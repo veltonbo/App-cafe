@@ -1,5 +1,6 @@
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Botão de backup
     const backup = document.createElement("button");
     backup.innerText = "Fazer Backup";
     backup.style.position = "fixed";
@@ -13,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
             financeiro: []
         };
         try {
-            const r = await fetch("https://script.google.com/macros/s/AKfycbzUmf5PuheEE_CggogXoGScNuGBnISI-6SHHDyaho0Lq-5igVyd1B_dTb3lmYOOdBfQfg/exec", {
+            const r = await fetch("https://script.google.com/macros/s/AKfycbxiKocLUoellQQF2ocnPWRVgHnB9bP1WPoaeF5vaNxDF4RIEJmBs4ndieDe05l1pTAr_w/exec", {
                 method: "POST",
                 body: JSON.stringify(dados),
                 headers: { "Content-Type": "application/json" }
@@ -25,4 +26,9 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
     document.body.appendChild(backup);
+
+    // Exibir seções de exemplo
+    document.getElementById("aplicacao").innerHTML = "<h2>Aplicações</h2><p>Área carregada.</p>";
+    document.getElementById("tarefas").innerHTML = "<h2>Tarefas</h2><p>Área carregada.</p>";
+    document.getElementById("financeiro").innerHTML = "<h2>Financeiro</h2><p>Área carregada.</p>";
 });

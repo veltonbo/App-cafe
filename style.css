@@ -1,72 +1,42 @@
 
 body {
-  font-family: Arial, sans-serif;
-  margin: 0; padding: 0;
-  background: #f4f4f4;
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
 }
 .menu {
-  display: flex;
-  background: #2e7d32;
+    display: flex;
+    background-color: #2d7b30;
 }
 .menu button {
-  flex: 1;
-  padding: 15px;
-  color: white;
-  background: none;
-  border: none;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
+    flex: 1;
+    padding: 12px;
+    border: none;
+    color: white;
+    background-color: #2d7b30;
+    font-size: 16px;
 }
-.menu button:hover {
-  background: #256327;
+.secao {
+    padding: 20px;
 }
-.aba { display: none; padding: 20px; }
-.aba.ativa { display: block; }
-
-.container {
-  background: white;
-  max-width: 500px;
-  margin: auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-h1, h2 { text-align: center; }
-.campo { margin-bottom: 15px; }
-label { font-weight: bold; display: block; margin-bottom: 5px; }
 input, select {
-  width: 100%; padding: 8px; box-sizing: border-box;
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+    width: 100%;
+    max-width: 400px;
 }
-button {
-  width: 100%;
-  background: #2e7d32;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 4px;
-  margin-top: 10px;
+.btn {
+    padding: 10px;
+    border: none;
+    cursor: pointer;
 }
-ul {
-  list-style: none;
-  padding: 0;
+.verde {
+    background-color: #2d7b30;
+    color: white;
 }
-ul li {
-  background: #eaeaea;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-ul li.feita {
-  background: #c8f7c5;
-  text-decoration: line-through;
-}
-ul li button {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
+.azul {
+    background-color: #007bff;
+    color: white;
 }

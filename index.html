@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manejo Café</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+</head>
+<body>
+    <nav>
+        <button onclick="showSection('aplicacao')">Aplicação</button>
+        <button onclick="showSection('tarefas')">Tarefas</button>
+        <button onclick="showSection('financeiro')">Financeiro</button>
+    </nav>
+    <main>
+        <section id="aplicacao" class="app-section"></section>
+        <section id="tarefas" class="app-section" style="display:none;"></section>
+        <section id="financeiro" class="app-section" style="display:none;"></section>
+    </main>
+    <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>

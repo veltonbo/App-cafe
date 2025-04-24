@@ -1,71 +1,71 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Manejo Café</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manejo Café</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="menu">
-    <button onclick="mostrarSecao('aplicacao')">Aplicação</button>
-    <button onclick="mostrarSecao('tarefas')">Tarefas</button>
-    <button onclick="mostrarSecao('financeiro')">Financeiro</button>
-  </div>
+    <div class="menu">
+        <button onclick="mostrarMenu('aplicacao')">Aplicação</button>
+        <button onclick="mostrarMenu('tarefas')">Tarefas</button>
+        <button onclick="mostrarMenu('financeiro')">Financeiro</button>
+    </div>
 
-  <div id="aplicacao" class="secao">
-    <h2>Aplicações realizadas</h2>
-    <input type="date" id="dataAplicacao" />
-    <input type="text" id="produtoAplicacao" placeholder="Produto" />
-    <input type="text" id="dosagemAplicacao" placeholder="Dosagem" />
-    <select id="tipoProduto">
-      <option value="">Tipo de Produto</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Adubo">Adubo</option>
-    </select>
-    <button onclick="adicionarAplicacao()">Adicionar</button>
-    <input type="text" id="filtroAplicacao" placeholder="Filtrar aplicações..." oninput="filtrarAplicacoes()" />
-    <button onclick="limparFiltroAplicacao()">✔ Limpar</button>
-    <ul id="listaAplicacoes"></ul>
-  </div>
+    <div id="aplicacao" class="conteudo ativo">
+        <h2>Aplicações realizadas</h2>
+        <input type="date" id="dataAplicacao">
+        <input type="text" id="produto" placeholder="Produto">
+        <input type="text" id="dosagem" placeholder="Dosagem">
+        <select id="tipo">
+            <option value="Herbicida">Herbicida</option>
+            <option value="Inseticida">Inseticida</option>
+            <option value="Fungicida">Fungicida</option>
+            <option value="Adubo">Adubo</option>
+        </select>
+        <button onclick="adicionarAplicacao()">Adicionar</button>
+        <input type="text" id="filtroAplicacao" placeholder="Filtrar aplicações..." oninput="filtrarAplicacoes()">
+        <button onclick="limparFiltroAplicacao()">Limpar filtro</button>
+        <ul id="listaAplicacoes"></ul>
+    </div>
 
-  <div id="tarefas" class="secao">
-    <h2>Tarefas</h2>
-    <input type="date" id="dataTarefa" />
-    <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa" />
-    <button onclick="adicionarTarefa()">Adicionar</button>
-    <ul id="listaTarefas"></ul>
-    <h3>Tarefas executadas</h3>
-    <ul id="listaTarefasExecutadas"></ul>
-  </div>
+    <div id="tarefas" class="conteudo">
+        <h2>Tarefas</h2>
+        <input type="date" id="dataTarefa">
+        <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa">
+        <button onclick="adicionarTarefa()">Adicionar</button>
+        <h3>Tarefas a fazer</h3>
+        <ul id="tarefasAFazer"></ul>
+        <h3>Tarefas executadas</h3>
+        <ul id="tarefasExecutadas"></ul>
+    </div>
 
-  <div id="financeiro" class="secao">
-    <h2>Financeiro</h2>
-    <input type="date" id="dataFinanceiro" />
-    <input type="text" id="produtoFinanceiro" placeholder="Produto" />
-    <input type="number" id="valorFinanceiro" placeholder="Valor (R$)" />
-    <select id="categoriaFinanceiro">
-      <option value="">Categoria</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Adubo">Adubo</option>
-      <option value="Outros">Outros</option>
-    </select>
-    <button onclick="adicionarFinanceiro()">Adicionar</button>
-    <ul id="listaFinanceiro"></ul>
-    <p><strong>Total a pagar:</strong> R$ <span id="totalFinanceiro">0.00</span></p>
-    <div id="resumoFinanceiro"></div>
-    <canvas id="graficoFinanceiro" width="300" height="300"></canvas>
-    <button onclick="marcarTudoPago()">Marcar tudo como pago</button>
-    <button onclick="gerarRelatorioPDF()">Gerar Relatório PDF</button>
-    <button onclick="exportarFinanceiro()">Exportar Dados</button>
-  </div>
+    <div id="financeiro" class="conteudo">
+        <h2>Financeiro</h2>
+        <input type="date" id="dataFinanceiro">
+        <input type="text" id="produtoFinanceiro" placeholder="Produto">
+        <input type="number" id="valorFinanceiro" placeholder="Valor (R$)">
+        <select id="categoriaFinanceiro">
+            <option value="Fungicida">Fungicida</option>
+            <option value="Herbicida">Herbicida</option>
+            <option value="Inseticida">Inseticida</option>
+            <option value="Adubo">Adubo</option>
+            <option value="Outros">Outros</option>
+        </select>
+        <button onclick="adicionarFinanceiro()">Adicionar</button>
+        <ul id="listaFinanceiro"></ul>
+        <p id="totalPagar">Total a pagar: R$ 0.00</p>
+        <div id="resumoFinanceiro"></div>
+        <canvas id="graficoPizza" width="300" height="300"></canvas>
+        <button onclick="marcarTudoComoPago()">Marcar tudo como pago</button>
+        <button onclick="gerarPDF()">Gerar Relatório PDF</button>
+        <button onclick="exportarFinanceiro()">Exportar Dados</button>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

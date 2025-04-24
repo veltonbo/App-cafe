@@ -1,48 +1,47 @@
+
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background: #f6f6f6;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
 }
 .menu {
-  display: flex;
-  justify-content: space-around;
-  background-color: #1d781d;
+    display: flex;
+    justify-content: space-around;
+    background: #2d7a2e;
+    padding: 10px 0;
 }
 .menu button {
-  flex: 1;
-  padding: 15px;
-  border: none;
-  background-color: #1d781d;
-  color: white;
-  font-weight: bold;
+    background: none;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
 }
-.menu button:hover, .menu button.active {
-  background-color: #155f15;
+.conteudo {
+    display: none;
+    padding: 20px;
 }
-.secao {
-  display: none;
-  padding: 20px;
-}
-.secao.active {
-  display: block;
-}
-input, select, button {
-  padding: 10px;
-  margin: 5px 0;
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
+.conteudo.ativo {
+    display: block;
 }
 ul {
-  list-style-type: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
 }
-ul li {
-  background: #e8e8e8;
-  margin: 5px 0;
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+li {
+    background: #eee;
+    margin-bottom: 5px;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+li.pago {
+    background: #c8f7c5;
+    text-decoration: line-through;
+}
+button {
+    margin: 5px 0;
 }

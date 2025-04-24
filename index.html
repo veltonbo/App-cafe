@@ -2,58 +2,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manejo Café</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="menu">
-        <button onclick="mostrarSecao('aplicacoes')">Aplicações</button>
-        <button onclick="mostrarSecao('tarefas')">Tarefas</button>
-        <button onclick="mostrarSecao('financeiro')">Financeiro</button>
-    </div>
+    <nav class="menu">
+        <button onclick="mostrarPagina('aplicacoes')">Aplicações</button>
+        <button onclick="mostrarPagina('tarefas')">Tarefas</button>
+        <button onclick="mostrarPagina('financeiro')">Financeiro</button>
+    </nav>
 
-    <div id="aplicacoes" class="secao">
+    <section id="aplicacoes" class="pagina">
         <h2>Aplicações</h2>
-        <input type="date" id="dataAplicacao" />
-        <input type="text" id="produtoAplicacao" placeholder="Produto" />
-        <input type="text" id="dosagemAplicacao" placeholder="Dosagem" />
+        <input type="date" id="dataAplicacao">
+        <input type="text" id="produtoAplicacao" placeholder="Produto">
+        <input type="text" id="dosagemAplicacao" placeholder="Dosagem">
         <select id="tipoAplicacao">
-            <option value="" disabled selected>Selecione</option>
+            <option value="">Selecione</option>
             <option value="Adubo">Adubo</option>
             <option value="Fungicida">Fungicida</option>
             <option value="Inseticida">Inseticida</option>
             <option value="Herbicida">Herbicida</option>
         </select>
-        <button class="btn verde" onclick="adicionarAplicacao()">Adicionar</button>
-        <div id="listaAplicacoes"></div>
-    </div>
+        <button onclick="adicionarAplicacao()">Adicionar</button>
+        <ul id="listaAplicacoes"></ul>
+    </section>
 
-    <div id="tarefas" class="secao" style="display:none;">
+    <section id="tarefas" class="pagina" style="display:none;">
         <h2>Tarefas</h2>
-        <input type="date" id="dataTarefa" />
-        <input type="text" id="descTarefa" placeholder="Descrição da tarefa" />
-        <button class="btn azul" onclick="adicionarTarefa()">Adicionar</button>
-        <div id="listaTarefas"></div>
-    </div>
+        <input type="date" id="dataTarefa">
+        <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa">
+        <button onclick="adicionarTarefa()">Adicionar</button>
+        <ul id="listaTarefas"></ul>
+    </section>
 
-    <div id="financeiro" class="secao" style="display:none;">
+    <section id="financeiro" class="pagina" style="display:none;">
         <h2>Financeiro</h2>
-        <input type="date" id="dataFinanceiro" />
-        <input type="text" id="produtoFinanceiro" placeholder="Produto" />
-        <input type="number" id="valorFinanceiro" placeholder="Valor (R$)" />
+        <input type="date" id="dataFinanceiro">
+        <input type="text" id="produtoFinanceiro" placeholder="Produto">
+        <input type="number" id="valorFinanceiro" placeholder="Valor (R$)">
         <select id="categoriaFinanceiro">
-            <option value="" disabled selected>Categoria</option>
+            <option value="">Categoria</option>
             <option value="Adubo">Adubo</option>
             <option value="Fungicida">Fungicida</option>
             <option value="Inseticida">Inseticida</option>
             <option value="Herbicida">Herbicida</option>
             <option value="Outros">Outros</option>
         </select>
-        <button class="btn verde" onclick="adicionarFinanceiro()">Adicionar</button>
-        <div id="listaFinanceiro"></div>
-    </div>
+        <button onclick="adicionarFinanceiro()">Adicionar</button>
+        <ul id="listaFinanceiro"></ul>
+    </section>
 
     <script src="script.js"></script>
 </body>

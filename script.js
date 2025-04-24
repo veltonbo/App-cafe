@@ -1,6 +1,6 @@
 
-function mostrarSecao(id) {
-    document.querySelectorAll('.secao').forEach(sec => sec.style.display = 'none');
+function mostrarPagina(id) {
+    document.querySelectorAll('.pagina').forEach(secao => secao.style.display = 'none');
     document.getElementById(id).style.display = 'block';
 }
 
@@ -9,21 +9,23 @@ function adicionarAplicacao() {
     const produto = document.getElementById('produtoAplicacao').value;
     const dosagem = document.getElementById('dosagemAplicacao').value;
     const tipo = document.getElementById('tipoAplicacao').value;
-    const lista = document.getElementById('listaAplicacoes');
-
-    const div = document.createElement('div');
-    div.textContent = `${data} - ${produto} - ${dosagem} - ${tipo}`;
-    lista.appendChild(div);
+    if (data && produto && dosagem && tipo) {
+        const lista = document.getElementById('listaAplicacoes');
+        const li = document.createElement('li');
+        li.textContent = `${data} - ${produto} - ${dosagem} - ${tipo}`;
+        lista.appendChild(li);
+    }
 }
 
 function adicionarTarefa() {
     const data = document.getElementById('dataTarefa').value;
-    const desc = document.getElementById('descTarefa').value;
-    const lista = document.getElementById('listaTarefas');
-
-    const div = document.createElement('div');
-    div.textContent = `${data} - ${desc}`;
-    lista.appendChild(div);
+    const descricao = document.getElementById('descricaoTarefa').value;
+    if (data && descricao) {
+        const lista = document.getElementById('listaTarefas');
+        const li = document.createElement('li');
+        li.textContent = `${data} - ${descricao}`;
+        lista.appendChild(li);
+    }
 }
 
 function adicionarFinanceiro() {
@@ -31,9 +33,10 @@ function adicionarFinanceiro() {
     const produto = document.getElementById('produtoFinanceiro').value;
     const valor = document.getElementById('valorFinanceiro').value;
     const categoria = document.getElementById('categoriaFinanceiro').value;
-    const lista = document.getElementById('listaFinanceiro');
-
-    const div = document.createElement('div');
-    div.textContent = `${data} - ${produto} - R$${valor} - ${categoria}`;
-    lista.appendChild(div);
+    if (data && produto && valor && categoria) {
+        const lista = document.getElementById('listaFinanceiro');
+        const li = document.createElement('li');
+        li.textContent = `${data} - ${produto} - R$${valor} - ${categoria}`;
+        lista.appendChild(li);
+    }
 }

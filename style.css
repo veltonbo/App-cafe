@@ -1,42 +1,38 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f2f2f2;
     margin: 0;
     padding: 0;
 }
 .menu {
     display: flex;
-    background-color: #2d7b30;
+    justify-content: space-around;
+    background-color: #2d802d;
 }
 .menu button {
     flex: 1;
-    padding: 12px;
-    border: none;
-    color: white;
-    background-color: #2d7b30;
+    padding: 15px;
     font-size: 16px;
+    color: white;
+    background: none;
+    border: none;
 }
-.secao {
+.pagina {
     padding: 20px;
 }
-input, select {
+input, select, button {
     display: block;
     margin: 10px 0;
-    padding: 8px;
+    padding: 10px;
     width: 100%;
     max-width: 400px;
 }
-.btn {
+ul {
+    list-style: none;
+    padding: 0;
+}
+ul li {
+    background-color: #f0f0f0;
+    margin: 5px 0;
     padding: 10px;
-    border: none;
-    cursor: pointer;
-}
-.verde {
-    background-color: #2d7b30;
-    color: white;
-}
-.azul {
-    background-color: #007bff;
-    color: white;
 }

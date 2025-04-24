@@ -164,6 +164,7 @@ document.getElementById("financeiro").innerHTML = `
         <ul id="lista-pago"></ul>
         <div><strong>Total a pagar:</strong> R$ <span id="total-pagar">0.00</span></div>
         <div class="container" id="resumo-mensal"></div>
+<div class="container"><h4>Gráfico de Gastos por Tipo</h4><canvas id="grafico-gastos" height="200"></canvas></div>
     </div>
 `;
 
@@ -199,6 +200,7 @@ function listarFinanceiro(filtro = "") {
 
     document.getElementById("total-pagar").innerText = total.toFixed(2);
     resumoMensalGastos();
+    atualizarGraficoGastos();
 }
 
 function marcarPago(index) {
@@ -254,3 +256,36 @@ function resumoMensalGastos() {
 }
 
 listarFinanceiro();
+
+function atualizarGraficoGastos() {
+    const ctx = document.getElementById('grafico-gastos').getContext('2d');
+    const tipos = {};
+    financeiro.forEach(item => {
+        if (!item.pago && item.tipo) {
+            tipos[item.tipo] = (tipos[item.tipo] || 0) + parseFloat(item.valor);
+        }
+    });
+
+    const labels = Object.keys(tipos);
+    const dados = Object.values(tipos);
+
+    if (window.graficoGastos) window.graficoGastos.destroy();
+
+    window.graficoGastos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Gastos (R$)',
+                data: dados
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: false }
+            }
+        }
+    });
+}

@@ -5,7 +5,6 @@ function showSection(id) {
 }
 
 // ---------------- APLICACAO ----------------
-
 document.getElementById("aplicacao").innerHTML = `
     <div class="container">
         <h2>Aplicações realizadas</h2>
@@ -23,7 +22,7 @@ document.getElementById("aplicacao").innerHTML = `
             <button type="submit">Adicionar</button>
         </form>
         <input type="text" id="filtro-aplicacao" placeholder="Filtrar aplicações...">
-        <button onclick="limparFiltroAplicacao()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Limpar filtro</button>
+        <button onclick="limparFiltroAplicacao()">✔️ Limpar filtro</button>
         <ul id="lista-aplicacoes"></ul>
     </div>
 `;
@@ -43,8 +42,8 @@ function listarAplicacoes(filtro = "") {
         .filter(ap => ap.produto.toLowerCase().includes(filtro.toLowerCase()))
         .forEach((ap, index) => {
             const li = document.createElement("li");
-            li.innerHTML = `${ap.data} - ${ap.produto} - ${ap.dosagem} - ${ap.tipo} 
-                <button onclick="deletarAplicacao(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
+            li.innerHTML = `${ap.data} - ${ap.produto} - ${ap.dosagem} - ${ap.tipo}
+                <button onclick="deletarAplicacao(${index})">🗑️</button>`;
             lista.appendChild(li);
         });
 }
@@ -78,7 +77,6 @@ function limparFiltroAplicacao() {
 listarAplicacoes();
 
 // ---------------- TAREFAS ----------------
-
 document.getElementById("tarefas").innerHTML = `
     <div class="container">
         <h2>Tarefas</h2>
@@ -87,10 +85,8 @@ document.getElementById("tarefas").innerHTML = `
             <input type="text" id="descricao-tarefa" placeholder="Descrição da tarefa" required>
             <button type="submit">Adicionar</button>
         </form>
-
         <h3>Tarefas a fazer</h3>
         <ul id="tarefas-afazer"></ul>
-
         <h3>Tarefas executadas</h3>
         <ul id="tarefas-executadas"></ul>
     </div>
@@ -112,8 +108,8 @@ function listarTarefas() {
     tarefas.forEach((t, index) => {
         const li = document.createElement("li");
         li.innerHTML = `${t.data} - ${t.descricao} 
-            ${!t.executada ? `<button onclick="executarTarefa(${index})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>` : ""}
-            <button onclick="deletarTarefa(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
+            ${!t.executada ? `<button onclick="executarTarefa(${index})">✔️</button>` : ""}
+            <button onclick="deletarTarefa(${index})">🗑️</button>`;
         if (t.executada) {
             listaExecutadas.appendChild(li);
         } else {
@@ -136,7 +132,6 @@ document.getElementById("tarefa-form").addEventListener("submit", e => {
     e.preventDefault();
     const data = document.getElementById("data-tarefa").value;
     const descricao = document.getElementById("descricao-tarefa").value;
-
     tarefas.push({ data, descricao, executada: false });
     salvarTarefas();
     e.target.reset();
@@ -145,7 +140,6 @@ document.getElementById("tarefa-form").addEventListener("submit", e => {
 listarTarefas();
 
 // ---------------- FINANCEIRO ----------------
-
 document.getElementById("financeiro").innerHTML = `
     <div class="container">
         <h2>Financeiro</h2>
@@ -162,17 +156,14 @@ document.getElementById("financeiro").innerHTML = `
             </select>
             <button type="submit">Adicionar</button>
         </form>
-
         <input type="text" id="filtro-financeiro" placeholder="Filtrar...">
-        <button onclick="limparFiltroFinanceiro()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Limpar filtro</button>
-
+        <button onclick="limparFiltroFinanceiro()">✔️ Limpar filtro</button>
         <h3>A vencer</h3>
         <ul id="lista-vencer"></ul>
-
         <h3>Pago</h3>
         <ul id="lista-pago"></ul>
-
         <div><strong>Total a pagar:</strong> R$ <span id="total-pagar">0.00</span></div>
+        <div class="container" id="resumo-mensal"></div>
     </div>
 `;
 
@@ -195,10 +186,9 @@ function listarFinanceiro(filtro = "") {
         .filter(f => f.produto.toLowerCase().includes(filtro.toLowerCase()))
         .forEach((item, index) => {
             const li = document.createElement("li");
-            li.innerHTML = `${item.data} - ${item.produto} - R$ ${parseFloat(item.valor).toFixed(2)} - ${item.tipo} 
-                ${!item.pago ? `<button onclick="marcarPago(${index})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Pagar</button>` : ""}
-                <button onclick="deletarFinanceiro(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
-
+            li.innerHTML = `${item.data} - ${item.produto} - R$ ${parseFloat(item.valor).toFixed(2)} - ${item.tipo}
+                ${!item.pago ? `<button onclick="marcarPago(${index})">✔️ Pagar</button>` : ""}
+                <button onclick="deletarFinanceiro(${index})">🗑️</button>`;
             if (item.pago) {
                 listaPago.appendChild(li);
             } else {
@@ -208,6 +198,7 @@ function listarFinanceiro(filtro = "") {
         });
 
     document.getElementById("total-pagar").innerText = total.toFixed(2);
+    resumoMensalGastos();
 }
 
 function marcarPago(index) {
@@ -241,48 +232,6 @@ function limparFiltroFinanceiro() {
     listarFinanceiro();
 }
 
-listarFinanceiro();
-
-// EXPORTAÇÃO DE DADOS
-function exportarCSV() {
-    let csv = "TABELA;DATA;DESCRICAO/PRODUTO;VALOR/DOSAGEM;TIPO;STATUS\n";
-
-    aplicacoes.forEach(item => {
-        csv += `Aplicacao;${item.data};${item.produto};${item.dosagem};${item.tipo};\n`;
-    });
-
-    tarefas.forEach(item => {
-        csv += `Tarefa;${item.data};${item.descricao};;;${item.executada ? "Executada" : "A Fazer"}\n`;
-    });
-
-    financeiro.forEach(item => {
-        csv += `Financeiro;${item.data};${item.produto};${item.valor};${item.tipo};${item.pago ? "Pago" : "A Vencer"}\n`;
-    });
-
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "manejo_cafe_export.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-const exportButton = document.createElement("button");
-exportButton.innerText = "Exportar Dados";
-exportButton.style.position = "fixed";
-exportButton.style.bottom = "10px";
-exportButton.style.right = "10px";
-exportButton.style.padding = "10px";
-exportButton.style.backgroundColor = "#2e7d32";
-exportButton.style.color = "white";
-exportButton.style.border = "none";
-exportButton.style.borderRadius = "5px";
-exportButton.style.cursor = "pointer";
-exportButton.onclick = exportarCSV;
-
-document.body.appendChild(exportButton);
-
 function resumoMensalGastos() {
     const resumoDiv = document.getElementById("resumo-mensal");
     const resumo = {};
@@ -300,76 +249,4 @@ function resumoMensalGastos() {
     }
 }
 
-document.getElementById("financeiro").innerHTML += `<div class="container" id="resumo-mensal"></div>`;
-resumoMensalGastos();
-
-// Alternar Tema Escuro
-const botaoTema = document.createElement("button");
-botaoTema.innerText = "Tema Escuro";
-botaoTema.style.position = "fixed";
-botaoTema.style.bottom = "60px";
-botaoTema.style.right = "10px";
-botaoTema.style.padding = "10px";
-botaoTema.style.backgroundColor = "#444";
-botaoTema.style.color = "white";
-botaoTema.style.border = "none";
-botaoTema.style.borderRadius = "5px";
-botaoTema.style.cursor = "pointer";
-
-botaoTema.onclick = () => {
-    document.body.classList.toggle("dark");
-    const tema = document.body.classList.contains("dark") ? "dark" : "light";
-    localStorage.setItem("tema", tema);
-    botaoTema.innerText = tema === "dark" ? "Tema Claro" : "Tema Escuro";
-};
-
-document.body.appendChild(botaoTema);
-
-window.addEventListener("load", () => {
-    const temaSalvo = localStorage.getItem("tema");
-    if (temaSalvo === "dark") {
-        document.body.classList.add("dark");
-        botaoTema.innerText = "Tema Claro";
-    }
-});
-
-function listarTarefas() {
-    const listaAfazer = document.getElementById("tarefas-afazer");
-    const listaExecutadas = document.getElementById("tarefas-executadas");
-    listaAfazer.innerHTML = "";
-    listaExecutadas.innerHTML = "";
-
-    const agruparPorData = (tarefas, executadas) => {
-        const agrupadas = {};
-        tarefas
-            .filter(t => t.executada === executadas)
-            .forEach(t => {
-                if (!agrupadas[t.data]) agrupadas[t.data] = [];
-                agrupadas[t.data].push(t);
-            });
-        return agrupadas;
-    };
-
-    const renderGrupo = (grupo, destino, executadas) => {
-        for (const data in grupo) {
-            const header = document.createElement("h4");
-            header.innerText = new Date(data).toLocaleDateString('pt-BR');
-            destino.appendChild(header);
-
-            grupo[data].forEach((t, indexGlobal) => {
-                const index = tarefas.indexOf(t);
-                const li = document.createElement("li");
-                li.innerHTML = `${t.descricao} 
-                    ${!executadas ? `<button onclick="executarTarefa(${index})">${svg_check}</button>` : ""}
-                    <button onclick="deletarTarefa(${index})">${svg_trash}</button>`;
-                destino.appendChild(li);
-            });
-        }
-    };
-
-    const grupoAfazer = agruparPorData(tarefas, false);
-    const grupoExecutadas = agruparPorData(tarefas, true);
-
-    renderGrupo(grupoAfazer, listaAfazer, false);
-    renderGrupo(grupoExecutadas, listaExecutadas, true);
-}
+listarFinanceiro();

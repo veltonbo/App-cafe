@@ -5,64 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manejo Café</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
+  <div class="menu">
+    <button onclick="mostrarSecao('aplicacao')">Aplicação</button>
+    <button onclick="mostrarSecao('tarefas')">Tarefas</button>
+    <button onclick="mostrarSecao('financeiro')">Financeiro</button>
+  </div>
 
-<nav>
-  <button onclick="showSection('aplicacao')">Aplicação</button>
-  <button onclick="showSection('tarefas')">Tarefas</button>
-  <button onclick="showSection('financeiro')">Financeiro</button>
-</nav>
+  <div id="aplicacao" class="secao">
+    <h2>Aplicações realizadas</h2>
+    <input type="date" id="dataAplicacao" />
+    <input type="text" id="produtoAplicacao" placeholder="Produto" />
+    <input type="text" id="dosagemAplicacao" placeholder="Dosagem" />
+    <select id="tipoProduto">
+      <option value="">Tipo de Produto</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Adubo">Adubo</option>
+    </select>
+    <button onclick="adicionarAplicacao()">Adicionar</button>
+    <input type="text" id="filtroAplicacao" placeholder="Filtrar aplicações..." oninput="filtrarAplicacoes()" />
+    <button onclick="limparFiltroAplicacao()">✔ Limpar</button>
+    <ul id="listaAplicacoes"></ul>
+  </div>
 
-<main>
-  <section id="aplicacao" class="app-section active">
-    <div class="container">
-      <h2>Aplicações realizadas</h2>
-      <form id="aplicacao-form">
-        <input type="date" id="data-aplicacao" required>
-        <input type="text" id="produto" placeholder="Produto" required>
-        <input type="text" id="dosagem" placeholder="Dosagem" required>
-        <button type="submit">Adicionar</button>
-      </form>
-      <ul id="lista-aplicacoes"></ul>
-    </div>
-  </section>
+  <div id="tarefas" class="secao">
+    <h2>Tarefas</h2>
+    <input type="date" id="dataTarefa" />
+    <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa" />
+    <button onclick="adicionarTarefa()">Adicionar</button>
+    <ul id="listaTarefas"></ul>
+    <h3>Tarefas executadas</h3>
+    <ul id="listaTarefasExecutadas"></ul>
+  </div>
 
-  <section id="tarefas" class="app-section">
-    <div class="container">
-      <h2>Tarefas</h2>
-      <form id="tarefa-form">
-        <input type="date" id="data-tarefa" required>
-        <input type="text" id="descricao-tarefa" placeholder="Descrição da tarefa" required>
-        <button type="submit">Adicionar</button>
-      </form>
-      <ul id="tarefas-afazer"></ul>
-      <ul id="tarefas-executadas"></ul>
-    </div>
-  </section>
+  <div id="financeiro" class="secao">
+    <h2>Financeiro</h2>
+    <input type="date" id="dataFinanceiro" />
+    <input type="text" id="produtoFinanceiro" placeholder="Produto" />
+    <input type="number" id="valorFinanceiro" placeholder="Valor (R$)" />
+    <select id="categoriaFinanceiro">
+      <option value="">Categoria</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Adubo">Adubo</option>
+      <option value="Outros">Outros</option>
+    </select>
+    <button onclick="adicionarFinanceiro()">Adicionar</button>
+    <ul id="listaFinanceiro"></ul>
+    <p><strong>Total a pagar:</strong> R$ <span id="totalFinanceiro">0.00</span></p>
+    <div id="resumoFinanceiro"></div>
+    <canvas id="graficoFinanceiro" width="300" height="300"></canvas>
+    <button onclick="marcarTudoPago()">Marcar tudo como pago</button>
+    <button onclick="gerarRelatorioPDF()">Gerar Relatório PDF</button>
+    <button onclick="exportarFinanceiro()">Exportar Dados</button>
+  </div>
 
-  <section id="financeiro" class="app-section">
-    <div class="container">
-      <h2>Financeiro</h2>
-      <form id="financeiro-form">
-        <input type="date" id="data-financeiro" required>
-        <input type="text" id="produto-financeiro" placeholder="Produto" required>
-        <input type="number" id="valor-financeiro" placeholder="Valor (R$)" required>
-        <button type="submit">Adicionar</button>
-      </form>
-      <ul id="lista-vencer"></ul>
-      <ul id="lista-pago"></ul>
-      <div><strong>Total a pagar:</strong> R$ <span id="total-pagar">0.00</span></div>
-
-      <div id="resumo-mensal" style="margin-top: 20px; background: #f8f8f8; padding: 10px; border-radius: 6px; font-size: 14px;"></div>
-      <canvas id="grafico-categorias" width="300" height="300" style="margin-top: 20px;"></canvas>
-    </div>
-  </section>
-</main>
-
-<script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

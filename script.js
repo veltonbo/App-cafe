@@ -1,376 +1,207 @@
-
-function showSection(id) {
-    document.querySelectorAll('.app-section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-}
-
-// ---------------- APLICACAO ----------------
-
-document.getElementById("aplicacao").innerHTML = `
-    <div class="container">
-        <h2>Aplicações realizadas</h2>
-        <form id="aplicacao-form">
-            <input type="date" id="data-aplicacao" required>
-            <input type="text" id="produto" placeholder="Produto" required>
-            <input type="text" id="dosagem" placeholder="Dosagem" required>
-            <select id="tipo">
-                <option value="">Tipo de Produto</option>
-                <option>Adubo</option>
-                <option>Herbicida</option>
-                <option>Inseticida</option>
-                <option>Fungicida</option>
-            </select>
-            <button type="submit">Adicionar</button>
-        </form>
-        <input type="text" id="filtro-aplicacao" placeholder="Filtrar aplicações...">
-        <button onclick="limparFiltroAplicacao()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Limpar filtro</button>
-        <ul id="lista-aplicacoes"></ul>
-    </div>
-`;
-
-let aplicacoes = JSON.parse(localStorage.getItem("aplicacoes")) || [];
-
-function salvarAplicacoes() {
-    localStorage.setItem("aplicacoes", JSON.stringify(aplicacoes));
-    listarAplicacoes();
-}
-
-function listarAplicacoes(filtro = "") {
-    const lista = document.getElementById("lista-aplicacoes");
-    lista.innerHTML = "";
-
-    aplicacoes
-        .filter(ap => ap.produto.toLowerCase().includes(filtro.toLowerCase()))
-        .forEach((ap, index) => {
-            const li = document.createElement("li");
-            li.innerHTML = `${ap.data} - ${ap.produto} - ${ap.dosagem} - ${ap.tipo} 
-                <button onclick="deletarAplicacao(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
-            lista.appendChild(li);
-        });
-}
-
-function deletarAplicacao(index) {
-    aplicacoes.splice(index, 1);
-    salvarAplicacoes();
-}
-
-document.getElementById("aplicacao-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const data = document.getElementById("data-aplicacao").value;
-    const produto = document.getElementById("produto").value;
-    const dosagem = document.getElementById("dosagem").value;
-    const tipo = document.getElementById("tipo").value;
-
-    aplicacoes.push({ data, produto, dosagem, tipo });
-    salvarAplicacoes();
-    e.target.reset();
+document.addEventListener("DOMContentLoaded", function () {
+  mostrarSecao("aplicacao");
+  carregarDados();
 });
 
-document.getElementById("filtro-aplicacao").addEventListener("input", e => {
-    listarAplicacoes(e.target.value);
-});
-
-function limparFiltroAplicacao() {
-    document.getElementById("filtro-aplicacao").value = "";
-    listarAplicacoes();
+function mostrarSecao(secaoId) {
+  document.querySelectorAll(".secao").forEach(secao => {
+    secao.classList.remove("active");
+  });
+  document.getElementById(secaoId).classList.add("active");
 }
 
-listarAplicacoes();
-
-// ---------------- TAREFAS ----------------
-
-document.getElementById("tarefas").innerHTML = `
-    <div class="container">
-        <h2>Tarefas</h2>
-        <form id="tarefa-form">
-            <input type="date" id="data-tarefa" required>
-            <input type="text" id="descricao-tarefa" placeholder="Descrição da tarefa" required>
-            <button type="submit">Adicionar</button>
-        </form>
-
-        <h3>Tarefas a fazer</h3>
-        <ul id="tarefas-afazer"></ul>
-
-        <h3>Tarefas executadas</h3>
-        <ul id="tarefas-executadas"></ul>
-    </div>
-`;
-
-let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
-
-function salvarTarefas() {
-    localStorage.setItem("tarefas", JSON.stringify(tarefas));
-    listarTarefas();
+function salvarDados(chave, dados) {
+  localStorage.setItem(chave, JSON.stringify(dados));
 }
 
-function listarTarefas() {
-    const listaAfazer = document.getElementById("tarefas-afazer");
-    const listaExecutadas = document.getElementById("tarefas-executadas");
-    listaAfazer.innerHTML = "";
-    listaExecutadas.innerHTML = "";
-
-    tarefas.forEach((t, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `${t.data} - ${t.descricao} 
-            ${!t.executada ? `<button onclick="executarTarefa(${index})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>` : ""}
-            <button onclick="deletarTarefa(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
-        if (t.executada) {
-            listaExecutadas.appendChild(li);
-        } else {
-            listaAfazer.appendChild(li);
-        }
-    });
+function carregarDados() {
+  atualizarLista("Aplicacoes");
+  atualizarLista("Tarefas");
+  atualizarLista("Financeiro");
+  atualizarResumoFinanceiro();
 }
 
-function executarTarefa(index) {
-    tarefas[index].executada = true;
-    salvarTarefas();
+function atualizarLista(tipo) {
+  const lista = JSON.parse(localStorage.getItem(tipo)) || [];
+  const ul = document.getElementById(`lista${tipo}`);
+  if (!ul) return;
+  ul.innerHTML = "";
+
+  lista.forEach((item, index) => {
+    const li = document.createElement("li");
+
+    if (tipo === "Financeiro") {
+      li.innerHTML = `${item.data} - ${item.produto} - R$ ${item.valor.toFixed(2)} 
+        <button onclick="marcarPago(${index})">✔</button>
+        <button onclick="editarFinanceiro(${index})">✏️</button>
+        <button onclick="removerItem('${tipo}', ${index})">🗑</button>`;
+    } else if (tipo === "Tarefas") {
+      li.innerHTML = `${item.data} - ${item.descricao}
+        <button onclick="marcarExecutada(${index})">✔</button>`;
+    } else {
+      li.innerHTML = `${item.data} - ${item.produto} - ${item.dosagem} - ${item.tipo}
+        <button onclick="removerItem('${tipo}', ${index})">🗑</button>`;
+    }
+
+    ul.appendChild(li);
+  });
+
+  if (tipo === "Financeiro") {
+    const total = lista.reduce((soma, item) => soma + item.valor, 0);
+    document.getElementById("totalFinanceiro").innerText = total.toFixed(2);
+  }
 }
 
-function deletarTarefa(index) {
-    tarefas.splice(index, 1);
-    salvarTarefas();
+function adicionarAplicacao() {
+  const data = document.getElementById("dataAplicacao").value;
+  const produto = document.getElementById("produtoAplicacao").value;
+  const dosagem = document.getElementById("dosagemAplicacao").value;
+  const tipo = document.getElementById("tipoProduto").value;
+
+  if (produto && dosagem && tipo) {
+    const lista = JSON.parse(localStorage.getItem("Aplicacoes")) || [];
+    lista.push({ data, produto, dosagem, tipo });
+    salvarDados("Aplicacoes", lista);
+    atualizarLista("Aplicacoes");
+  }
 }
 
-document.getElementById("tarefa-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const data = document.getElementById("data-tarefa").value;
-    const descricao = document.getElementById("descricao-tarefa").value;
-
-    tarefas.push({ data, descricao, executada: false });
-    salvarTarefas();
-    e.target.reset();
-});
-
-listarTarefas();
-
-// ---------------- FINANCEIRO ----------------
-
-document.getElementById("financeiro").innerHTML = `
-    <div class="container">
-        <h2>Financeiro</h2>
-        <form id="financeiro-form">
-            <input type="date" id="data-financeiro" required>
-            <input type="text" id="produto-financeiro" placeholder="Produto" required>
-            <input type="number" id="valor-financeiro" placeholder="Valor (R$)" required>
-            <select id="tipo-financeiro">
-                <option value="">Tipo de Produto</option>
-                <option>Adubo</option>
-                <option>Herbicida</option>
-                <option>Inseticida</option>
-                <option>Fungicida</option>
-            </select>
-            <button type="submit">Adicionar</button>
-        </form>
-
-        <input type="text" id="filtro-financeiro" placeholder="Filtrar...">
-        <button onclick="limparFiltroFinanceiro()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Limpar filtro</button>
-
-        <h3>A vencer</h3>
-        <ul id="lista-vencer"></ul>
-
-        <h3>Pago</h3>
-        <ul id="lista-pago"></ul>
-
-        <div><strong>Total a pagar:</strong> R$ <span id="total-pagar">0.00</span></div>
-    </div>
-`;
-
-let financeiro = JSON.parse(localStorage.getItem("financeiro")) || [];
-
-function salvarFinanceiro() {
-    localStorage.setItem("financeiro", JSON.stringify(financeiro));
-    listarFinanceiro();
+function adicionarTarefa() {
+  const data = document.getElementById("dataTarefa").value;
+  const descricao = document.getElementById("descricaoTarefa").value;
+  if (descricao) {
+    const lista = JSON.parse(localStorage.getItem("Tarefas")) || [];
+    lista.push({ data, descricao });
+    salvarDados("Tarefas", lista);
+    atualizarLista("Tarefas");
+  }
 }
 
-function listarFinanceiro(filtro = "") {
-    const listaVencer = document.getElementById("lista-vencer");
-    const listaPago = document.getElementById("lista-pago");
-    listaVencer.innerHTML = "";
-    listaPago.innerHTML = "";
+function adicionarFinanceiro() {
+  const data = document.getElementById("dataFinanceiro").value;
+  const produto = document.getElementById("produtoFinanceiro").value;
+  const valor = parseFloat(document.getElementById("valorFinanceiro").value);
+  const categoria = document.getElementById("categoriaFinanceiro").value;
 
-    let total = 0;
-
-    financeiro
-        .filter(f => f.produto.toLowerCase().includes(filtro.toLowerCase()))
-        .forEach((item, index) => {
-            const li = document.createElement("li");
-            li.innerHTML = `${item.data} - ${item.produto} - R$ ${parseFloat(item.valor).toFixed(2)} - ${item.tipo} 
-                ${!item.pago ? `<button onclick="marcarPago(${index})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="green" viewBox="0 0 24 24"><path d="M20.285 2.859L9 14.143l-5.285-5.286L2 10.572 9 17.572l12-12z"/></svg></button>Pagar</button>` : ""}
-                <button onclick="deletarFinanceiro(${index})" class="btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 4v12h2V7h-2z"/></svg></button>`;
-
-            if (item.pago) {
-                listaPago.appendChild(li);
-            } else {
-                listaVencer.appendChild(li);
-                total += parseFloat(item.valor);
-            }
-        });
-
-    document.getElementById("total-pagar").innerText = total.toFixed(2);
+  if (produto && valor && categoria) {
+    const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+    lista.push({ data, produto, valor, categoria });
+    salvarDados("Financeiro", lista);
+    atualizarLista("Financeiro");
+    atualizarResumoFinanceiro();
+  }
 }
 
 function marcarPago(index) {
-    financeiro[index].pago = true;
-    salvarFinanceiro();
+  const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+  lista.splice(index, 1);
+  salvarDados("Financeiro", lista);
+  atualizarLista("Financeiro");
+  atualizarResumoFinanceiro();
 }
 
-function deletarFinanceiro(index) {
-    financeiro.splice(index, 1);
-    salvarFinanceiro();
+function editarFinanceiro(index) {
+  const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+  const item = lista[index];
+  document.getElementById("dataFinanceiro").value = item.data;
+  document.getElementById("produtoFinanceiro").value = item.produto;
+  document.getElementById("valorFinanceiro").value = item.valor;
+  document.getElementById("categoriaFinanceiro").value = item.categoria;
+  lista.splice(index, 1);
+  salvarDados("Financeiro", lista);
+  atualizarLista("Financeiro");
+  atualizarResumoFinanceiro();
 }
 
-document.getElementById("financeiro-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const data = document.getElementById("data-financeiro").value;
-    const produto = document.getElementById("produto-financeiro").value;
-    const valor = document.getElementById("valor-financeiro").value;
-    const tipo = document.getElementById("tipo-financeiro").value;
-
-    financeiro.push({ data, produto, valor, tipo, pago: false });
-    salvarFinanceiro();
-    e.target.reset();
-});
-
-document.getElementById("filtro-financeiro").addEventListener("input", e => {
-    listarFinanceiro(e.target.value);
-});
-
-function limparFiltroFinanceiro() {
-    document.getElementById("filtro-financeiro").value = "";
-    listarFinanceiro();
+function marcarExecutada(index) {
+  const lista = JSON.parse(localStorage.getItem("Tarefas")) || [];
+  const item = lista.splice(index, 1)[0];
+  salvarDados("Tarefas", lista);
+  atualizarLista("Tarefas");
+  const feitas = JSON.parse(localStorage.getItem("TarefasExecutadas")) || [];
+  feitas.push(item);
+  salvarDados("TarefasExecutadas", feitas);
+  const ul = document.getElementById("listaTarefasExecutadas");
+  const li = document.createElement("li");
+  li.innerText = `${item.data} - ${item.descricao}`;
+  ul.appendChild(li);
 }
 
-listarFinanceiro();
-
-// EXPORTAÇÃO DE DADOS
-function exportarCSV() {
-    let csv = "TABELA;DATA;DESCRICAO/PRODUTO;VALOR/DOSAGEM;TIPO;STATUS\n";
-
-    aplicacoes.forEach(item => {
-        csv += `Aplicacao;${item.data};${item.produto};${item.dosagem};${item.tipo};\n`;
-    });
-
-    tarefas.forEach(item => {
-        csv += `Tarefa;${item.data};${item.descricao};;;${item.executada ? "Executada" : "A Fazer"}\n`;
-    });
-
-    financeiro.forEach(item => {
-        csv += `Financeiro;${item.data};${item.produto};${item.valor};${item.tipo};${item.pago ? "Pago" : "A Vencer"}\n`;
-    });
-
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "manejo_cafe_export.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+function removerItem(tipo, index) {
+  const lista = JSON.parse(localStorage.getItem(tipo)) || [];
+  lista.splice(index, 1);
+  salvarDados(tipo, lista);
+  atualizarLista(tipo);
+  if (tipo === "Financeiro") atualizarResumoFinanceiro();
 }
 
-const exportButton = document.createElement("button");
-exportButton.innerText = "Exportar Dados";
-exportButton.style.position = "fixed";
-exportButton.style.bottom = "10px";
-exportButton.style.right = "10px";
-exportButton.style.padding = "10px";
-exportButton.style.backgroundColor = "#2e7d32";
-exportButton.style.color = "white";
-exportButton.style.border = "none";
-exportButton.style.borderRadius = "5px";
-exportButton.style.cursor = "pointer";
-exportButton.onclick = exportarCSV;
+function exportarFinanceiro() {
+  const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+  const csv = "Data,Produto,Valor,Categoria\n" + lista.map(i => 
+    [i.data, i.produto, i.valor, i.categoria].join(",")).join("\n");
 
-document.body.appendChild(exportButton);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "financeiro.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
-function resumoMensalGastos() {
-    const resumoDiv = document.getElementById("resumo-mensal");
-    const resumo = {};
+function gerarRelatorioPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Relatório Financeiro", 10, 10);
+  const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+  lista.forEach((item, i) => {
+    doc.text(`${item.data} - ${item.produto} - R$${item.valor} - ${item.categoria}`, 10, 20 + i * 8);
+  });
+  doc.save("relatorio.pdf");
+}
 
-    financeiro.forEach(f => {
-        if (!f.pago) {
-            const mesAno = new Date(f.data).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-            resumo[mesAno] = (resumo[mesAno] || 0) + parseFloat(f.valor);
-        }
-    });
+function atualizarResumoFinanceiro() {
+  const lista = JSON.parse(localStorage.getItem("Financeiro")) || [];
+  const resumo = {};
+  lista.forEach(i => {
+    if (!resumo[i.categoria]) resumo[i.categoria] = 0;
+    resumo[i.categoria] += i.valor;
+  });
 
-    resumoDiv.innerHTML = "<h4>Resumo Mensal de Gastos</h4>";
-    for (const mes in resumo) {
-        resumoDiv.innerHTML += `<div>${mes}: R$ ${resumo[mes].toFixed(2)}</div>`;
+  const container = document.getElementById("resumoFinanceiro");
+  container.innerHTML = "<h3>Resumo Mensal por Categoria</h3><ul>" + Object.entries(resumo).map(
+    ([cat, val]) => `<li>${cat}: R$ ${val.toFixed(2)}</li>`
+  ).join("") + "</ul>";
+
+  const ctx = document.getElementById("graficoFinanceiro").getContext("2d");
+  if (window.graficoPizza) window.graficoPizza.destroy();
+  window.graficoPizza = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(resumo),
+      datasets: [{
+        data: Object.values(resumo),
+        backgroundColor: ["#4caf50", "#2196f3", "#ff9800", "#9c27b0", "#f44336"]
+      }]
     }
+  });
 }
 
-// adicionar div no HTML do financeiro
-document.getElementById("financeiro").innerHTML += `<div class="container" id="resumo-mensal"></div>`;
-resumoMensalGastos();
+function marcarTudoPago() {
+  salvarDados("Financeiro", []);
+  atualizarLista("Financeiro");
+  atualizarResumoFinanceiro();
+}
 
-// Alternar Tema Escuro
-const botaoTema = document.createElement("button");
-botaoTema.innerText = "Tema Escuro";
-botaoTema.style.position = "fixed";
-botaoTema.style.bottom = "60px";
-botaoTema.style.right = "10px";
-botaoTema.style.padding = "10px";
-botaoTema.style.backgroundColor = "#444";
-botaoTema.style.color = "white";
-botaoTema.style.border = "none";
-botaoTema.style.borderRadius = "5px";
-botaoTema.style.cursor = "pointer";
+function filtrarAplicacoes() {
+  const filtro = document.getElementById("filtroAplicacao").value.toLowerCase();
+  const itens = document.querySelectorAll("#listaAplicacoes li");
+  itens.forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(filtro) ? "" : "none";
+  });
+}
 
-botaoTema.onclick = () => {
-    document.body.classList.toggle("dark");
-    const tema = document.body.classList.contains("dark") ? "dark" : "light";
-    localStorage.setItem("tema", tema);
-    botaoTema.innerText = tema === "dark" ? "Tema Claro" : "Tema Escuro";
-};
-
-document.body.appendChild(botaoTema);
-
-window.addEventListener("load", () => {
-    const temaSalvo = localStorage.getItem("tema");
-    if (temaSalvo === "dark") {
-        document.body.classList.add("dark");
-        botaoTema.innerText = "Tema Claro";
-    }
-});
-
-function listarTarefas() {
-    const listaAfazer = document.getElementById("tarefas-afazer");
-    const listaExecutadas = document.getElementById("tarefas-executadas");
-    listaAfazer.innerHTML = "";
-    listaExecutadas.innerHTML = "";
-
-    const agruparPorData = (tarefas, executadas) => {
-        const agrupadas = {};
-        tarefas
-            .filter(t => t.executada === executadas)
-            .forEach(t => {
-                if (!agrupadas[t.data]) agrupadas[t.data] = [];
-                agrupadas[t.data].push(t);
-            });
-        return agrupadas;
-    };
-
-    const renderGrupo = (grupo, destino, executadas) => {
-        for (const data in grupo) {
-            const header = document.createElement("h4");
-            header.innerText = new Date(data).toLocaleDateString('pt-BR');
-            destino.appendChild(header);
-
-            grupo[data].forEach((t, indexGlobal) => {
-                const index = tarefas.indexOf(t);
-                const li = document.createElement("li");
-                li.innerHTML = `${t.descricao} 
-                    ${!executadas ? `<button onclick="executarTarefa(${index})">${svg_check}</button>` : ""}
-                    <button onclick="deletarTarefa(${index})">${svg_trash}</button>`;
-                destino.appendChild(li);
-            });
-        }
-    };
-
-    const grupoAfazer = agruparPorData(tarefas, false);
-    const grupoExecutadas = agruparPorData(tarefas, true);
-
-    renderGrupo(grupoAfazer, listaAfazer, false);
-    renderGrupo(grupoExecutadas, listaExecutadas, true);
+function limparFiltroAplicacao() {
+  document.getElementById("filtroAplicacao").value = "";
+  filtrarAplicacoes();
 }

@@ -1,54 +1,48 @@
 body {
-  margin: 0;
   font-family: Arial, sans-serif;
-  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+  background: #f6f6f6;
 }
-nav {
+.menu {
   display: flex;
-  background-color: #2e7d32;
+  justify-content: space-around;
+  background-color: #1d781d;
 }
-nav button {
+.menu button {
   flex: 1;
-  padding: 1em;
+  padding: 15px;
   border: none;
-  background: #2e7d32;
+  background-color: #1d781d;
   color: white;
   font-weight: bold;
-  cursor: pointer;
 }
-nav button:hover {
-  background-color: #256d28;
+.menu button:hover, .menu button.active {
+  background-color: #155f15;
 }
-.app-section {
+.secao {
   display: none;
-  padding: 1em;
+  padding: 20px;
 }
-.app-section.active {
+.secao.active {
   display: block;
 }
-.container {
-  background: white;
-  padding: 1em;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin: 1em 0;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-}
-input, button {
-  padding: 0.8em;
-  font-size: 1em;
+input, select, button {
+  padding: 10px;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
 }
 ul {
-  list-style: none;
+  list-style-type: none;
   padding: 0;
 }
 ul li {
-  background: #eee;
-  margin: 0.5em 0;
-  padding: 0.8em;
-  border-radius: 5px;
+  background: #e8e8e8;
+  margin: 5px 0;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }

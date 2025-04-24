@@ -1,61 +1,72 @@
 
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    margin: 0;
-    padding: 0;
+  font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+  background: #f4f4f4;
 }
+.menu {
+  display: flex;
+  background: #2e7d32;
+}
+.menu button {
+  flex: 1;
+  padding: 15px;
+  color: white;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.menu button:hover {
+  background: #256327;
+}
+.aba { display: none; padding: 20px; }
+.aba.ativa { display: block; }
+
 .container {
-    max-width: 500px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    margin-top: 30px;
-    border-radius: 8px;
+  background: white;
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-h1, h2 {
-    text-align: center;
-}
-.campo {
-    margin-bottom: 15px;
-}
-label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
+h1, h2 { text-align: center; }
+.campo { margin-bottom: 15px; }
+label { font-weight: bold; display: block; margin-bottom: 5px; }
 input, select {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
+  width: 100%; padding: 8px; box-sizing: border-box;
 }
 button {
-    width: 100%;
-    padding: 10px;
-    background-color: #2e7d32;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
+  width: 100%;
+  background: #2e7d32;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 ul {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
 }
 ul li {
-    background: #eaeaea;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: #eaeaea;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-ul li .acoes button {
-    margin-left: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+ul li.feita {
+  background: #c8f7c5;
+  text-decoration: line-through;
+}
+ul li button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
 }

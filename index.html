@@ -2,47 +2,71 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financeiro - Manejo Café</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Financeiro</h1>
-        <form id="financeiro-form">
-            <div class="campo">
-                <label>Data</label>
-                <input type="date" id="data">
-            </div>
-            <div class="campo">
-                <label>Produto</label>
-                <input type="text" id="produto" placeholder="Nome do produto">
-            </div>
-            <div class="campo">
-                <label>Valor</label>
-                <input type="number" id="valor" placeholder="Valor em R$">
-            </div>
-            <div class="campo">
-                <label>Categoria</label>
-                <select id="categoria">
-                    <option value="">Selecione</option>
-                    <option value="Adubo">Adubo</option>
-                    <option value="Fungicida">Fungicida</option>
-                    <option value="Inseticida">Inseticida</option>
-                    <option value="Herbicida">Herbicida</option>
-                    <option value="Outros">Outros</option>
-                </select>
-            </div>
-            <button type="submit">Adicionar</button>
-        </form>
+  <nav class="menu">
+    <button onclick="mostrarAba('aplicacoes')">Aplicações</button>
+    <button onclick="mostrarAba('tarefas')">Tarefas</button>
+    <button onclick="mostrarAba('financeiro')">Financeiro</button>
+  </nav>
 
-        <div class="financeiro-lista">
-            <h2>Registros</h2>
-            <ul id="lista-financeiro"></ul>
-            <p id="total">Total a pagar: R$ 0,00</p>
+  <section id="aplicacoes" class="aba">
+    <div class="container">
+      <h1>Aplicações</h1>
+      <form id="form-aplicacao">
+        <div class="campo"><label>Data</label><input type="date" id="dataAplicacao" required></div>
+        <div class="campo"><label>Produto</label><input type="text" id="produtoAplicacao" required></div>
+        <div class="campo"><label>Dosagem</label><input type="text" id="dosagemAplicacao" required></div>
+        <div class="campo">
+          <label>Tipo</label>
+          <select id="tipoAplicacao" required>
+            <option value="">Selecione</option>
+            <option>Herbicida</option><option>Inseticida</option><option>Fungicida</option><option>Adubo</option>
+          </select>
         </div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="listaAplicacoes"></ul>
     </div>
-    <script src="script.js"></script>
+  </section>
+
+  <section id="tarefas" class="aba">
+    <div class="container">
+      <h1>Tarefas</h1>
+      <form id="form-tarefa">
+        <div class="campo"><label>Data</label><input type="date" id="dataTarefa" required></div>
+        <div class="campo"><label>Descrição</label><input type="text" id="descricaoTarefa" required></div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <h2>Tarefas a fazer</h2><ul id="tarefasAFazer"></ul>
+      <h2>Tarefas concluídas</h2><ul id="tarefasConcluidas"></ul>
+    </div>
+  </section>
+
+  <section id="financeiro" class="aba">
+    <div class="container">
+      <h1>Financeiro</h1>
+      <form id="form-financeiro">
+        <div class="campo"><label>Data</label><input type="date" id="dataFinanceiro" required></div>
+        <div class="campo"><label>Produto</label><input type="text" id="produtoFinanceiro" required></div>
+        <div class="campo"><label>Valor</label><input type="number" id="valorFinanceiro" required></div>
+        <div class="campo">
+          <label>Categoria</label>
+          <select id="categoriaFinanceiro" required>
+            <option>Adubo</option><option>Fungicida</option><option>Inseticida</option><option>Herbicida</option><option>Outros</option>
+          </select>
+        </div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="listaFinanceiro"></ul>
+      <p id="totalPagar">Total a pagar: R$ 0,00</p>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,33 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manejo Café</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2e7d32">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manejo Café</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-    <nav>
-        <button onclick="showSection('aplicacao')">Aplicação</button>
-        <button onclick="showSection('tarefas')">Tarefas</button>
-        <button onclick="showSection('financeiro')">Financeiro</button>
-    </nav>
-    <main>
-        <section id="aplicacao" class="app-section"></section>
-        <section id="tarefas" class="app-section" style="display:none;"></section>
-        <section id="financeiro" class="app-section" style="display:none;"></section>
-    </main>
-    <script src="script.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registrado:', reg.scope))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
-            });
-        }
-    </script>
+
+<nav>
+  <button onclick="showSection('aplicacao')">Aplicação</button>
+  <button onclick="showSection('tarefas')">Tarefas</button>
+  <button onclick="showSection('financeiro')">Financeiro</button>
+</nav>
+
+<main>
+  <section id="aplicacao" class="app-section active">
+    <div class="container">
+      <h2>Aplicações realizadas</h2>
+      <form id="aplicacao-form">
+        <input type="date" id="data-aplicacao" required>
+        <input type="text" id="produto" placeholder="Produto" required>
+        <input type="text" id="dosagem" placeholder="Dosagem" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="lista-aplicacoes"></ul>
+    </div>
+  </section>
+
+  <section id="tarefas" class="app-section">
+    <div class="container">
+      <h2>Tarefas</h2>
+      <form id="tarefa-form">
+        <input type="date" id="data-tarefa" required>
+        <input type="text" id="descricao-tarefa" placeholder="Descrição da tarefa" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="tarefas-afazer"></ul>
+      <ul id="tarefas-executadas"></ul>
+    </div>
+  </section>
+
+  <section id="financeiro" class="app-section">
+    <div class="container">
+      <h2>Financeiro</h2>
+      <form id="financeiro-form">
+        <input type="date" id="data-financeiro" required>
+        <input type="text" id="produto-financeiro" placeholder="Produto" required>
+        <input type="number" id="valor-financeiro" placeholder="Valor (R$)" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="lista-vencer"></ul>
+      <ul id="lista-pago"></ul>
+      <div><strong>Total a pagar:</strong> R$ <span id="total-pagar">0.00</span></div>
+
+      <div id="resumo-mensal" style="margin-top: 20px; background: #f8f8f8; padding: 10px; border-radius: 6px; font-size: 14px;"></div>
+      <canvas id="grafico-categorias" width="300" height="300" style="margin-top: 20px;"></canvas>
+    </div>
+  </section>
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>

@@ -147,7 +147,7 @@ document.getElementById("financeiro").innerHTML = `
             <input type="date" id="data-financeiro" required>
             <input type="text" id="produto-financeiro" placeholder="Produto" required>
             <input type="number" id="valor-financeiro" placeholder="Valor (R$)" required>
-            <select id="tipo-financeiro">
+            <select id="tipo-financeiro" required>
                 <option value="">Tipo de Produto</option>
                 <option>Adubo</option>
                 <option>Herbicida</option>
@@ -217,6 +217,10 @@ document.getElementById("financeiro-form").addEventListener("submit", e => {
     const produto = document.getElementById("produto-financeiro").value;
     const valor = document.getElementById("valor-financeiro").value;
     const tipo = document.getElementById("tipo-financeiro").value;
+    if (!tipo) {
+        alert("Por favor, selecione o tipo de produto.");
+        return;
+    }
 
     financeiro.push({ data, produto, valor, tipo, pago: false });
     salvarFinanceiro();

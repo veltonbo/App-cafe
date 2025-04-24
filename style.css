@@ -1,38 +1,125 @@
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --nav: #2e7d32;
+    --card: #ffffff;
+    --input: #f9f9f9;
+    --shadow: rgba(0,0,0,0.1);
 }
-.menu {
+
+body.dark {
+    --bg: #121212;
+    --text: #f5f5f5;
+    --nav: #1b5e20;
+    --card: #1e1e1e;
+    --input: #2c2c2c;
+    --shadow: rgba(255,255,255,0.05);
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+nav {
+    position: sticky;
+    top: 0;
     display: flex;
     justify-content: space-around;
-    background-color: #2d802d;
+    background-color: var(--nav);
+    padding: 0.5em;
+    z-index: 10;
 }
-.menu button {
+
+nav button {
     flex: 1;
-    padding: 15px;
-    font-size: 16px;
+    margin: 0 0.2em;
+    padding: 0.8em;
+    background-color: var(--nav);
     color: white;
-    background: none;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+nav button:hover {
+    background-color: #256d28;
+}
+
+.container {
+    background-color: var(--card);
+    margin: 1em;
+    padding: 1em;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px var(--shadow);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-bottom: 1em;
+}
+
+form input, form select, form button {
+    padding: 0.6em;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background: var(--input);
+    color: var(--text);
+    font-size: 1em;
+}
+
+form button {
+    background-color: var(--nav);
+    color: white;
+    font-weight: bold;
     border: none;
 }
-.pagina {
-    padding: 20px;
+
+form button:hover {
+    background-color: #256d28;
 }
-input, select, button {
-    display: block;
-    margin: 10px 0;
-    padding: 10px;
-    width: 100%;
-    max-width: 400px;
-}
+
 ul {
     list-style: none;
     padding: 0;
 }
+
 ul li {
-    background-color: #f0f0f0;
-    margin: 5px 0;
-    padding: 10px;
+    background-color: var(--input);
+    margin-bottom: 0.5em;
+    padding: 0.6em;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text);
+}
+
+ul li button {
+    margin-left: 0.5em;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+ul li button:hover {
+    color: red;
+}
+
+@media (max-width: 600px) {
+    nav button {
+        font-size: 0.9em;
+        padding: 0.6em;
+    }
+    .container {
+        margin: 0.5em;
+        padding: 0.8em;
+    }
 }

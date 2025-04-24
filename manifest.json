@@ -1,0 +1,17 @@
+
+{
+  "name": "Manejo Café",
+  "short_name": "Café",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2e7d32",
+  "description": "Aplicativo de manejo para cultivo de café clonal.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2909/2909593.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

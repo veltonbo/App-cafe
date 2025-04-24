@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,55 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manejo Café</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
 </head>
 <body>
-    <nav class="menu">
-        <button onclick="mostrarPagina('aplicacoes')">Aplicações</button>
-        <button onclick="mostrarPagina('tarefas')">Tarefas</button>
-        <button onclick="mostrarPagina('financeiro')">Financeiro</button>
+    <nav>
+        <button onclick="showSection('aplicacao')">Aplicação</button>
+        <button onclick="showSection('tarefas')">Tarefas</button>
+        <button onclick="showSection('financeiro')">Financeiro</button>
     </nav>
-
-    <section id="aplicacoes" class="pagina">
-        <h2>Aplicações</h2>
-        <input type="date" id="dataAplicacao">
-        <input type="text" id="produtoAplicacao" placeholder="Produto">
-        <input type="text" id="dosagemAplicacao" placeholder="Dosagem">
-        <select id="tipoAplicacao">
-            <option value="">Selecione</option>
-            <option value="Adubo">Adubo</option>
-            <option value="Fungicida">Fungicida</option>
-            <option value="Inseticida">Inseticida</option>
-            <option value="Herbicida">Herbicida</option>
-        </select>
-        <button onclick="adicionarAplicacao()">Adicionar</button>
-        <ul id="listaAplicacoes"></ul>
-    </section>
-
-    <section id="tarefas" class="pagina" style="display:none;">
-        <h2>Tarefas</h2>
-        <input type="date" id="dataTarefa">
-        <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa">
-        <button onclick="adicionarTarefa()">Adicionar</button>
-        <ul id="listaTarefas"></ul>
-    </section>
-
-    <section id="financeiro" class="pagina" style="display:none;">
-        <h2>Financeiro</h2>
-        <input type="date" id="dataFinanceiro">
-        <input type="text" id="produtoFinanceiro" placeholder="Produto">
-        <input type="number" id="valorFinanceiro" placeholder="Valor (R$)">
-        <select id="categoriaFinanceiro">
-            <option value="">Categoria</option>
-            <option value="Adubo">Adubo</option>
-            <option value="Fungicida">Fungicida</option>
-            <option value="Inseticida">Inseticida</option>
-            <option value="Herbicida">Herbicida</option>
-            <option value="Outros">Outros</option>
-        </select>
-        <button onclick="adicionarFinanceiro()">Adicionar</button>
-        <ul id="listaFinanceiro"></ul>
-    </section>
-
+    <main>
+        <section id="aplicacao" class="app-section"></section>
+        <section id="tarefas" class="app-section" style="display:none;"></section>
+        <section id="financeiro" class="app-section" style="display:none;"></section>
+    </main>
     <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
 </body>
 </html>

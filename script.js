@@ -1,4 +1,6 @@
 
+window.addEventListener('DOMContentLoaded', () => {
+
 // Simples placeholder para recriação após reset
 console.log("Reinicializado após reset. Código real será gerado novamente conforme solicitado.");
 
@@ -37,3 +39,5 @@ function desenharGrafico(dados) {
         options: { responsive: true, plugins: { legend: { display: false } } }
     });
 }
+
+});

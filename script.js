@@ -300,7 +300,6 @@ function resumoMensalGastos() {
     }
 }
 
-// adicionar div no HTML do financeiro
 document.getElementById("financeiro").innerHTML += `<div class="container" id="resumo-mensal"></div>`;
 resumoMensalGastos();
 

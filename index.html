@@ -5,32 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manejo Café</title>
 
-  <!-- Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- Chart.js e jsPDF -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-  <!-- Firebase Config -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-      authDomain: "manej-cafe.firebaseapp.com",
-      databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-      projectId: "manej-cafe",
-      storageBucket: "manej-cafe.appspot.com",
-      messagingSenderId: "808931200634",
-      appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-  </script>
-
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -506,4 +480,27 @@
 </script>
 
 </body>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com",
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Exemplo de teste ao carregar
+  window.db = db; // para poder acessar no console
+  console.log("Firebase conectado com sucesso!");
+
+  // Se desejar, pode chamar carregarAplicacoes() aqui se já tiver a função no escopo
+</script>
 </html>

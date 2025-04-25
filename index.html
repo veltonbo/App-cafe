@@ -53,6 +53,9 @@
       color: #fff;
       font-size: 16px;
     }
+    input:invalid, select:invalid {
+      border-color: #f44336;
+    }
     .item {
       background-color: #1e1e1e;
       margin: 10px 0;
@@ -130,8 +133,8 @@
     }
   </style>
 </head>
-
-<body onload="restaurarEstado(); carregarTudoDoSheets();">
+ 
+  <body onload="restaurarEstado(); carregarTudoDoSheets();">
   <button id="botaoTema" onclick="alternarTema()">☀️</button>
 
   <div class="menu">
@@ -145,8 +148,8 @@
   <div id="aplicacoes" class="aba">
     <h3>Aplicações</h3>
     <input id="dataApp" type="date">
-    <input id="produtoApp" placeholder="Produto">
-    <input id="dosagemApp" placeholder="Dosagem">
+    <input id="produtoApp" placeholder="Produto" type="text">
+    <input id="dosagemApp" placeholder="Dosagem" type="text">
     <select id="tipoApp">
       <option value="Adubo">Adubo</option>
       <option value="Fungicida">Fungicida</option>
@@ -160,7 +163,7 @@
   <div id="tarefas" class="aba">
     <h3>Tarefas</h3>
     <input id="dataTarefa" type="date">
-    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+    <input id="descricaoTarefa" placeholder="Descrição da tarefa" type="text">
     <button onclick="adicionarTarefa()">Adicionar Tarefa</button>
     <h4>A Fazer</h4>
     <div id="listaTarefas"></div>
@@ -171,7 +174,7 @@
   <div id="financeiro" class="aba">
     <h3>Financeiro</h3>
     <input id="dataFin" type="date">
-    <input id="produtoFin" placeholder="Produto">
+    <input id="produtoFin" placeholder="Produto" type="text">
     <input id="valorFin" type="number" placeholder="Valor">
     <select id="tipoFin">
       <option value="Adubo">Adubo</option>
@@ -204,8 +207,7 @@
     <button onclick="exportarRelatorioPDF()">Exportar PDF</button>
   </div>
 
-<script>
-
+    <script>
 const aplicacoes = [];
 const tarefas = [];
 const tarefasFeitas = [];
@@ -230,6 +232,7 @@ function mostrarAba(id) {
   localStorage.setItem('aba', id);
 }
 
+// APLICACOES
 function adicionarAplicacao() {
   const app = {
     data: document.getElementById('dataApp').value,
@@ -237,6 +240,7 @@ function adicionarAplicacao() {
     dosagem: document.getElementById('dosagemApp').value,
     tipo: document.getElementById('tipoApp').value
   };
+  if (!app.data || !app.produto || !app.dosagem) return alert("Preencha todos os campos!");
   aplicacoes.push(app);
   atualizarAplicacoes();
 }
@@ -254,18 +258,18 @@ function atualizarAplicacoes() {
     item.appendChild(del);
     lista.appendChild(item);
   });
- 
-  // salvamento automático
   google.script.run.salvarDados('Aplicacoes', aplicacoes);
 }
 
+// TAREFAS
 function adicionarTarefa() {
   const tarefa = {
-  data: document.getElementById('dataTarefa').value,
-  descricao: document.getElementById('descricaoTarefa').value,
-  executada: false
-};
-tarefas.push(tarefa);
+    data: document.getElementById('dataTarefa').value,
+    descricao: document.getElementById('descricaoTarefa').value,
+    executada: false
+  };
+  if (!tarefa.data || !tarefa.descricao) return alert("Preencha todos os campos!");
+  tarefas.push(tarefa);
   atualizarTarefas();
 }
 
@@ -282,7 +286,7 @@ function atualizarTarefas() {
     btn.innerText = '✔️';
     btn.onclick = () => {
       tarefas[i].executada = true;
-tarefasFeitas.push(tarefas.splice(i, 1)[0]);
+      tarefasFeitas.push(tarefas.splice(i, 1)[0]);
       atualizarTarefas();
     };
     item.appendChild(btn);
@@ -298,12 +302,10 @@ tarefasFeitas.push(tarefas.splice(i, 1)[0]);
     item.appendChild(btn);
     feitas.appendChild(item);
   });
- 
-  // SALVAMENTO AUTOMÁTICO
-  const todasTarefas = tarefas.concat(tarefasFeitas);
-  google.script.run.salvarDados('Tarefas', todasTarefas);
+  google.script.run.salvarDados('Tarefas', tarefas.concat(tarefasFeitas));
 }
 
+// FINANCEIRO
 function adicionarFinanceiro() {
   const f = {
     data: document.getElementById('dataFin').value,
@@ -312,6 +314,7 @@ function adicionarFinanceiro() {
     tipo: document.getElementById('tipoFin').value,
     pago: false
   };
+  if (!f.data || !f.produto || !f.valor || isNaN(f.valor)) return alert("Preencha todos os campos!");
   financeiro.push(f);
   atualizarFinanceiro();
 }
@@ -334,16 +337,11 @@ function atualizarFinanceiro() {
       atualizarFinanceiro();
     };
     item.appendChild(btn);
-    if (f.pago) pagos.appendChild(item);
-    else {
-      vencer.appendChild(item);
-      total += f.valor;
-    }
+    (f.pago ? pagos : vencer).appendChild(item);
+    if (!f.pago) total += f.valor;
   });
   document.getElementById('totalPagar').innerText = total.toFixed(2);
   gerarGrafico();
-
-  // Salvamento automático
   google.script.run.salvarDados('Financeiro', financeiro);
 }
 
@@ -363,6 +361,7 @@ function gerarGrafico() {
   });
 }
 
+// BACKUP
 function fazerBackup() {
   const dados = { aplicacoes, tarefas, tarefasFeitas, financeiro };
   const blob = new Blob([JSON.stringify(dados)], { type: 'application/json' });
@@ -374,6 +373,7 @@ function fazerBackup() {
   URL.revokeObjectURL(url);
 }
 
+// RELATÓRIO
 function gerarRelatorio() {
   let pago = 0, pendente = 0;
   financeiro.forEach(f => f.pago ? pago += f.valor : pendente += f.valor);
@@ -400,6 +400,7 @@ function exportarRelatorioPDF() {
   doc.save("relatorio_manejo.pdf");
 }
 
+// CARREGAMENTO INICIAL DO SHEETS
 function carregarTudoDoSheets() {
   google.script.run.withSuccessHandler(dados => {
     aplicacoes.length = 0;
@@ -410,13 +411,7 @@ function carregarTudoDoSheets() {
   google.script.run.withSuccessHandler(dados => {
     tarefas.length = 0;
     tarefasFeitas.length = 0;
-    dados.forEach(t => {
-      if (t.executada === true || t.executada === "TRUE") {
-        tarefasFeitas.push(t);
-      } else {
-        tarefas.push(t);
-      }
-    });
+    dados.forEach(t => (t.executada === true || t.executada === "TRUE") ? tarefasFeitas.push(t) : tarefas.push(t));
     atualizarTarefas();
   }).carregarDados('Tarefas');
 
@@ -426,8 +421,6 @@ function carregarTudoDoSheets() {
     atualizarFinanceiro();
   }).carregarDados('Financeiro');
 }
-  
 </script>
-
 </body>
 </html>

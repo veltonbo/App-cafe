@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café</title>
+  <!-- Firebase SDK (Compat mode v9.23.0) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Segoe UI, sans-serif;
+      margin: 0;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    body.claro {
+      background-color: #f0f0f0;
+      color: #202020;
+    }
+    .menu {
+      display: flex;
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    body.claro .menu {
+      background-color: #e4e4e4;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .menu button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .menu button:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+    body.claro .menu button:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+    .menu button.active {
+      background-color: #388e3c; /* aba ativa destacada (verde escuro) */
+      color: #fff;
+    }
+    body.claro .menu button.active {
+      background-color: #4caf50; /* aba ativa no tema claro */
+      color: #fff;
+    }
+    .content {
+      padding: 16px;
+    }
+    .hidden {
+      display: none;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    /* Formulários */
+    form {
+      margin-bottom: 20px;
+    }
+    form .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    form .form-row > * {
+      flex: 1 1 150px;
+      min-width: 120px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.9em;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #e0e0e0;
+      box-sizing: border-box;
+    }
+    body.claro input, body.claro select {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      color: #000;
+    }
+    button[type="submit"], button.save-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #388e3c;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button[type="submit"]:hover, button.save-btn:hover {
+      background-color: #2e7d32;
+    }
+    /* Cartões/Itens da lista */
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 5px solid #388e3c;
+    }
+    body.claro .card {
+      background-color: #fdfdfd;
+      border-left: 5px solid #4caf50;
+      color: #202020;
+    }
+    .card .text {
+      overflow-wrap: anywhere;
+    }
+    .card .actions {
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .card .actions button {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .card .actions button:hover {
+      color: #ff5555;
+    }
+    body.claro .card .actions button:hover {
+      color: #d32f2f;
+    }
+    /* Cores por prioridade (tarefas) */
+    .priority-alta { border-left-color: #d32f2f; }
+    .priority-media { border-left-color: #ffa000; }
+    .priority-baixa { border-left-color: #388e3c; }
+    /* Tarefas concluídas */
+    .done {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    /* Seções de Financeiro */
+    .finance-section {
+      margin-top: 16px;
+    }
+    .finance-section h3 {
+      margin: 8px 0;
+    }
+    /* Botão flutuante de tema */
+    #themeToggle {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background-color: #607d8b;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 100;
+    }
+    #themeToggle:hover {
+      background-color: #455a64;
+    }
+    body.claro #themeToggle {
+      background-color: #cccccc;
+      color: #333;
+    }
+    body.claro #themeToggle:hover {
+      background-color: #aaaaaa;
+    }
+    /* Responsividade */
+    @media (max-width: 600px) {
+      .menu button {
+        font-size: 0.9em;
+        padding: 10px;
+      }
+      form .form-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Menu de Navegação -->
+  <div class="menu">
+    <button id="tabAplicacoes" class="active" onclick="mostrarAba('aplicacoes')">Aplicações</button>
+    <button id="tabTarefas" onclick="mostrarAba('tarefas')">Tarefas</button>
+    <button id="tabFinanceiro" onclick="mostrarAba('financeiro')">Financeiro</button>
+  </div>
+
+  <!-- Seção Aplicações -->
+  <div id="sec-aplicacoes" class="content">
+    <h2>Aplicações</h2>
+    <form id="formAplicacoes" onsubmit="salvarAplicacao(); return false;">
+      <div class="form-row">
+        <div>
+          <label for="ap-data">Data</label>
+          <input type="date" id="ap-data" required />
+        </div>
+        <div>
+          <label for="ap-produto">Produto</label>
+          <input type="text" id="ap-produto" placeholder="Produto" required />
+        </div>
+        <div>
+          <label for="ap-dosagem">Dosagem</label>
+          <input type="text" id="ap-dosagem" placeholder="Dosagem" required />
+        </div>
+        <div>
+          <label for="ap-tipo">Tipo</label>
+          <select id="ap-tipo">
+            <option>Adubo</option>
+            <option>Fungicida</option>
+            <option>Inseticida</option>
+            <option>Herbicida</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="save-btn">Salvar</button>
+    </form>
+    <input type="text" id="searchAplicacoes" placeholder="Buscar aplicações..." oninput="filtrarAplicacoes()" />
+    <div id="listaAplicacoes"></div>
+  </div>
+
+  <!-- Seção Tarefas -->
+  <div id="sec-tarefas" class="content hidden">
+    <h2>Tarefas</h2>
+    <form id="formTarefas" onsubmit="salvarTarefa(); return false;">
+      <div class="form-row">
+        <div>
+          <label for="t-data">Data</label>
+          <input type="date" id="t-data" required />
+        </div>
+        <div>
+          <label for="t-desc">Descrição</label>
+          <input type="text" id="t-desc" placeholder="Descrição da tarefa" required />
+        </div>
+        <div>
+          <label for="t-prioridade">Prioridade</label>
+          <select id="t-prioridade">
+            <option>Alta</option>
+            <option>Média</option>
+            <option>Baixa</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="save-btn">Salvar</button>
+    </form>
+    <input type="text" id="searchTarefas" placeholder="Buscar tarefas..." oninput="filtrarTarefas()" />
+    <div id="listaTarefas"></div>
+  </div>
+
+  <!-- Seção Financeiro -->
+  <div id="sec-financeiro" class="content hidden">
+    <h2>Financeiro</h2>
+    <form id="formFinanceiro" onsubmit="salvarFinanceiro(); return false;">
+      <div class="form-row">
+        <div>
+          <label for="f-data">Data</label>
+          <input type="date" id="f-data" required />
+        </div>
+        <div>
+          <label for="f-produto">Produto</label>
+          <input type="text" id="f-produto" placeholder="Produto" required />
+        </div>
+        <div>
+          <label for="f-valor">Valor (R$)</label>
+          <input type="number" step="0.01" id="f-valor" placeholder="0.00" required />
+        </div>
+        <div>
+          <label for="f-tipo">Tipo</label>
+          <select id="f-tipo">
+            <option>Adubo</option>
+            <option>Fungicida</option>
+            <option>Inseticida</option>
+            <option>Herbicida</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option>A vencer</option>
+            <option>Pago</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="save-btn">Salvar</button>
+    </form>
+    <input type="text" id="searchFinanceiro" placeholder="Buscar lançamentos..." oninput="filtrarFinanceiro()" />
+    <!-- Listas de itens financeiros -->
+    <div class="finance-section">
+      <h3>A Vencer</h3>
+      <div id="listaFinanceiroPendente"></div>
+    </div>
+    <div class="finance-section">
+      <h3>Pagos</h3>
+      <div id="listaFinanceiroPago"></div>
+    </div>
+    <!-- Gráfico de gastos (Chart.js) -->
+    <canvas id="graficoGastos" width="400" height="300"></canvas>
+  </div>
+
+  <!-- Botão de alternância de tema -->
+  <button id="themeToggle" onclick="alternarTema()">🌙</button>
+
+  <script>
+    // Configuração Firebase (substitua pelos dados do seu projeto Firebase)
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "SEU_AUTH_DOMAIN",
+      databaseURL: "SUA_DATABASE_URL",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_STORAGE_BUCKET",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Arrays locais para armazenar dados e IDs de edição ativos
+    let aplicacoes = [];
+    let tarefas = [];
+    let financeiro = [];
+    let editTarefaId = null;
+    let editAplicacaoId = null;
+    let editFinanceiroId = null;
+    let chartInstance = null;
+
+    // Alternar tema claro/escuro
+    function alternarTema() {
+      document.body.classList.toggle('claro');
+      // Atualiza ícone do botão de tema
+      document.getElementById('themeToggle').textContent =
+        document.body.classList.contains('claro') ? '🌞' : '🌙';
+      // Salva preferência no localStorage
+      localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+    }
+
+    // Restaurar tema salvo ao carregar
+    function restaurarTema() {
+      const temaSalvo = localStorage.getItem('tema');
+      if (temaSalvo === 'claro') {
+        document.body.classList.add('claro');
+        document.getElementById('themeToggle').textContent = '🌞';
+      }
+    }
+
+    // Mostrar aba/section selecionada e ocultar as demais
+    function mostrarAba(aba) {
+      // Remove destaque de todos os botões
+      document.getElementById('tabAplicacoes').classList.remove('active');
+      document.getElementById('tabTarefas').classList.remove('active');
+      document.getElementById('tabFinanceiro').classList.remove('active');
+      // Esconde todas as seções
+      document.getElementById('sec-aplicacoes').classList.add('hidden');
+      document.getElementById('sec-tarefas').classList.add('hidden');
+      document.getElementById('sec-financeiro').classList.add('hidden');
+      // Exibe a seção selecionada
+      if (aba === 'aplicacoes') {
+        document.getElementById('tabAplicacoes').classList.add('active');
+        document.getElementById('sec-aplicacoes').classList.remove('hidden');
+      } else if (aba === 'tarefas') {
+        document.getElementById('tabTarefas').classList.add('active');
+        document.getElementById('sec-tarefas').classList.remove('hidden');
+      } else if (aba === 'financeiro') {
+        document.getElementById('tabFinanceiro').classList.add('active');
+        document.getElementById('sec-financeiro').classList.remove('hidden');
+      }
+    }
+
+    // Funções de renderização das listas na interface
+    function renderAplicacoes(listaFiltrada = null) {
+      const container = document.getElementById('listaAplicacoes');
+      container.innerHTML = '';
+      const dataToRender = listaFiltrada || aplicacoes;
+      dataToRender.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = \`
+          <div class="text">\${item.data} - \${item.produto} (\${item.dosagem}) - \${item.tipo}</div>
+          <div class="actions">
+            <button onclick="excluirAplicacao('\${item.id}')">✖</button>
+          </div>\`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderTarefas(listaFiltrada = null) {
+      const container = document.getElementById('listaTarefas');
+      container.innerHTML = '';
+      let dataToRender = listaFiltrada || tarefas;
+      // Ordena por data e agrupa
+      dataToRender.sort((a, b) => a.data.localeCompare(b.data));
+      let currentDate = null;
+      dataToRender.forEach(item => {
+        if (item.data !== currentDate) {
+          currentDate = item.data;
+          const dateHeader = document.createElement('div');
+          dateHeader.innerHTML = '<strong>' + currentDate + '</strong>';
+          dateHeader.style.margin = '8px 0 4px';
+          container.appendChild(dateHeader);
+        }
+        const div = document.createElement('div');
+        div.className = 'card';
+        if (item.feita) div.classList.add('done');
+        // Classe de prioridade para borda colorida
+        const prioridadeClass = item.prioridade === 'Alta' ? 'priority-alta' :
+                                item.prioridade === 'Média' ? 'priority-media' : 'priority-baixa';
+        div.classList.add(prioridadeClass);
+        div.innerHTML = \`
+          <div class="text">
+            <input type="checkbox" \${item.feita ? 'checked' : ''} onclick="toggleTarefaFeita('\${item.id}', this)" />
+            \${item.descricao} (\${item.prioridade})
+          </div>
+          <div class="actions">
+            <button onclick="editarTarefa('\${item.id}')">✎</button>
+            <button onclick="excluirTarefa('\${item.id}')">✖</button>
+          </div>\`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderFinanceiro(listaFiltrada = null) {
+      const containerPago = document.getElementById('listaFinanceiroPago');
+      const containerPend = document.getElementById('listaFinanceiroPendente');
+      containerPago.innerHTML = '';
+      containerPend.innerHTML = '';
+      const dataToRender = listaFiltrada || financeiro;
+      dataToRender.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        // (Opcional: estilizar diferente se pago ou pendente, se desejado)
+        div.innerHTML = \`
+          <div class="text">\${item.data} - \${item.produto}: R$ \${parseFloat(item.valor).toFixed(2)} - \${item.tipo}</div>
+          <div class="actions">
+            <button onclick="excluirFinanceiro('\${item.id}')">✖</button>
+          </div>\`;
+        if (item.status === 'Pago') {
+          containerPago.appendChild(div);
+        } else {
+          containerPend.appendChild(div);
+        }
+      });
+      atualizarGraficoGastos();
+    }
+
+    // Atualiza gráfico de gastos pagos por tipo
+    function atualizarGraficoGastos() {
+      const totals = {};
+      financeiro.forEach(item => {
+        if (item.status === 'Pago') {
+          totals[item.tipo] = (totals[item.tipo] || 0) + parseFloat(item.valor);
+        }
+      });
+      const tipos = Object.keys(totals);
+      const valores = Object.values(totals);
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      const ctx = document.getElementById('graficoGastos').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: tipos,
+          datasets: [{
+            data: valores,
+            backgroundColor: ['#4caf50','#ff9800','#f44336','#2196f3','#9c27b0','#607d8b']
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Gastos Pagos por Tipo' }
+          }
+        }
+      });
+    }
+
+    // Funções de filtro de busca
+    function filtrarAplicacoes() {
+      const query = document.getElementById('searchAplicacoes').value.toLowerCase();
+      if (!query) {
+        renderAplicacoes();
+        return;
+      }
+      const filtrada = aplicacoes.filter(item =>
+        item.data.toLowerCase().includes(query) ||
+        item.produto.toLowerCase().includes(query) ||
+        item.dosagem.toLowerCase().includes(query) ||
+        item.tipo.toLowerCase().includes(query)
+      );
+      renderAplicacoes(filtrada);
+    }
+    function filtrarTarefas() {
+      const query = document.getElementById('searchTarefas').value.toLowerCase();
+      if (!query) {
+        renderTarefas();
+        return;
+      }
+      const filtrada = tarefas.filter(item =>
+        item.data.toLowerCase().includes(query) ||
+        item.descricao.toLowerCase().includes(query) ||
+        item.prioridade.toLowerCase().includes(query)
+      );
+      renderTarefas(filtrada);
+    }
+    function filtrarFinanceiro() {
+      const query = document.getElementById('searchFinanceiro').value.toLowerCase();
+      if (!query) {
+        renderFinanceiro();
+        return;
+      }
+      const filtrada = financeiro.filter(item =>
+        item.data.toLowerCase().includes(query) ||
+        item.produto.toLowerCase().includes(query) ||
+        item.tipo.toLowerCase().includes(query) ||
+        item.valor.toString().includes(query) ||
+        item.status.toLowerCase().includes(query)
+      );
+      renderFinanceiro(filtrada);
+    }
+
+    // Funções de salvar (create/update) para cada seção
+    function salvarAplicacao() {
+      const data = document.getElementById('ap-data').value;
+      const produto = document.getElementById('ap-produto').value;
+      const dosagem = document.getElementById('ap-dosagem').value;
+      const tipo = document.getElementById('ap-tipo').value;
+      if (editAplicacaoId) {
+        // (Não há edição de aplicação especificada, código reservado caso fosse necessário)
+      } else {
+        // Novo registro de aplicação
+        const newRef = db.ref('aplicacoes').push();
+        const newId = newRef.key;
+        const newObj = { data, produto, dosagem, tipo };
+        newRef.set(newObj);
+        newObj.id = newId;
+        aplicacoes.push(newObj);
+        renderAplicacoes();
+      }
+      document.getElementById('formAplicacoes').reset();
+      editAplicacaoId = null;
+    }
+
+    function salvarTarefa() {
+      const data = document.getElementById('t-data').value;
+      const descricao = document.getElementById('t-desc').value;
+      const prioridade = document.getElementById('t-prioridade').value;
+      if (editTarefaId) {
+        // Atualiza tarefa existente
+        db.ref('tarefas/' + editTarefaId).update({ data, descricao, prioridade });
+        const task = tarefas.find(t => t.id === editTarefaId);
+        if (task) {
+          task.data = data;
+          task.descricao = descricao;
+          task.prioridade = prioridade;
+        }
+        editTarefaId = null;
+      } else {
+        // Nova tarefa
+        const newRef = db.ref('tarefas').push();
+        const newId = newRef.key;
+        const newObj = { data, descricao, prioridade, feita: false };
+        newRef.set(newObj);
+        newObj.id = newId;
+        tarefas.push(newObj);
+      }
+      renderTarefas();
+      document.getElementById('formTarefas').reset();
+    }
+
+    function salvarFinanceiro() {
+      const data = document.getElementById('f-data').value;
+      const produto = document.getElementById('f-produto').value;
+      const valor = parseFloat(document.getElementById('f-valor').value || 0).toFixed(2);
+      const tipo = document.getElementById('f-tipo').value;
+      const status = document.getElementById('f-status').value;
+      if (editFinanceiroId) {
+        // Atualiza lançamento existente (caso fosse necessário implementar edição)
+        db.ref('financeiro/' + editFinanceiroId).update({ data, produto, valor, tipo, status });
+        const fin = financeiro.find(f => f.id === editFinanceiroId);
+        if (fin) {
+          fin.data = data;
+          fin.produto = produto;
+          fin.valor = valor;
+          fin.tipo = tipo;
+          fin.status = status;
+        }
+        editFinanceiroId = null;
+      } else {
+        // Novo lançamento financeiro
+        const newRef = db.ref('financeiro').push();
+        const newId = newRef.key;
+        const newObj = { data, produto, valor, tipo, status };
+        newRef.set(newObj);
+        newObj.id = newId;
+        financeiro.push(newObj);
+      }
+      renderFinanceiro();
+      document.getElementById('formFinanceiro').reset();
+    }
+
+    // Funções de editar/excluir ações
+    function editarTarefa(id) {
+      const task = tarefas.find(t => t.id === id);
+      if (!task) return;
+      document.getElementById('t-data').value = task.data;
+      document.getElementById('t-desc').value = task.descricao;
+      document.getElementById('t-prioridade').value = task.prioridade;
+      editTarefaId = id;
+      document.getElementById('t-data').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function excluirTarefa(id) {
+      if (!confirm('Excluir esta tarefa?')) return;
+      db.ref('tarefas/' + id).remove();
+      tarefas = tarefas.filter(t => t.id !== id);
+      renderTarefas();
+    }
+
+    function toggleTarefaFeita(id, checkbox) {
+      const done = checkbox.checked;
+      const task = tarefas.find(t => t.id === id);
+      if (task) task.feita = done;
+      db.ref('tarefas/' + id).update({ feita: done });
+      renderTarefas();
+    }
+
+    function excluirAplicacao(id) {
+      if (!confirm('Excluir esta aplicação?')) return;
+      db.ref('aplicacoes/' + id).remove();
+      aplicacoes = aplicacoes.filter(ap => ap.id !== id);
+      renderAplicacoes();
+    }
+
+    function excluirFinanceiro(id) {
+      if (!confirm('Excluir este lançamento?')) return;
+      db.ref('financeiro/' + id).remove();
+      financeiro = financeiro.filter(f => f.id !== id);
+      renderFinanceiro();
+    }
+
+    // Carrega dados do Firebase ao iniciar
+    function carregarDadosFirebase() {
+      db.ref('aplicacoes').once('value').then(snapshot => {
+        const dataObj = snapshot.val() || {};
+        aplicacoes = Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] }));
+        renderAplicacoes();
+      });
+      db.ref('tarefas').once('value').then(snapshot => {
+        const dataObj = snapshot.val() || {};
+        tarefas = Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] }));
+        renderTarefas();
+      });
+      db.ref('financeiro').once('value').then(snapshot => {
+        const dataObj = snapshot.val() || {};
+        financeiro = Object.keys(dataObj).map(key => ({ id: key, ...dataObj[key] }));
+        renderFinanceiro();
+      });
+    }
+
+    // Inicialização ao carregar a página
+    restaurarTema();
+    carregarDadosFirebase();
+  </script>
+</body>
+</html>

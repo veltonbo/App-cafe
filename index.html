@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manejo Café</title>
 
-  <!-- Chart.js para gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Firebase Compat para funcionar no Apps Script Web App -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -17,6 +15,14 @@
       margin: 0;
       background-color: #121212;
       color: #e0e0e0;
+    }
+    .claro {
+      background: #f9f9f9;
+      color: #111;
+    }
+    .claro input, .claro select, .claro button, .claro .item {
+      background-color: #fff;
+      color: #000;
     }
     .menu {
       display: flex;
@@ -74,14 +80,31 @@
       border-radius: 10px;
       margin-top: 20px;
     }
+    #botaoTema {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #2e7d32;
+      color: white;
+      border-radius: 50%;
+      font-size: 20px;
+      width: 48px;
+      height: 48px;
+      border: none;
+      box-shadow: 0 4px 10px #000;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body onload="inicializarApp()">
+  <button id="botaoTema" onclick="alternarTema()">☀️</button>
   <div class="menu">
     <button onclick="mostrarAba('aplicacoes')" id="btn-aplicacoes">Aplicações</button>
     <button onclick="mostrarAba('tarefas')" id="btn-tarefas">Tarefas</button>
     <button onclick="mostrarAba('financeiro')" id="btn-financeiro">Financeiro</button>
+    <button onclick="mostrarAba('backup')" id="btn-backup">Backup</button>
+    <button onclick="mostrarAba('relatorio')" id="btn-relatorio">Relatório</button>
   </div>
 
   <div id="aplicacoes" class="aba">
@@ -129,209 +152,197 @@
     <canvas id="graficoGastos"></canvas>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-      authDomain: "manej-cafe.firebaseapp.com",
-      databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-      projectId: "manej-cafe",
-      storageBucket: "manej-cafe.appspot.com",
-      messagingSenderId: "808931200634",
-      appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
-    };
+  <div id="backup" class="aba">
+    <h3>Backup</h3>
+    <button onclick="fazerBackup()">Baixar Backup</button>
+  </div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  <div id="relatorio" class="aba">
+    <h3>Relatório</h3>
+    <p>Total de Aplicações: <span id="relAplicacoes">0</span></p>
+    <p>Tarefas a Fazer: <span id="relTarefas">0</span></p>
+    <p>Tarefas Executadas: <span id="relFeitas">0</span></p>
+    <p>Gastos Pagos: R$ <span id="relPago">0.00</span></p>
+    <p>Gastos Pendentes: R$ <span id="relPendente">0.00</span></p>
+    <button onclick="gerarRelatorio()">Atualizar</button>
+  </div>
 
-    const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+  authDomain: "manej-cafe.firebaseapp.com",
+  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+  projectId: "manej-cafe",
+  storageBucket: "manej-cafe.appspot.com",
+  messagingSenderId: "808931200634",
+  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
 
-    function inicializarApp() {
-      mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-      carregarAplicacoes();
-      carregarTarefas();
-      carregarFinanceiro();
-    }
+function alternarTema() {
+  document.body.classList.toggle('claro');
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+}
+function inicializarApp() {
+  if (localStorage.getItem('tema') === 'claro') document.body.classList.add('claro');
+  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+  carregarAplicacoes(); carregarTarefas(); carregarFinanceiro();
+}
+function mostrarAba(id) {
+  document.querySelectorAll('.aba').forEach(div => div.classList.remove('active'));
+  document.querySelectorAll('.menu button').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('btn-' + id).classList.add('active');
+  localStorage.setItem('aba', id);
+}
 
-    function mostrarAba(id) {
-      document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
-      document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      document.getElementById('btn-' + id).classList.add('active');
-      localStorage.setItem('aba', id);
-    }
-
-    // ---------------- APLICACOES ----------------
-    function adicionarAplicacao() {
-      const nova = {
-        data: dataApp.value,
-        produto: produtoApp.value,
-        dosagem: dosagemApp.value,
-        tipo: tipoApp.value
-      };
-      if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
-      aplicacoes.push(nova);
-      firebase.database().ref('Aplicacoes').set(aplicacoes);
+// --- Aplicações ---
+function adicionarAplicacao() {
+  const nova = { data: dataApp.value, produto: produtoApp.value, dosagem: dosagemApp.value, tipo: tipoApp.value };
+  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+  aplicacoes.push(nova);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+}
+function atualizarAplicacoes() {
+  listaAplicacoes.innerHTML = '';
+  aplicacoes.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}`;
+    const btn = document.createElement('button');
+    btn.textContent = '❌';
+    btn.onclick = () => { aplicacoes.splice(i, 1); db.ref('Aplicacoes').set(aplicacoes); atualizarAplicacoes(); };
+    div.appendChild(btn);
+    listaAplicacoes.appendChild(div);
+  });
+}
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').once('value').then(snap => {
+    if (snap.exists()) {
+      aplicacoes.length = 0;
+      aplicacoes.push(...snap.val());
       atualizarAplicacoes();
     }
+  });
+}
 
-    function atualizarAplicacoes() {
-      listaAplicacoes.innerHTML = '';
-      aplicacoes.forEach((a, i) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}`;
-        const btn = document.createElement('button');
-        btn.textContent = '❌';
-        btn.onclick = () => {
-          aplicacoes.splice(i, 1);
-          firebase.database().ref('Aplicacoes').set(aplicacoes);
-          atualizarAplicacoes();
-        };
-        div.appendChild(btn);
-        listaAplicacoes.appendChild(div);
-      });
-    }
-
-    function carregarAplicacoes() {
-      firebase.database().ref('Aplicacoes').once('value').then(snapshot => {
-        if (snapshot.exists()) {
-          aplicacoes.length = 0;
-          aplicacoes.push(...snapshot.val());
-          atualizarAplicacoes();
-        }
-      });
-    }
-
-    // ---------------- TAREFAS ----------------
-    function adicionarTarefa() {
-      const nova = {
-        data: dataTarefa.value,
-        descricao: descricaoTarefa.value,
-        executada: false
-      };
-      if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
-      tarefas.push(nova);
-      salvarTarefas();
+// --- Tarefas ---
+function adicionarTarefa() {
+  const nova = { data: dataTarefa.value, descricao: descricaoTarefa.value, executada: false };
+  if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+  tarefas.push(nova); salvarTarefas(); atualizarTarefas();
+}
+function salvarTarefas() {
+  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
+}
+function atualizarTarefas() {
+  listaTarefas.innerHTML = ''; listaTarefasFeitas.innerHTML = '';
+  tarefas.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `${t.data} - ${t.descricao}`;
+    const btn = document.createElement('button');
+    btn.textContent = '✔️';
+    btn.onclick = () => { t.executada = true; tarefasFeitas.push(tarefas.splice(i, 1)[0]); salvarTarefas(); atualizarTarefas(); };
+    div.appendChild(btn); listaTarefas.appendChild(div);
+  });
+  tarefasFeitas.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `${t.data} - ${t.descricao}`;
+    const btn = document.createElement('button');
+    btn.textContent = '❌';
+    btn.onclick = () => { tarefasFeitas.splice(i, 1); salvarTarefas(); atualizarTarefas(); };
+    div.appendChild(btn); listaTarefasFeitas.appendChild(div);
+  });
+}
+function carregarTarefas() {
+  db.ref('Tarefas').once('value').then(snap => {
+    if (snap.exists()) {
+      tarefas.length = 0; tarefasFeitas.length = 0;
+      snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
       atualizarTarefas();
     }
+  });
+}
 
-    function salvarTarefas() {
-      const todas = [...tarefas, ...tarefasFeitas];
-      firebase.database().ref('Tarefas').set(todas);
-    }
-
-    function atualizarTarefas() {
-      listaTarefas.innerHTML = '';
-      listaTarefasFeitas.innerHTML = '';
-      tarefas.forEach((t, i) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `${t.data} - ${t.descricao}`;
-        const btn = document.createElement('button');
-        btn.textContent = '✔️';
-        btn.onclick = () => {
-          t.executada = true;
-          tarefasFeitas.push(tarefas.splice(i, 1)[0]);
-          salvarTarefas();
-          atualizarTarefas();
-        };
-        div.appendChild(btn);
-        listaTarefas.appendChild(div);
-      });
-      tarefasFeitas.forEach((t, i) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `${t.data} - ${t.descricao}`;
-        const btn = document.createElement('button');
-        btn.textContent = '❌';
-        btn.onclick = () => {
-          tarefasFeitas.splice(i, 1);
-          salvarTarefas();
-          atualizarTarefas();
-        };
-        div.appendChild(btn);
-        listaTarefasFeitas.appendChild(div);
-      });
-    }
-
-    function carregarTarefas() {
-      firebase.database().ref('Tarefas').once('value').then(snapshot => {
-        if (snapshot.exists()) {
-          tarefas.length = 0;
-          tarefasFeitas.length = 0;
-          snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
-          atualizarTarefas();
-        }
-      });
-    }
-
-    // ---------------- FINANCEIRO ----------------
-    function adicionarFinanceiro() {
-      const novo = {
-        data: dataFin.value,
-        produto: produtoFin.value,
-        valor: parseFloat(valorFin.value),
-        tipo: tipoFin.value,
-        pago: false
-      };
-      if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
-      financeiro.push(novo);
-      salvarFinanceiro();
+// --- Financeiro ---
+function adicionarFinanceiro() {
+  const novo = {
+    data: dataFin.value,
+    produto: produtoFin.value,
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false
+  };
+  if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+  financeiro.push(novo); salvarFinanceiro(); atualizarFinanceiro();
+}
+function salvarFinanceiro() { db.ref('Financeiro').set(financeiro); }
+function atualizarFinanceiro() {
+  financeiroVencer.innerHTML = ''; financeiroPago.innerHTML = ''; let total = 0;
+  financeiro.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}`;
+    const btn = document.createElement('button');
+    btn.textContent = f.pago ? '❌' : '✔️';
+    btn.onclick = () => {
+      if (f.pago) financeiro.splice(i, 1);
+      else f.pago = true;
+      salvarFinanceiro(); atualizarFinanceiro();
+    };
+    div.appendChild(btn);
+    (f.pago ? financeiroPago : financeiroVencer).appendChild(div);
+    if (!f.pago) total += f.valor;
+  });
+  gerarGrafico();
+}
+function carregarFinanceiro() {
+  db.ref('Financeiro').once('value').then(snap => {
+    if (snap.exists()) {
+      financeiro.length = 0;
+      financeiro.push(...snap.val());
       atualizarFinanceiro();
     }
-
-    function salvarFinanceiro() {
-      firebase.database().ref('Financeiro').set(financeiro);
+  });
+}
+function gerarGrafico() {
+  const ctx = document.getElementById('graficoGastos').getContext('2d');
+  if (window.grafico) window.grafico.destroy();
+  const totais = {};
+  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
+  window.grafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totais),
+      datasets: [{ label: 'Gastos pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
     }
+  });
+}
 
-    function atualizarFinanceiro() {
-      financeiroVencer.innerHTML = '';
-      financeiroPago.innerHTML = '';
-      let total = 0;
-      financeiro.forEach((f, i) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}`;
-        const btn = document.createElement('button');
-        btn.textContent = f.pago ? '❌' : '✔️';
-        btn.onclick = () => {
-          if (f.pago) financeiro.splice(i, 1);
-          else f.pago = true;
-          salvarFinanceiro();
-          atualizarFinanceiro();
-        };
-        div.appendChild(btn);
-        (f.pago ? financeiroPago : financeiroVencer).appendChild(div);
-        if (!f.pago) total += f.valor;
-      });
-      gerarGrafico();
-    }
-
-    function carregarFinanceiro() {
-      firebase.database().ref('Financeiro').once('value').then(snapshot => {
-        if (snapshot.exists()) {
-          financeiro.length = 0;
-          financeiro.push(...snapshot.val());
-          atualizarFinanceiro();
-        }
-      });
-    }
-
-    function gerarGrafico() {
-      const ctx = document.getElementById('graficoGastos').getContext('2d');
-      if (window.grafico) window.grafico.destroy();
-      const totais = {};
-      financeiro.forEach(f => {
-        if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor;
-      });
-      window.grafico = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(totais),
-          datasets: [{ label: 'Gastos pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
-        }
-      });
-    }
-  </script>
+// --- Backup & Relatório ---
+function fazerBackup() {
+  const dados = { aplicacoes, tarefas, tarefasFeitas, financeiro };
+  const blob = new Blob([JSON.stringify(dados)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+function gerarRelatorio() {
+  let pago = 0, pendente = 0;
+  financeiro.forEach(f => f.pago ? pago += f.valor : pendente += f.valor);
+  relAplicacoes.innerText = aplicacoes.length;
+  relTarefas.innerText = tarefas.length;
+  relFeitas.innerText = tarefasFeitas.length;
+  relPago.innerText = pago.toFixed(2);
+  relPendente.innerText = pendente.toFixed(2);
+}
+</script>
 </body>
 </html>

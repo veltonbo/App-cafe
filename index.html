@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manejo Café</title>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Chart.js + jsPDF -->
+  <!-- Chart.js e jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -31,7 +31,6 @@
     const db = firebase.database();
   </script>
 
-  <!-- Estilo CSS -->
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -39,11 +38,127 @@
       background-color: #121212;
       color: #e0e0e0;
     }
-    /* (Demais estilos iguais aos que você já colocou serão mantidos) */
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .menu button {
+      flex: 1 1 20%;
+      padding: 12px;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .menu button:hover,
+    .menu button.active {
+      background-color: #388e3c;
+    }
+    .aba {
+      display: none;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    .aba.active {
+      display: block;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #2c2c2c;
+      color: #fff;
+      font-size: 16px;
+    }
+    input:invalid, select:invalid {
+      border-color: #f44336;
+    }
+    .item {
+      background-color: #1e1e1e;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #66bb6a;
+    }
+    .item button {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #fff;
+      margin-left: 10px;
+    }
+    .item button.delete { color: #f44336; }
+    .item button.check { color: #66bb6a; }
+    #botaoTema {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      background-color: #2e7d32;
+      color: white;
+      border-radius: 50%;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      z-index: 1000;
+    }
+    #botaoTema:hover {
+      background-color: #1b5e20;
+    }
+    canvas {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 15px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    @media (max-width: 600px) {
+      .menu button { flex: 1 1 50%; font-size: 14px; }
+      .aba { padding: 15px; }
+    }
+    .claro {
+      background-color: #f4f4f4;
+      color: #111;
+    }
+    .claro .menu {
+      background-color: #eee;
+    }
+    .claro .menu button {
+      background-color: #eee;
+      color: #111;
+    }
+    .claro .menu button.active {
+      background-color: #c8e6c9;
+    }
+    .claro .item {
+      background-color: #fff;
+      border-left: 4px solid #4caf50;
+    }
+    .claro input, .claro select, .claro button {
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 
-<body onload="restaurarEstado(); carregarDoFirebase();">
+  <body onload="restaurarEstado(); carregarDoFirebase();">
   <button id="botaoTema" onclick="alternarTema()">☀️</button>
 
   <div class="menu">
@@ -116,8 +231,7 @@
     <button onclick="exportarRelatorioPDF()">Exportar PDF</button>
   </div>
 
-<script type="module">
-  // CONFIGURAÇÃO DO FIREBASE
+    <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
   import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
 
@@ -134,18 +248,19 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // DADOS LOCAIS
   const aplicacoes = [];
-
-  // TEMA
-  function restaurarEstado() {
-    if (localStorage.getItem('tema') === 'claro') document.body.classList.add('claro');
-    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  }
+  const tarefas = [];
+  const tarefasFeitas = [];
+  const financeiro = [];
 
   function alternarTema() {
     document.body.classList.toggle('claro');
     localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+  }
+
+  function restaurarEstado() {
+    if (localStorage.getItem('tema') === 'claro') document.body.classList.add('claro');
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
   }
 
   function mostrarAba(id) {
@@ -157,7 +272,7 @@
     localStorage.setItem('aba', id);
   }
 
-  // --- APLICACOES ---
+  // -------- Aplicações --------
   function adicionarAplicacao() {
     const app = {
       data: document.getElementById('dataApp').value,
@@ -195,22 +310,16 @@
   }
 
   function carregarAplicacoes() {
-    const dbRef = ref(db);
-    get(child(dbRef, 'Aplicacoes')).then((snapshot) => {
+    get(child(ref(db), 'Aplicacoes')).then(snapshot => {
       if (snapshot.exists()) {
         aplicacoes.length = 0;
         aplicacoes.push(...snapshot.val());
         atualizarAplicacoes();
       }
-    }).catch((error) => {
-      console.error("Erro ao carregar Aplicações:", error);
     });
   }
 
-// --- TAREFAS ---
-  const tarefas = [];
-  const tarefasFeitas = [];
-
+  // -------- Tarefas --------
   function adicionarTarefa() {
     const tarefa = {
       data: document.getElementById('dataTarefa').value,
@@ -224,17 +333,15 @@
   }
 
   function atualizarTarefas() {
-    const fazer = document.getElementById('listaTarefas');
-    const feitas = document.getElementById('listaTarefasFeitas');
-    fazer.innerHTML = '';
-    feitas.innerHTML = '';
+    document.getElementById('listaTarefas').innerHTML = '';
+    document.getElementById('listaTarefasFeitas').innerHTML = '';
 
     tarefas.forEach((t, i) => {
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `${t.data} - ${t.descricao}`;
       const btn = document.createElement('button');
-      btn.innerText = '✔️';
+      btn.innerHTML = '✔️';
       btn.onclick = () => {
         t.executada = true;
         tarefasFeitas.push(tarefas.splice(i, 1)[0]);
@@ -242,7 +349,7 @@
         atualizarTarefas();
       };
       item.appendChild(btn);
-      fazer.appendChild(item);
+      document.getElementById('listaTarefas').appendChild(item);
     });
 
     tarefasFeitas.forEach((t, i) => {
@@ -250,14 +357,14 @@
       item.className = 'item';
       item.innerHTML = `${t.data} - ${t.descricao}`;
       const btn = document.createElement('button');
-      btn.innerText = '❌';
+      btn.innerHTML = '❌';
       btn.onclick = () => {
         tarefasFeitas.splice(i, 1);
         salvarTarefas();
         atualizarTarefas();
       };
       item.appendChild(btn);
-      feitas.appendChild(item);
+      document.getElementById('listaTarefasFeitas').appendChild(item);
     });
   }
 
@@ -267,25 +374,17 @@
   }
 
   function carregarTarefas() {
-    const dbRef = ref(db);
-    get(child(dbRef, 'Tarefas')).then((snapshot) => {
+    get(child(ref(db), 'Tarefas')).then(snapshot => {
       if (snapshot.exists()) {
         tarefas.length = 0;
         tarefasFeitas.length = 0;
-        snapshot.val().forEach(t => {
-          if (t.executada === true || t.executada === "TRUE") tarefasFeitas.push(t);
-          else tarefas.push(t);
-        });
+        snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
         atualizarTarefas();
       }
-    }).catch((error) => {
-      console.error("Erro ao carregar Tarefas:", error);
     });
   }
 
-// --- FINANCEIRO ---
-  const financeiro = [];
-
+  // -------- Financeiro --------
   function adicionarFinanceiro() {
     const f = {
       data: document.getElementById('dataFin').value,
@@ -301,18 +400,16 @@
   }
 
   function atualizarFinanceiro() {
-    const vencer = document.getElementById('financeiroVencer');
-    const pagos = document.getElementById('financeiroPago');
+    document.getElementById('financeiroVencer').innerHTML = '';
+    document.getElementById('financeiroPago').innerHTML = '';
     let total = 0;
-    vencer.innerHTML = '';
-    pagos.innerHTML = '';
 
     financeiro.forEach((f, i) => {
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}`;
       const btn = document.createElement('button');
-      btn.innerText = f.pago ? '❌' : '✔️';
+      btn.innerHTML = f.pago ? '❌' : '✔️';
       btn.onclick = () => {
         if (f.pago) financeiro.splice(i, 1);
         else f.pago = true;
@@ -320,7 +417,7 @@
         atualizarFinanceiro();
       };
       item.appendChild(btn);
-      (f.pago ? pagos : vencer).appendChild(item);
+      (f.pago ? document.getElementById('financeiroPago') : document.getElementById('financeiroVencer')).appendChild(item);
       if (!f.pago) total += f.valor;
     });
 
@@ -333,25 +430,21 @@
   }
 
   function carregarFinanceiro() {
-    const dbRef = ref(db);
-    get(child(dbRef, 'Financeiro')).then((snapshot) => {
+    get(child(ref(db), 'Financeiro')).then(snapshot => {
       if (snapshot.exists()) {
         financeiro.length = 0;
         financeiro.push(...snapshot.val());
         atualizarFinanceiro();
       }
-    }).catch((error) => {
-      console.error("Erro ao carregar Financeiro:", error);
     });
   }
 
+  // -------- Gráfico --------
   function gerarGrafico() {
     const ctx = document.getElementById('graficoGastos').getContext('2d');
     if (window.grafico) window.grafico.destroy();
     const totais = {};
-    financeiro.forEach(f => {
-      if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor;
-    });
+    financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
     window.grafico = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -361,7 +454,7 @@
     });
   }
 
-// --- BACKUP MANUAL ---
+  // -------- Backup e Relatório --------
   function fazerBackup() {
     const dados = { aplicacoes, tarefas, tarefasFeitas, financeiro };
     const blob = new Blob([JSON.stringify(dados)], { type: 'application/json' });
@@ -373,7 +466,6 @@
     URL.revokeObjectURL(url);
   }
 
-  // --- RELATÓRIO ---
   function gerarRelatorio() {
     let pago = 0, pendente = 0;
     financeiro.forEach(f => f.pago ? pago += f.valor : pendente += f.valor);
@@ -400,8 +492,8 @@
     doc.save("relatorio_manejo.pdf");
   }
 
-  // --- INICIALIZAÇÃO COMPLETA ---
-  function carregarTudoDoFirebase() {
+  // -------- Início --------
+  function carregarDoFirebase() {
     carregarAplicacoes();
     carregarTarefas();
     carregarFinanceiro();
@@ -409,5 +501,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     restaurarEstado();
-    carregarTudoDoFirebase();
+    carregarDoFirebase();
   });
+</script>
+
+</body>
+</html>

@@ -480,27 +480,4 @@
 </script>
 
 </body>
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-    authDomain: "manej-cafe.firebaseapp.com",
-    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-    projectId: "manej-cafe",
-    storageBucket: "manej-cafe.appspot.com",
-    messagingSenderId: "808931200634",
-    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // Exemplo de teste ao carregar
-  window.db = db; // para poder acessar no console
-  console.log("Firebase conectado com sucesso!");
-
-  // Se desejar, pode chamar carregarAplicacoes() aqui se já tiver a função no escopo
-</script>
 </html>

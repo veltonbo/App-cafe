@@ -254,6 +254,9 @@ function atualizarAplicacoes() {
     item.appendChild(del);
     lista.appendChild(item);
   });
+ 
+  // salvamento automático
+  google.script.run.salvarDados('Aplicacoes', aplicacoes);
 }
 
 function adicionarTarefa() {
@@ -295,6 +298,10 @@ tarefasFeitas.push(tarefas.splice(i, 1)[0]);
     item.appendChild(btn);
     feitas.appendChild(item);
   });
+ 
+  // SALVAMENTO AUTOMÁTICO
+  const todasTarefas = tarefas.concat(tarefasFeitas);
+  google.script.run.salvarDados('Tarefas', todasTarefas);
 }
 
 function adicionarFinanceiro() {
@@ -335,6 +342,9 @@ function atualizarFinanceiro() {
   });
   document.getElementById('totalPagar').innerText = total.toFixed(2);
   gerarGrafico();
+
+  // Salvamento automático
+  google.script.run.salvarDados('Financeiro', financeiro);
 }
 
 function gerarGrafico() {

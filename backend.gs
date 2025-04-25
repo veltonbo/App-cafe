@@ -1,40 +1,26 @@
-const SHEET_ID = '1-vsi1PI9aDZtgMbmBchG7eCCHS0T0UqOSRAt1RXrvcQ';
+const SHEET = SpreadsheetApp.getActiveSpreadsheet();
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .setTitle("Manejo Café");
-}
+function salvarDados(aba, dados) {
+  const planilha = SHEET.getSheetByName(aba);
+  planilha.clearContents();
+  if (dados.length === 0) return;
 
-function salvarDados(tipo, dados) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const aba = ss.getSheetByName(tipo) || ss.insertSheet(tipo);
-  aba.clearContents();
+  const chaves = Object.keys(dados[0]);
+  planilha.appendRow(chaves);
 
-  if (!Array.isArray(dados) || dados.length === 0) return;
-
-  const colunas = Object.keys(dados[0]);
-  aba.appendRow(colunas);
-
-  dados.forEach(linha => {
-    const valores = colunas.map(c => linha[c]);
-    aba.appendRow(valores);
+  dados.forEach(obj => {
+    const linha = chaves.map(k => obj[k]);
+    planilha.appendRow(linha);
   });
 }
 
-function carregarDados(tipo) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const aba = ss.getSheetByName(tipo);
-  if (!aba) return [];
-
-  const valores = aba.getDataRange().getValues();
-  const cabecalho = valores[0];
-
-  return valores.slice(1).map(linha => {
+function carregarDados(aba) {
+  const planilha = SHEET.getSheetByName(aba);
+  const valores = planilha.getDataRange().getValues();
+  const chaves = valores.shift();
+  return valores.map(linha => {
     const obj = {};
-    cabecalho.forEach((coluna, i) => {
-      obj[coluna] = linha[i];
-    });
+    linha.forEach((v, i) => obj[chaves[i]] = v);
     return obj;
   });
 }

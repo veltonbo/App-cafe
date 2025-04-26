@@ -76,8 +76,8 @@
       align-items: center;
       justify-content: space-between;
       border-left: 4px solid #66bb6a;
-      flex-wrap: wrap;
-      position: relative;
+      flex-wrap: nowrap; /* impede que o texto quebre pra baixo */
+      gap: 8px; /* espaço entre texto e botões */
     }
     .item input[type="checkbox"] {
       width: 18px;

@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +14,6 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- jsPDF (corrigido para ficar acima do seu script principal) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     body {
@@ -162,27 +161,84 @@
       margin-bottom: 5px;
       color: #66bb6a;
     }
-
-    /* --- Tema Claro --- */
-    body.claro {
-      background-color: #ffffff;
-      color: #000000;
-    }
-    body.claro input, body.claro select, body.claro button, body.claro .campo-pesquisa, body.claro .item, body.claro canvas {
-      background-color: #f0f0f0;
-      color: #000;
-    }
-    body.claro .menu-superior {
-      background-color: #ddd;
-    }
-    body.claro .menu-superior button {
-      color: #555;
-    }
-    body.claro .menu-superior button.active, body.claro .menu-superior button:hover {
-      color: #4caf50;
-    }
   </style>
 </head>
+
+<body onload="inicializarApp()">
+
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;"></span></button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  </div>
+
+  <div class="conteudo">
+    <div id="aplicacoes" class="aba">
+      <h2>Aplicações</h2>
+      <input id="dataApp" type="date">
+      <input id="produtoApp" placeholder="Produto">
+      <input id="dosagemApp" placeholder="Dosagem">
+      <select id="tipoApp">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+      <div id="listaAplicacoes"></div>
+    </div>
+
+    <div id="tarefas" class="aba">
+      <h2>Tarefas</h2>
+      <input id="dataTarefa" type="date">
+      <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+      <select id="prioridadeTarefa">
+        <option>Alta</option>
+        <option>Média</option>
+        <option>Baixa</option>
+      </select>
+      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+      <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+      <h4>A Fazer</h4>
+      <div id="listaTarefas"></div>
+      <h4>Executadas</h4>
+      <div id="listaTarefasFeitas"></div>
+    </div>
+
+    <div id="financeiro" class="aba">
+      <h2>Financeiro</h2>
+      <input id="dataFin" type="date">
+      <input id="produtoFin" placeholder="Produto">
+      <input id="valorFin" placeholder="Valor" type="number">
+      <select id="tipoFin">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+      <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+      <h4>A Vencer</h4>
+      <div id="financeiroVencer"></div>
+      <h4>Pagos</h4>
+      <div id="financeiroPago"></div>
+      <canvas id="graficoGastos"></canvas>
+    </div>
+
+    <div id="relatorio" class="aba">
+      <h2>Relatório</h2>
+      <div id="resumoRelatorio"></div>
+      <button onclick="exportarPDF()">Exportar PDF</button>
+    </div>
+
+    <div id="configuracoes" class="aba">
+      <h2>Configurações</h2>
+      <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+    </div>
+  </div>
 
 <script>
   // Firebase Config
@@ -202,9 +258,6 @@
 
   function inicializarApp() {
     mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-    if (localStorage.getItem('tema') === 'claro') {
-      document.body.classList.add('claro');
-    }
     carregarAplicacoes();
     carregarTarefas();
     carregarFinanceiro();
@@ -216,11 +269,6 @@
     document.getElementById(id).classList.add('active');
     document.getElementById('btn-' + id).classList.add('active');
     localStorage.setItem('aba', id);
-  }
-
-  function alternarTema() {
-    document.body.classList.toggle('claro');
-    localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
   }
 
   // Aplicações
@@ -434,11 +482,11 @@
     });
   }
 
+  function alternarTema() {
+    document.body.classList.toggle('claro');
+  }
+
   function exportarPDF() {
-    if (!window.jspdf) {
-      alert("Biblioteca jsPDF ainda não carregada. Tente novamente.");
-      return;
-    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.text('Relatório - Manejo Café', 20, 20);
@@ -448,3 +496,7 @@
     doc.save('relatorio_manejo.pdf');
   }
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>

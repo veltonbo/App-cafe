@@ -392,42 +392,66 @@
   }
 
   function atualizarFinanceiro() {
-    const filtro = pesquisaFinanceiro.value.toLowerCase();
-    financeiroVencer.innerHTML = '';
-    financeiroPago.innerHTML = '';
+  const filtro = pesquisaFinanceiro.value.toLowerCase();
+  financeiroVencer.innerHTML = '';
+  financeiroPago.innerHTML = '';
 
-    const vencendoHoje = [];
-    const hoje = new Date().toISOString().split('T')[0];
+  const vencendoHoje = [];
+  const hoje = new Date().toISOString().split('T')[0];
 
-    const agrupado = {};
+  const agrupado = {};
 
-    financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
-      if (!f.pago) {
-        if (!agrupado[f.data]) agrupado[f.data] = [];
-        agrupado[f.data].push({ ...f, i });
-      }
-    });
-
-    for (const data in agrupado) {
-      const titulo = document.createElement('div');
-      titulo.className = 'grupo-data';
-      titulo.textContent = data;
-      financeiroVencer.appendChild(titulo);
-
-      agrupado[data].forEach(({ produto, valor, tipo, i }) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-          <span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
-          <div class="botoes-financeiro">
-            <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
-          </div>
-        `;
-        financeiroVencer.appendChild(div);
-
-        if (data <= hoje) vencendoHoje.push(1);
-      });
+  financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+    if (!f.pago) {
+      if (!agrupado[f.data]) agrupado[f.data] = [];
+      agrupado[f.data].push({ ...f, i });
     }
+  });
+
+  for (const data in agrupado) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = data;
+    financeiroVencer.appendChild(titulo);
+
+    agrupado[data].forEach(({ produto, valor, tipo, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
+        </div>
+      `;
+      financeiroVencer.appendChild(div);
+
+      if (data <= hoje) vencendoHoje.push(1);
+    });
+  }
+
+  financeiro.filter(f => f.pago && `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-excluir" onclick="excluirConta(${i})">Excluir</button>
+      </div>
+    `;
+    financeiroPago.appendChild(div);
+  });
+
+  const notificacao = document.getElementById('notificacao-financeiro');
+  if (vencendoHoje.length > 0) {
+    notificacao.style.display = 'flex';
+    notificacao.textContent = vencendoHoje.length;
+  } else {
+    notificacao.style.display = 'none';
+    notificacao.textContent = '';
+  }
+
+  gerarGrafico();
+}
 
     financeiro.filter(f => f.pago && `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
       const div = document.createElement('div');

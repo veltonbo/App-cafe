@@ -36,6 +36,7 @@
     }
     .aba { display: none; }
     .aba.active { display: block; }
+
     input, select, button {
       width: 100%;
       padding: 10px;
@@ -72,8 +73,8 @@
       margin: 10px 0;
       border-radius: 8px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       border-left: 4px solid #66bb6a;
     }
     .item input[type="checkbox"] {
@@ -114,39 +115,6 @@
       padding: 10px;
       margin-top: 20px;
     }
-    /* Botões pequenos */
-    .botao-pequeno {
-      padding: 3px 8px;
-      font-size: 13px;
-      border-radius: 5px;
-      margin-left: 8px;
-      white-space: nowrap;
-    }
-    .botao-verde {
-      background-color: #4caf50;
-      color: white;
-      border: none;
-    }
-    .botao-verde:hover {
-      background-color: #43a047;
-    }
-    .botao-vermelho {
-      background-color: #f44336;
-      color: white;
-      border: none;
-    }
-    .botao-vermelho:hover {
-      background-color: #d32f2f;
-    }
-    .badge {
-      background: red;
-      color: white;
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 8px;
-      vertical-align: top;
-      margin-left: 4px;
-    }
   </style>
 </head>
 
@@ -155,15 +123,12 @@
   <div class="menu-superior">
     <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
     <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')">
-      <i class="fas fa-dollar-sign"></i> <span id="notificacaoFinanceiro"></span>
-    </button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
     <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
     <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
   </div>
 
   <div class="conteudo">
-
     <div id="aplicacoes" class="aba">
       <h2>Aplicações</h2>
       <input id="dataApp" type="date">
@@ -227,270 +192,221 @@
       <h2>Configurações</h2>
       <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
     </div>
-
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-// Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-  authDomain: "manej-cafe.firebaseapp.com",
-  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-  projectId: "manej-cafe",
-  storageBucket: "manej-cafe.appspot.com",
-  messagingSenderId: "808931200634",
-  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  <script>
+    // Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+      authDomain: "manej-cafe.firebaseapp.com",
+      databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+      projectId: "manej-cafe",
+      storageBucket: "manej-cafe.appspot.com",
+      messagingSenderId: "808931200634",
+      appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+    const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
 
-function inicializarApp() {
-  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  carregarAplicacoes();
-  carregarTarefas();
-  carregarFinanceiro();
-}
+    function inicializarApp() {
+      mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+      carregarAplicacoes();
+      carregarTarefas();
+      carregarFinanceiro();
+    }
 
-// Dados Locais
-const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+    function mostrarAba(id) {
+      document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.getElementById('btn-' + id).classList.add('active');
+      localStorage.setItem('aba', id);
+    }
 
-// Controle de Abas
-function mostrarAba(id) {
-  document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
-  document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('btn-' + id).classList.add('active');
-  localStorage.setItem('aba', id);
-}
-
-// Aplicações
-function adicionarAplicacao() {
-  const nova = {
-    data: dataApp.value,
-    produto: produtoApp.value,
-    dosagem: dosagemApp.value,
-    tipo: tipoApp.value
-  };
-  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
-  aplicacoes.push(nova);
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
-}
-
-function atualizarAplicacoes() {
-  const filtro = pesquisaAplicacoes.value.toLowerCase();
-  listaAplicacoes.innerHTML = '';
-  aplicacoes.filter(a => `${a.data} ${a.produto} ${a.dosagem} ${a.tipo}`.toLowerCase().includes(filtro))
-    .forEach(a => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `<span>${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}</span>`;
-      listaAplicacoes.appendChild(div);
-    });
-}
-
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      aplicacoes.length = 0;
-      aplicacoes.push(...snapshot.val());
+    function adicionarAplicacao() {
+      const nova = {
+        data: dataApp.value,
+        produto: produtoApp.value,
+        dosagem: dosagemApp.value,
+        tipo: tipoApp.value
+      };
+      if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+      aplicacoes.push(nova);
+      db.ref('Aplicacoes').set(aplicacoes);
       atualizarAplicacoes();
     }
-  });
-}
 
-// Tarefas
-function adicionarTarefa() {
-  const nova = {
-    data: dataTarefa.value,
-    descricao: descricaoTarefa.value,
-    prioridade: prioridadeTarefa.value,
-    executada: false
-  };
-  if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
-  tarefas.push(nova);
-  salvarTarefas();
-  atualizarTarefas();
-}
+    function atualizarAplicacoes() {
+      const filtro = pesquisaAplicacoes.value.toLowerCase();
+      listaAplicacoes.innerHTML = '';
+      aplicacoes.filter(a => `${a.data} ${a.produto} ${a.dosagem} ${a.tipo}`.toLowerCase().includes(filtro))
+        .forEach(a => {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.innerHTML = `<span>${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}</span>`;
+          listaAplicacoes.appendChild(div);
+        });
+    }
 
-function salvarTarefas() {
-  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
-}
+    function carregarAplicacoes() {
+      db.ref('Aplicacoes').once('value').then(snap => {
+        if (snap.exists()) {
+          aplicacoes.length = 0;
+          aplicacoes.push(...snap.val());
+          atualizarAplicacoes();
+        }
+      });
+    }
 
-function atualizarTarefas() {
-  const filtro = pesquisaTarefas.value.toLowerCase();
-  listaTarefas.innerHTML = '';
-  listaTarefasFeitas.innerHTML = '';
-
-  tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
-    listaTarefas.appendChild(div);
-  });
-
-  tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
-    listaTarefasFeitas.appendChild(div);
-  });
-}
-
-function marcarTarefa(index, checked) {
-  if (checked) {
-    tarefas[index].executada = true;
-    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function marcarTarefaFeita(index, checked) {
-  if (!checked) {
-    tarefasFeitas[index].executada = false;
-    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function carregarTarefas() {
-  db.ref('Tarefas').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      tarefas.length = 0;
-      tarefasFeitas.length = 0;
-      snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+    function adicionarTarefa() {
+      const nova = {
+        data: dataTarefa.value,
+        descricao: descricaoTarefa.value,
+        prioridade: prioridadeTarefa.value,
+        executada: false
+      };
+      if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+      tarefas.push(nova);
+      salvarTarefas();
       atualizarTarefas();
     }
-  });
-}
 
-// Financeiro
-function adicionarFinanceiro() {
-  const novo = {
-    data: dataFin.value,
-    produto: produtoFin.value,
-    valor: parseFloat(valorFin.value),
-    tipo: tipoFin.value,
-    pago: false
-  };
-  if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
-  financeiro.push(novo);
-  db.ref('Financeiro').set(financeiro);
-  atualizarFinanceiro();
-}
-
-function atualizarFinanceiro() {
-  const filtro = pesquisaFinanceiro.value.toLowerCase();
-  financeiroVencer.innerHTML = '';
-  financeiroPago.innerHTML = '';
-
-  const hoje = new Date();
-  let notificacao = 0;
-
-  financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `<span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>`;
-
-    if (!f.pago) {
-      const botao = document.createElement('button');
-      botao.className = 'botao-pequeno botao-verde';
-      botao.textContent = 'Pagar';
-      botao.onclick = () => marcarComoPago(i);
-      div.appendChild(botao);
-
-      // Verificar vencimento (notificação)
-      const dataVencimento = new Date(f.data + "T00:00:00");
-      const diferencaDias = (dataVencimento - hoje) / (1000 * 60 * 60 * 24);
-      if (diferencaDias <= 2 && diferencaDias >= 0) notificacao++;
-
-      financeiroVencer.appendChild(div);
-    } else {
-      const botaoDel = document.createElement('button');
-      botaoDel.className = 'botao-pequeno botao-vermelho';
-      botaoDel.textContent = 'Excluir';
-      botaoDel.onclick = () => excluirPago(i);
-      div.appendChild(botaoDel);
-
-      financeiroPago.appendChild(div);
+    function salvarTarefas() {
+      db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
     }
-  });
 
-  atualizarNotificacao(notificacao);
-  gerarGrafico();
-}
+    function atualizarTarefas() {
+      const filtro = pesquisaTarefas.value.toLowerCase();
+      listaTarefas.innerHTML = '';
+      listaTarefasFeitas.innerHTML = '';
 
-function marcarComoPago(index) {
-  financeiro[index].pago = true;
-  db.ref('Financeiro').set(financeiro);
-  atualizarFinanceiro();
-}
+      tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+          <span>${t.data} - ${t.descricao} - (${t.prioridade})</span>`;
+        listaTarefas.appendChild(div);
+      });
 
-function excluirPago(index) {
-  financeiro.splice(index, 1);
-  db.ref('Financeiro').set(financeiro);
-  atualizarFinanceiro();
-}
+      tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+          <span>${t.data} - ${t.descricao} - (${t.prioridade})</span>`;
+        listaTarefasFeitas.appendChild(div);
+      });
+    }
 
-function atualizarNotificacao(qtd) {
-  const badge = document.getElementById('notificacaoFinanceiro');
-  if (qtd > 0) {
-    badge.innerHTML = `<span class="badge">${qtd}</span>`;
-  } else {
-    badge.innerHTML = '';
-  }
-}
+    function marcarTarefa(index, checked) {
+      if (checked) {
+        tarefas[index].executada = true;
+        tarefasFeitas.push(tarefas.splice(index, 1)[0]);
+      }
+      salvarTarefas();
+      atualizarTarefas();
+    }
 
-function carregarFinanceiro() {
-  db.ref('Financeiro').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      financeiro.length = 0;
-      financeiro.push(...snapshot.val());
+    function marcarTarefaFeita(index, checked) {
+      if (!checked) {
+        tarefasFeitas[index].executada = false;
+        tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+      }
+      salvarTarefas();
+      atualizarTarefas();
+    }
+
+    function carregarTarefas() {
+      db.ref('Tarefas').once('value').then(snap => {
+        if (snap.exists()) {
+          tarefas.length = 0;
+          tarefasFeitas.length = 0;
+          snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+          atualizarTarefas();
+        }
+      });
+    }
+
+    function adicionarFinanceiro() {
+      const novo = {
+        data: dataFin.value,
+        produto: produtoFin.value,
+        valor: parseFloat(valorFin.value),
+        tipo: tipoFin.value,
+        pago: false
+      };
+      if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+      financeiro.push(novo);
+      db.ref('Financeiro').set(financeiro);
       atualizarFinanceiro();
     }
-  });
-}
 
-// Gráfico
-function gerarGrafico() {
-  const ctx = document.getElementById('graficoGastos').getContext('2d');
-  if (window.grafico) window.grafico.destroy();
-  const totais = {};
-  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
-  window.grafico = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: Object.keys(totais),
-      datasets: [{ label: 'Gastos Pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+    function atualizarFinanceiro() {
+      const filtro = pesquisaFinanceiro.value.toLowerCase();
+      financeiroVencer.innerHTML = '';
+      financeiroPago.innerHTML = '';
+
+      financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>
+          ${!f.pago ? `<button style="background:#ff9800;color:#000;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;margin-left:10px;" onclick="pagarConta(${i})">Pagar</button>` : ''}
+        `;
+        if (!f.pago) financeiroVencer.appendChild(div);
+        else financeiroPago.appendChild(div);
+      });
+
+      gerarGrafico();
     }
-  });
-}
 
-// Relatório
-function exportarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text('Relatório - Manejo Café', 20, 20);
-  doc.text('Total Aplicações: ' + aplicacoes.length, 20, 40);
-  doc.text('Total Tarefas: ' + (tarefas.length + tarefasFeitas.length), 20, 50);
-  doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
-  doc.save('relatorio_manejo.pdf');
-}
+    function pagarConta(index) {
+      financeiro[index].pago = true;
+      db.ref('Financeiro').set(financeiro);
+      atualizarFinanceiro();
+    }
 
-// Tema
-function alternarTema() {
-  document.body.classList.toggle('claro');
-}
-</script>
+    function carregarFinanceiro() {
+      db.ref('Financeiro').once('value').then(snap => {
+        if (snap.exists()) {
+          financeiro.length = 0;
+          financeiro.push(...snap.val());
+          atualizarFinanceiro();
+        }
+      });
+    }
+
+    function gerarGrafico() {
+      const ctx = document.getElementById('graficoGastos').getContext('2d');
+      if (window.grafico) window.grafico.destroy();
+      const totais = {};
+      financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
+      window.grafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(totais),
+          datasets: [{ label: 'Gastos Pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+        }
+      });
+    }
+
+    function alternarTema() {
+      document.body.classList.toggle('claro');
+    }
+
+    function exportarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text('Relatório - Manejo Café', 20, 20);
+      doc.text('Total Aplicações: ' + aplicacoes.length, 20, 40);
+      doc.text('Total Tarefas: ' + (tarefas.length + tarefasFeitas.length), 20, 50);
+      doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
+      doc.save('relatorio_manejo.pdf');
+    }
+  </script>
 
 </body>
 </html>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Manejo Café</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Base styles */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #eee;
+    }
+    header {
+      background-color: #1f1f1f;
+      padding: 10px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-bottom: 1px solid #333;
+    }
+    header i {
+      font-size: 24px;
+      color: #bbb;
+      cursor: pointer;
+      padding: 10px;
+      transition: color 0.3s;
+    }
+    header i:hover, header i.active {
+      color: #fff;
+    }
+    .container {
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    input[type="text"], input[type="date"], input[type="number"], textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #222;
+      color: #eee;
+      box-sizing: border-box;
+    }
+    .btn-save {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-save:hover {
+      background-color: #45a049;
+    }
+    .search-field {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #222;
+      color: #eee;
+    }
+    .list-section {
+      margin-top: 20px;
+    }
+    .task-group {
+      margin-bottom: 20px;
+    }
+    .task-group h3 {
+      background-color: #2c2c2c;
+      padding: 5px 10px;
+      margin: 0;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .task-list li {
+      display: flex;
+      align-items: center;
+      background-color: #1e1e1e;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .task-list li.completed .task-text {
+      text-decoration: line-through;
+      color: #777;
+    }
+    .task-text {
+      flex: 1;
+      margin-left: 10px;
+    }
+    .task-actions button {
+      background: none;
+      border: none;
+      color: #4caf50;
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 16px;
+    }
+    .finance-item {
+      display: flex;
+      justify-content: space-between;
+      background-color: #1e1e1e;
+      padding: 8px;
+      border-radius: 4px;
+      margin: 5px 0;
+      align-items: center;
+    }
+    .finance-item.paid {
+      opacity: 0.6;
+    }
+    .finance-item .desc {
+      flex: 1;
+    }
+    .finance-item button {
+      background-color: #ffc107;
+      border: none;
+      color: #000;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .finance-item button.paid-btn {
+      background-color: #6c757d;
+      color: #fff;
+      cursor: not-allowed;
+    }
+    #financeChartContainer {
+      margin-top: 20px;
+      background-color: #1e1e1e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    #financeChart {
+      max-width: 100%;
+      height: 300px;
+    }
+    #reportSummary {
+      margin-top: 10px;
+      background-color: #1e1e1e;
+      padding: 10px;
+      border-radius: 4px;
+      line-height: 1.6;
+    }
+    #exportPdfBtn {
+      margin-top: 15px;
+      background-color: #17a2b8;
+      border: none;
+      color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    #exportPdfBtn:hover {
+      background-color: #138496;
+    }
+    /* Hidden sections */
+    section {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <i class="fas fa-flask" id="tab-aplicacoes-btn" title="Aplicações"></i>
+    <i class="fas fa-list-check" id="tab-tarefas-btn" title="Tarefas"></i>
+    <i class="fas fa-dollar-sign" id="tab-financeiro-btn" title="Financeiro"></i>
+    <i class="fas fa-chart-line" id="tab-relatorio-btn" title="Relatório"></i>
+    <i class="fas fa-cog" id="tab-config-btn" title="Configurações"></i>
+  </header>
+  <div class="container">
+    <!-- Aplicações Tab -->
+    <section id="aplicacoes">
+      <h2>Aplicações</h2>
+      <div class="form-group">
+        <label for="app-produto">Produto</label>
+        <input type="text" id="app-produto" placeholder="Nome do produto">
+      </div>
+      <div class="form-group">
+        <label for="app-quantidade">Quantidade</label>
+        <input type="number" id="app-quantidade" placeholder="Quantidade">
+      </div>
+      <div class="form-group">
+        <label for="app-data">Data</label>
+        <input type="date" id="app-data">
+      </div>
+      <button class="btn-save" id="saveAplicacao">Salvar</button>
+      <input type="text" id="searchAplicacao" class="search-field" placeholder="Buscar aplicação...">
+      <div class="list-section" id="aplicacaoList"></div>
+    </section>
+    <!-- Tarefas Tab -->
+    <section id="tarefas">
+      <h2>Tarefas</h2>
+      <div class="form-group">
+        <label for="task-desc">Tarefa</label>
+        <input type="text" id="task-desc" placeholder="Descrição da tarefa">
+      </div>
+      <div class="form-group">
+        <label for="task-date">Data</label>
+        <input type="date" id="task-date">
+      </div>
+      <button class="btn-save" id="saveTask">Salvar</button>
+      <input type="text" id="searchTask" class="search-field" placeholder="Buscar tarefa...">
+      <div class="list-section" id="taskGroups"></div>
+    </section>
+    <!-- Financeiro Tab -->
+    <section id="financeiro">
+      <h2>Financeiro</h2>
+      <div class="form-group">
+        <label for="fin-desc">Descrição</label>
+        <input type="text" id="fin-desc" placeholder="Descrição">
+      </div>
+      <div class="form-group">
+        <label for="fin-valor">Valor</label>
+        <input type="number" id="fin-valor" placeholder="Valor">
+      </div>
+      <div class="form-group">
+        <label for="fin-data">Data</label>
+        <input type="date" id="fin-data">
+      </div>
+      <button class="btn-save" id="saveFinanceiro">Salvar</button>
+      <input type="text" id="searchFinanceiro" class="search-field" placeholder="Buscar item financeiro...">
+      <div class="list-section" id="financeiroList"></div>
+      <div id="financeChartContainer">
+        <canvas id="financeChart"></canvas>
+      </div>
+    </section>
+    <!-- Relatório Tab -->
+    <section id="relatorio">
+      <h2>Relatório</h2>
+      <div id="reportSummary">Carregando relatório...</div>
+      <button id="exportPdfBtn">Exportar PDF</button>
+    </section>
+    <!-- Configurações Tab -->
+    <section id="config">
+      <h2>Configurações</h2>
+      <p>Ajustes do aplicativo estarão disponíveis em breve.</p>
+    </section>
+  </div>
+  <!-- Firebase JS -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Firebase configuration
+    var firebaseConfig = {
+      apiKey: "SEU_API_KEY",
+      authDomain: "SEU_AUTH_DOMAIN",
+      databaseURL: "SEU_DATABASE_URL",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_STORAGE_BUCKET",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+
+    // Tab navigation
+    const tabs = ['aplicacoes', 'tarefas', 'financeiro', 'relatorio', 'config'];
+    tabs.forEach(tab => {
+      document.getElementById('tab-' + tab + '-btn').addEventListener('click', function() {
+        showTab(tab);
+      });
+    });
+    function showTab(tab) {
+      tabs.forEach(t => {
+        document.getElementById(t).style.display = 'none';
+        document.getElementById('tab-' + t + '-btn').classList.remove('active');
+      });
+      document.getElementById(tab).style.display = 'block';
+      document.getElementById('tab-' + tab + '-btn').classList.add('active');
+    }
+    // Show first tab by default
+    showTab('aplicacoes');
+
+    // Aplicações handlers
+    var editAplicacaoId = null;
+    document.getElementById('saveAplicacao').addEventListener('click', function() {
+      var prod = document.getElementById('app-produto').value;
+      var qtd = document.getElementById('app-quantidade').value;
+      var data = document.getElementById('app-data').value;
+      if(prod === '' || qtd === '' || data === '') return;
+      var appsRef = database.ref('aplicacoes');
+      var newApp = { produto: prod, quantidade: parseFloat(qtd), data: data };
+      if(editAplicacaoId) {
+        appsRef.child(editAplicacaoId).update(newApp);
+        editAplicacaoId = null;
+      } else {
+        appsRef.push(newApp);
+      }
+      document.getElementById('app-produto').value = '';
+      document.getElementById('app-quantidade').value = '';
+      document.getElementById('app-data').value = '';
+    });
+    document.getElementById('searchAplicacao').addEventListener('input', function() {
+      renderAplicacoes();
+    });
+    function renderAplicacoes() {
+      var searchText = document.getElementById('searchAplicacao').value.toLowerCase();
+      var listEl = document.getElementById('aplicacaoList');
+      listEl.innerHTML = '';
+      database.ref('aplicacoes').orderByChild('data').once('value', function(snapshot) {
+        snapshot.forEach(function(child) {
+          var app = child.val();
+          if(app.produto.toLowerCase().includes(searchText)) {
+            var item = document.createElement('div');
+            item.className = 'finance-item';
+            var descDiv = document.createElement('div');
+            descDiv.className = 'desc';
+            descDiv.textContent = app.data + ' - ' + app.produto + ' (' + app.quantidade + ')';
+            item.appendChild(descDiv);
+            var editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.addEventListener('click', function() {
+              editAplicacao(child.key);
+            });
+            item.appendChild(editBtn);
+            listEl.appendChild(item);
+          }
+        });
+      });
+    }
+    function editAplicacao(id) {
+      database.ref('aplicacoes/' + id).once('value', function(snapshot) {
+        var app = snapshot.val();
+        document.getElementById('app-produto').value = app.produto;
+        document.getElementById('app-quantidade').value = app.quantidade;
+        document.getElementById('app-data').value = app.data;
+        editAplicacaoId = id;
+      });
+    }
+    // Listen for application updates
+    database.ref('aplicacoes').on('value', function() {
+      renderAplicacoes();
+      updateReport();
+    });
+
+    // Tarefas handlers
+    var editTaskId = null;
+    document.getElementById('saveTask').addEventListener('click', function() {
+      var desc = document.getElementById('task-desc').value;
+      var date = document.getElementById('task-date').value;
+      if(desc === '' || date === '') return;
+      var tasksRef = database.ref('tarefas');
+      var newTask = { desc: desc, date: date, done: false };
+      if(editTaskId) {
+        tasksRef.child(editTaskId).update(newTask);
+        editTaskId = null;
+      } else {
+        tasksRef.push(newTask);
+      }
+      document.getElementById('task-desc').value = '';
+      document.getElementById('task-date').value = '';
+    });
+    document.getElementById('searchTask').addEventListener('input', function() {
+      renderTasks();
+    });
+    function renderTasks() {
+      var searchText = document.getElementById('searchTask').value.toLowerCase();
+      var groupsEl = document.getElementById('taskGroups');
+      groupsEl.innerHTML = '';
+      database.ref('tarefas').orderByChild('date').once('value', function(snapshot) {
+        var tasks = {};
+        snapshot.forEach(function(child) {
+          var t = child.val();
+          if(t.desc.toLowerCase().includes(searchText)) {
+            var group = tasks[t.date] || [];
+            group.push({id: child.key, desc: t.desc, done: t.done});
+            tasks[t.date] = group;
+          }
+        });
+        var dates = Object.keys(tasks).sort();
+        dates.forEach(function(date) {
+          var groupDiv = document.createElement('div');
+          groupDiv.className = 'task-group';
+          var title = document.createElement('h3');
+          title.textContent = date;
+          groupDiv.appendChild(title);
+          var ul = document.createElement('ul');
+          ul.className = 'task-list';
+          tasks[date].forEach(function(t) {
+            var li = document.createElement('li');
+            if(t.done) li.classList.add('completed');
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = t.done;
+            checkbox.style.transform = 'scale(0.8)';
+            checkbox.addEventListener('change', function() {
+              database.ref('tarefas/' + t.id).update({done: this.checked});
+            });
+            var span = document.createElement('span');
+            span.className = 'task-text';
+            span.textContent = t.desc;
+            var editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.addEventListener('click', function() {
+              editTask(t.id);
+            });
+            var actions = document.createElement('div');
+            actions.className = 'task-actions';
+            actions.appendChild(editBtn);
+            li.appendChild(checkbox);
+            li.appendChild(span);
+            li.appendChild(actions);
+            ul.appendChild(li);
+          });
+          groupDiv.appendChild(ul);
+          groupsEl.appendChild(groupDiv);
+        });
+      });
+    }
+    function editTask(id) {
+      database.ref('tarefas/' + id).once('value', function(snapshot) {
+        var t = snapshot.val();
+        document.getElementById('task-desc').value = t.desc;
+        document.getElementById('task-date').value = t.date;
+        editTaskId = id;
+      });
+    }
+    // Listen for task updates
+    database.ref('tarefas').on('value', function() {
+      renderTasks();
+      updateReport();
+    });
+
+    // Financeiro handlers
+    var editFinId = null;
+    document.getElementById('saveFinanceiro').addEventListener('click', function() {
+      var desc = document.getElementById('fin-desc').value;
+      var valor = document.getElementById('fin-valor').value;
+      var data = document.getElementById('fin-data').value;
+      if(desc === '' || valor === '' || data === '') return;
+      var finRef = database.ref('financeiro');
+      var newFin = { desc: desc, valor: parseFloat(valor), data: data, paid: false };
+      if(editFinId) {
+        finRef.child(editFinId).update(newFin);
+        editFinId = null;
+      } else {
+        finRef.push(newFin);
+      }
+      document.getElementById('fin-desc').value = '';
+      document.getElementById('fin-valor').value = '';
+      document.getElementById('fin-data').value = '';
+    });
+    document.getElementById('searchFinanceiro').addEventListener('input', function() {
+      renderFinanceiro();
+    });
+    function renderFinanceiro() {
+      var searchText = document.getElementById('searchFinanceiro').value.toLowerCase();
+      var listEl = document.getElementById('financeiroList');
+      listEl.innerHTML = '';
+      database.ref('financeiro').orderByChild('data').once('value', function(snapshot) {
+        var finances = [];
+        snapshot.forEach(function(child) {
+          var f = child.val();
+          if(f.desc.toLowerCase().includes(searchText)) {
+            finances.push({id: child.key, ...f});
+          }
+        });
+        finances.sort((a, b) => a.data.localeCompare(b.data));
+        finances.forEach(function(f) {
+          var item = document.createElement('div');
+          item.className = 'finance-item' + (f.paid ? ' paid' : '');
+          var descDiv = document.createElement('div');
+          descDiv.className = 'desc';
+          descDiv.textContent = f.data + ' - ' + f.desc + ' (R$ ' + f.valor.toFixed(2) + ')';
+          item.appendChild(descDiv);
+          var payBtn = document.createElement('button');
+          if(f.paid) {
+            payBtn.textContent = 'Pago';
+            payBtn.className = 'paid-btn';
+            payBtn.disabled = true;
+          } else {
+            payBtn.textContent = 'Pagar';
+            payBtn.addEventListener('click', function() {
+              database.ref('financeiro/' + f.id).update({paid: true});
+            });
+          }
+          item.appendChild(payBtn);
+          listEl.appendChild(item);
+        });
+        renderFinanceChart(finances);
+      });
+    }
+    function renderFinanceChart(finances) {
+      var ctx = document.getElementById('financeChart').getContext('2d');
+      var monthly = {};
+      finances.forEach(function(f) {
+        var month = f.data.slice(0,7);
+        monthly[month] = (monthly[month] || 0) + f.valor;
+      });
+      var labels = Object.keys(monthly).sort();
+      var data = labels.map(m => monthly[m]);
+      if(window.financeChart) {
+        window.financeChart.destroy();
+      }
+      window.financeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total R$ por mês',
+            data: data,
+            backgroundColor: '#4caf50'
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {color: '#fff'},
+              grid: { color: '#444' }
+            },
+            x: {
+              ticks: {color: '#fff'},
+              grid: { display: false }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#fff' } }
+          }
+        }
+      });
+    }
+    // Listen for finance updates
+    database.ref('financeiro').on('value', function() {
+      renderFinanceiro();
+      updateReport();
+    });
+
+    // Relatório
+    function updateReport() {
+      var summaryEl = document.getElementById('reportSummary');
+      var totalApps = 0, totalTasks = 0, doneTasks = 0, totalFin = 0, paidFin = 0;
+      var updates = { apps: false, tasks: false, fin: false };
+      database.ref('aplicacoes').once('value', function(snap) {
+        totalApps = snap.numChildren();
+        updates.apps = true;
+        checkAndUpdate();
+      });
+      database.ref('tarefas').once('value', function(snap) {
+        totalTasks = snap.numChildren();
+        var doneCount = 0;
+        snap.forEach(function(child) {
+          if(child.val().done) doneCount++;
+        });
+        doneTasks = doneCount;
+        updates.tasks = true;
+        checkAndUpdate();
+      });
+      database.ref('financeiro').once('value', function(snap) {
+        var sumVal = 0; var sumPaid = 0;
+        snap.forEach(function(child) {
+          sumVal += child.val().valor;
+          if(child.val().paid) sumPaid++;
+        });
+        totalFin = sumVal;
+        paidFin = sumPaid;
+        updates.fin = true;
+        checkAndUpdate();
+      });
+      function checkAndUpdate() {
+        if(updates.apps && updates.tasks && updates.fin) {
+          summaryEl.innerHTML = '' +
+            '<p>Total de aplicações registradas: ' + totalApps + '</p>' +
+            '<p>Total de tarefas: ' + totalTasks + ', concluídas: ' + doneTasks + '</p>' +
+            '<p>Total financeiro: R$ ' + totalFin.toFixed(2) + ' (' + paidFin + ' pagos)</p>';
+        }
+      }
+    }
+    // Export PDF
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+      const { jsPDF } = window.jspdf;
+      var doc = new jsPDF();
+      var summaryText = document.getElementById('reportSummary').innerText;
+      doc.text("Relatório Manejo Café", 10, 10);
+      doc.setFontSize(12);
+      var splitText = doc.splitTextToSize(summaryText, 180);
+      doc.text(splitText, 10, 20);
+      doc.save("relatorio.pdf");
+    });
+    // Initial report update
+    updateReport();
+  </script>
+</body>
+</html>

@@ -254,7 +254,242 @@ function inicializarApp() {
   carregarFinanceiro();
 }
 
-// Restante do JS continua...
+// Dados Locais
+const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+
+// Controle de Abas
+function mostrarAba(id) {
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('btn-' + id).classList.add('active');
+  localStorage.setItem('aba', id);
+}
+
+// Aplicações
+function adicionarAplicacao() {
+  const nova = {
+    data: dataApp.value,
+    produto: produtoApp.value,
+    dosagem: dosagemApp.value,
+    tipo: tipoApp.value
+  };
+  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+  aplicacoes.push(nova);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+}
+
+function atualizarAplicacoes() {
+  const filtro = pesquisaAplicacoes.value.toLowerCase();
+  listaAplicacoes.innerHTML = '';
+  aplicacoes.filter(a => `${a.data} ${a.produto} ${a.dosagem} ${a.tipo}`.toLowerCase().includes(filtro))
+    .forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<span>${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}</span>`;
+      listaAplicacoes.appendChild(div);
+    });
+}
+
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      aplicacoes.length = 0;
+      aplicacoes.push(...snapshot.val());
+      atualizarAplicacoes();
+    }
+  });
+}
+
+// Tarefas
+function adicionarTarefa() {
+  const nova = {
+    data: dataTarefa.value,
+    descricao: descricaoTarefa.value,
+    prioridade: prioridadeTarefa.value,
+    executada: false
+  };
+  if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+  tarefas.push(nova);
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function salvarTarefas() {
+  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
+}
+
+function atualizarTarefas() {
+  const filtro = pesquisaTarefas.value.toLowerCase();
+  listaTarefas.innerHTML = '';
+  listaTarefasFeitas.innerHTML = '';
+
+  tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
+    listaTarefas.appendChild(div);
+  });
+
+  tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
+    listaTarefasFeitas.appendChild(div);
+  });
+}
+
+function marcarTarefa(index, checked) {
+  if (checked) {
+    tarefas[index].executada = true;
+    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function marcarTarefaFeita(index, checked) {
+  if (!checked) {
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function carregarTarefas() {
+  db.ref('Tarefas').once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      tarefas.length = 0;
+      tarefasFeitas.length = 0;
+      snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+      atualizarTarefas();
+    }
+  });
+}
+
+// Financeiro
+function adicionarFinanceiro() {
+  const novo = {
+    data: dataFin.value,
+    produto: produtoFin.value,
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false
+  };
+  if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+  financeiro.push(novo);
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function atualizarFinanceiro() {
+  const filtro = pesquisaFinanceiro.value.toLowerCase();
+  financeiroVencer.innerHTML = '';
+  financeiroPago.innerHTML = '';
+
+  const hoje = new Date();
+  let notificacao = 0;
+
+  financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>`;
+
+    if (!f.pago) {
+      const botao = document.createElement('button');
+      botao.className = 'botao-pequeno botao-verde';
+      botao.textContent = 'Pagar';
+      botao.onclick = () => marcarComoPago(i);
+      div.appendChild(botao);
+
+      // Verificar vencimento (notificação)
+      const dataVencimento = new Date(f.data + "T00:00:00");
+      const diferencaDias = (dataVencimento - hoje) / (1000 * 60 * 60 * 24);
+      if (diferencaDias <= 2 && diferencaDias >= 0) notificacao++;
+
+      financeiroVencer.appendChild(div);
+    } else {
+      const botaoDel = document.createElement('button');
+      botaoDel.className = 'botao-pequeno botao-vermelho';
+      botaoDel.textContent = 'Excluir';
+      botaoDel.onclick = () => excluirPago(i);
+      div.appendChild(botaoDel);
+
+      financeiroPago.appendChild(div);
+    }
+  });
+
+  atualizarNotificacao(notificacao);
+  gerarGrafico();
+}
+
+function marcarComoPago(index) {
+  financeiro[index].pago = true;
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function excluirPago(index) {
+  financeiro.splice(index, 1);
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function atualizarNotificacao(qtd) {
+  const badge = document.getElementById('notificacaoFinanceiro');
+  if (qtd > 0) {
+    badge.innerHTML = `<span class="badge">${qtd}</span>`;
+  } else {
+    badge.innerHTML = '';
+  }
+}
+
+function carregarFinanceiro() {
+  db.ref('Financeiro').once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      financeiro.length = 0;
+      financeiro.push(...snapshot.val());
+      atualizarFinanceiro();
+    }
+  });
+}
+
+// Gráfico
+function gerarGrafico() {
+  const ctx = document.getElementById('graficoGastos').getContext('2d');
+  if (window.grafico) window.grafico.destroy();
+  const totais = {};
+  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
+  window.grafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totais),
+      datasets: [{ label: 'Gastos Pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+    }
+  });
+}
+
+// Relatório
+function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text('Relatório - Manejo Café', 20, 20);
+  doc.text('Total Aplicações: ' + aplicacoes.length, 20, 40);
+  doc.text('Total Tarefas: ' + (tarefas.length + tarefasFeitas.length), 20, 50);
+  doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
+  doc.save('relatorio_manejo.pdf');
+}
+
+// Tema
+function alternarTema() {
+  document.body.classList.toggle('claro');
+}
 </script>
 
 </body>

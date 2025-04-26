@@ -1,255 +1,459 @@
-// CONFIGURAÇÃO DO FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-  authDomain: "manej-cafe.firebaseapp.com",
-  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-  projectId: "manej-cafe",
-  storageBucket: "manej-cafe.appspot.com",
-  messagingSenderId: "808931200634",
-  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
-// DADOS LOCAIS
-const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café</title>
 
-// FUNÇÕES GERAIS
-function inicializarApp() {
-  if (localStorage.getItem('tema') === 'claro') document.body.classList.add('claro');
-  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  carregarAplicacoes();
-  carregarTarefas();
-  carregarFinanceiro();
-}
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-function alternarTema() {
-  document.body.classList.toggle('claro');
-  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
-}
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-function mostrarAba(id) {
-  document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('btn-' + id).classList.add('active');
-  localStorage.setItem('aba', id);
-}
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-// ----------------- APLICACOES -----------------
-function adicionarAplicacao() {
-  const nova = {
-    data: dataApp.value,
-    produto: produtoApp.value,
-    dosagem: dosagemApp.value,
-    tipo: tipoApp.value
-  };
-  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha todos os campos!");
-  aplicacoes.push(nova);
-  firebase.database().ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
-}
-
-function atualizarAplicacoes() {
-  const filtro = filtroAplicacoes.value.toLowerCase();
-  listaAplicacoes.innerHTML = '';
-  aplicacoes.filter(a => 
-    a.data.includes(filtro) || 
-    a.produto.toLowerCase().includes(filtro) || 
-    a.dosagem.toLowerCase().includes(filtro) || 
-    a.tipo.toLowerCase().includes(filtro)
-  ).forEach((a, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}`;
-    const btn = document.createElement('button');
-    btn.textContent = '❌';
-    btn.onclick = () => {
-      aplicacoes.splice(i, 1);
-      firebase.database().ref('Aplicacoes').set(aplicacoes);
-      atualizarAplicacoes();
-    };
-    div.appendChild(btn);
-    listaAplicacoes.appendChild(div);
-  });
-}
-
-function carregarAplicacoes() {
-  firebase.database().ref('Aplicacoes').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      aplicacoes.length = 0;
-      aplicacoes.push(...snapshot.val());
-      atualizarAplicacoes();
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
     }
-  });
-}
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      background: #1e1e1e;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .menu button {
+      flex: 1;
+      padding: 12px;
+      background: #1e1e1e;
+      color: #e0e0e0;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .menu button.active {
+      background: #388e3c;
+    }
+    .aba {
+      display: none;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+    .aba.active {
+      display: block;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #2c2c2c;
+      color: #fff;
+      font-size: 16px;
+    }
+    .item {
+      background: #1e1e1e;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 5px solid #66bb6a;
+    }
+    .item.editing {
+      border-left-color: #ff9800;
+    }
+    .item input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    .item-actions button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #fff;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    .item-actions button.delete { color: #f44336; }
+    .item-actions button.edit { color: #ffc107; }
+    .filtro {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      background: #2c2c2c;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    #botaoTema {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #388e3c;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+    }
+    #botaoTema:hover {
+      background: #2e7d32;
+    }
+    .claro {
+      background: #f5f5f5;
+      color: #111;
+    }
+    .claro .menu { background: #ddd; }
+    .claro .menu button { background: #ddd; color: #111; }
+    .claro .menu button.active { background: #c8e6c9; }
+    .claro input, .claro select, .claro button, .claro .filtro {
+      background: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+    .claro .item { background: #fff; }
+  </style>
+</head>
 
-// ----------------- TAREFAS -----------------
-function adicionarTarefa() {
-  const nova = {
-    data: dataTarefa.value,
-    descricao: descricaoTarefa.value,
-    prioridade: prioridadeTarefa.value,
-    executada: false
+<body onload="inicializarApp()">
+  <div class="menu">
+    <button onclick="mostrarAba('aplicacoes')" id="btn-aplicacoes">Aplicações</button>
+    <button onclick="mostrarAba('tarefas')" id="btn-tarefas">Tarefas</button>
+    <button onclick="mostrarAba('financeiro')" id="btn-financeiro">Financeiro</button>
+    <button onclick="mostrarAba('relatorio')" id="btn-relatorio">Relatório</button>
+  </div>
+
+  <button id="botaoTema" onclick="alternarTema()">☀️</button>
+
+  <div id="aplicacoes" class="aba">
+    <h3>Aplicações</h3>
+    <input class="filtro" id="filtroAplicacoes" placeholder="Pesquisar...">
+    <input id="dataApp" type="date">
+    <input id="produtoApp" placeholder="Produto">
+    <input id="dosagemApp" placeholder="Dosagem">
+    <select id="tipoApp">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <button onclick="adicionarAplicacao()">Salvar</button>
+    <div id="listaAplicacoes"></div>
+  </div>
+
+  <div id="tarefas" class="aba">
+    <h3>Tarefas</h3>
+    <input class="filtro" id="filtroTarefas" placeholder="Pesquisar...">
+    <input id="dataTarefa" type="date">
+    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+    <select id="prioridadeTarefa">
+      <option>Alta</option>
+      <option>Média</option>
+      <option>Baixa</option>
+    </select>
+    <button onclick="adicionarTarefa()">Salvar</button>
+    <h4>A Fazer</h4>
+    <div id="listaTarefas"></div>
+    <h4>Executadas</h4>
+    <div id="listaTarefasFeitas"></div>
+  </div>
+
+  <div id="financeiro" class="aba">
+    <h3>Financeiro</h3>
+    <input class="filtro" id="filtroFinanceiro" placeholder="Pesquisar...">
+    <input id="dataFin" type="date">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="valorFin" type="number" placeholder="Valor">
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <button onclick="adicionarFinanceiro()">Salvar</button>
+    <h4>A Vencer</h4>
+    <div id="financeiroVencer"></div>
+    <h4>Pagos</h4>
+    <div id="financeiroPago"></div>
+    <canvas id="graficoGastos"></canvas>
+  </div>
+
+  <div id="relatorio" class="aba">
+    <h3>Relatório</h3>
+    <p>Total de Aplicações: <span id="relAplicacoes">0</span></p>
+    <p>Total de Tarefas A Fazer: <span id="relTarefas">0</span></p>
+    <p>Total de Tarefas Executadas: <span id="relFeitas">0</span></p>
+    <p>Total de Gastos Pagos: R$ <span id="relPago">0.00</span></p>
+    <p>Total de Gastos Pendentes: R$ <span id="relPendente">0.00</span></p>
+    <button onclick="gerarRelatorioPDF()">Exportar PDF</button>
+  </div>
+
+<script>
+  // Configurações Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com",
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
   };
-  if (!nova.data || !nova.descricao) return alert("Preencha todos os campos!");
-  tarefas.push(nova);
-  salvarTarefas();
-  atualizarTarefas();
-}
 
-function atualizarTarefas() {
-  const filtro = filtroTarefas.value.toLowerCase();
-  listaTarefas.innerHTML = '';
-  listaTarefasFeitas.innerHTML = '';
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  tarefas.sort((a, b) => new Date(a.data) - new Date(b.data)).forEach((t, i) => {
-    if (t.data.includes(filtro) || t.descricao.toLowerCase().includes(filtro)) {
+  // Dados locais
+  const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+
+  function inicializarApp() {
+    restaurarTema();
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+    carregarDados();
+  }
+
+  function alternarTema() {
+    document.body.classList.toggle('claro');
+    localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+  }
+
+  function restaurarTema() {
+    if (localStorage.getItem('tema') === 'claro') {
+      document.body.classList.add('claro');
+    }
+  }
+
+  function mostrarAba(id) {
+    document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('btn-' + id).classList.add('active');
+    localStorage.setItem('aba', id);
+  }
+
+  function carregarDados() {
+    db.ref('Aplicacoes').once('value').then(s => {
+      if (s.exists()) {
+        aplicacoes.push(...s.val());
+        atualizarAplicacoes();
+      }
+    });
+    db.ref('Tarefas').once('value').then(s => {
+      if (s.exists()) {
+        s.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+        atualizarTarefas();
+      }
+    });
+    db.ref('Financeiro').once('value').then(s => {
+      if (s.exists()) {
+        financeiro.push(...s.val());
+        atualizarFinanceiro();
+      }
+    });
+  }
+
+  // --- Aplicações ---
+  function adicionarAplicacao() {
+    const nova = {
+      data: dataApp.value,
+      produto: produtoApp.value,
+      dosagem: dosagemApp.value,
+      tipo: tipoApp.value
+    };
+    if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+    aplicacoes.push(nova);
+    db.ref('Aplicacoes').set(aplicacoes);
+    atualizarAplicacoes();
+  }
+
+  function atualizarAplicacoes() {
+    listaAplicacoes.innerHTML = '';
+    const filtro = filtroAplicacoes.value.toLowerCase();
+    aplicacoes.filter(a => `${a.data} ${a.produto} ${a.tipo} ${a.dosagem}`.toLowerCase().includes(filtro))
+    .forEach((a, i) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `<input type="checkbox" onchange="executarTarefa(${i})"> 
-                       <b>[${t.prioridade}]</b> ${t.data} - ${t.descricao}`;
-      const edit = document.createElement('button');
-      edit.textContent = '✏️';
-      edit.onclick = () => editarTarefa(i);
-      div.appendChild(edit);
-      listaTarefas.appendChild(div);
-    }
-  });
+      div.innerHTML = `${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}`;
+      const del = document.createElement('button');
+      del.textContent = '❌';
+      del.onclick = () => {
+        aplicacoes.splice(i,1);
+        db.ref('Aplicacoes').set(aplicacoes);
+        atualizarAplicacoes();
+      };
+      div.appendChild(del);
+      listaAplicacoes.appendChild(div);
+    });
+  }
 
-  tarefasFeitas.sort((a, b) => new Date(a.data) - new Date(b.data)).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `<b>[${t.prioridade}]</b> ${t.data} - ${t.descricao}`;
-    const del = document.createElement('button');
-    del.textContent = '❌';
-    del.onclick = () => {
-      tarefasFeitas.splice(i, 1);
-      salvarTarefas();
-      atualizarTarefas();
+  // --- Tarefas ---
+  function adicionarTarefa() {
+    const nova = {
+      data: dataTarefa.value,
+      descricao: descricaoTarefa.value,
+      prioridade: prioridadeTarefa.value,
+      executada: false
     };
-    div.appendChild(del);
-    listaTarefasFeitas.appendChild(div);
-  });
-}
-
-function executarTarefa(index) {
-  tarefas[index].executada = true;
-  tarefasFeitas.push(tarefas.splice(index, 1)[0]);
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function editarTarefa(index) {
-  const novoTexto = prompt("Editar tarefa:", tarefas[index].descricao);
-  if (novoTexto !== null) {
-    tarefas[index].descricao = novoTexto;
+    if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+    tarefas.push(nova);
     salvarTarefas();
     atualizarTarefas();
   }
-}
 
-function salvarTarefas() {
-  firebase.database().ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
-}
+  function salvarTarefas() {
+    const todas = [...tarefas, ...tarefasFeitas];
+    db.ref('Tarefas').set(todas);
+  }
 
-function carregarTarefas() {
-  firebase.database().ref('Tarefas').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      tarefas.length = 0;
-      tarefasFeitas.length = 0;
-      snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+  function atualizarTarefas() {
+    listaTarefas.innerHTML = '';
+    listaTarefasFeitas.innerHTML = '';
+    const filtro = filtroTarefas.value.toLowerCase();
+
+    tarefas.sort((a,b)=>a.data.localeCompare(b.data));
+    tarefas.filter(t => `${t.data} ${t.descricao} ${t.prioridade}`.toLowerCase().includes(filtro))
+    .forEach((t, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.onclick = () => {
+        t.executada = true;
+        tarefasFeitas.push(tarefas.splice(i,1)[0]);
+        salvarTarefas();
+        atualizarTarefas();
+      };
+      const span = document.createElement('span');
+      span.innerText = `${t.data} - ${t.descricao} (${t.prioridade})`;
+      const edit = document.createElement('button');
+      edit.innerHTML = '✏️';
+      edit.onclick = () => editarTarefa(t, i);
+      div.appendChild(chk);
+      div.appendChild(span);
+      div.appendChild(edit);
+      listaTarefas.appendChild(div);
+    });
+
+    tarefasFeitas.sort((a,b)=>a.data.localeCompare(b.data));
+    tarefasFeitas.filter(t => `${t.data} ${t.descricao} ${t.prioridade}`.toLowerCase().includes(filtro))
+    .forEach((t,i)=>{
+      const div = document.createElement('div');
+      div.className = 'item';
+      const span = document.createElement('span');
+      span.innerText = `${t.data} - ${t.descricao} (${t.prioridade})`;
+      const del = document.createElement('button');
+      del.textContent = '❌';
+      del.onclick = () => {
+        tarefasFeitas.splice(i,1);
+        salvarTarefas();
+        atualizarTarefas();
+      };
+      div.appendChild(span);
+      div.appendChild(del);
+      listaTarefasFeitas.appendChild(div);
+    });
+  }
+
+  function editarTarefa(t, i) {
+    const novaDesc = prompt("Editar descrição:", t.descricao);
+    if (novaDesc) {
+      tarefas[i].descricao = novaDesc;
+      salvarTarefas();
       atualizarTarefas();
     }
-  });
-}
+  }
 
-// ----------------- FINANCEIRO -----------------
-function adicionarFinanceiro() {
-  const novo = {
-    data: dataFin.value,
-    produto: produtoFin.value,
-    valor: parseFloat(valorFin.value),
-    tipo: tipoFin.value,
-    pago: false
-  };
-  if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha todos os campos!");
-  financeiro.push(novo);
-  salvarFinanceiro();
-  atualizarFinanceiro();
-}
+  // --- Financeiro ---
+  function adicionarFinanceiro() {
+    const novo = {
+      data: dataFin.value,
+      produto: produtoFin.value,
+      valor: parseFloat(valorFin.value),
+      tipo: tipoFin.value,
+      pago: false
+    };
+    if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+    financeiro.push(novo);
+    db.ref('Financeiro').set(financeiro);
+    atualizarFinanceiro();
+  }
 
-function atualizarFinanceiro() {
-  const filtro = filtroFinanceiro.value.toLowerCase();
-  financeiroVencer.innerHTML = '';
-  financeiroPago.innerHTML = '';
-  let total = 0;
+  function atualizarFinanceiro() {
+    financeiroVencer.innerHTML = '';
+    financeiroPago.innerHTML = '';
+    const filtro = filtroFinanceiro.value.toLowerCase();
+    let total = 0;
 
-  financeiro.forEach((f, i) => {
-    if (f.data.includes(filtro) || f.produto.toLowerCase().includes(filtro) || f.tipo.toLowerCase().includes(filtro)) {
+    financeiro.filter(f => `${f.data} ${f.produto} ${f.tipo}`.toLowerCase().includes(filtro))
+    .forEach((f,i)=>{
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}`;
       const btn = document.createElement('button');
       btn.textContent = f.pago ? '❌' : '✔️';
       btn.onclick = () => {
-        if (f.pago) financeiro.splice(i, 1);
+        if(f.pago) financeiro.splice(i,1);
         else f.pago = true;
-        salvarFinanceiro();
+        db.ref('Financeiro').set(financeiro);
         atualizarFinanceiro();
       };
       div.appendChild(btn);
       (f.pago ? financeiroPago : financeiroVencer).appendChild(div);
       if (!f.pago) total += f.valor;
-    }
-  });
+    });
 
-  gerarGrafico();
-}
+    gerarGrafico();
+  }
 
-function salvarFinanceiro() {
-  firebase.database().ref('Financeiro').set(financeiro);
-}
+  function gerarGrafico() {
+    const ctx = document.getElementById('graficoGastos').getContext('2d');
+    if (window.grafico) window.grafico.destroy();
+    const totais = {};
+    financeiro.forEach(f => { if (f.pago) totais[f.tipo]=(totais[f.tipo]||0)+f.valor; });
+    window.grafico = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(totais),
+        datasets: [{ label: 'Gastos pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+      }
+    });
+  }
 
-function carregarFinanceiro() {
-  firebase.database().ref('Financeiro').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      financeiro.length = 0;
-      financeiro.push(...snapshot.val());
-      atualizarFinanceiro();
-    }
-  });
-}
+  // --- Relatório e PDF ---
+  function gerarRelatorioPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let pago = 0, pendente = 0;
+    financeiro.forEach(f => f.pago ? pago+=f.valor : pendente+=f.valor);
 
-function gerarGrafico() {
-  const ctx = document.getElementById('graficoGastos').getContext('2d');
-  if (window.grafico) window.grafico.destroy();
-  const totais = {};
-  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
-  window.grafico = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: Object.keys(totais),
-      datasets: [{ label: 'Gastos pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
-    }
-  });
-}
+    doc.setFontSize(16);
+    doc.text('Relatório Manejo Café', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Aplicações: ${aplicacoes.length}`, 20, 40);
+    doc.text(`Tarefas A Fazer: ${tarefas.length}`, 20, 50);
+    doc.text(`Tarefas Executadas: ${tarefasFeitas.length}`, 20, 60);
+    doc.text(`Gastos Pagos: R$ ${pago.toFixed(2)}`, 20, 70);
+    doc.text(`Gastos Pendentes: R$ ${pendente.toFixed(2)}`, 20, 80);
+    doc.save('relatorio_manejo.pdf');
+  }
+</script>
 
-// ----------------- RELATÓRIO -----------------
-function exportarRelatorioPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(14);
-  doc.text("Relatório Manejo Café", 20, 20);
-  doc.setFontSize(12);
-  doc.text(`Aplicações: ${aplicacoes.length}`, 20, 40);
-  doc.text(`Tarefas a Fazer: ${tarefas.length}`, 20, 50);
-  doc.text(`Tarefas Executadas: ${tarefasFeitas.length}`, 20, 60);
-
-  let pago = 0, pendente = 0;
-  financeiro.forEach(f => f.pago ? pago += f.valor : pendente += f.valor);
-
-  doc.text(`Gastos Pagos: R$ ${pago.toFixed(2)}`, 20, 70);
-  doc.text(`Gastos Pendentes: R$ ${pendente.toFixed(2)}`, 20, 80);
-  doc.save("relatorio_manejo.pdf");
-}
+</body>
+</html>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Menu Financeiro</title>
+  <title>Manejo Café</title>
 
-  <!-- Firebase -->
+  <!-- Firebase Compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -19,9 +19,8 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #121212;
+      background-color: #121212;
       color: #e0e0e0;
-      overflow-x: hidden;
     }
     .conteudo {
       padding: 20px;
@@ -29,8 +28,26 @@
       max-width: 800px;
       margin: auto;
     }
-    h2 {
-      margin-top: 0;
+    .menu-superior {
+      display: flex;
+      justify-content: center;
+      background-color: #1f1f1f;
+      padding: 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .menu-superior button {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 22px;
+      margin: 0 15px;
+      cursor: pointer;
+    }
+    .menu-superior button.active, .menu-superior button:hover {
+      color: #4caf50;
     }
     input, select, button {
       width: 100%;
@@ -41,7 +58,6 @@
       background-color: #2c2c2c;
       color: #fff;
       font-size: 16px;
-      box-sizing: border-box;
     }
     button {
       background-color: #4caf50;
@@ -52,82 +68,102 @@
     button:hover {
       background-color: #45a049;
     }
+    .campo-pesquisa {
+      padding: 10px;
+      background: #2c2c2c;
+      border: 1px solid #555;
+      border-radius: 8px;
+      margin: 10px 0;
+      color: white;
+      font-size: 16px;
+    }
     .item {
       background: #1e1e1e;
-      padding: 10px;
-      margin: 8px 0;
+      padding: 12px;
+      margin: 10px 0;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .grupo-data {
-      margin-top: 20px;
+    .item span {
+      flex-grow: 1;
+      margin-right: 10px;
     }
-    .grupo-data h4 {
-      margin-bottom: 8px;
-      color: #4caf50;
+    .btn-pequeno {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      margin-left: 5px;
     }
-    .botao-pagar {
+    .btn-pagar {
       background-color: #4caf50;
       color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      height: auto;
-      width: auto;
-      min-width: 0;
-      flex-shrink: 0;
-      cursor: pointer;
-      margin-left: 8px;
     }
-    .botao-excluir {
-      background-color: #e53935;
+    .btn-excluir {
+      background-color: #f44336;
       color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      height: auto;
-      width: auto;
-      min-width: 0;
-      flex-shrink: 0;
-      cursor: pointer;
-      margin-left: 8px;
     }
     canvas {
       background: #1e1e1e;
       border-radius: 10px;
-      padding: 10px;
       margin-top: 20px;
+      padding: 10px;
+    }
+    .notificacao {
+      background-color: #d32f2f;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      position: fixed;
+      top: 50px;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: none;
     }
   </style>
 </head>
 
 <body onload="inicializarApp()">
 
+<div class="menu-superior">
+  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+  <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+</div>
+
+<div id="notificacao" class="notificacao"></div>
+
 <div class="conteudo">
-  <h2>Financeiro</h2>
-  <input id="dataFin" type="date">
-  <input id="produtoFin" placeholder="Produto">
-  <input id="valorFin" placeholder="Valor" type="number">
-  <select id="tipoFin">
-    <option>Adubo</option>
-    <option>Fungicida</option>
-    <option>Inseticida</option>
-    <option>Herbicida</option>
-  </select>
-  <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
-  <input id="pesquisaFinanceiro" placeholder="Pesquisar..." oninput="atualizarFinanceiro()" style="margin-top: 10px;">
+  <!-- Menu Financeiro -->
+  <div id="financeiro" class="aba">
+    <h2>Financeiro</h2>
+    <input id="dataFin" type="date">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="valorFin" placeholder="Valor" type="number">
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+    <h4>A Vencer</h4>
+    <div id="financeiroVencer"></div>
+    <h4>Pagos</h4>
+    <div id="financeiroPago"></div>
+    <canvas id="graficoGastos"></canvas>
+  </div>
 
-  <h3>A Vencer</h3>
-  <div id="financeiroVencer"></div>
-
-  <h3>Pagos</h3>
-  <div id="financeiroPago"></div>
-
-  <canvas id="graficoGastos"></canvas>
+  <!-- Outros Menus (Placeholder) -->
+  <div id="aplicacoes" class="aba"></div>
+  <div id="tarefas" class="aba"></div>
+  <div id="relatorio" class="aba"></div>
+  <div id="configuracoes" class="aba"></div>
 </div>
 
 <script>
@@ -144,83 +180,86 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  const financeiro = [];
+  let financeiro = [];
 
   function inicializarApp() {
+    mostrarAba('financeiro');
     carregarFinanceiro();
+  }
+
+  function mostrarAba(id) {
+    document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('btn-' + id).classList.add('active');
   }
 
   function adicionarFinanceiro() {
     const novo = {
-      data: dataFin.value,
-      produto: produtoFin.value,
-      valor: parseFloat(valorFin.value),
-      tipo: tipoFin.value,
+      data: document.getElementById('dataFin').value,
+      produto: document.getElementById('produtoFin').value,
+      valor: parseFloat(document.getElementById('valorFin').value),
+      tipo: document.getElementById('tipoFin').value,
       pago: false
     };
-    if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha todos os campos!");
+    if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
     financeiro.push(novo);
     db.ref('Financeiro').set(financeiro);
     atualizarFinanceiro();
   }
 
   function atualizarFinanceiro() {
-    const filtro = pesquisaFinanceiro.value.toLowerCase();
+    const filtro = document.getElementById('pesquisaFinanceiro').value.toLowerCase();
     const vencer = document.getElementById('financeiroVencer');
     const pagos = document.getElementById('financeiroPago');
     vencer.innerHTML = '';
     pagos.innerHTML = '';
 
-    const vencerPorData = {}, pagosPorData = {};
+    const vencerPorData = {};
+    const pagosPorData = {};
 
     financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>`;
+
       if (!f.pago) {
-        if (!vencerPorData[f.data]) vencerPorData[f.data] = [];
-        vencerPorData[f.data].push({f, i});
+        const btn = document.createElement('button');
+        btn.className = 'btn-pequeno btn-pagar';
+        btn.innerText = 'Pagar';
+        btn.onclick = () => pagarConta(i);
+        div.appendChild(btn);
+
+        vencerPorData[f.data] = vencerPorData[f.data] || [];
+        vencerPorData[f.data].push(div);
       } else {
-        if (!pagosPorData[f.data]) pagosPorData[f.data] = [];
-        pagosPorData[f.data].push({f, i});
+        const btn = document.createElement('button');
+        btn.className = 'btn-pequeno btn-excluir';
+        btn.innerText = 'Excluir';
+        btn.onclick = () => excluirConta(i);
+        div.appendChild(btn);
+
+        pagosPorData[f.data] = pagosPorData[f.data] || [];
+        pagosPorData[f.data].push(div);
       }
     });
 
-    // Renderizar Contas a Vencer
+    // Exibir agrupados por data
     Object.keys(vencerPorData).sort().forEach(data => {
-      const grupo = document.createElement('div');
-      grupo.className = 'grupo-data';
-      grupo.innerHTML = `<h4>${data}</h4>`;
-      vencerPorData[data].forEach(({f, i}) => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = `<span>${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>`;
-        const btnPagar = document.createElement('button');
-        btnPagar.className = 'botao-pagar';
-        btnPagar.innerText = 'Pagar';
-        btnPagar.onclick = () => pagarConta(i);
-        item.appendChild(btnPagar);
-        grupo.appendChild(item);
-      });
-      vencer.appendChild(grupo);
+      const titulo = document.createElement('h5');
+      titulo.innerText = data;
+      vencer.appendChild(titulo);
+      vencerPorData[data].forEach(div => vencer.appendChild(div));
     });
 
-    // Renderizar Contas Pagas
     Object.keys(pagosPorData).sort().forEach(data => {
-      const grupo = document.createElement('div');
-      grupo.className = 'grupo-data';
-      grupo.innerHTML = `<h4>${data}</h4>`;
-      pagosPorData[data].forEach(({f, i}) => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = `<span>${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>`;
-        const btnExcluir = document.createElement('button');
-        btnExcluir.className = 'botao-excluir';
-        btnExcluir.innerText = 'Excluir';
-        btnExcluir.onclick = () => excluirConta(i);
-        item.appendChild(btnExcluir);
-        grupo.appendChild(item);
-      });
-      pagos.appendChild(grupo);
+      const titulo = document.createElement('h5');
+      titulo.innerText = data;
+      pagos.appendChild(titulo);
+      pagosPorData[data].forEach(div => pagos.appendChild(div));
     });
 
+    verificarContasVencendo();
     gerarGrafico();
   }
 
@@ -239,11 +278,28 @@
   function carregarFinanceiro() {
     db.ref('Financeiro').once('value').then(snapshot => {
       if (snapshot.exists()) {
-        financeiro.length = 0;
-        financeiro.push(...snapshot.val());
-        atualizarFinanceiro();
+        financeiro = snapshot.val();
       }
+      atualizarFinanceiro();
     });
+  }
+
+  function verificarContasVencendo() {
+    const hoje = new Date();
+    const amanha = new Date();
+    amanha.setDate(hoje.getDate() + 1);
+
+    const dataHoje = hoje.toISOString().split('T')[0];
+    const dataAmanha = amanha.toISOString().split('T')[0];
+
+    const vencendo = financeiro.some(f => !f.pago && (f.data === dataHoje || f.data === dataAmanha));
+
+    if (vencendo) {
+      const div = document.getElementById('notificacao');
+      div.innerText = "Atenção: Conta vencendo hoje ou amanhã!";
+      div.style.display = 'block';
+      setTimeout(() => { div.style.display = 'none'; }, 5000);
+    }
   }
 
   function gerarGrafico() {

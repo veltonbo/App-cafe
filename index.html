@@ -77,16 +77,6 @@
       justify-content: space-between;
       border-left: 4px solid #66bb6a;
     }
-    .item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      margin-right: 10px;
-      accent-color: #4caf50;
-      cursor: pointer;
-    }
-    .item span {
-      flex-grow: 1;
-    }
     .menu-superior {
       display: flex;
       justify-content: center;
@@ -103,41 +93,25 @@
       color: #aaa;
       font-size: 22px;
       margin: 0 15px;
+      position: relative;
       cursor: pointer;
       transition: 0.3s;
-      position: relative;
     }
     .menu-superior button.active, .menu-superior button:hover {
       color: #4caf50;
     }
-    .badge {
-      position: absolute;
-      top: 2px;
-      right: 2px;
+    .notificacao {
       background: red;
       color: white;
-      font-size: 10px;
-      padding: 2px 5px;
-      border-radius: 50%;
-    }
-    .botoes-financeiro {
-      display: flex;
-      gap: 8px;
-    }
-    .btn-pagar, .btn-excluir {
       font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-    }
-    .btn-pagar {
-      background: #4caf50;
-      color: white;
-    }
-    .btn-excluir {
-      background: red;
-      color: white;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 16px;
+      position: absolute;
+      top: -5px;
+      right: -5px;
     }
     canvas {
       background: #1e1e1e;
@@ -145,51 +119,33 @@
       padding: 10px;
       margin-top: 20px;
     }
+    .grupo-data {
+      margin-top: 20px;
+    }
+    .grupo-data h4 {
+      margin-bottom: 8px;
+      color: #66bb6a;
+    }
   </style>
 </head>
 
-<body>
+<body onload="inicializarApp()">
 
   <div class="menu-superior">
     <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
     <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacaoFinanceiro" class="badge" style="display:none;"></span></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacaoFinanceiro" class="notificacao" style="display:none;"></span></button>
     <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
     <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
   </div>
 
   <div class="conteudo">
     <div id="aplicacoes" class="aba">
-      <h2>Aplicações</h2>
-      <input id="dataApp" type="date">
-      <input id="produtoApp" placeholder="Produto">
-      <input id="dosagemApp" placeholder="Dosagem">
-      <select id="tipoApp">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
-      </select>
-      <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
-      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-      <div id="listaAplicacoes"></div>
+      <!-- Aplicações aqui -->
     </div>
 
     <div id="tarefas" class="aba">
-      <h2>Tarefas</h2>
-      <input id="dataTarefa" type="date">
-      <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-      <select id="prioridadeTarefa">
-        <option>Alta</option>
-        <option>Média</option>
-        <option>Baixa</option>
-      </select>
-      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-      <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-      <h4>A Fazer</h4>
-      <div id="listaTarefas"></div>
-      <h4>Executadas</h4>
-      <div id="listaTarefasFeitas"></div>
+      <!-- Tarefas aqui -->
     </div>
 
     <div id="financeiro" class="aba">
@@ -213,19 +169,15 @@
     </div>
 
     <div id="relatorio" class="aba">
-      <h2>Relatório</h2>
-      <div id="resumoRelatorio"></div>
-      <button onclick="exportarPDF()">Exportar PDF</button>
+      <!-- Relatório aqui -->
     </div>
 
     <div id="configuracoes" class="aba">
-      <h2>Configurações</h2>
-      <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+      <!-- Configurações aqui -->
     </div>
   </div>
 
 <script>
-// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -238,126 +190,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+const financeiro = [];
 
 function inicializarApp() {
-  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  carregarAplicacoes();
-  carregarTarefas();
+  mostrarAba(localStorage.getItem('aba') || 'financeiro');
   carregarFinanceiro();
 }
 
 function mostrarAba(id) {
   document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
   document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + id).classList.add('active');
   document.getElementById(id).classList.add('active');
+  document.getElementById('btn-' + id).classList.add('active');
   localStorage.setItem('aba', id);
-}
-
-function adicionarAplicacao() {
-  const nova = {
-    data: dataApp.value,
-    produto: produtoApp.value,
-    dosagem: dosagemApp.value,
-    tipo: tipoApp.value
-  };
-  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
-  aplicacoes.push(nova);
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
-}
-
-function atualizarAplicacoes() {
-  const filtro = pesquisaAplicacoes.value.toLowerCase();
-  listaAplicacoes.innerHTML = '';
-  aplicacoes.filter(a => `${a.data} ${a.produto} ${a.dosagem} ${a.tipo}`.toLowerCase().includes(filtro))
-    .forEach(a => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `<span>${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}</span>`;
-      listaAplicacoes.appendChild(div);
-    });
-}
-
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').once('value').then(snap => {
-    if (snap.exists()) {
-      aplicacoes.length = 0;
-      aplicacoes.push(...snap.val());
-      atualizarAplicacoes();
-    }
-  });
-}
-
-function adicionarTarefa() {
-  const nova = {
-    data: dataTarefa.value,
-    descricao: descricaoTarefa.value,
-    prioridade: prioridadeTarefa.value,
-    executada: false
-  };
-  if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
-  tarefas.push(nova);
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function salvarTarefas() {
-  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
-}
-
-function atualizarTarefas() {
-  const filtro = pesquisaTarefas.value.toLowerCase();
-  listaTarefas.innerHTML = '';
-  listaTarefasFeitas.innerHTML = '';
-
-  tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} - (${t.prioridade})</span>`;
-    listaTarefas.appendChild(div);
-  });
-
-  tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} - (${t.prioridade})</span>`;
-    listaTarefasFeitas.appendChild(div);
-  });
-}
-
-function marcarTarefa(index, checked) {
-  if (checked) {
-    tarefas[index].executada = true;
-    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function marcarTarefaFeita(index, checked) {
-  if (!checked) {
-    tarefasFeitas[index].executada = false;
-    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function carregarTarefas() {
-  db.ref('Tarefas').once('value').then(snap => {
-    if (snap.exists()) {
-      tarefas.length = 0;
-      tarefasFeitas.length = 0;
-      snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
-      atualizarTarefas();
-    }
-  });
 }
 
 function adicionarFinanceiro() {
@@ -378,26 +223,57 @@ function atualizarFinanceiro() {
   const filtro = pesquisaFinanceiro.value.toLowerCase();
   financeiroVencer.innerHTML = '';
   financeiroPago.innerHTML = '';
-  let vencendo = 0;
+
+  const vencerAgrupado = {};
+  const pagoAgrupado = {};
 
   financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>
-      ${!f.pago ? `<div class="botoes-financeiro"><button class="btn-pagar" onclick="pagarConta(${i})">Pagar</button></div>` : `<div class="botoes-financeiro"><button class="btn-excluir" onclick="excluirConta(${i})">Excluir</button></div>`}
-    `;
-    if (!f.pago) {
-      financeiroVencer.appendChild(div);
-      vencendo++;
+    const grupo = f.data || "Sem data";
+    if (f.pago) {
+      if (!pagoAgrupado[grupo]) pagoAgrupado[grupo] = [];
+      pagoAgrupado[grupo].push({ ...f, index: i });
+    } else {
+      if (!vencerAgrupado[grupo]) vencerAgrupado[grupo] = [];
+      vencerAgrupado[grupo].push({ ...f, index: i });
     }
-    else financeiroPago.appendChild(div);
   });
 
-  document.getElementById('notificacaoFinanceiro').style.display = vencendo > 0 ? 'block' : 'none';
-  document.getElementById('notificacaoFinanceiro').innerText = vencendo;
+  // Gerar vencer
+  for (const data in vencerAgrupado) {
+    const divData = document.createElement('div');
+    divData.className = 'grupo-data';
+    divData.innerHTML = `<h4>${data}</h4>`;
+    vencerAgrupado[data].forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>
+        <button onclick="pagarConta(${f.index})" style="padding:4px 8px;">Pagar</button>
+      `;
+      divData.appendChild(div);
+    });
+    financeiroVencer.appendChild(divData);
+  }
+
+  // Gerar pagos
+  for (const data in pagoAgrupado) {
+    const divData = document.createElement('div');
+    divData.className = 'grupo-data';
+    divData.innerHTML = `<h4>${data}</h4>`;
+    pagoAgrupado[data].forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>
+        <button onclick="excluirConta(${f.index})" style="padding:4px 8px;background:red;">Excluir</button>
+      `;
+      divData.appendChild(div);
+    });
+    financeiroPago.appendChild(divData);
+  }
 
   gerarGrafico();
+  atualizarNotificacao();
 }
 
 function pagarConta(index) {
@@ -436,23 +312,13 @@ function gerarGrafico() {
   });
 }
 
-function alternarTema() {
-  document.body.classList.toggle('claro');
+function atualizarNotificacao() {
+  const hoje = new Date().toISOString().split('T')[0];
+  const vencendo = financeiro.filter(f => !f.pago && f.data <= hoje).length;
+  const badge = document.getElementById('notificacaoFinanceiro');
+  badge.innerText = vencendo;
+  badge.style.display = vencendo ? 'block' : 'none';
 }
-
-function exportarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text('Relatório - Manejo Café', 20, 20);
-  doc.text('Total Aplicações: ' + aplicacoes.length, 20, 40);
-  doc.text('Total Tarefas: ' + (tarefas.length + tarefasFeitas.length), 20, 50);
-  doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
-  doc.save('relatorio_manejo.pdf');
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  inicializarApp();
-});
 </script>
 
 </body>

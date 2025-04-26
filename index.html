@@ -76,6 +76,7 @@
       align-items: center;
       justify-content: space-between;
       border-left: 4px solid #66bb6a;
+      flex-wrap: wrap;
     }
     .item input[type="checkbox"] {
       width: 18px;
@@ -86,6 +87,7 @@
     }
     .item span {
       flex-grow: 1;
+      margin-right: 8px;
     }
     .menu-superior {
       display: flex;
@@ -98,7 +100,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     .menu-superior button {
-      position: relative;
       background: none;
       border: none;
       color: #aaa;
@@ -106,28 +107,59 @@
       margin: 0 15px;
       cursor: pointer;
       transition: 0.3s;
+      position: relative;
     }
     .menu-superior button.active, .menu-superior button:hover {
       color: #4caf50;
     }
-    #notificacao-financeiro {
-      position: absolute;
-      top: 5px;
-      right: 5px;
+    .notificacao {
       background: red;
       color: white;
-      font-size: 10px;
-      padding: 2px 5px;
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      display: none;
-      min-width: 18px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -6px;
+      right: -6px;
     }
     canvas {
       background: #1e1e1e;
       border-radius: 10px;
       padding: 10px;
       margin-top: 20px;
+    }
+    .botoes-financeiro {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    .botao-pagar {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .botao-excluir {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .grupo-data {
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      color: #66bb6a;
     }
   </style>
 </head>
@@ -137,82 +169,79 @@
   <div class="menu-superior">
     <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
     <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')">
-      <i class="fas fa-dollar-sign"></i>
-      <div id="notificacao-financeiro"></div>
-    </button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;"></span></button>
     <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
     <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
   </div>
 
-<div class="conteudo">
-<div id="aplicacoes" class="aba">
-    <h2>Aplicações</h2>
-    <input id="dataApp" type="date">
-    <input id="produtoApp" placeholder="Produto">
-    <input id="dosagemApp" placeholder="Dosagem">
-    <select id="tipoApp">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-    <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
-    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-    <div id="listaAplicacoes"></div>
-  </div>
+  <div class="conteudo">
+    <div id="aplicacoes" class="aba">
+      <h2>Aplicações</h2>
+      <input id="dataApp" type="date">
+      <input id="produtoApp" placeholder="Produto">
+      <input id="dosagemApp" placeholder="Dosagem">
+      <select id="tipoApp">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+      <div id="listaAplicacoes"></div>
+    </div>
 
-  <div id="tarefas" class="aba">
-    <h2>Tarefas</h2>
-    <input id="dataTarefa" type="date">
-    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-    <select id="prioridadeTarefa">
-      <option>Alta</option>
-      <option>Média</option>
-      <option>Baixa</option>
-    </select>
-    <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-    <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-    <h4>A Fazer</h4>
-    <div id="listaTarefas"></div>
-    <h4>Executadas</h4>
-    <div id="listaTarefasFeitas"></div>
-  </div>
+    <div id="tarefas" class="aba">
+      <h2>Tarefas</h2>
+      <input id="dataTarefa" type="date">
+      <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+      <select id="prioridadeTarefa">
+        <option>Alta</option>
+        <option>Média</option>
+        <option>Baixa</option>
+      </select>
+      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+      <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+      <h4>A Fazer</h4>
+      <div id="listaTarefas"></div>
+      <h4>Executadas</h4>
+      <div id="listaTarefasFeitas"></div>
+    </div>
 
-  <div id="financeiro" class="aba">
-    <h2>Financeiro</h2>
-    <input id="dataFin" type="date">
-    <input id="produtoFin" placeholder="Produto">
-    <input id="valorFin" placeholder="Valor" type="number">
-    <select id="tipoFin">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
-    <h4>A Vencer</h4>
-    <div id="financeiroVencer"></div>
-    <h4>Pagos</h4>
-    <div id="financeiroPago"></div>
-    <canvas id="graficoGastos"></canvas>
-  </div>
+    <div id="financeiro" class="aba">
+      <h2>Financeiro</h2>
+      <input id="dataFin" type="date">
+      <input id="produtoFin" placeholder="Produto">
+      <input id="valorFin" placeholder="Valor" type="number">
+      <select id="tipoFin">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+      <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+      <h4>A Vencer</h4>
+      <div id="financeiroVencer"></div>
+      <h4>Pagos</h4>
+      <div id="financeiroPago"></div>
+      <canvas id="graficoGastos"></canvas>
+    </div>
 
-  <div id="relatorio" class="aba">
-    <h2>Relatório</h2>
-    <div id="resumoRelatorio"></div>
-    <button onclick="exportarPDF()">Exportar PDF</button>
-  </div>
+    <div id="relatorio" class="aba">
+      <h2>Relatório</h2>
+      <div id="resumoRelatorio"></div>
+      <button onclick="exportarPDF()">Exportar PDF</button>
+    </div>
 
-  <div id="configuracoes" class="aba">
-    <h2>Configurações</h2>
-    <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+    <div id="configuracoes" class="aba">
+      <h2>Configurações</h2>
+      <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+    </div>
   </div>
-</div>
 
 <script>
-  // Firebase
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
     authDomain: "manej-cafe.firebaseapp.com",
@@ -242,6 +271,7 @@
     localStorage.setItem('aba', id);
   }
 
+  // Aplicações
   function adicionarAplicacao() {
     const nova = {
       data: dataApp.value,
@@ -277,6 +307,7 @@
     });
   }
 
+  // Tarefas
   function adicionarTarefa() {
     const nova = {
       data: dataTarefa.value,
@@ -302,18 +333,16 @@
     tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `
-        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-        <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
+      div.innerHTML = `<input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+                       <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
       listaTarefas.appendChild(div);
     });
 
     tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `
-        <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-        <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
+      div.innerHTML = `<input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+                       <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
       listaTarefasFeitas.appendChild(div);
     });
   }
@@ -347,6 +376,7 @@
     });
   }
 
+  // Financeiro
   function adicionarFinanceiro() {
     const novo = {
       data: dataFin.value,
@@ -365,31 +395,65 @@
     const filtro = pesquisaFinanceiro.value.toLowerCase();
     financeiroVencer.innerHTML = '';
     financeiroPago.innerHTML = '';
-    let contasVencendo = 0;
+
+    const vencendoHoje = [];
+    const hoje = new Date().toISOString().split('T')[0];
+
+    const agrupado = {};
 
     financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${f.data} - ${f.produto} - R$ ${f.valor.toFixed(2)} - ${f.tipo}</span>
-        ${!f.pago ? `<button style="background:#ff9800;color:#000;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;" onclick="pagarConta(${i})">Pagar</button>` : ''}
-      `;
       if (!f.pago) {
-        financeiroVencer.appendChild(div);
-        contasVencendo++;
-      } else {
-        financeiroPago.appendChild(div);
+        if (!agrupado[f.data]) agrupado[f.data] = [];
+        agrupado[f.data].push({ ...f, i });
       }
     });
 
-    document.getElementById('notificacao-financeiro').innerText = contasVencendo > 0 ? contasVencendo : '';
-    document.getElementById('notificacao-financeiro').style.display = contasVencendo > 0 ? 'block' : 'none';
+    for (const data in agrupado) {
+      const titulo = document.createElement('div');
+      titulo.className = 'grupo-data';
+      titulo.textContent = data;
+      financeiroVencer.appendChild(titulo);
+
+      agrupado[data].forEach(({ produto, valor, tipo, i }) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
+          <div class="botoes-financeiro">
+            <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
+          </div>
+        `;
+        financeiroVencer.appendChild(div);
+
+        if (data <= hoje) vencendoHoje.push(1);
+      });
+    }
+
+    financeiro.filter(f => f.pago && `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirConta(${i})">Excluir</button>
+        </div>
+      `;
+      financeiroPago.appendChild(div);
+    });
+
+    document.getElementById('notificacao-financeiro').style.display = vencendoHoje.length ? 'flex' : 'none';
 
     gerarGrafico();
   }
 
   function pagarConta(index) {
     financeiro[index].pago = true;
+    db.ref('Financeiro').set(financeiro);
+    atualizarFinanceiro();
+  }
+
+  function excluirConta(index) {
+    financeiro.splice(index, 1);
     db.ref('Financeiro').set(financeiro);
     atualizarFinanceiro();
   }
@@ -433,5 +497,6 @@
   }
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>

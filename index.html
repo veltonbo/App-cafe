@@ -192,7 +192,264 @@
     </div>
   </div>
 
-  <!-- Aqui depois vamos integrar o JavaScript de controle e Firebase -->
+  <script>
+  // Configuração Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com",
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+
+  function inicializarApp() {
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+    carregarAplicacoes();
+    carregarTarefas();
+    carregarFinanceiro();
+  }
+
+  function mostrarAba(id) {
+    document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('btn-' + id).classList.add('active');
+    localStorage.setItem('aba', id);
+  }
+
+  // -------- Aplicações --------
+  function adicionarAplicacao() {
+    const nova = {
+      data: dataApp.value,
+      produto: produtoApp.value,
+      dosagem: dosagemApp.value,
+      tipo: tipoApp.value
+    };
+    if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+    aplicacoes.push(nova);
+    firebase.database().ref('Aplicacoes').set(aplicacoes);
+    atualizarAplicacoes();
+  }
+
+  function atualizarAplicacoes() {
+    const filtro = pesquisaAplicacoes.value.toLowerCase();
+    listaAplicacoes.innerHTML = '';
+    aplicacoes
+      .filter(a => 
+        a.produto.toLowerCase().includes(filtro) ||
+        a.tipo.toLowerCase().includes(filtro) ||
+        a.dosagem.toLowerCase().includes(filtro) ||
+        a.data.includes(filtro)
+      )
+      .forEach((a, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo}`;
+        const btn = document.createElement('button');
+        btn.innerHTML = '❌';
+        btn.onclick = () => {
+          aplicacoes.splice(i, 1);
+          firebase.database().ref('Aplicacoes').set(aplicacoes);
+          atualizarAplicacoes();
+        };
+        div.appendChild(btn);
+        listaAplicacoes.appendChild(div);
+      });
+  }
+
+  function carregarAplicacoes() {
+    firebase.database().ref('Aplicacoes').once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        aplicacoes.length = 0;
+        aplicacoes.push(...snapshot.val());
+        atualizarAplicacoes();
+      }
+    });
+  }
+
+  // -------- Tarefas --------
+  function adicionarTarefa() {
+    const nova = {
+      data: dataTarefa.value,
+      descricao: descricaoTarefa.value,
+      prioridade: prioridadeTarefa.value,
+      executada: false
+    };
+    if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+    tarefas.push(nova);
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function salvarTarefas() {
+    const todas = [...tarefas, ...tarefasFeitas];
+    firebase.database().ref('Tarefas').set(todas);
+  }
+
+  function atualizarTarefas() {
+    const filtro = pesquisaTarefas.value.toLowerCase();
+    listaTarefas.innerHTML = '';
+    listaTarefasFeitas.innerHTML = '';
+
+    tarefas
+      .filter(t => 
+        t.descricao.toLowerCase().includes(filtro) ||
+        t.prioridade.toLowerCase().includes(filtro) ||
+        t.data.includes(filtro)
+      )
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<input type="checkbox" onchange="marcarFeito(${i})"> ${t.data} - ${t.descricao} (${t.prioridade})`;
+        listaTarefas.appendChild(div);
+      });
+
+    tarefasFeitas
+      .filter(t => 
+        t.descricao.toLowerCase().includes(filtro) ||
+        t.prioridade.toLowerCase().includes(filtro) ||
+        t.data.includes(filtro)
+      )
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `${t.data} - ${t.descricao} (${t.prioridade}) <button onclick="desfazerFeito(${i})">↩️</button>`;
+        listaTarefasFeitas.appendChild(div);
+      });
+  }
+
+  function marcarFeito(index) {
+    tarefas[index].executada = true;
+    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function desfazerFeito(index) {
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function carregarTarefas() {
+    firebase.database().ref('Tarefas').once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        tarefas.length = 0;
+        tarefasFeitas.length = 0;
+        snapshot.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+        atualizarTarefas();
+      }
+    });
+  }
+
+  // -------- Financeiro --------
+  function adicionarFinanceiro() {
+    const novo = {
+      data: dataFin.value,
+      produto: produtoFin.value,
+      valor: parseFloat(valorFin.value),
+      tipo: tipoFin.value,
+      pago: false
+    };
+    if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+    financeiro.push(novo);
+    salvarFinanceiro();
+    atualizarFinanceiro();
+  }
+
+  function salvarFinanceiro() {
+    firebase.database().ref('Financeiro').set(financeiro);
+  }
+
+  function atualizarFinanceiro() {
+    const filtro = pesquisaFinanceiro.value.toLowerCase();
+    financeiroVencer.innerHTML = '';
+    financeiroPago.innerHTML = '';
+    let total = 0;
+
+    financeiro
+      .filter(f => 
+        f.produto.toLowerCase().includes(filtro) ||
+        f.tipo.toLowerCase().includes(filtro) ||
+        f.data.includes(filtro)
+      )
+      .forEach((f, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}`;
+        const btn = document.createElement('button');
+        btn.innerText = f.pago ? '❌' : '✔️';
+        btn.onclick = () => {
+          if (f.pago) financeiro.splice(i, 1);
+          else f.pago = true;
+          salvarFinanceiro();
+          atualizarFinanceiro();
+        };
+        div.appendChild(btn);
+        (f.pago ? financeiroPago : financeiroVencer).appendChild(div);
+        if (!f.pago) total += f.valor;
+      });
+
+    gerarGrafico();
+  }
+
+  function carregarFinanceiro() {
+    firebase.database().ref('Financeiro').once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        financeiro.length = 0;
+        financeiro.push(...snapshot.val());
+        atualizarFinanceiro();
+      }
+    });
+  }
+
+  function gerarGrafico() {
+    const ctx = document.getElementById('graficoGastos').getContext('2d');
+    if (window.grafico) window.grafico.destroy();
+    const totais = {};
+    financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
+    window.grafico = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(totais),
+        datasets: [{ label: 'Gastos pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+      }
+    });
+  }
+
+  // -------- Relatório PDF --------
+  function exportarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text("Relatório - Manejo Café", 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Aplicações: ${aplicacoes.length}`, 20, 40);
+    doc.text(`Tarefas Pendentes: ${tarefas.length}`, 20, 50);
+    doc.text(`Tarefas Concluídas: ${tarefasFeitas.length}`, 20, 60);
+
+    let pago = 0, pendente = 0;
+    financeiro.forEach(f => f.pago ? pago += f.valor : pendente += f.valor);
+    doc.text(`Gastos Pagos: R$ ${pago.toFixed(2)}`, 20, 70);
+    doc.text(`Gastos Pendentes: R$ ${pendente.toFixed(2)}`, 20, 80);
+
+    doc.save("relatorio_manejo.pdf");
+  }
+
+  function alternarTema() {
+    document.body.classList.toggle('tema-claro');
+  }
+</script>
 
 </body>
 </html>

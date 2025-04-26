@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+    }
+    header {
+      background: #1e1e1e;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .aba {
+      display: none;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    .aba.active {
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #2c2c2c;
+      color: #fff;
+    }
+    button {
+      background: #388e3c;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2e7d32;
+    }
+    .item {
+      background: #1e1e1e;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 5px solid #66bb6a;
+    }
+    .item .acoes button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    #menuInferior {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #1e1e1e;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #333;
+    }
+    #menuInferior button {
+      background: none;
+      color: #bbb;
+      font-size: 22px;
+      flex: 1;
+      border: none;
+      cursor: pointer;
+    }
+    #menuInferior button.active {
+      color: #4caf50;
+    }
+    #botaoTema {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: #2e7d32;
+      color: white;
+      border-radius: 50%;
+      font-size: 22px;
+      border: none;
+      cursor: pointer;
+    }
+    canvas {
+      background: #1e1e1e;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .filtro {
+      margin: 10px 0;
+    }
+    .checkbox {
+      margin-right: 10px;
+    }
+    .prioridade-alta {
+      border-left: 5px solid #e53935;
+    }
+    .prioridade-media {
+      border-left: 5px solid #fbc02d;
+    }
+    .prioridade-baixa {
+      border-left: 5px solid #43a047;
+    }
+  </style>
+</head>
+
+<body onload="inicializarApp()">
+
+<header>Manejo Café</header>
+
+<!-- Botão Tema -->
+<button id="botaoTema" onclick="alternarTema()">☀️</button>
+
+<!-- Abas -->
+<div id="aplicacoes" class="aba">
+  <input type="text" id="filtroAplicacoes" placeholder="Filtrar por Produto, Tipo, Dosagem..." oninput="atualizarAplicacoes()">
+  <h3>Nova Aplicação</h3>
+  <input id="dataApp" type="date">
+  <input id="produtoApp" placeholder="Produto">
+  <input id="dosagemApp" placeholder="Dosagem">
+  <select id="tipoApp">
+    <option value="">Tipo</option>
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+  <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+  <div id="listaAplicacoes"></div>
+</div>
+
+<div id="tarefas" class="aba">
+  <input type="text" id="filtroTarefas" placeholder="Filtrar por Descrição, Prioridade..." oninput="atualizarTarefas()">
+  <h3>Nova Tarefa</h3>
+  <input id="dataTarefa" type="date">
+  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
+  <select id="prioridadeTarefa">
+    <option value="baixa">Baixa</option>
+    <option value="media">Média</option>
+    <option value="alta">Alta</option>
+  </select>
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>
+
+<div id="financeiro" class="aba">
+  <input type="text" id="filtroFinanceiro" placeholder="Filtrar por Produto, Tipo..." oninput="atualizarFinanceiro()">
+  <h3>Novo Gasto</h3>
+  <input id="dataFin" type="date">
+  <input id="produtoFin" placeholder="Produto">
+  <input id="valorFin" placeholder="Valor" type="number">
+  <select id="tipoFin">
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+  <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+  <h4>A Vencer</h4>
+  <div id="financeiroVencer"></div>
+  <h4>Pagos</h4>
+  <div id="financeiroPago"></div>
+  <canvas id="graficoGastos"></canvas>
+</div>
+
+<div id="relatorio" class="aba">
+  <h3>Relatório Resumido</h3>
+  <p>Aplicações: <span id="relAplicacoes">0</span></p>
+  <p>Tarefas A Fazer: <span id="relTarefas">0</span></p>
+  <p>Tarefas Executadas: <span id="relTarefasFeitas">0</span></p>
+  <p>Total a Pagar: R$ <span id="relPagar">0.00</span></p>
+  <p>Total Pago: R$ <span id="relPago">0.00</span></p>
+  <button onclick="exportarRelatorio()">Exportar Relatório PDF</button>
+</div>
+
+<!-- Menu Inferior -->
+<div id="menuInferior">
+  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-list-check"></i></button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+  <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-file-pdf"></i></button>
+</div>
+
+<script>
+// (O JavaScript completo que faz tudo funcionar será colado em seguida na próxima resposta para caber tudo aqui)
+</script>
+
+</body>
+</html>

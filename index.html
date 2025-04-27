@@ -228,6 +228,13 @@
       </select>
       
       <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+
+      <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+        <option value="">Todos os Setores</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+      </select>
+      
       <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
       <h4>A Fazer</h4>
       <div id="listaTarefas"></div>

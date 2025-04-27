@@ -68,17 +68,17 @@
       font-size: 16px;
     }
     .item {
-      background: #1e1e1e;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-left: 4px solid #66bb6a;
-      flex-wrap: wrap;
-      position: relative;
-    }
+  background: #1e1e1e;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 4px solid #66bb6a;
+  flex-wrap: nowrap; /* impede que o texto quebre pra baixo */
+  gap: 8px; /* espaço entre texto e botões */
+}
     .item input[type="checkbox"] {
       width: 18px;
       height: 18px;

@@ -449,6 +449,16 @@ function carregarAplicacoes() {
     atualizarTarefas();
   }
 
+  function excluirTarefa(index, feita) {
+  if (feita) {
+    tarefasFeitas.splice(index, 1);
+  } else {
+    tarefas.splice(index, 1);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+  }
+
   function marcarTarefaFeita(index, checked) {
     if (!checked) {
       tarefasFeitas[index].executada = false;

@@ -199,6 +199,14 @@
         <option>Setor 02</option>
       </select>
       <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      
+      <!-- Filtro de Setor -->
+      <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+        <option value="">Todos os Setores</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+      </select>
+        
       <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
       <div id="listaAplicacoes"></div>
     </div>

@@ -374,44 +374,54 @@ function carregarAplicacoes() {
 }
 
   // TAREFAS
-  function adicionarTarefa() {
-    const nova = {
-      data: dataTarefa.value,
-      descricao: descricaoTarefa.value,
-      prioridade: prioridadeTarefa.value,
-      executada: false
-    };
-    if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
-    tarefas.push(nova);
-    salvarTarefas();
-    atualizarTarefas();
-  }
-
-  function salvarTarefas() {
-    db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
-  }
-
   function atualizarTarefas() {
-    const filtro = pesquisaTarefas.value.toLowerCase();
-    listaTarefas.innerHTML = '';
-    listaTarefasFeitas.innerHTML = '';
+  const filtro = pesquisaTarefas.value.toLowerCase();
+  const filtroSetor = filtroSetorTarefas.value;
+  listaTarefas.innerHTML = '';
+  listaTarefasFeitas.innerHTML = '';
 
-    tarefas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
+  const agrupado = {};
+
+  tarefas.filter(t => 
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || t.setor === filtroSetor)
+  ).forEach((t, i) => {
+    if (!agrupado[t.data]) agrupado[t.data] = [];
+    agrupado[t.data].push({ ...t, i });
+  });
+
+  for (const data in agrupado) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = data;
+    listaTarefas.appendChild(titulo);
+
+    agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `<input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-                       <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
+      let cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
+      div.innerHTML = `
+        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+        <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+      `;
       listaTarefas.appendChild(div);
     });
-
-    tarefasFeitas.filter(t => `${t.data} ${t.descricao}`.toLowerCase().includes(filtro)).forEach((t, i) => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `<input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-                       <span>${t.data} - ${t.descricao} (${t.prioridade})</span>`;
-      listaTarefasFeitas.appendChild(div);
-    });
   }
+
+  // Executadas
+  tarefasFeitas.filter(t => 
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || t.setor === filtroSetor)
+  ).forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+    `;
+    listaTarefasFeitas.appendChild(div);
+  });
+}
 
   function marcarTarefa(index, checked) {
     if (checked) {
@@ -567,4 +577,4 @@ function carregarAplicacoes() {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
-</html>
+</html>f

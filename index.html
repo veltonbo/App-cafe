@@ -2,667 +2,926 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap CSS (for layout, forms, buttons) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <style>
-    body {
-      background-color: #343a40;
-      color: #ffffff;
-    }
-    .navbar {
-      background-color: #212529;
-    }
-    .nav-link {
-      color: #ffffff;
-    }
-    .nav-link:hover {
-      color: #cccccc;
-    }
-    .active-link {
-      color: #28a745 !important; /* green for active item */
-    }
-    .section {
-      display: none;
-      padding: 20px;
-    }
-    .visible {
-      display: block;
-    }
-    .btn-green {
-      background-color: #28a745;
-      color: #fff;
-    }
-    .btn-green:hover {
-      background-color: #218838;
-    }
-    .btn-red {
-      background-color: #dc3545;
-      color: #fff;
-    }
-    .btn-red:hover {
-      background-color: #c82333;
-    }
-    .light-theme {
-      background-color: #f8f9fa;
-      color: #212529;
-    }
-    .light-theme .navbar {
-      background-color: #e9ecef;
-    }
-    .light-theme .nav-link {
-      color: #212529;
-    }
-    .light-theme .nav-link:hover {
-      color: #444;
-    }
-    .light-theme .active-link {
-      color: #28a745 !important;
-    }
-    .light-theme input, .light-theme select {
-      background-color: #fff;
-      color: #212529;
-    }
-    .chart-container {
-      width: 100%;
-      max-width: 600px;
-      margin: auto;
-    }
-  </style>
-</head>
-<body>
-  <!-- Top Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Manejo Café</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
-        aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarMenu">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active-link" href="#" id="menu-aplicacoes-link">
-              <i class="fas fa-spray-can"></i> Aplicações
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="menu-tarefas-link">
-              <i class="fas fa-tasks"></i> Tarefas
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="menu-financeiro-link">
-              <i class="fas fa-dollar-sign"></i> Financeiro
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="menu-colheita-link">
-              <i class="fas fa-leaf"></i> Colheita
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="menu-relatorio-link">
-              <i class="fas fa-chart-bar"></i> Relatório
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="menu-config-link">
-              <i class="fas fa-cog"></i> Configurações
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main content sections -->
-  <div class="container-fluid">
-    <!-- Aplicações Section -->
-    <section id="aplicacoes-section" class="section visible">
-      <h2>Aplicações</h2>
-      <form id="aplicacao-form" class="mb-3">
-        <div class="row g-2">
-          <div class="col-md-3">
-            <input type="text" id="aplicacao-produto" class="form-control" placeholder="Produto">
-          </div>
-          <div class="col-md-2">
-            <input type="text" id="aplicacao-setor" class="form-control" placeholder="Setor">
-          </div>
-          <div class="col-md-2">
-            <input type="text" id="aplicacao-tipo" class="form-control" placeholder="Tipo">
-          </div>
-          <div class="col-md-2">
-            <input type="text" id="aplicacao-dosagem" class="form-control" placeholder="Dosagem">
-          </div>
-          <div class="col-md-2">
-            <input type="date" id="aplicacao-data" class="form-control">
-          </div>
-          <div class="col-md-1">
-            <button type="button" class="btn btn-green w-100" id="btn-add-aplicacao">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-      <div id="lista-aplicacoes"></div>
-    </section>
-
-    <!-- Tarefas Section -->
-    <section id="tarefas-section" class="section">
-      <h2>Tarefas</h2>
-      <form id="tarefa-form" class="mb-3">
-        <div class="row g-2">
-          <div class="col-md-6">
-            <input type="text" id="tarefa-desc" class="form-control" placeholder="Descrição da tarefa">
-          </div>
-          <div class="col-md-3">
-            <select id="tarefa-prioridade" class="form-control">
-              <option value="Baixa">Baixa</option>
-              <option value="Média">Média</option>
-              <option value="Alta">Alta</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <select id="tarefa-tipo" class="form-control">
-              <option value="Geral">Geral</option>
-              <option value="Aplicação">Aplicação</option>
-            </select>
-          </div>
-          <div class="col-md-1">
-            <button type="button" class="btn btn-green w-100" id="btn-add-tarefa">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-      <div id="lista-tarefas" class="list-group"></div>
-    </section>
-
-    <!-- Financeiro Section -->
-    <section id="financeiro-section" class="section">
-      <h2>Financeiro</h2>
-      <form id="fin-form" class="mb-3">
-        <div class="row g-2">
-          <div class="col-md-4">
-            <input type="text" id="fin-desc" class="form-control" placeholder="Descrição">
-          </div>
-          <div class="col-md-3">
-            <input type="number" id="fin-valor" class="form-control" placeholder="Valor">
-          </div>
-          <div class="col-md-3">
-            <select id="fin-status" class="form-control">
-              <option value="avencer">A Vencer</option>
-              <option value="pago">Pago</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button type="button" class="btn btn-green w-100" id="btn-add-fin">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-      <div class="row">
-        <div class="col-md-6">
-          <h5>A Vencer</h5>
-          <ul id="fin-avencer" class="list-group mb-3"></ul>
-        </div>
-        <div class="col-md-6">
-          <h5>Pagos</h5>
-          <ul id="fin-pagos" class="list-group mb-3"></ul>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6 chart-container">
-          <canvas id="chart-financeiro-bar"></canvas>
-        </div>
-        <div class="col-md-6 chart-container">
-          <canvas id="chart-financeiro-pie"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- Colheita Section -->
-    <section id="colheita-section" class="section">
-      <h2>Colheita</h2>
-      <form id="colheita-form" class="mb-3">
-        <div class="row g-2">
-          <div class="col-md-4">
-            <input type="text" id="colheita-colhedor" class="form-control" placeholder="Colhedor">
-          </div>
-          <div class="col-md-3">
-            <input type="date" id="colheita-data" class="form-control">
-          </div>
-          <div class="col-md-3">
-            <input type="number" id="colheita-latas" class="form-control" placeholder="Latas">
-          </div>
-          <div class="col-md-2">
-            <button type="button" class="btn btn-green w-100" id="btn-add-colheita">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-      <div id="lista-colheita"></div>
-      <h5>Total geral: <span id="total-latas">0</span> latas</h5>
-    </section>
-
-    <!-- Relatório Section -->
-    <section id="relatorio-section" class="section">
-      <h2>Relatório</h2>
-      <div class="row">
-        <div class="col-md-6 chart-container">
-          <canvas id="chart-relatorio-aplic"></canvas>
-        </div>
-        <div class="col-md-6 chart-container">
-          <canvas id="chart-relatorio-tarefas"></canvas>
-        </div>
-      </div>
-      <div class="row mt-4">
-        <div class="col-md-6 chart-container">
-          <canvas id="chart-relatorio-fin"></canvas>
-        </div>
-      </div>
-      <button class="btn btn-green mt-3" id="btn-download-report">
-        <i class="fas fa-file-pdf"></i> Baixar Relatório (PDF)
-      </button>
-    </section>
-
-    <!-- Configurações Section -->
-    <section id="config-section" class="section">
-      <h2>Configurações</h2>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="toggle-theme">
-        <label class="form-check-label" for="toggle-theme">Tema Claro</label>
-      </div>
-    </section>
-  </div>
-
-  <!-- Scripts -->
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    // Initialize Firebase
-    var firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.database();
-
-    // Navigation
-    const sections = {
-      aplicacoes: document.getElementById('aplicacoes-section'),
-      tarefas: document.getElementById('tarefas-section'),
-      financeiro: document.getElementById('financeiro-section'),
-      colheita: document.getElementById('colheita-section'),
-      relatorio: document.getElementById('relatorio-section'),
-      config: document.getElementById('config-section')
-    };
-    const links = {
-      aplicacoes: document.getElementById('menu-aplicacoes-link'),
-      tarefas: document.getElementById('menu-tarefas-link'),
-      financeiro: document.getElementById('menu-financeiro-link'),
-      colheita: document.getElementById('menu-colheita-link'),
-      relatorio: document.getElementById('menu-relatorio-link'),
-      config: document.getElementById('menu-config-link')
-    };
-    function showSection(section) {
-      for (let key in sections) {
-        sections[key].classList.remove('visible');
-        links[key].classList.remove('active-link');
-      }
-      sections[section].classList.add('visible');
-      links[section].classList.add('active-link');
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      overflow-x: hidden;
     }
-    links.aplicacoes.addEventListener('click', (e) => { e.preventDefault(); showSection('aplicacoes'); });
-    links.tarefas.addEventListener('click', (e) => { e.preventDefault(); showSection('tarefas'); });
-    links.financeiro.addEventListener('click', (e) => { e.preventDefault(); showSection('financeiro'); });
-    links.colheita.addEventListener('click', (e) => { e.preventDefault(); showSection('colheita'); });
-    links.relatorio.addEventListener('click', (e) => { e.preventDefault(); showSection('relatorio'); });
-    links.config.addEventListener('click', (e) => { e.preventDefault(); showSection('config'); });
-
-    // Aplicações
-    const aplicacoesRef = db.ref('aplicacoes');
-    function addAplicacao() {
-      const produto = document.getElementById('aplicacao-produto').value;
-      const setor = document.getElementById('aplicacao-setor').value;
-      const tipo = document.getElementById('aplicacao-tipo').value;
-      const dosagem = document.getElementById('aplicacao-dosagem').value;
-      const data = document.getElementById('aplicacao-data').value;
-      if (produto && setor && tipo && dosagem && data) {
-        const newApp = { produto, setor, tipo, dosagem, data };
-        aplicacoesRef.push(newApp);
-        document.getElementById('aplicacao-form').reset();
-      }
+    .conteudo {
+      padding: 20px;
+      padding-bottom: 80px;
+      max-width: 800px;
+      margin: auto;
+      animation: fadeIn 0.5s ease;
     }
-    document.getElementById('btn-add-aplicacao').addEventListener('click', addAplicacao);
-    aplicacoesRef.on('value', snapshot => {
-      const list = document.getElementById('lista-aplicacoes');
-      list.innerHTML = '';
-      const data = snapshot.val();
-      if (data) {
-        const grouped = {};
-        Object.keys(data).forEach(id => {
-          const item = data[id];
-          if (!grouped[item.data]) grouped[item.data] = [];
-          grouped[item.data].push({id, ...item});
-        });
-        const sortedDates = Object.keys(grouped).sort();
-        sortedDates.forEach(date => {
-          const dateHeader = document.createElement('h5');
-          dateHeader.textContent = date;
-          list.appendChild(dateHeader);
-          const ul = document.createElement('ul');
-          ul.className = 'list-group mb-3';
-          grouped[date].forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.textContent = `${item.produto} - ${item.setor} - ${item.tipo} - ${item.dosagem}`;
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-red btn-sm';
-            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            delBtn.onclick = () => aplicacoesRef.child(item.id).remove();
-            li.appendChild(delBtn);
-            ul.appendChild(li);
-          });
-          list.appendChild(ul);
-        });
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .aba { display: none; }
+    .aba.active { display: block; }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background-color: #2c2c2c;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4caf50;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .campo-pesquisa {
+      padding: 10px;
+      background: #2c2c2c;
+      border: 1px solid #555;
+      border-radius: 8px;
+      margin: 10px 0;
+      color: white;
+      font-size: 16px;
+    }
+    .item {
+      background: #1e1e1e;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 8px;
+      border-left: 4px solid #66bb6a;
+    }
+    .item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      accent-color: #4caf50;
+      cursor: pointer;
+    }
+    .item span {
+      flex-grow: 1;
+      overflow-wrap: break-word;
+    }
+    .menu-superior {
+      display: flex;
+      justify-content: center;
+      background-color: #1f1f1f;
+      padding: 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .menu-superior button {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 22px;
+      margin: 0 15px;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+    }
+    .menu-superior button.active, .menu-superior button:hover {
+      color: #4caf50;
+    }
+    .notificacao {
+      background: red;
+      color: white;
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+    }
+    canvas {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 20px;
+    }
+    .botoes-financeiro {
+      display: flex;
+      gap: 5px;
+    }
+    .botao-pagar {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .botao-pagar:hover {
+      background-color: #45a049;
+    }
+    .botao-excluir {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .botao-excluir:hover {
+      background-color: #e53935;
+    }
+    .grupo-data {
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      color: #66bb6a;
+    }
+  </style>
+</head>
+
+<body onload="inicializarApp()">
+
+<div class="menu-superior">
+  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;">!</span></button>
+  <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+  <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+</div>
+
+<div class="conteudo">
+  <div id="aplicacoes" class="aba">
+    <h2>Aplicações</h2>
+    <input id="dataApp" type="date">
+    <input id="produtoApp" placeholder="Produto">
+    <input id="dosagemApp" placeholder="Dosagem">
+    <select id="tipoApp">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <select id="setorApp">
+      <option>Setor 01</option>
+      <option>Setor 02</option>
+    </select>
+    <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+    <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+    <div id="listaAplicacoes"></div>
+  </div>
+
+  <div id="tarefas" class="aba">
+    <h2>Tarefas</h2>
+    <input id="dataTarefa" type="date">
+    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+    <select id="prioridadeTarefa">
+      <option>Alta</option>
+      <option>Média</option>
+      <option>Baixa</option>
+    </select>
+    <select id="setorTarefa">
+      <option>Setor 01</option>
+      <option>Setor 02</option>
+    </select>
+
+    <label style="margin-top:10px;">
+      <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
+    </label>
+
+    <div id="camposAplicacao" style="display:none; margin-top:10px;">
+      <input id="dosagemAplicacao" placeholder="Dosagem">
+      <select id="tipoAplicacao">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+    </div>
+
+    <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+    <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+    <h4>A Fazer</h4>
+    <div id="listaTarefas"></div>
+    <h4>Executadas</h4>
+    <div id="listaTarefasFeitas"></div>
+  </div>
+
+  <div id="financeiro" class="aba">
+    <h2>Financeiro</h2>
+    <input id="dataFin" type="date">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="valorFin" placeholder="Valor" type="number">
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+    <h4>A Vencer</h4>
+    <div id="financeiroVencer"></div>
+    <h4>Pagos</h4>
+    <div id="financeiroPago"></div>
+    <canvas id="graficoGastos"></canvas>
+  </div>
+
+  <div id="relatorio" class="aba">
+  <h2>Relatório</h2>
+
+  <!-- Submenu Relatório -->
+  <div class="menu-superior" style="margin-bottom: 20px;">
+    <button id="btn-relatorio-aplicacoes" onclick="mostrarRelatorio('aplicacoesRel')"><i class="fas fa-flask"></i></button>
+    <button id="btn-relatorio-tarefas" onclick="mostrarRelatorio('tarefasRel')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-relatorio-financeiro" onclick="mostrarRelatorio('financeiroRel')"><i class="fas fa-dollar-sign"></i></button>
+  </div>
+
+  <!-- Área dos relatórios -->
+  <div id="aplicacoesRel" class="relatorio-subaba">
+    <h3>Últimas Aplicações</h3>
+    <div id="ultimasAplicacoes"></div>
+    <canvas id="graficoAplicacoes" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <div id="tarefasRel" class="relatorio-subaba" style="display:none;">
+    <h3>Últimas Tarefas</h3>
+    <div id="ultimasTarefas"></div>
+    <canvas id="graficoTarefas" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <div id="financeiroRel" class="relatorio-subaba" style="display:none;">
+    <h3>Resumo Financeiro</h3>
+    <div id="resumoFinanceiro"></div>
+    <canvas id="graficoFinanceiro" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <button onclick="exportarPDF()">Exportar PDF</button>
+</div>
+
+  <div id="configuracoes" class="aba">
+    <h2>Configurações</h2>
+    <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+  </div>
+</div>
+
+<!-- Menu Colheita -->
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+
+  <!-- Valor da lata -->
+  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+
+  <!-- Dados da colheita -->
+  <input id="dataColheita" type="date" />
+  <input id="colhedor" placeholder="Nome do Colhedor" />
+  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+  <button onclick="adicionarColheita()">Salvar Colheita</button>
+
+  <!-- Pesquisa -->
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+
+  <!-- Separação -->
+  <h4>A Pagar</h4>
+  <div id="colheitaPendente"></div>
+
+  <h4>Pagos</h4>
+  <div id="colheitaPaga"></div>
+
+  <!-- Gráfico -->
+  <canvas id="graficoColheita"></canvas>
+</div>
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+  authDomain: "manej-cafe.firebaseapp.com",
+  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+  projectId: "manej-cafe",
+  storageBucket: "manej-cafe.appspot.com",
+  messagingSenderId: "808931200634",
+  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [];
+
+function inicializarApp() {
+  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
+  }
+  carregarAplicacoes();
+  carregarTarefas();
+  carregarFinanceiro();
+}
+
+function mostrarAba(id) {
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + id).classList.add('active');
+  document.getElementById(id).classList.add('active');
+  localStorage.setItem('aba', id);
+}
+
+function alternarTema() {
+  document.body.classList.toggle('claro');
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+}
+
+// ----- Aplicações -----
+function adicionarAplicacao() {
+  const nova = {
+    data: dataApp.value,
+    produto: produtoApp.value,
+    dosagem: dosagemApp.value,
+    tipo: tipoApp.value,
+    setor: setorApp.value
+  };
+  if (!nova.data || !nova.produto || !nova.dosagem) return alert("Preencha tudo!");
+  aplicacoes.push(nova);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+}
+
+function atualizarAplicacoes() {
+  const filtro = pesquisaAplicacoes.value.toLowerCase();
+  const filtroSetor = filtroSetorAplicacoes.value;
+  listaAplicacoes.innerHTML = '';
+
+  const agrupado = {};
+  aplicacoes.filter(a => 
+    (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || a.setor === filtroSetor)
+  ).forEach((a, i) => {
+    if (!agrupado[a.data]) agrupado[a.data] = [];
+    agrupado[a.data].push({ ...a, i });
+  });
+
+  for (const data in agrupado) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = data;
+    listaAplicacoes.appendChild(titulo);
+
+    agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
+        </div>
+      `;
+      listaAplicacoes.appendChild(div);
+    });
+  }
+}
+
+function excluirAplicacao(index) {
+  aplicacoes.splice(index, 1);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+}
+
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').on('value', snap => {
+    if (snap.exists()) {
+      aplicacoes.length = 0;
+      aplicacoes.push(...snap.val());
+      atualizarAplicacoes();
+    }
+  });
+}
+
+// ----- Tarefas -----
+function adicionarTarefa() {
+  const nova = {
+    data: dataTarefa.value,
+    descricao: descricaoTarefa.value,
+    prioridade: prioridadeTarefa.value,
+    setor: setorTarefa.value,
+    executada: false,
+    eAplicacao: document.getElementById('eAplicacaoCheckbox').checked,
+    dosagem: document.getElementById('dosagemAplicacao').value,
+    tipoAplicacao: document.getElementById('tipoAplicacao').value
+  };
+  if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
+  tarefas.push(nova);
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function salvarTarefas() {
+  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
+}
+
+function atualizarTarefas() {
+  const filtro = pesquisaTarefas.value.toLowerCase();
+  const filtroSetor = filtroSetorTarefas.value;
+  listaTarefas.innerHTML = '';
+  listaTarefasFeitas.innerHTML = '';
+
+  const agrupado = {};
+  tarefas.filter(t => 
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || t.setor === filtroSetor)
+  ).forEach((t, i) => {
+    if (!agrupado[t.data]) agrupado[t.data] = [];
+    agrupado[t.data].push({ ...t, i });
+  });
+
+  for (const data in agrupado) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = data;
+    listaTarefas.appendChild(titulo);
+
+    agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      let cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
+      div.innerHTML = `
+        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+        <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
+        </div>
+      `;
+      listaTarefas.appendChild(div);
+    });
+  }
+
+  tarefasFeitas.filter(t => 
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || t.setor === filtroSetor)
+  ).forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+      </div>
+    `;
+    listaTarefasFeitas.appendChild(div);
+  });
+}
+
+function marcarTarefa(index, checked) {
+  if (checked) {
+    const tarefaExecutada = tarefas.splice(index, 1)[0];
+    tarefaExecutada.executada = true;
+    tarefasFeitas.push(tarefaExecutada);
+
+    if (tarefaExecutada.eAplicacao) {
+      const novaAplicacao = {
+        data: tarefaExecutada.data,
+        produto: tarefaExecutada.descricao,
+        dosagem: tarefaExecutada.dosagem || '',
+        tipo: tarefaExecutada.tipoAplicacao || '',
+        setor: tarefaExecutada.setor || ''
+      };
+      aplicacoes.push(novaAplicacao);
+      db.ref('Aplicacoes').set(aplicacoes);
+      atualizarAplicacoes();
+    }
+  } else {
+    tarefas[index].executada = false;
+    tarefasFeitas.splice(index, 1);
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function marcarTarefaFeita(index, checked) {
+  if (!checked) {
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function excluirTarefa(index, feita) {
+  if (feita) {
+    tarefasFeitas.splice(index, 1);
+  } else {
+    tarefas.splice(index, 1);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function mostrarCamposAplicacao() {
+  const checkbox = document.getElementById('eAplicacaoCheckbox');
+  const campos = document.getElementById('camposAplicacao');
+  campos.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+function carregarTarefas() {
+  db.ref('Tarefas').on('value', snap => {
+    if (snap.exists()) {
+      tarefas.length = 0;
+      tarefasFeitas.length = 0;
+      snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+      atualizarTarefas();
+    }
+  });
+}
+
+// ----- Financeiro -----
+function adicionarFinanceiro() {
+  const novo = {
+    data: dataFin.value,
+    produto: produtoFin.value,
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false
+  };
+  if (!novo.data || !novo.produto || isNaN(novo.valor)) return alert("Preencha tudo!");
+  financeiro.push(novo);
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function atualizarFinanceiro() {
+  const filtro = pesquisaFinanceiro.value.toLowerCase();
+  financeiroVencer.innerHTML = '';
+  financeiroPago.innerHTML = '';
+
+  const vencendoHoje = [];
+  const hoje = new Date().toISOString().split('T')[0];
+
+  const agrupado = {};
+
+  financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+    if (!f.pago) {
+      if (!agrupado[f.data]) agrupado[f.data] = [];
+      agrupado[f.data].push({ ...f, i });
+    }
+  });
+
+  for (const data in agrupado) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = data;
+    financeiroVencer.appendChild(titulo);
+
+    agrupado[data].forEach(({ produto, valor, tipo, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
+        </div>
+      `;
+      financeiroVencer.appendChild(div);
+
+      if (data <= hoje) vencendoHoje.push(1);
+    });
+  }
+
+  financeiro.filter(f => f.pago && `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-excluir" onclick="excluirConta(${i})">Excluir</button>
+      </div>
+    `;
+    financeiroPago.appendChild(div);
+  });
+
+  const notificacao = document.getElementById('notificacao-financeiro');
+  if (vencendoHoje.length) {
+    notificacao.style.display = 'flex';
+    notificacao.innerText = vencendoHoje.length;
+  } else {
+    notificacao.style.display = 'none';
+  }
+
+  gerarGrafico();
+}
+
+function pagarConta(index) {
+  financeiro[index].pago = true;
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function excluirConta(index) {
+  financeiro.splice(index, 1);
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
+}
+
+function carregarFinanceiro() {
+  db.ref('Financeiro').on('value', snap => {
+    if (snap.exists()) {
+      financeiro.length = 0;
+      financeiro.push(...snap.val());
+      atualizarFinanceiro();
+    }
+  });
+}
+
+function gerarGrafico() {
+  const ctx = document.getElementById('graficoGastos').getContext('2d');
+  if (window.grafico) window.grafico.destroy();
+  const totais = {};
+  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
+  window.grafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totais),
+      datasets: [{ label: 'Gastos Pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
+    }
+  });
+}
+
+function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text('Relatório - Manejo Café', 20, 20);
+  doc.text('Total Aplicações: ' + aplicacoes.length, 20, 40);
+  doc.text('Total Tarefas: ' + (tarefas.length + tarefasFeitas.length), 20, 50);
+  doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
+  doc.save('relatorio_manejo.pdf');
+}
+
+function mostrarRelatorio(tipo) {
+  document.querySelectorAll('.relatorio-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(tipo).style.display = 'block';
+
+  if (tipo === 'aplicacoesRel') gerarGraficoAplicacoes();
+  if (tipo === 'tarefasRel') gerarGraficoTarefas();
+  if (tipo === 'financeiroRel') gerarGraficoFinanceiro();
+}
+
+// Gerar lista e gráfico de Aplicações
+function gerarGraficoAplicacoes() {
+  const ultimas = aplicacoes.slice(-5).reverse();
+  const lista = ultimas.map(app => `<div class="item">${app.data} - ${app.produto} (${app.dosagem})</div>`).join('');
+  document.getElementById('ultimasAplicacoes').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoAplicacoes').getContext('2d');
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ultimas.map(a => a.produto),
+      datasets: [{ label: 'Aplicações', data: ultimas.map(a => parseFloat(a.dosagem) || 0) }]
+    }
+  });
+}
+
+// Gerar lista e gráfico de Tarefas
+function gerarGraficoTarefas() {
+  const ultimas = tarefasFeitas.slice(-5).reverse();
+  const lista = ultimas.map(t => `<div class="item">${t.data} - ${t.descricao} (${t.prioridade})</div>`).join('');
+  document.getElementById('ultimasTarefas').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoTarefas').getContext('2d');
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Alta', 'Média', 'Baixa'],
+      datasets: [{
+        label: 'Prioridade',
+        data: [
+          ultimas.filter(t => t.prioridade === 'Alta').length,
+          ultimas.filter(t => t.prioridade === 'Média').length,
+          ultimas.filter(t => t.prioridade === 'Baixa').length
+        ],
+        backgroundColor: ['#f44336', '#ff9800', '#4caf50']
+      }]
+    }
+  });
+}
+
+// Gerar lista e gráfico de Financeiro
+function gerarGraficoFinanceiro() {
+  const pagos = financeiro.filter(f => f.pago);
+  const totalPago = pagos.reduce((acc, f) => acc + f.valor, 0);
+
+  document.getElementById('resumoFinanceiro').innerHTML = `<div class="item">Total Pago: R$ ${totalPago.toFixed(2)}</div>`;
+
+  const ctx = document.getElementById('graficoFinanceiro').getContext('2d');
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  const totaisPorTipo = {};
+
+  pagos.forEach(f => {
+    totaisPorTipo[f.tipo] = (totaisPorTipo[f.tipo] || 0) + f.valor;
+  });
+
+  window.graficoFinanceiro = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(totaisPorTipo),
+      datasets: [{
+        label: 'Financeiro',
+        data: Object.values(totaisPorTipo),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350']
+      }]
+    }
+  });
+}
+
+// Banco de dados para a Colheita
+const colheita = [];
+
+function adicionarColheita() {
+  const valorLataInput = document.getElementById('valorLata');
+  const valorPorLata = parseFloat(valorLataInput.value) || 0;
+
+  const nova = {
+    data: dataColheita.value,
+    colhedor: colhedor.value,
+    quantidade: parseInt(quantidadeLatas.value),
+    valorLata: valorPorLata,
+    pago: false
+  };
+
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
+    return alert("Preencha todos os campos corretamente!");
+  }
+
+  colheita.push(nova);
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+}
+
+function atualizarColheita() {
+  const filtro = pesquisaColheita.value.toLowerCase();
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
+
+  const agrupado = {};
+
+  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
+    if (!agrupado[c.colhedor]) agrupado[c.colhedor] = [];
+    agrupado[c.colhedor].push({ ...c, i });
+  });
+
+  for (const nome in agrupado) {
+    const grupo = agrupado[nome];
+    
+    const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
+    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * item.valorLata), 0);
+
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = `${nome} - Total: ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
+
+    const container = document.createElement('div');
+    container.appendChild(titulo);
+
+    grupo.forEach(({ data, quantidade, valorLata, pago, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${data} - ${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
+        <div class="botoes-financeiro">
+          ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
+      `;
+      container.appendChild(div);
     });
 
-    // Tarefas
-    const tarefasRef = db.ref('tarefas');
-    function addTarefa() {
-      const desc = document.getElementById('tarefa-desc').value;
-      const prioridade = document.getElementById('tarefa-prioridade').value;
-      const tipo = document.getElementById('tarefa-tipo').value;
-      if (desc) {
-        const newTask = { desc, prioridade, tipo, done: false };
-        tarefasRef.push(newTask);
-        document.getElementById('tarefa-form').reset();
-      }
+    if (grupo[0].pago) {
+      colheitaPaga.appendChild(container);
+    } else {
+      colheitaPendente.appendChild(container);
     }
-    document.getElementById('btn-add-tarefa').addEventListener('click', addTarefa);
-    tarefasRef.on('value', snapshot => {
-      const list = document.getElementById('lista-tarefas');
-      list.innerHTML = '';
-      const data = snapshot.val();
-      if (data) {
-        Object.keys(data).forEach(id => {
-          const item = data[id];
-          const li = document.createElement('div');
-          li.className = 'list-group-item';
-          li.innerHTML = '<div class="form-check"><input class="form-check-input" type="checkbox" id="task-'+id+'">' +
-                         '<label class="form-check-label" for="task-'+id+'">' +
-                         item.desc + ' (' + item.prioridade + ')' +
-                         '</label></div>';
-          list.appendChild(li);
-          const checkbox = li.querySelector('input');
-          checkbox.checked = item.done;
-          checkbox.addEventListener('change', () => {
-            tarefasRef.child(id).update({ done: checkbox.checked });
-            if (checkbox.checked && item.tipo === 'Aplicação') {
-              const newApp = {
-                produto: item.desc,
-                setor: '',
-                tipo: 'Aplicação',
-                dosagem: '',
-                data: new Date().toISOString().split('T')[0]
-              };
-              aplicacoesRef.push(newApp);
-            }
-          });
-        });
-      }
+  }
+
+  gerarGraficoColheita();
+}
+
+function pagarColheita(index) {
+  colheita[index].pago = true;
+
+  // Perguntar ao usuário o tipo de lançamento
+  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
+
+  if (tipo) {
+    financeiro.push({
+      data: colheita[index].data,
+      produto: `Colheita - ${colheita[index].colhedor}`,
+      valor: colheita[index].quantidade * colheita[index].valorLata,
+      tipo: tipo,
+      pago: true
     });
 
-    // Financeiro
-    const finRef = db.ref('financeiro');
-    function addFin() {
-      const desc = document.getElementById('fin-desc').value;
-      const valor = parseFloat(document.getElementById('fin-valor').value);
-      const status = document.getElementById('fin-status').value;
-      if (desc && valor) {
-        finRef.push({ desc, valor, status });
-        document.getElementById('fin-form').reset();
-      }
-    }
-    document.getElementById('btn-add-fin').addEventListener('click', addFin);
-    function renderFinanceiro() {
-      finRef.on('value', snapshot => {
-        const data = snapshot.val();
-        const avencerList = document.getElementById('fin-avencer');
-        const pagosList = document.getElementById('fin-pagos');
-        avencerList.innerHTML = '';
-        pagosList.innerHTML = '';
-        let avencerCount = 0, pagosCount = 0;
-        if (data) {
-          Object.keys(data).forEach(id => {
-            const item = data[id];
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.textContent = item.desc + ' - R$' + item.valor.toFixed(2);
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-red btn-sm';
-            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            delBtn.onclick = () => finRef.child(id).remove();
-            li.appendChild(delBtn);
-            if (item.status === 'avencer') {
-              avencerList.appendChild(li);
-              avencerCount += item.valor;
-            } else {
-              pagosList.appendChild(li);
-              pagosCount += item.valor;
-            }
-          });
-        }
-        updateFinCharts(avencerCount, pagosCount);
-      });
-    }
-    renderFinanceiro();
-    function updateFinCharts(avencer, pagos) {
-      if (window.barChartFin && window.pieChartFin) {
-        window.barChartFin.data.datasets[0].data = [avencer, pagos];
-        window.barChartFin.update();
-        window.pieChartFin.data.datasets[0].data = [avencer, pagos];
-        window.pieChartFin.update();
-      }
-    }
-    const ctxBarFin = document.getElementById('chart-financeiro-bar').getContext('2d');
-    window.barChartFin = new Chart(ctxBarFin, {
-      type: 'bar',
-      data: {
-        labels: ['A Vencer', 'Pagos'],
-        datasets: [{
-          label: 'Valor R$',
-          data: [0, 0],
-          backgroundColor: ['#ffc107', '#28a745']
-        }]
-      }
-    });
-    const ctxPieFin = document.getElementById('chart-financeiro-pie').getContext('2d');
-    window.pieChartFin = new Chart(ctxPieFin, {
-      type: 'pie',
-      data: {
-        labels: ['A Vencer', 'Pagos'],
-        datasets: [{
-          data: [0, 0],
-          backgroundColor: ['#ffc107', '#28a745']
-        }]
-      }
-    });
+    db.ref('Colheita').set(colheita);
+    db.ref('Financeiro').set(financeiro);
 
-    // Colheita
-    const colheitaRef = db.ref('colheita');
-    function addColheita() {
-      const colhedor = document.getElementById('colheita-colhedor').value;
-      const data = document.getElementById('colheita-data').value;
-      const latas = parseInt(document.getElementById('colheita-latas').value);
-      if (colhedor && data && latas) {
-        colheitaRef.push({ colhedor, data, latas });
-        document.getElementById('colheita-form').reset();
-      }
+    atualizarColheita();
+    atualizarFinanceiro();
+  } else {
+    alert("Pagamento cancelado: é obrigatório informar o tipo!");
+  }
+}
+
+  function excluirColheita(index) {
+  colheita.splice(index, 1);
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+}
+
+function carregarColheita() {
+  db.ref('Colheita').on('value', snap => {
+    if (snap.exists()) {
+      colheita.length = 0;
+      colheita.push(...snap.val());
+      atualizarColheita();
     }
-    document.getElementById('btn-add-colheita').addEventListener('click', addColheita);
-    colheitaRef.on('value', snapshot => {
-      const list = document.getElementById('lista-colheita');
-      const totalElem = document.getElementById('total-latas');
-      list.innerHTML = '';
-      let totalLatas = 0;
-      const data = snapshot.val();
-      if (data) {
-        const grouped = {};
-        Object.keys(data).forEach(id => {
-          const item = data[id];
-          if (!grouped[item.data]) grouped[item.data] = [];
-          grouped[item.data].push({id, ...item});
-          totalLatas += item.latas;
-        });
-        totalElem.textContent = totalLatas;
-        const sortedDates = Object.keys(grouped).sort();
-        sortedDates.forEach(date => {
-          const dateHeader = document.createElement('h5');
-          dateHeader.textContent = date;
-          list.appendChild(dateHeader);
-          const ul = document.createElement('ul');
-          ul.className = 'list-group mb-3';
-          let dailyTotal = 0;
-          grouped[date].forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.textContent = `${item.colhedor}: ${item.latas} latas`;
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-red btn-sm';
-            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            delBtn.onclick = () => colheitaRef.child(item.id).remove();
-            li.appendChild(delBtn);
-            ul.appendChild(li);
-            dailyTotal += item.latas;
-          });
-          const totalLi = document.createElement('li');
-          totalLi.className = 'list-group-item d-flex justify-content-between align-items-center';
-          totalLi.innerHTML = `<strong>Total: ${dailyTotal} latas</strong>`;
-          const payBtn = document.createElement('button');
-          payBtn.className = 'btn btn-green btn-sm';
-          payBtn.textContent = 'Pagar';
-          payBtn.onclick = () => {
-            finRef.push({ desc: 'Pagamento colheita ' + date, valor: dailyTotal, status: 'pago' });
-            grouped[date].forEach(item => colheitaRef.child(item.id).remove());
-          };
-          totalLi.appendChild(payBtn);
-          ul.appendChild(totalLi);
-          list.appendChild(ul);
-        });
-      } else {
-        totalElem.textContent = 0;
-      }
-    });
+  });
+}
 
-    // Relatório
-    function updateRelatorioCharts() {
-      const aplicDataRef = db.ref('aplicacoes');
-      const tarefasDataRef = db.ref('tarefas');
-      aplicDataRef.once('value', snap => {
-        const apps = snap.val();
-        const count = apps ? Object.keys(apps).length : 0;
-        if (window.chartRelAplic) {
-          window.chartRelAplic.data.datasets[0].data = [count];
-          window.chartRelAplic.update();
-        }
-      });
-      tarefasDataRef.once('value', snap => {
-        const tasks = snap.val();
-        let done = 0;
-        if (tasks) {
-          Object.values(tasks).forEach(t => {
-            if (t.done) done++;
-          });
-        }
-        const pend = tasks ? Object.keys(tasks).length - done : 0;
-        if (window.chartRelTarefas) {
-          window.chartRelTarefas.data.datasets[0].data = [done, pend];
-          window.chartRelTarefas.update();
-        }
-      });
-      finRef.once('value', snap => {
-        const fin = snap.val();
-        let total = 0;
-        if (fin) {
-          Object.values(fin).forEach(f => { total += f.valor; });
-        }
-        if (window.chartRelFin) {
-          window.chartRelFin.data.datasets[0].data = [total];
-          window.chartRelFin.update();
-        }
-      });
+function gerarGraficoColheita() {
+  const ctx = document.getElementById('graficoColheita').getContext('2d');
+  if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
+
+  const dias = {};
+  colheita.forEach(c => {
+    if (!dias[c.data]) dias[c.data] = 0;
+    dias[c.data] += c.quantidade;
+  });
+
+  window.graficoColheitaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Object.keys(dias),
+      datasets: [{
+        label: 'Latas Colhidas por Dia',
+        data: Object.values(dias),
+        backgroundColor: '#4caf50',
+        borderColor: '#66bb6a',
+        fill: false,
+        tension: 0.3
+      }]
     }
-    const ctxRelAplic = document.getElementById('chart-relatorio-aplic').getContext('2d');
-    window.chartRelAplic = new Chart(ctxRelAplic, {
-      type: 'doughnut',
-      data: {
-        labels: ['Total Aplicações'],
-        datasets: [{ data: [0], backgroundColor: ['#17a2b8'] }]
-      }
-    });
-    const ctxRelTarefas = document.getElementById('chart-relatorio-tarefas').getContext('2d');
-    window.chartRelTarefas = new Chart(ctxRelTarefas, {
-      type: 'doughnut',
-      data: {
-        labels: ['Concluídas', 'Pendentes'],
-        datasets: [{ data: [0, 0], backgroundColor: ['#28a745','#ffc107'] }]
-      }
-    });
-    const ctxRelFin = document.getElementById('chart-relatorio-fin').getContext('2d');
-    window.chartRelFin = new Chart(ctxRelFin, {
-      type: 'bar',
-      data: {
-        labels: ['Total Gasto'],
-        datasets: [{ data: [0], backgroundColor: ['#dc3545'] }]
-      }
-    });
-    updateRelatorioCharts();
-    aplicacoesRef.on('value', updateRelatorioCharts);
-    tarefasRef.on('value', updateRelatorioCharts);
-    finRef.on('value', updateRelatorioCharts);
+  });
+}
 
-    // PDF Download
-    document.getElementById('btn-download-report').addEventListener('click', () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text("Relatório Manejo Café", 10, 10);
-      doc.text("Dados gerados em " + new Date().toLocaleString(), 10, 20);
-      doc.save("relatorio.pdf");
-    });
+// Carregar os dados da Colheita assim que abrir o app
+carregarColheita();
 
-    // Config - Theme toggle
-    const toggleTheme = document.getElementById('toggle-theme');
-    toggleTheme.addEventListener('change', () => {
-      document.body.classList.toggle('light-theme');
-    });
-  </script>
-</body>
-</html>
+</script>

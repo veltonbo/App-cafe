@@ -411,22 +411,25 @@ function adicionarTarefa() {
 function marcarTarefa(index, checked) {
   if (checked) {
     tarefas[index].executada = true;
-    if (tarefas[index].eAplicacao) {
+    const tarefaExecutada = tarefas.splice(index, 1)[0];
+    tarefasFeitas.push(tarefaExecutada);
+
+    // Se for uma Aplicação, adiciona também nas Aplicações
+    if (tarefaExecutada.eAplicacao) {
       const novaAplicacao = {
-        data: tarefas[index].data,
-        produto: tarefas[index].descricao,
-        dosagem: '',
-        tipo: 'Adubo'
+        data: tarefaExecutada.data,
+        produto: tarefaExecutada.descricao,
+        dosagem: tarefaExecutada.dosagem,
+        tipo: tarefaExecutada.tipoAplicacao,
+        setor: tarefaExecutada.setor
       };
       aplicacoes.push(novaAplicacao);
-      db.ref('Aplicacoes').set(aplicacoes).then(() => {
-        carregarAplicacoes(); // <- ATUALIZA a tela depois de salvar
-      });
+      db.ref('Aplicacoes').set(aplicacoes);
     }
-    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
   }
   salvarTarefas();
   atualizarTarefas();
+  atualizarAplicacoes(); // Atualiza a lista de aplicações
 }
 
 function salvarTarefas() {

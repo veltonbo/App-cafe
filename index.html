@@ -835,28 +835,69 @@ function atualizarColheita() {
   for (const nome in agrupado) {
     const grupo = agrupado[nome];
     
-    const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
-    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * item.valorLata), 0);
+    // Agrupar por data
+    const porData = {};
+    grupo.forEach(item => {
+      if (!porData[item.data]) porData[item.data] = [];
+      porData[item.data].push(item);
+    });
+
+    let totalLatasGeral = 0;
+    let totalValorGeral = 0;
 
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
-    titulo.textContent = `${nome} - Total: ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
-
+    titulo.textContent = `${nome}`;
+    
     const container = document.createElement('div');
     container.appendChild(titulo);
 
-    grupo.forEach(({ data, quantidade, valorLata, pago, i }) => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${data} - ${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
-        <div class="botoes-financeiro">
-          ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
-          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
-        </div>
-      `;
-      container.appendChild(div);
-    });
+    for (const data in porData) {
+      const lista = porData[data];
+      let totalLatasDia = 0;
+      let totalValorDia = 0;
+
+      const tituloData = document.createElement('div');
+      tituloData.className = 'grupo-data';
+      tituloData.style.fontSize = '16px';
+      tituloData.style.color = '#bbb';
+      tituloData.textContent = data;
+      container.appendChild(tituloData);
+
+      lista.forEach(({ quantidade, valorLata, pago, i }) => {
+        totalLatasDia += quantidade;
+        totalValorDia += quantidade * valorLata;
+
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
+          <div class="botoes-financeiro">
+            ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+            <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      const resumoDia = document.createElement('div');
+      resumoDia.className = 'grupo-data';
+      resumoDia.style.fontSize = '14px';
+      resumoDia.style.color = '#66bb6a';
+      resumoDia.textContent = `Total do dia: ${totalLatasDia} latas = R$${totalValorDia.toFixed(2)}`;
+      container.appendChild(resumoDia);
+
+      totalLatasGeral += totalLatasDia;
+      totalValorGeral += totalValorDia;
+    }
+
+    const resumoGeral = document.createElement('div');
+    resumoGeral.className = 'grupo-data';
+    resumoGeral.style.fontSize = '16px';
+    resumoGeral.style.color = '#4caf50';
+    resumoGeral.style.marginTop = '10px';
+    resumoGeral.textContent = `Total geral: ${totalLatasGeral} latas = R$${totalValorGeral.toFixed(2)}`;
+    container.appendChild(resumoGeral);
 
     if (grupo[0].pago) {
       colheitaPaga.appendChild(container);

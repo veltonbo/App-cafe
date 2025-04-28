@@ -845,67 +845,52 @@ function atualizarColheita() {
   colheitaPendente.innerHTML = '';
   colheitaPaga.innerHTML = '';
 
-  // Calcular total geral
-  let totalLatasGeral = 0;
-  let totalValorGeral = 0;
-
-  colheita.forEach(c => {
-    if (c.colhedor.toLowerCase().includes(filtro)) {
-      totalLatasGeral += c.quantidade;
-      totalValorGeral += c.quantidade * c.valorLata;
-    }
-  });
-
-  // Atualizar resumo
-  document.getElementById('resumoGeralColheita').innerHTML = `
-    Total Geral: <strong>${totalLatasGeral} latas</strong> = <strong>R$ ${totalValorGeral.toFixed(2)}</strong>
-  `;
-
   const agrupado = {};
 
   colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
-    if (c.pago) {
-      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
-      agrupadoPagos[c.colhedor].push({ ...c, i });
-    } else {
-      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
-      agrupadoPendentes[c.colhedor].push({ ...c, i });
-    }
+    if (!agrupado[c.data]) agrupado[c.data] = [];
+    agrupado[c.data].push({ ...c, i });
   });
 
-  renderizarColheita(agrupadoPendentes, colheitaPendente, false);
-  renderizarColheita(agrupadoPagos, colheitaPaga, true);
+  renderizarAgrupado(colheitaPendente, agrupado, false);
+  renderizarAgrupado(colheitaPaga, agrupado, true);
 
   gerarGraficoColheita();
 }
 
-function renderizarColheita(agrupado, container, pago) {
-  for (const nome in agrupado) {
-    const grupo = agrupado[nome];
-    const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
-    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * parseFloat(item.valorLata)), 0);
+function renderizarAgrupado(container, agrupado, pago) {
+  for (const data in agrupado) {
+    const grupoData = agrupado[data].filter(c => c.pago === pago);
+    if (grupoData.length === 0) continue;
 
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
-    titulo.textContent = `${nome} - ${totalLatas} latas - Total R$ ${totalValor.toFixed(2)}`;
+    titulo.innerText = data;
+    container.appendChild(titulo);
 
-    const bloco = document.createElement('div');
-    bloco.appendChild(titulo);
+    // Agrupar por colhedor dentro da data
+    const colhedores = {};
 
-    grupo.forEach(({ data, quantidade, valorLata, i }) => {
+    grupoData.forEach(c => {
+      if (!colhedores[c.colhedor]) colhedores[c.colhedor] = { latas: 0, valor: 0, indices: [] };
+      colhedores[c.colhedor].latas += c.quantidade;
+      colhedores[c.colhedor].valor += c.quantidade * c.valorLata;
+      colhedores[c.colhedor].indices.push(c.i);
+    });
+
+    for (const nome in colhedores) {
+      const { latas, valor, indices } = colhedores[nome];
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `
-        <span>${data} - ${quantidade} latas = R$${(quantidade * parseFloat(valorLata)).toFixed(2)}</span>
+        <span><strong>${nome}</strong> - ${latas} latas = <strong>R$${valor.toFixed(2)}</strong></span>
         <div class="botoes-financeiro">
-          ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>` : ''}
-          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+          ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${indices[0]})">Pagar</button>` : ''}
+          <button class="botao-excluir" onclick="excluirColheita(${indices[0]})">Excluir</button>
         </div>
       `;
-      bloco.appendChild(div);
-    });
-
-    container.appendChild(bloco);
+      container.appendChild(div);
+    }
   }
 }
 

@@ -858,24 +858,6 @@ function atualizarColheita() {
   gerarGraficoColheita();
 }
 
-function atualizarColheita() {
-  const filtro = pesquisaColheita.value.toLowerCase();
-  colheitaPendente.innerHTML = '';
-  colheitaPaga.innerHTML = '';
-
-  const agrupado = {};
-
-  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
-    if (!agrupado[c.data]) agrupado[c.data] = [];
-    agrupado[c.data].push({ ...c, i });
-  });
-
-  renderizarAgrupado(colheitaPendente, agrupado, false);
-  renderizarAgrupado(colheitaPaga, agrupado, true);
-
-  gerarGraficoColheita();
-}
-
 function renderizarAgrupado(container, agrupado, pago) {
   for (const data in agrupado) {
     const grupoData = agrupado[data].filter(c => c.pago === pago);
@@ -915,31 +897,44 @@ function renderizarAgrupado(container, agrupado, pago) {
 let indexColheitaParaPagar = null;
 
 function pagarColheita(index) {
-  indexColheitaParaPagar = index;
-  document.getElementById('modalPagamento').style.display = 'flex';
-}
+  const colhedorAlvo = colheita[index].colhedor;
 
-function confirmarPagamentoColheita() {
-  if (indexColheitaParaPagar === null) return;
+  // Filtrar todas as entradas pendentes desse colhedor
+  const entradasParaPagar = colheita.filter(c => c.colhedor === colhedorAlvo && !c.pago);
 
-  const tipoSelecionado = document.getElementById('tipoPagamento').value;
+  if (entradasParaPagar.length === 0) {
+    alert('Nenhuma colheita pendente para este colhedor.');
+    return;
+  }
 
-  colheita[indexColheitaParaPagar].pago = true;
+  // Calcular o total
+  const totalValor = entradasParaPagar.reduce((acc, c) => acc + (c.quantidade * c.valorLata), 0);
 
+  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
+
+  if (!tipo) {
+    alert("Pagamento cancelado: é obrigatório informar o tipo!");
+    return;
+  }
+
+  // Marcar todas as colheitas como pagas
+  entradasParaPagar.forEach(c => c.pago = true);
+
+  // Registrar um único gasto no financeiro
   financeiro.push({
-    data: colheita[indexColheitaParaPagar].data,
-    produto: `Colheita - ${colheita[indexColheitaParaPagar].colhedor}`,
-    valor: colheita[indexColheitaParaPagar].quantidade * colheita[indexColheitaParaPagar].valorLata,
-    tipo: tipoSelecionado,
+    data: new Date().toISOString().split('T')[0], // data de hoje
+    produto: `Colheita - ${colhedorAlvo}`,
+    valor: totalValor,
+    tipo: tipo,
     pago: true
   });
 
+  // Atualizar Firebase
   db.ref('Colheita').set(colheita);
   db.ref('Financeiro').set(financeiro);
 
   atualizarColheita();
   atualizarFinanceiro();
-  fecharModalPagamento();
 }
 
 function fecharModalPagamento() {

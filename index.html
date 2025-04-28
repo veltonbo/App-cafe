@@ -792,16 +792,20 @@ function gerarGraficoFinanceiro() {
 }
 
 // Banco de dados para a Colheita<!-- Atualizado: Menu Colheita organizado, totalizador, botão excluir, botão pagar -->
-<!-- Dentro da aba Colheita -->
+<!-- Menu Colheita -->
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
+  <!-- Valor da lata -->
   <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+
+  <!-- Dados da colheita -->
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
   <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
   <button onclick="adicionarColheita()">Salvar Colheita</button>
 
+  <!-- Pesquisa -->
   <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
   <h4>A Pagar</h4>
@@ -825,7 +829,7 @@ function adicionarColheita() {
     pago: false
   };
 
-  if (!nova.data || !nova.colhedor || !nova.quantidade || isNaN(nova.valorLata)) {
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || isNaN(nova.valorLata)) {
     alert('Preencha todos os campos corretamente.');
     return;
   }
@@ -879,7 +883,7 @@ function renderizarColheita(pago, agrupado, container) {
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
-        <span><strong>${colhedor}</strong> - ${quantidade} latas = <strong>R$${(quantidade*valorLata).toFixed(2)}</strong></span>
+        <span><strong>${colhedor}</strong> - ${quantidade} latas = <strong>R$${(quantidade * valorLata).toFixed(2)}</strong></span>
         <div class="botoes-financeiro">
           ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>` : ''}
           <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
@@ -930,10 +934,8 @@ function excluirColheita(index) {
       f.produto.includes(item.colhedor) &&
       f.valor === (item.quantidade * item.valorLata)
     );
-    if (idxFin !== -1) {
-      financeiro.splice(idxFin, 1);
-      db.ref('Financeiro').set(financeiro);
-    }
+    if (idxFin !== -1) financeiro.splice(idxFin, 1);
+    db.ref('Financeiro').set(financeiro);
   }
 
   colheita.splice(index, 1);

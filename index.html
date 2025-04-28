@@ -857,20 +857,26 @@ function atualizarColheita() {
 function pagarColheita(index) {
   colheita[index].pago = true;
 
-  // Quando pagar, também adicionar no Financeiro
-  financeiro.push({
-    data: colheita[index].data,
-    produto: `Colheita - ${colheita[index].colhedor}`,
-    valor: colheita[index].quantidade * colheita[index].valorLata,
-    tipo: 'Colheita',
-    pago: true
-  });
+  // Perguntar ao usuário o tipo de lançamento
+  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
 
-  db.ref('Colheita').set(colheita);
-  db.ref('Financeiro').set(financeiro);
+  if (tipo) {
+    financeiro.push({
+      data: colheita[index].data,
+      produto: `Colheita - ${colheita[index].colhedor}`,
+      valor: colheita[index].quantidade * colheita[index].valorLata,
+      tipo: tipo,
+      pago: true
+    });
 
-  atualizarColheita();
-  atualizarFinanceiro();
+    db.ref('Colheita').set(colheita);
+    db.ref('Financeiro').set(financeiro);
+
+    atualizarColheita();
+    atualizarFinanceiro();
+  } else {
+    alert("Pagamento cancelado: é obrigatório informar o tipo!");
+  }
 }
 
   function excluirColheita(index) {

@@ -410,11 +410,11 @@ function adicionarTarefa() {
 
 function marcarTarefa(index, checked) {
   if (checked) {
-    tarefas[index].executada = true;
     const tarefaExecutada = tarefas.splice(index, 1)[0];
+    tarefaExecutada.executada = true;
     tarefasFeitas.push(tarefaExecutada);
 
-    // Se for uma aplicação marcada, adiciona também em Aplicações
+    // Se for uma aplicação, adiciona nos registros de Aplicações
     if (tarefaExecutada.eAplicacao) {
       const novaAplicacao = {
         data: tarefaExecutada.data,
@@ -428,7 +428,8 @@ function marcarTarefa(index, checked) {
       atualizarAplicacoes();
     }
   } else {
-    tarefasFeitas[index].executada = false;
+    tarefas[index].executada = false;
+    tarefasFeitas.splice(index, 1);
     tarefas.push(tarefasFeitas.splice(index, 1)[0]);
   }
   salvarTarefas();
@@ -485,24 +486,6 @@ function atualizarTarefas() {
     `;
     listaTarefasFeitas.appendChild(div);
   });
-}
-
-function marcarTarefa(index, checked) {
-  if (checked) {
-    tarefas[index].executada = true;
-    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function marcarTarefaFeita(index, checked) {
-  if (!checked) {
-    tarefasFeitas[index].executada = false;
-    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
-  }
-  salvarTarefas();
-  atualizarTarefas();
 }
 
 function mostrarCamposAplicacao() {

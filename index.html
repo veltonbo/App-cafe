@@ -414,22 +414,22 @@ function marcarTarefa(index, checked) {
     const tarefaExecutada = tarefas.splice(index, 1)[0];
     tarefasFeitas.push(tarefaExecutada);
 
-    // Se for uma Aplicação, adiciona também nas Aplicações
+    // Se for uma aplicação, adiciona nos registros de Aplicações
     if (tarefaExecutada.eAplicacao) {
       const novaAplicacao = {
         data: tarefaExecutada.data,
         produto: tarefaExecutada.descricao,
-        dosagem: tarefaExecutada.dosagem,
-        tipo: tarefaExecutada.tipoAplicacao,
-        setor: tarefaExecutada.setor
+        dosagem: tarefaExecutada.dosagem || '',   // Se não tiver dosagem, evita erro
+        tipo: tarefaExecutada.tipoAplicacao || '', // Se não tiver tipo, evita erro
+        setor: tarefaExecutada.setor || ''         // Para manter o padrão
       };
       aplicacoes.push(novaAplicacao);
       db.ref('Aplicacoes').set(aplicacoes);
+      atualizarAplicacoes();
     }
   }
   salvarTarefas();
   atualizarTarefas();
-  atualizarAplicacoes(); // Atualiza a lista de aplicações
 }
 
 function salvarTarefas() {

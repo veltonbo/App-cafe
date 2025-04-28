@@ -787,18 +787,19 @@ const colheita = [];
 
 function adicionarColheita() {
   const valorLataInput = document.getElementById('valorLata');
-  const valorPorLata = parseFloat(valorLataInput.value) || 0;
+  const valorPorLata = parseFloat(valorLataInput.value);
 
   const nova = {
     data: dataColheita.value,
-    colhedor: colhedor.value,
+    colhedor: colhedor.value.trim(),
     quantidade: parseInt(quantidadeLatas.value),
-    valorLata: valorPorLata,
+    valorLata: isNaN(valorPorLata) ? 0 : valorPorLata.toFixed(2),
     pago: false
   };
 
-  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
-    return alert("Preencha todos os campos corretamente!");
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0 || nova.valorLata <= 0) {
+    alert("Preencha todos os campos corretamente! O valor da lata não pode ser 0.");
+    return;
   }
 
   colheita.push(nova);

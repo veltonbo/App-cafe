@@ -858,6 +858,24 @@ function atualizarColheita() {
   gerarGraficoColheita();
 }
 
+function atualizarColheita() {
+  const filtro = pesquisaColheita.value.toLowerCase();
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
+
+  const agrupado = {};
+
+  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
+    if (!agrupado[c.data]) agrupado[c.data] = [];
+    agrupado[c.data].push({ ...c, i });
+  });
+
+  renderizarAgrupado(colheitaPendente, agrupado, false);
+  renderizarAgrupado(colheitaPaga, agrupado, true);
+
+  gerarGraficoColheita();
+}
+
 function renderizarAgrupado(container, agrupado, pago) {
   for (const data in agrupado) {
     const grupoData = agrupado[data].filter(c => c.pago === pago);

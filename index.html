@@ -272,11 +272,34 @@
   <div id="relatorio" class="aba">
   <h2>Relatório</h2>
 
-  <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-    <button id="btn-relatorio-aplicacoes" onclick="mostrarSubRelatorio('aplicacoesRelatorio')">Aplicações</button>
-    <button id="btn-relatorio-tarefas" onclick="mostrarSubRelatorio('tarefasRelatorio')">Tarefas</button>
-    <button id="btn-relatorio-financeiro" onclick="mostrarSubRelatorio('financeiroRelatorio')">Financeiro</button>
+  <!-- Filtros -->
+  <input id="filtroDataInicial" type="date">
+  <input id="filtroDataFinal" type="date">
+  <select id="filtroSetorRelatorio">
+    <option value="">Todos os Setores</option>
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+  <button onclick="gerarRelatorio()">Aplicar Filtro</button>
+
+  <div style="margin-top:20px;">
+    <h3>Últimas 5 Aplicações</h3>
+    <div id="ultimasAplicacoes"></div>
+
+    <h3>Últimas 5 Tarefas</h3>
+    <div id="ultimasTarefas"></div>
+
+    <h3>Últimos 5 Gastos</h3>
+    <div id="ultimosGastos"></div>
+
+    <h3 style="margin-top:30px;">Gráficos</h3>
+    <canvas id="graficoAplicacoes"></canvas>
+    <canvas id="graficoTarefas"></canvas>
+    <canvas id="graficoFinanceiro"></canvas>
   </div>
+
+  <button style="margin-top:20px;" onclick="exportarPDF()">Exportar PDF</button>
+</div>
 
   <div id="aplicacoesRelatorio" class="sub-relatorio" style="display:none;">
     <canvas id="graficoAplicacoesRelatorio"></canvas>
@@ -751,6 +774,91 @@ function gerarRelatorioFinanceiro() {
     html += `<div class="item"><span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo} - ${f.pago ? 'Pago' : 'A Vencer'}</span></div>`;
   });
   document.getElementById('listaFinanceiroRelatorio').innerHTML = html;
+}
+
+  function gerarRelatorio() {
+  const dataInicial = filtroDataInicial.value;
+  const dataFinal = filtroDataFinal.value;
+  const setor = filtroSetorRelatorio.value;
+
+  // Função interna para verificar data
+  function estaNoIntervalo(data) {
+    if (!dataInicial && !dataFinal) return true;
+    if (dataInicial && data > dataInicial && !dataFinal) return true;
+    if (!dataInicial && data < dataFinal) return true;
+    return (!dataInicial || data >= dataInicial) && (!dataFinal || data <= dataFinal);
+  }
+
+  // Últimas 5 Aplicações
+  let filtradasAplicacoes = aplicacoes
+    .filter(a => estaNoIntervalo(a.data) && (setor === "" || a.setor === setor))
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, 5);
+  
+  ultimasAplicacoes.innerHTML = filtradasAplicacoes.map(a => `<div class="item"><span>${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo} - ${a.setor}</span></div>`).join('');
+
+  // Últimas 5 Tarefas
+  let todasTarefas = [...tarefas, ...tarefasFeitas];
+  let filtradasTarefas = todasTarefas
+    .filter(t => estaNoIntervalo(t.data) && (setor === "" || t.setor === setor))
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, 5);
+  
+  ultimasTarefas.innerHTML = filtradasTarefas.map(t => `<div class="item"><span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span></div>`).join('');
+
+  // Últimos 5 Gastos
+  let filtradosGastos = financeiro
+    .filter(f => estaNoIntervalo(f.data))
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, 5);
+  
+  ultimosGastos.innerHTML = filtradosGastos.map(f => `<div class="item"><span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span></div>`).join('');
+
+  gerarGraficosRelatorio(filtradasAplicacoes, filtradasTarefas, filtradosGastos);
+}
+
+function gerarGraficosRelatorio(aplics, tarefas, gastos) {
+  // Gráfico Aplicações por Tipo
+  const tiposAplic = {};
+  aplics.forEach(a => tiposAplic[a.tipo] = (tiposAplic[a.tipo] || 0) + 1);
+
+  const ctx1 = document.getElementById('graficoAplicacoes').getContext('2d');
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(tiposAplic),
+      datasets: [{ label: 'Aplicações', data: Object.values(tiposAplic), backgroundColor: '#66bb6a' }]
+    }
+  });
+
+  // Gráfico Tarefas por Prioridade
+  const prioridades = {};
+  tarefas.forEach(t => prioridades[t.prioridade] = (prioridades[t.prioridade] || 0) + 1);
+
+  const ctx2 = document.getElementById('graficoTarefas').getContext('2d');
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx2, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(prioridades),
+      datasets: [{ label: 'Tarefas', data: Object.values(prioridades), backgroundColor: ['#f44336', '#ff9800', '#4caf50'] }]
+    }
+  });
+
+  // Gráfico Financeiro
+  const tiposGastos = {};
+  gastos.forEach(f => tiposGastos[f.tipo] = (tiposGastos[f.tipo] || 0) + f.valor);
+
+  const ctx3 = document.getElementById('graficoFinanceiro').getContext('2d');
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  window.graficoFinanceiro = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(tiposGastos),
+      datasets: [{ label: 'Gastos', data: Object.values(tiposGastos), backgroundColor: '#66bb6a' }]
+    }
+  });
 }
   
 </script>

@@ -513,6 +513,23 @@ function atualizarTarefas() {
     div.innerHTML = `
       <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
       <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+      </div>
+    `;
+    listaTarefasFeitas.appendChild(div);
+  });
+}
+
+  tarefasFeitas.filter(t => 
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (filtroSetor === "" || t.setor === filtroSetor)
+  ).forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
     `;
     listaTarefasFeitas.appendChild(div);
   });

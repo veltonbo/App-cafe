@@ -334,6 +334,20 @@
   <!-- Gráfico -->
   <canvas id="graficoColheita"></canvas>
 </div>
+
+  <div id="modalTipoPagamento" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#1e1e1e; padding:20px; border-radius:10px; width:300px; text-align:center;">
+    <h3>Escolher Tipo</h3>
+    <select id="tipoPagamentoSelecionado" style="margin:10px 0;">
+      <option>Colheita</option>
+      <option>Salário</option>
+      <option>Adiantamento</option>
+      <option>Outro</option>
+    </select>
+    <button onclick="confirmarPagamentoColheita()">Confirmar Pagamento</button><br><br>
+    <button style="background:#f44336;" onclick="fecharModalPagamento()">Cancelar</button>
+  </div>
+</div>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -854,18 +868,24 @@ function atualizarColheita() {
   gerarGraficoColheita();
 }
 
+let indiceColheitaSelecionado = null;
+
 function pagarColheita(index) {
-  colheita[index].pago = true;
+  indiceColheitaSelecionado = index;
+  document.getElementById('modalTipoPagamento').style.display = 'flex';
+}
 
-  // Perguntar ao usuário o tipo de lançamento
-  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
-
-  if (tipo) {
+function confirmarPagamentoColheita() {
+  const tipoSelecionado = document.getElementById('tipoPagamentoSelecionado').value;
+  const index = indiceColheitaSelecionado;
+  
+  if (index !== null && tipoSelecionado) {
+    colheita[index].pago = true;
     financeiro.push({
       data: colheita[index].data,
       produto: `Colheita - ${colheita[index].colhedor}`,
       valor: colheita[index].quantidade * colheita[index].valorLata,
-      tipo: tipo,
+      tipo: tipoSelecionado,
       pago: true
     });
 
@@ -874,9 +894,13 @@ function pagarColheita(index) {
 
     atualizarColheita();
     atualizarFinanceiro();
-  } else {
-    alert("Pagamento cancelado: é obrigatório informar o tipo!");
+    fecharModalPagamento();
   }
+}
+
+function fecharModalPagamento() {
+  document.getElementById('modalTipoPagamento').style.display = 'none';
+  indiceColheitaSelecionado = null;
 }
 
   function excluirColheita(index) {

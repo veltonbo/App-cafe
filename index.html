@@ -909,29 +909,39 @@ function renderizarColheita(agrupado, container, pago) {
   }
 }
 
+let indexColheitaParaPagar = null;
+
 function pagarColheita(index) {
-  colheita[index].pago = true;
+  indexColheitaParaPagar = index;
+  document.getElementById('modalPagamento').style.display = 'flex';
+}
 
-  // Perguntar ao usuário o tipo de lançamento
-  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
+function confirmarPagamentoColheita() {
+  if (indexColheitaParaPagar === null) return;
 
-  if (tipo) {
-    financeiro.push({
-      data: colheita[index].data,
-      produto: `Colheita - ${colheita[index].colhedor}`,
-      valor: colheita[index].quantidade * colheita[index].valorLata,
-      tipo: tipo,
-      pago: true
-    });
+  const tipoSelecionado = document.getElementById('tipoPagamento').value;
 
-    db.ref('Colheita').set(colheita);
-    db.ref('Financeiro').set(financeiro);
+  colheita[indexColheitaParaPagar].pago = true;
 
-    atualizarColheita();
-    atualizarFinanceiro();
-  } else {
-    alert("Pagamento cancelado: é obrigatório informar o tipo!");
-  }
+  financeiro.push({
+    data: colheita[indexColheitaParaPagar].data,
+    produto: `Colheita - ${colheita[indexColheitaParaPagar].colhedor}`,
+    valor: colheita[indexColheitaParaPagar].quantidade * colheita[indexColheitaParaPagar].valorLata,
+    tipo: tipoSelecionado,
+    pago: true
+  });
+
+  db.ref('Colheita').set(colheita);
+  db.ref('Financeiro').set(financeiro);
+
+  atualizarColheita();
+  atualizarFinanceiro();
+  fecharModalPagamento();
+}
+
+function fecharModalPagamento() {
+  document.getElementById('modalPagamento').style.display = 'none';
+  indexColheitaParaPagar = null;
 }
 
   function excluirColheita(index) {

@@ -321,7 +321,8 @@
   <input id="colhedor" placeholder="Nome do Colhedor" />
   <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
   <button onclick="adicionarColheita()">Salvar Colheita</button>
-
+  <button onclick="pagarTodasColheitas()" style="background:#ff9800;">Pagar Todos</button>
+ 
   <!-- Pesquisa -->
   <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
@@ -848,12 +849,69 @@ function atualizarColheita() {
   const agrupado = {};
 
   colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
-    if (!agrupado[c.data]) agrupado[c.data] = [];
-    agrupado[c.data].push({ ...c, i });
+    if (!agrupado[c.colhedor]) agrupado[c.colhedor] = [];
+    agrupado[c.colhedor].push({ ...c, i });
   });
 
-  renderizarAgrupado(colheitaPendente, agrupado, false);
-  renderizarAgrupado(colheitaPaga, agrupado, true);
+  let totalLatasPendentes = 0;
+  let totalValorPendentes = 0;
+  let totalLatasPagas = 0;
+  let totalValorPagas = 0;
+
+  for (const nome in agrupado) {
+    const grupo = agrupado[nome];
+    
+    const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
+    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * item.valorLata), 0);
+
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = `${nome} - Total: ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
+
+    const container = document.createElement('div');
+    container.appendChild(titulo);
+
+    grupo.forEach(({ data, quantidade, valorLata, pago, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${data} - ${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
+        <div class="botoes-financeiro">
+          ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
+      `;
+      container.appendChild(div);
+
+      if (pago) {
+        totalLatasPagas += quantidade;
+        totalValorPagas += quantidade * valorLata;
+      } else {
+        totalLatasPendentes += quantidade;
+        totalValorPendentes += quantidade * valorLata;
+      }
+    });
+
+    if (grupo[0].pago) {
+      colheitaPaga.appendChild(container);
+    } else {
+      colheitaPendente.appendChild(container);
+    }
+  }
+
+  // Resumo final A Pagar
+  const resumoPendentes = document.createElement('div');
+  resumoPendentes.className = 'grupo-data';
+  resumoPendentes.style.marginTop = '20px';
+  resumoPendentes.textContent = `Total Pendente: ${totalLatasPendentes} latas = R$${totalValorPendentes.toFixed(2)}`;
+  colheitaPendente.appendChild(resumoPendentes);
+
+  // Resumo final Pagos
+  const resumoPagos = document.createElement('div');
+  resumoPagos.className = 'grupo-data';
+  resumoPagos.style.marginTop = '20px';
+  resumoPagos.textContent = `Total Pago: ${totalLatasPagas} latas = R$${totalValorPagas.toFixed(2)}`;
+  colheitaPaga.appendChild(resumoPagos);
 
   gerarGraficoColheita();
 }
@@ -943,11 +1001,27 @@ function fecharModalPagamento() {
 }
 
   function excluirColheita(index) {
+  const item = colheita[index];
+
+  if (item.pago) {
+    // Se já foi pago, remover também do Financeiro
+    const indiceFinanceiro = financeiro.findIndex(f => 
+      f.data === item.data && 
+      f.produto === `Colheita - ${item.colhedor}` &&
+      f.valor === (item.quantidade * item.valorLata)
+    );
+
+    if (indiceFinanceiro !== -1) {
+      financeiro.splice(indiceFinanceiro, 1);
+      db.ref('Financeiro').set(financeiro);
+    }
+  }
+
   colheita.splice(index, 1);
   db.ref('Colheita').set(colheita);
   atualizarColheita();
+  atualizarFinanceiro();
 }
-
 function carregarColheita() {
   db.ref('Colheita').on('value', snap => {
     if (snap.exists()) {
@@ -959,31 +1033,33 @@ function carregarColheita() {
 }
 
 function gerarGraficoColheita() {
-  const diasPendentes = {};
-  const diasPagos = {};
+  const ctx = document.getElementById('graficoColheita').getContext('2d');
+  if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
 
-  colheita.forEach(c => {
-    if (c.pago) {
-      diasPagos[c.data] = (diasPagos[c.data] || 0) + c.quantidade;
-    } else {
-      diasPendentes[c.data] = (diasPendentes[c.data] || 0) + c.quantidade;
-    }
-  });
+  const dias = {};
 
-  // Gráfico Pendentes
-  const ctxPendente = document.getElementById('graficoColheitaPendente').getContext('2d');
-  if (window.graficoColheitaPendente) window.graficoColheitaPendente.destroy();
-  window.graficoColheitaPendente = new Chart(ctxPendente, {
-    type: 'bar',
+  colheita
+    .filter(c => c.pago) // Somente colheitas pagas
+    .forEach(c => {
+      if (!dias[c.data]) dias[c.data] = 0;
+      dias[c.data] += c.quantidade;
+    });
+
+  window.graficoColheitaChart = new Chart(ctx, {
+    type: 'line',
     data: {
-      labels: Object.keys(diasPendentes),
+      labels: Object.keys(dias),
       datasets: [{
-        label: 'Latas Pendentes',
-        data: Object.values(diasPendentes),
-        backgroundColor: '#ff9800'
+        label: 'Latas Pagas por Dia',
+        data: Object.values(dias),
+        backgroundColor: '#4caf50',
+        borderColor: '#66bb6a',
+        fill: false,
+        tension: 0.3
       }]
     }
   });
+}
 
   // Gráfico Pagos
   const ctxPago = document.getElementById('graficoColheitaPaga').getContext('2d');
@@ -1001,7 +1077,59 @@ function gerarGraficoColheita() {
   });
 }
 
+// Resumo Total Geral Pago
+  const totalLatas = Object.values(dias).reduce((sum, val) => sum + val, 0);
+  const totalValor = colheita
+    .filter(c => c.pago)
+    .reduce((sum, c) => sum + (c.quantidade * c.valorLata), 0);
+
+  let resumoTotal = document.getElementById('resumoColheita');
+  if (!resumoTotal) {
+    resumoTotal = document.createElement('div');
+    resumoTotal.id = 'resumoColheita';
+    resumoTotal.style.marginTop = '20px';
+    resumoTotal.style.fontWeight = 'bold';
+    resumoTotal.style.textAlign = 'center';
+    resumoTotal.style.color = '#66bb6a';
+    ctx.canvas.parentNode.appendChild(resumoTotal);
+  }
+  resumoTotal.innerHTML = `Total Geral Pago: ${totalLatas} latas = R$ ${totalValor.toFixed(2)}`;
+  
 // Carregar os dados da Colheita assim que abrir o app
 carregarColheita();
 
+  function pagarTodasColheitas() {
+  const pendentes = colheita.filter(c => !c.pago);
+  if (pendentes.length === 0) {
+    alert("Não há colheitas pendentes para pagar.");
+    return;
+  }
+
+  const tipo = prompt("Digite o tipo de gasto para lançar no financeiro (ex: Colheita, Salário, Adiantamento, Outros):", "Colheita");
+
+  if (!tipo) {
+    alert("Pagamento cancelado: é obrigatório informar o tipo!");
+    return;
+  }
+
+  pendentes.forEach(c => {
+    c.pago = true;
+    financeiro.push({
+      data: c.data,
+      produto: `Colheita - ${c.colhedor}`,
+      valor: c.quantidade * c.valorLata,
+      tipo: tipo,
+      pago: true
+    });
+  });
+
+  db.ref('Colheita').set(colheita);
+  db.ref('Financeiro').set(financeiro);
+
+  atualizarColheita();
+  atualizarFinanceiro();
+
+  alert(`Pagamentos efetuados: ${pendentes.length} registros.`);
+}
+  
 </script>

@@ -828,81 +828,83 @@ function atualizarColheita() {
 
   const agrupado = {};
 
-  colheita.forEach((c, i) => {
-    if (!agrupado[c.data]) agrupado[c.data] = {};
-    if (!agrupado[c.data][c.colhedor]) agrupado[c.data][c.colhedor] = [];
-    agrupado[c.data][c.colhedor].push({ ...c, index: i });
+  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
+    if (!agrupado[c.data]) agrupado[c.data] = [];
+    agrupado[c.data].push({ ...c, i });
   });
 
-  for (const data in agrupado) {
-    const dia = agrupado[data];
+  const renderizar = (pago, container) => {
+    let totalLatasGeral = 0;
+    let totalValorGeral = 0;
 
-    const tituloDia = document.createElement('div');
-    tituloDia.className = 'grupo-data';
-    tituloDia.textContent = `Data: ${data}`;
-    
-    const containerDiaPendente = document.createElement('div');
-    const containerDiaPago = document.createElement('div');
+    for (const data in agrupado) {
+      const grupoData = agrupado[data].filter(c => c.pago === pago);
+      if (grupoData.length === 0) continue;
 
-    let totalLatasDia = 0;
-    let totalValorDia = 0;
+      const cardData = document.createElement('div');
+      cardData.style.background = '#1e1e1e';
+      cardData.style.borderRadius = '10px';
+      cardData.style.padding = '15px';
+      cardData.style.marginBottom = '20px';
+      cardData.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
 
-    for (const colhedor in dia) {
-      const colheitas = dia[colhedor];
+      const tituloData = document.createElement('div');
+      tituloData.className = 'grupo-data';
+      tituloData.textContent = `Data: ${data}`;
+      cardData.appendChild(tituloData);
 
-      let totalLatasColhedor = 0;
-      let totalValorColhedor = 0;
+      let totalLatasDia = 0;
+      let totalValorDia = 0;
 
-      colheitas.forEach(c => {
-        totalLatasColhedor += c.quantidade;
-        totalValorColhedor += c.quantidade * c.valorLata;
+      const colhedores = {};
+
+      grupoData.forEach(({ colhedor, quantidade, valorLata, i }) => {
+        if (!colhedores[colhedor]) colhedores[colhedor] = { latas: 0, valor: 0, indices: [] };
+        colhedores[colhedor].latas += quantidade;
+        colhedores[colhedor].valor += quantidade * valorLata;
+        colhedores[colhedor].indices.push(i);
+
+        totalLatasDia += quantidade;
+        totalValorDia += quantidade * valorLata;
       });
 
-      const blocoColhedor = document.createElement('div');
-      blocoColhedor.innerHTML = `
-        <div class="grupo-data">${colhedor} - ${totalLatasColhedor} latas - R$${totalValorColhedor.toFixed(2)}</div>
-      `;
-
-      colheitas.forEach(c => {
+      for (const nome in colhedores) {
         const div = document.createElement('div');
         div.className = 'item';
         div.innerHTML = `
-          <span>${c.data} - ${c.quantidade} latas = R$${(c.quantidade * c.valorLata).toFixed(2)}</span>
+          <span>${nome} - ${colhedores[nome].latas} latas = R$${colhedores[nome].valor.toFixed(2)}</span>
           <div class="botoes-financeiro">
-            ${c.pago ? '' : `<button class="botao-pagar" onclick="abrirModalPagamento(${c.index})">Pagar</button>`}
-            <button class="botao-excluir" onclick="excluirColheita(${c.index})">Excluir</button>
+            ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${colhedores[nome].indices[0]})">Pagar</button>` : ''}
+            <button class="botao-excluir" onclick="excluirColheita(${colhedores[nome].indices[0]})">Excluir</button>
           </div>
         `;
-        blocoColhedor.appendChild(div);
-      });
-
-      totalLatasDia += totalLatasColhedor;
-      totalValorDia += totalValorColhedor;
-
-      if (colheitas[0].pago) {
-        containerDiaPago.appendChild(blocoColhedor);
-      } else {
-        containerDiaPendente.appendChild(blocoColhedor);
+        cardData.appendChild(div);
       }
+
+      const resumoDia = document.createElement('div');
+      resumoDia.style.marginTop = '10px';
+      resumoDia.style.fontSize = '14px';
+      resumoDia.style.color = '#aaa';
+      resumoDia.textContent = `Total do dia: ${totalLatasDia} latas - R$${totalValorDia.toFixed(2)}`;
+      cardData.appendChild(resumoDia);
+
+      container.appendChild(cardData);
+
+      totalLatasGeral += totalLatasDia;
+      totalValorGeral += totalValorDia;
     }
 
-    // Totais por dia
-    const totalDia = document.createElement('div');
-    totalDia.className = 'grupo-data';
-    totalDia.style.color = '#66bb6a';
-    totalDia.textContent = `Total do dia: ${totalLatasDia} latas - R$${totalValorDia.toFixed(2)}`;
+    if (totalLatasGeral > 0) {
+      const totalGeral = document.createElement('div');
+      totalGeral.className = 'grupo-data';
+      totalGeral.style.marginTop = '10px';
+      totalGeral.textContent = `Total Geral: ${totalLatasGeral} latas = R$${totalValorGeral.toFixed(2)}`;
+      container.appendChild(totalGeral);
+    }
+  };
 
-    if (containerDiaPendente.children.length > 0) {
-      colheitaPendente.appendChild(tituloDia);
-      colheitaPendente.appendChild(containerDiaPendente);
-      colheitaPendente.appendChild(totalDia.cloneNode(true));
-    }
-    if (containerDiaPago.children.length > 0) {
-      colheitaPaga.appendChild(tituloDia.cloneNode(true));
-      colheitaPaga.appendChild(containerDiaPago);
-      colheitaPaga.appendChild(totalDia.cloneNode(true));
-    }
-  }
+  renderizar(false, colheitaPendente);
+  renderizar(true, colheitaPaga);
 
   gerarGraficoColheita();
 }

@@ -314,7 +314,7 @@
   <!-- Resumo Geral da Colheita -->
 <div id="resumoGeralColheita" style="margin: 10px 0; font-weight: bold; color: #66bb6a;"></div>
   <!-- Valor da lata -->
-  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" onchange="salvarValorLata()" />
 
   <!-- Dados da colheita -->
   <input id="dataColheita" type="date" />
@@ -368,6 +368,19 @@ function inicializarApp() {
   carregarAplicacoes();
   carregarTarefas();
   carregarFinanceiro();
+  carregarValorLata();
+}
+
+function salvarValorLata() {
+  const valor = document.getElementById('valorLata').value;
+  localStorage.setItem('valorLata', valor);
+}
+
+function carregarValorLata() {
+  const valorSalvo = localStorage.getItem('valorLata');
+  if (valorSalvo) {
+    document.getElementById('valorLata').value = valorSalvo;
+  }
 }
 
 function mostrarAba(id) {

@@ -377,11 +377,33 @@ function adicionarTarefa() {
     descricao: descricaoTarefa.value,
     prioridade: prioridadeTarefa.value,
     setor: setorTarefa.value,
-    executada: false
+    executada: false,
+    eAplicacao: document.getElementById('eAplicacao').checked // Novo campo
   };
   if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
   tarefas.push(nova);
   salvarTarefas();
+  atualizarTarefas();
+}
+
+function marcarTarefa(index, checked) {
+  if (checked) {
+    tarefas[index].executada = true;
+    // Se a tarefa for uma aplicação, adiciona automaticamente nas Aplicações
+    if (tarefas[index].eAplicacao) {
+      const novaAplicacao = {
+        data: tarefas[index].data,
+        produto: tarefas[index].descricao,
+        dosagem: '',
+        tipo: 'Adubo'
+      };
+      aplicacoes.push(novaAplicacao);
+      db.ref('Aplicacoes').set(aplicacoes);
+    }
+    tarefasFeitas.push(tarefas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarAplicacoes(); // Atualiza lista de aplicações ao criar nova
   atualizarTarefas();
 }
 

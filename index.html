@@ -821,13 +821,13 @@ function atualizarColheita() {
 
   for (const nome in agrupado) {
     const grupo = agrupado[nome];
-    
+
     const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
-    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * item.valorLata), 0);
+    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * parseFloat(item.valorLata)), 0);
 
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
-    titulo.textContent = `${nome} - Total: ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
+    titulo.textContent = `${nome} - ${totalLatas} latas - Total R$ ${totalValor.toFixed(2)}`;
 
     const container = document.createElement('div');
     container.appendChild(titulo);
@@ -836,7 +836,7 @@ function atualizarColheita() {
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `
-        <span>${data} - ${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
+        <span>${data} - ${quantidade} latas = R$${(quantidade * parseFloat(valorLata)).toFixed(2)}</span>
         <div class="botoes-financeiro">
           ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
           <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>

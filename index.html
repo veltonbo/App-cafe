@@ -396,7 +396,6 @@ function adicionarTarefa() {
 function marcarTarefa(index, checked) {
   if (checked) {
     tarefas[index].executada = true;
-    // Se a tarefa for uma aplicação, adiciona automaticamente nas Aplicações
     if (tarefas[index].eAplicacao) {
       const novaAplicacao = {
         data: tarefas[index].data,
@@ -405,12 +404,13 @@ function marcarTarefa(index, checked) {
         tipo: 'Adubo'
       };
       aplicacoes.push(novaAplicacao);
-      db.ref('Aplicacoes').set(aplicacoes);
+      db.ref('Aplicacoes').set(aplicacoes).then(() => {
+        carregarAplicacoes(); // <- ATUALIZA a tela depois de salvar
+      });
     }
     tarefasFeitas.push(tarefas.splice(index, 1)[0]);
   }
   salvarTarefas();
-  atualizarAplicacoes(); // Atualiza lista de aplicações ao criar nova
   atualizarTarefas();
 }
 

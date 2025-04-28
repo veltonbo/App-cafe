@@ -907,26 +907,43 @@ function carregarColheita() {
 }
 
 function gerarGraficoColheita() {
-  const ctx = document.getElementById('graficoColheita').getContext('2d');
-  if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
+  const diasPendentes = {};
+  const diasPagos = {};
 
-  const dias = {};
   colheita.forEach(c => {
-    if (!dias[c.data]) dias[c.data] = 0;
-    dias[c.data] += c.quantidade;
+    if (c.pago) {
+      diasPagos[c.data] = (diasPagos[c.data] || 0) + c.quantidade;
+    } else {
+      diasPendentes[c.data] = (diasPendentes[c.data] || 0) + c.quantidade;
+    }
   });
 
-  window.graficoColheitaChart = new Chart(ctx, {
-    type: 'line',
+  // Gráfico Pendentes
+  const ctxPendente = document.getElementById('graficoColheitaPendente').getContext('2d');
+  if (window.graficoColheitaPendente) window.graficoColheitaPendente.destroy();
+  window.graficoColheitaPendente = new Chart(ctxPendente, {
+    type: 'bar',
     data: {
-      labels: Object.keys(dias),
+      labels: Object.keys(diasPendentes),
       datasets: [{
-        label: 'Latas Colhidas por Dia',
-        data: Object.values(dias),
-        backgroundColor: '#4caf50',
-        borderColor: '#66bb6a',
-        fill: false,
-        tension: 0.3
+        label: 'Latas Pendentes',
+        data: Object.values(diasPendentes),
+        backgroundColor: '#ff9800'
+      }]
+    }
+  });
+
+  // Gráfico Pagos
+  const ctxPago = document.getElementById('graficoColheitaPaga').getContext('2d');
+  if (window.graficoColheitaPaga) window.graficoColheitaPaga.destroy();
+  window.graficoColheitaPaga = new Chart(ctxPago, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(diasPagos),
+      datasets: [{
+        label: 'Latas Pagas',
+        data: Object.values(diasPagos),
+        backgroundColor: '#4caf50'
       }]
     }
   });

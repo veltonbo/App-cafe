@@ -812,16 +812,28 @@ function atualizarColheita() {
   colheitaPendente.innerHTML = '';
   colheitaPaga.innerHTML = '';
 
-  const agrupado = {};
+  const agrupadoPendentes = {};
+  const agrupadoPagos = {};
 
   colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
-    if (!agrupado[c.colhedor]) agrupado[c.colhedor] = [];
-    agrupado[c.colhedor].push({ ...c, i });
+    if (c.pago) {
+      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+      agrupadoPagos[c.colhedor].push({ ...c, i });
+    } else {
+      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+      agrupadoPendentes[c.colhedor].push({ ...c, i });
+    }
   });
 
+  renderizarColheita(agrupadoPendentes, colheitaPendente, false);
+  renderizarColheita(agrupadoPagos, colheitaPaga, true);
+
+  gerarGraficoColheita();
+}
+
+function renderizarColheita(agrupado, container, pago) {
   for (const nome in agrupado) {
     const grupo = agrupado[nome];
-
     const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
     const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * parseFloat(item.valorLata)), 0);
 
@@ -829,30 +841,24 @@ function atualizarColheita() {
     titulo.className = 'grupo-data';
     titulo.textContent = `${nome} - ${totalLatas} latas - Total R$ ${totalValor.toFixed(2)}`;
 
-    const container = document.createElement('div');
-    container.appendChild(titulo);
+    const bloco = document.createElement('div');
+    bloco.appendChild(titulo);
 
-    grupo.forEach(({ data, quantidade, valorLata, pago, i }) => {
+    grupo.forEach(({ data, quantidade, valorLata, i }) => {
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `
         <span>${data} - ${quantidade} latas = R$${(quantidade * parseFloat(valorLata)).toFixed(2)}</span>
         <div class="botoes-financeiro">
-          ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+          ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>` : ''}
           <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
         </div>
       `;
-      container.appendChild(div);
+      bloco.appendChild(div);
     });
 
-    if (grupo[0].pago) {
-      colheitaPaga.appendChild(container);
-    } else {
-      colheitaPendente.appendChild(container);
-    }
+    container.appendChild(bloco);
   }
-
-  gerarGraficoColheita();
 }
 
 function pagarColheita(index) {

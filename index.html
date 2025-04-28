@@ -428,12 +428,22 @@ function marcarTarefa(index, checked) {
       atualizarAplicacoes();
     }
   } else {
-    tarefas[index].executada = false;
-    tarefasFeitas.splice(index, 1);
-    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+    const tarefaReaberta = tarefasFeitas.splice(index, 1)[0];
+    tarefaReaberta.executada = false;
+    tarefas.push(tarefaReaberta);
   }
   salvarTarefas();
   atualizarTarefas();
+}
+
+function marcarTarefaFeita(index, checked) {
+  if (!checked) {
+    const tarefaReaberta = tarefasFeitas.splice(index, 1)[0];
+    tarefaReaberta.executada = false;
+    tarefas.push(tarefaReaberta);
+    salvarTarefas();
+    atualizarTarefas();
+  }
 }
 
 function salvarTarefas() {
@@ -493,7 +503,7 @@ function mostrarCamposAplicacao() {
   const campos = document.getElementById('camposAplicacao');
   campos.style.display = checkbox.checked ? 'block' : 'none';
 }
-  
+
 function carregarTarefas() {
   db.ref('Tarefas').on('value', snap => {
     if (snap.exists()) {

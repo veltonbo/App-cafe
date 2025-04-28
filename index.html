@@ -270,10 +270,36 @@
   </div>
 
   <div id="relatorio" class="aba">
-    <h2>Relatório</h2>
-    <div id="resumoRelatorio"></div>
-    <button onclick="exportarPDF()">Exportar PDF</button>
+  <h2>Relatório</h2>
+
+  <!-- Submenu Relatório -->
+  <div class="menu-superior" style="margin-bottom: 20px;">
+    <button id="btn-relatorio-aplicacoes" onclick="mostrarRelatorio('aplicacoesRel')"><i class="fas fa-flask"></i></button>
+    <button id="btn-relatorio-tarefas" onclick="mostrarRelatorio('tarefasRel')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-relatorio-financeiro" onclick="mostrarRelatorio('financeiroRel')"><i class="fas fa-dollar-sign"></i></button>
   </div>
+
+  <!-- Área dos relatórios -->
+  <div id="aplicacoesRel" class="relatorio-subaba">
+    <h3>Últimas Aplicações</h3>
+    <div id="ultimasAplicacoes"></div>
+    <canvas id="graficoAplicacoes" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <div id="tarefasRel" class="relatorio-subaba" style="display:none;">
+    <h3>Últimas Tarefas</h3>
+    <div id="ultimasTarefas"></div>
+    <canvas id="graficoTarefas" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <div id="financeiroRel" class="relatorio-subaba" style="display:none;">
+    <h3>Resumo Financeiro</h3>
+    <div id="resumoFinanceiro"></div>
+    <canvas id="graficoFinanceiro" style="margin-top: 20px;"></canvas>
+  </div>
+
+  <button onclick="exportarPDF()">Exportar PDF</button>
+</div>
 
   <div id="configuracoes" class="aba">
     <h2>Configurações</h2>
@@ -648,4 +674,84 @@ function exportarPDF() {
   doc.text('Total Financeiro: R$' + financeiro.reduce((a, b) => a + b.valor, 0).toFixed(2), 20, 60);
   doc.save('relatorio_manejo.pdf');
 }
+
+function mostrarRelatorio(tipo) {
+  document.querySelectorAll('.relatorio-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(tipo).style.display = 'block';
+
+  if (tipo === 'aplicacoesRel') gerarGraficoAplicacoes();
+  if (tipo === 'tarefasRel') gerarGraficoTarefas();
+  if (tipo === 'financeiroRel') gerarGraficoFinanceiro();
+}
+
+// Gerar lista e gráfico de Aplicações
+function gerarGraficoAplicacoes() {
+  const ultimas = aplicacoes.slice(-5).reverse();
+  const lista = ultimas.map(app => `<div class="item">${app.data} - ${app.produto} (${app.dosagem})</div>`).join('');
+  document.getElementById('ultimasAplicacoes').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoAplicacoes').getContext('2d');
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ultimas.map(a => a.produto),
+      datasets: [{ label: 'Aplicações', data: ultimas.map(a => parseFloat(a.dosagem) || 0) }]
+    }
+  });
+}
+
+// Gerar lista e gráfico de Tarefas
+function gerarGraficoTarefas() {
+  const ultimas = tarefasFeitas.slice(-5).reverse();
+  const lista = ultimas.map(t => `<div class="item">${t.data} - ${t.descricao} (${t.prioridade})</div>`).join('');
+  document.getElementById('ultimasTarefas').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoTarefas').getContext('2d');
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Alta', 'Média', 'Baixa'],
+      datasets: [{
+        label: 'Prioridade',
+        data: [
+          ultimas.filter(t => t.prioridade === 'Alta').length,
+          ultimas.filter(t => t.prioridade === 'Média').length,
+          ultimas.filter(t => t.prioridade === 'Baixa').length
+        ],
+        backgroundColor: ['#f44336', '#ff9800', '#4caf50']
+      }]
+    }
+  });
+}
+
+// Gerar lista e gráfico de Financeiro
+function gerarGraficoFinanceiro() {
+  const pagos = financeiro.filter(f => f.pago);
+  const totalPago = pagos.reduce((acc, f) => acc + f.valor, 0);
+
+  document.getElementById('resumoFinanceiro').innerHTML = `<div class="item">Total Pago: R$ ${totalPago.toFixed(2)}</div>`;
+
+  const ctx = document.getElementById('graficoFinanceiro').getContext('2d');
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  const totaisPorTipo = {};
+
+  pagos.forEach(f => {
+    totaisPorTipo[f.tipo] = (totaisPorTipo[f.tipo] || 0) + f.valor;
+  });
+
+  window.graficoFinanceiro = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(totaisPorTipo),
+      datasets: [{
+        label: 'Financeiro',
+        data: Object.values(totaisPorTipo),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350']
+      }]
+    }
+  });
+}
+
 </script>

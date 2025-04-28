@@ -820,95 +820,6 @@ function adicionarColheita() {
   atualizarColheita();
 }
 
-function atualizarColheita() {
-  const filtro = pesquisaColheita.value.toLowerCase();
-  colheitaPendente.innerHTML = '';
-  colheitaPaga.innerHTML = '';
-
-  const agrupado = {};
-
-  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
-    if (!agrupado[c.colhedor]) agrupado[c.colhedor] = [];
-    agrupado[c.colhedor].push({ ...c, i });
-  });
-
-  for (const nome in agrupado) {
-    const grupo = agrupado[nome];
-    
-    // Agrupar por data
-    const porData = {};
-    grupo.forEach(item => {
-      if (!porData[item.data]) porData[item.data] = [];
-      porData[item.data].push(item);
-    });
-
-    let totalLatasGeral = 0;
-    let totalValorGeral = 0;
-
-    const titulo = document.createElement('div');
-    titulo.className = 'grupo-data';
-    titulo.textContent = `${nome}`;
-    
-    const container = document.createElement('div');
-    container.appendChild(titulo);
-
-    for (const data in porData) {
-      const lista = porData[data];
-      let totalLatasDia = 0;
-      let totalValorDia = 0;
-
-      const tituloData = document.createElement('div');
-      tituloData.className = 'grupo-data';
-      tituloData.style.fontSize = '16px';
-      tituloData.style.color = '#bbb';
-      tituloData.textContent = data;
-      container.appendChild(tituloData);
-
-      lista.forEach(({ quantidade, valorLata, pago, i }) => {
-        totalLatasDia += quantidade;
-        totalValorDia += quantidade * valorLata;
-
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-          <span>${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
-          <div class="botoes-financeiro">
-            ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
-            <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-
-      const resumoDia = document.createElement('div');
-      resumoDia.className = 'grupo-data';
-      resumoDia.style.fontSize = '14px';
-      resumoDia.style.color = '#66bb6a';
-      resumoDia.textContent = `Total do dia: ${totalLatasDia} latas = R$${totalValorDia.toFixed(2)}`;
-      container.appendChild(resumoDia);
-
-      totalLatasGeral += totalLatasDia;
-      totalValorGeral += totalValorDia;
-    }
-
-    const resumoGeral = document.createElement('div');
-    resumoGeral.className = 'grupo-data';
-    resumoGeral.style.fontSize = '16px';
-    resumoGeral.style.color = '#4caf50';
-    resumoGeral.style.marginTop = '10px';
-    resumoGeral.textContent = `Total geral: ${totalLatasGeral} latas = R$${totalValorGeral.toFixed(2)}`;
-    container.appendChild(resumoGeral);
-
-    if (grupo[0].pago) {
-      colheitaPaga.appendChild(container);
-    } else {
-      colheitaPendente.appendChild(container);
-    }
-  }
-
-  gerarGraficoColheita();
-}
-
 let indiceColheitaSelecionado = null;
 
 function pagarColheita(index) {
@@ -919,9 +830,10 @@ function pagarColheita(index) {
 function confirmarPagamentoColheita() {
   const tipoSelecionado = document.getElementById('tipoPagamentoSelecionado').value;
   const index = indiceColheitaSelecionado;
-  
+
   if (index !== null && tipoSelecionado) {
     colheita[index].pago = true;
+
     financeiro.push({
       data: colheita[index].data,
       produto: `Colheita - ${colheita[index].colhedor}`,
@@ -944,28 +856,24 @@ function fecharModalPagamento() {
   indiceColheitaSelecionado = null;
 }
 
-  function excluirColheita(index) {
-  const colheitaRemovida = colheita[index];
-
-  // Remover da Colheita
+function excluirColheita(index) {
+  const item = colheita[index];
+  if (item.pago) {
+    // Excluir também do Financeiro
+    const indiceFinanceiro = financeiro.findIndex(f =>
+      f.data === item.data &&
+      f.produto === `Colheita - ${item.colhedor}` &&
+      f.valor === (item.quantidade * item.valorLata)
+    );
+    if (indiceFinanceiro !== -1) {
+      financeiro.splice(indiceFinanceiro, 1);
+      db.ref('Financeiro').set(financeiro);
+      atualizarFinanceiro();
+    }
+  }
   colheita.splice(index, 1);
   db.ref('Colheita').set(colheita);
-
-  // Também remover do Financeiro se existir
-  const descricaoFinanceiro = `Colheita - ${colheitaRemovida.colhedor}`;
-  const dataFinanceiro = colheitaRemovida.data;
-
-  const indexFinanceiro = financeiro.findIndex(f =>
-    f.produto === descricaoFinanceiro && f.data === dataFinanceiro
-  );
-
-  if (indexFinanceiro !== -1) {
-    financeiro.splice(indexFinanceiro, 1);
-    db.ref('Financeiro').set(financeiro);
-  }
-
   atualizarColheita();
-  atualizarFinanceiro();
 }
 
 function carregarColheita() {
@@ -976,6 +884,84 @@ function carregarColheita() {
       atualizarColheita();
     }
   });
+}
+
+function atualizarColheita() {
+  const filtro = pesquisaColheita.value.toLowerCase();
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
+
+  const agrupado = {};
+
+  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
+    if (!agrupado[c.data]) agrupado[c.data] = [];
+    agrupado[c.data].push({ ...c, i });
+  });
+
+  const renderizar = (pago, container) => {
+    let totalLatasGeral = 0;
+    let totalValorGeral = 0;
+
+    for (const data in agrupado) {
+      const grupoData = agrupado[data].filter(c => c.pago === pago);
+      if (grupoData.length === 0) continue;
+
+      const tituloData = document.createElement('div');
+      tituloData.className = 'grupo-data';
+      tituloData.textContent = data;
+      container.appendChild(tituloData);
+
+      let totalLatasDia = 0;
+      let totalValorDia = 0;
+
+      const colhedores = {};
+
+      grupoData.forEach(({ colhedor, quantidade, valorLata, i }) => {
+        if (!colhedores[colhedor]) colhedores[colhedor] = { latas: 0, valor: 0, indices: [] };
+        colhedores[colhedor].latas += quantidade;
+        colhedores[colhedor].valor += quantidade * valorLata;
+        colhedores[colhedor].indices.push(i);
+
+        totalLatasDia += quantidade;
+        totalValorDia += quantidade * valorLata;
+      });
+
+      for (const nome in colhedores) {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${nome} - ${colhedores[nome].latas} latas = R$${colhedores[nome].valor.toFixed(2)}</span>
+          <div class="botoes-financeiro">
+            ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${colhedores[nome].indices[0]})">Pagar</button>` : ''}
+            <button class="botao-excluir" onclick="excluirColheita(${colhedores[nome].indices[0]})">Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+
+      const totalDia = document.createElement('div');
+      totalDia.className = 'grupo-data';
+      totalDia.style.fontSize = '14px';
+      totalDia.textContent = `Total do dia: ${totalLatasDia} latas = R$${totalValorDia.toFixed(2)}`;
+      container.appendChild(totalDia);
+
+      totalLatasGeral += totalLatasDia;
+      totalValorGeral += totalValorDia;
+    }
+
+    if (totalLatasGeral > 0) {
+      const totalGeral = document.createElement('div');
+      totalGeral.className = 'grupo-data';
+      totalGeral.style.marginTop = '20px';
+      totalGeral.textContent = `Total Geral: ${totalLatasGeral} latas = R$${totalValorGeral.toFixed(2)}`;
+      container.appendChild(totalGeral);
+    }
+  };
+
+  renderizar(false, colheitaPendente);
+  renderizar(true, colheitaPaga);
+
+  gerarGraficoColheita();
 }
 
 function gerarGraficoColheita() {
@@ -1004,7 +990,4 @@ function gerarGraficoColheita() {
   });
 }
 
-// Carregar os dados da Colheita assim que abrir o app
 carregarColheita();
-
-</script>

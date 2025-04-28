@@ -397,8 +397,11 @@ function adicionarTarefa() {
     prioridade: prioridadeTarefa.value,
     setor: setorTarefa.value,
     executada: false,
-    eAplicacao: document.getElementById('eAplicacao').checked // Novo campo
+    eAplicacao: document.getElementById('eAplicacaoCheckbox').checked,
+    dosagem: document.getElementById('dosagemAplicacao').value,
+    tipoAplicacao: document.getElementById('tipoAplicacao').value
   };
+  
   if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
   tarefas.push(nova);
   salvarTarefas();
@@ -496,6 +499,12 @@ function marcarTarefaFeita(index, checked) {
   atualizarTarefas();
 }
 
+function mostrarCamposAplicacao() {
+  const checkbox = document.getElementById('eAplicacaoCheckbox');
+  const campos = document.getElementById('camposAplicacao');
+  campos.style.display = checkbox.checked ? 'block' : 'none';
+}
+  
 function carregarTarefas() {
   db.ref('Tarefas').on('value', snap => {
     if (snap.exists()) {

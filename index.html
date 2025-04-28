@@ -792,10 +792,10 @@ function gerarGraficoFinanceiro() {
 }
 
 // Banco de dados para a Colheita<!-- Atualizado: Menu Colheita organizado, totalizador, botão excluir, botão pagar -->
+<!-- Dentro da aba Colheita -->
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Inputs -->
   <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
@@ -804,14 +804,13 @@ function gerarGraficoFinanceiro() {
 
   <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
-  <!-- Resultado -->
   <h4>A Pagar</h4>
   <div id="colheitaPendente"></div>
 
   <h4>Pagos</h4>
   <div id="colheitaPaga"></div>
 
-  <canvas id="graficoColheita"></canvas>
+  <canvas id="graficoColheita" style="margin-top: 20px;"></canvas>
 </div>
 
 <script>
@@ -926,9 +925,15 @@ function pagarColheita(index) {
 function excluirColheita(index) {
   if (colheita[index].pago) {
     const item = colheita[index];
-    const idxFin = financeiro.findIndex(f => f.data === item.data && f.produto.includes(item.colhedor) && f.valor === (item.quantidade * item.valorLata));
-    if (idxFin !== -1) financeiro.splice(idxFin, 1);
-    db.ref('Financeiro').set(financeiro);
+    const idxFin = financeiro.findIndex(f =>
+      f.data === item.data &&
+      f.produto.includes(item.colhedor) &&
+      f.valor === (item.quantidade * item.valorLata)
+    );
+    if (idxFin !== -1) {
+      financeiro.splice(idxFin, 1);
+      db.ref('Financeiro').set(financeiro);
+    }
   }
 
   colheita.splice(index, 1);
@@ -973,4 +978,3 @@ function gerarGraficoColheita() {
 
 carregarColheita();
 </script>
-

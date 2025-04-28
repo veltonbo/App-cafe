@@ -180,6 +180,7 @@
   <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;">!</span></button>
   <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
   <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
 </div>
 
 <div class="conteudo">
@@ -307,6 +308,18 @@
   </div>
 </div>
 
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+  
+  <input id="dataColheita" type="date">
+  <input id="colhedorColheita" placeholder="Nome do colhedor">
+  <input id="quantidadeColheita" placeholder="Quantas latas" type="number">
+  
+  <button onclick="salvarColheita()">Salvar</button>
+
+  <div id="listaColheita" style="margin-top:20px;"></div>
+</div>
+  
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -752,6 +765,50 @@ function gerarGraficoFinanceiro() {
       }]
     }
   });
+}
+
+  const colheita = [];
+const valorPorLata = 10; // Você pode mudar esse valor conforme desejar.
+
+function salvarColheita() {
+  const nova = {
+    data: dataColheita.value,
+    colhedor: colhedorColheita.value,
+    quantidade: parseInt(quantidadeColheita.value),
+    pago: false
+  };
+  
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade)) return alert("Preencha tudo!");
+
+  colheita.push(nova);
+  atualizarColheita();
+}
+
+function atualizarColheita() {
+  listaColheita.innerHTML = '';
+
+  colheita.forEach((c, i) => {
+    const total = c.quantidade * valorPorLata;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div>
+        <strong>${c.colhedor}</strong><br>
+        ${c.data}<br>
+        ${c.quantidade} latas<br>
+        Total: R$ ${total.toFixed(2)}
+      </div>
+      <div>
+        ${c.pago ? '<span style="color:lightgreen;">Pago</span>' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+      </div>
+    `;
+    listaColheita.appendChild(div);
+  });
+}
+
+function pagarColheita(index) {
+  colheita[index].pago = true;
+  atualizarColheita();
 }
 
 </script>

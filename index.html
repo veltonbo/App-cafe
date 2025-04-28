@@ -389,7 +389,8 @@ function carregarAplicacoes() {
   });
 }
 
-// TAREFAS
+// --- TAREFAS ---
+
 function adicionarTarefa() {
   const nova = {
     data: dataTarefa.value,
@@ -406,48 +407,6 @@ function adicionarTarefa() {
   tarefas.push(nova);
   salvarTarefas();
   atualizarTarefas();
-}
-
-function marcarTarefa(index, checked) {
-  if (checked) {
-    const tarefaExecutada = tarefas.splice(index, 1)[0];
-    tarefaExecutada.executada = true;
-    tarefasFeitas.push(tarefaExecutada);
-
-    // Se for uma aplicação, adiciona nos registros de Aplicações
-    if (tarefaExecutada.eAplicacao) {
-      const novaAplicacao = {
-        data: tarefaExecutada.data,
-        produto: tarefaExecutada.descricao,
-        dosagem: tarefaExecutada.dosagem || '',
-        tipo: tarefaExecutada.tipoAplicacao || '',
-        setor: tarefaExecutada.setor || ''
-      };
-      aplicacoes.push(novaAplicacao);
-      db.ref('Aplicacoes').set(aplicacoes);
-      atualizarAplicacoes();
-    }
-  } else {
-    const tarefaReaberta = tarefasFeitas.splice(index, 1)[0];
-    tarefaReaberta.executada = false;
-    tarefas.push(tarefaReaberta);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function marcarTarefaFeita(index, checked) {
-  if (!checked) {
-    const tarefaReaberta = tarefasFeitas.splice(index, 1)[0];
-    tarefaReaberta.executada = false;
-    tarefas.push(tarefaReaberta);
-    salvarTarefas();
-    atualizarTarefas();
-  }
-}
-
-function salvarTarefas() {
-  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
 }
 
 function atualizarTarefas() {
@@ -504,41 +463,60 @@ function atualizarTarefas() {
   });
 }
 
-  tarefasFeitas.filter(t => 
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
-    (filtroSetor === "" || t.setor === filtroSetor)
-  ).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
-      </div>
-    `;
-    listaTarefasFeitas.appendChild(div);
-  });
+function marcarTarefa(index, checked) {
+  if (checked) {
+    const tarefaExecutada = tarefas.splice(index, 1)[0];
+    tarefaExecutada.executada = true;
+    tarefasFeitas.push(tarefaExecutada);
+
+    if (tarefaExecutada.eAplicacao) {
+      const novaAplicacao = {
+        data: tarefaExecutada.data,
+        produto: tarefaExecutada.descricao,
+        dosagem: tarefaExecutada.dosagem || '',
+        tipo: tarefaExecutada.tipoAplicacao || '',
+        setor: tarefaExecutada.setor || ''
+      };
+      aplicacoes.push(novaAplicacao);
+      db.ref('Aplicacoes').set(aplicacoes);
+      atualizarAplicacoes();
+    }
+  } else {
+    tarefas[index].executada = false;
+    tarefasFeitas.splice(index, 1);
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
 }
 
-  tarefasFeitas.filter(t => 
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
-    (filtroSetor === "" || t.setor === filtroSetor)
-  ).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-    `;
-    listaTarefasFeitas.appendChild(div);
-  });
+function marcarTarefaFeita(index, checked) {
+  if (!checked) {
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+  }
+  salvarTarefas();
+  atualizarTarefas();
+}
+
+function excluirTarefa(index, feita) {
+  if (feita) {
+    tarefasFeitas.splice(index, 1);
+  } else {
+    tarefas.splice(index, 1);
+  }
+  salvarTarefas();
+  atualizarTarefas();
 }
 
 function mostrarCamposAplicacao() {
   const checkbox = document.getElementById('eAplicacaoCheckbox');
   const campos = document.getElementById('camposAplicacao');
   campos.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+function salvarTarefas() {
+  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
 }
 
 function carregarTarefas() {

@@ -308,14 +308,12 @@
   </div>
 </div>
 
-<!-- Menu Colheita (Novo Modelo) -->
+<!-- Menu Colheita -->
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Valor da lata -->
+  <!-- Inputs -->
   <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
-
-  <!-- Dados da colheita -->
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
   <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
@@ -324,15 +322,15 @@
   <!-- Pesquisa -->
   <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
-  <!-- Área dos registros -->
-  <h4>A Pagar</h4>
+  <!-- Separação -->
+  <h4 style="margin-top:20px;">A Pagar</h4>
   <div id="colheitaPendente"></div>
 
-  <h4>Pagos</h4>
+  <h4 style="margin-top:20px;">Pagos</h4>
   <div id="colheitaPaga"></div>
 
-  <!-- Gráfico de Evolução -->
-  <canvas id="graficoColheita" style="margin-top: 20px;"></canvas>
+  <!-- Gráfico -->
+  <canvas id="graficoColheita" style="margin-top: 30px;"></canvas>
 </div>
 
 <!-- Modal de escolha do tipo de pagamento -->

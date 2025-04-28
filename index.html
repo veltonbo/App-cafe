@@ -817,8 +817,23 @@ function atualizarColheita() {
   colheitaPendente.innerHTML = '';
   colheitaPaga.innerHTML = '';
 
-  const agrupadoPendentes = {};
-  const agrupadoPagos = {};
+  // Calcular total geral
+  let totalLatasGeral = 0;
+  let totalValorGeral = 0;
+
+  colheita.forEach(c => {
+    if (c.colhedor.toLowerCase().includes(filtro)) {
+      totalLatasGeral += c.quantidade;
+      totalValorGeral += c.quantidade * c.valorLata;
+    }
+  });
+
+  // Atualizar resumo
+  document.getElementById('resumoGeralColheita').innerHTML = `
+    Total Geral: <strong>${totalLatasGeral} latas</strong> = <strong>R$ ${totalValorGeral.toFixed(2)}</strong>
+  `;
+
+  const agrupado = {};
 
   colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
     if (c.pago) {

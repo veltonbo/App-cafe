@@ -184,7 +184,140 @@
 </div>
 
 <div class="conteudo">
-  <script>
+  
+  <div id="aplicacoes" class="aba">
+    <h2>Aplicações</h2>
+    <input id="dataApp" type="date">
+    <input id="produtoApp" placeholder="Produto">
+    <input id="dosagemApp" placeholder="Dosagem">
+    <select id="tipoApp">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <select id="setorApp">
+      <option>Setor 01</option>
+      <option>Setor 02</option>
+    </select>
+    <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+    <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+    <div id="listaAplicacoes"></div>
+  </div>
+
+  <div id="tarefas" class="aba">
+    <h2>Tarefas</h2>
+    <input id="dataTarefa" type="date">
+    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+    <select id="prioridadeTarefa">
+      <option>Alta</option>
+      <option>Média</option>
+      <option>Baixa</option>
+    </select>
+    <select id="setorTarefa">
+      <option>Setor 01</option>
+      <option>Setor 02</option>
+    </select>
+
+    <label style="margin-top:10px;">
+      <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
+    </label>
+
+    <div id="camposAplicacao" style="display:none; margin-top:10px;">
+      <input id="dosagemAplicacao" placeholder="Dosagem">
+      <select id="tipoAplicacao">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+    </div>
+
+    <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+    <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+    <h4>A Fazer</h4>
+    <div id="listaTarefas"></div>
+    <h4>Executadas</h4>
+    <div id="listaTarefasFeitas"></div>
+  </div>
+
+  <div id="financeiro" class="aba">
+    <h2>Financeiro</h2>
+    <input id="dataFin" type="date">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="valorFin" placeholder="Valor" type="number">
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+    <h4>A Vencer</h4>
+    <div id="financeiroVencer"></div>
+    <h4>Pagos</h4>
+    <div id="financeiroPago"></div>
+    <canvas id="graficoGastos"></canvas>
+  </div>
+
+  <div id="colheita" class="aba">
+    <h2>Colheita</h2>
+    <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+    <input id="dataColheita" type="date" />
+    <input id="colhedor" placeholder="Nome do Colhedor" />
+    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+    <button onclick="adicionarColheita()">Salvar Colheita</button>
+    <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+    <h4>A Pagar</h4>
+    <div id="colheitaPendente"></div>
+    <h4>Pagos</h4>
+    <div id="colheitaPaga"></div>
+    <canvas id="graficoColheita"></canvas>
+  </div>
+
+  <div id="relatorio" class="aba">
+    <h2>Relatório</h2>
+    <div id="aplicacoesRel" class="relatorio-subaba">
+      <h3>Últimas Aplicações</h3>
+      <div id="ultimasAplicacoes"></div>
+      <canvas id="graficoAplicacoes"></canvas>
+    </div>
+    <div id="tarefasRel" class="relatorio-subaba" style="display:none;">
+      <h3>Últimas Tarefas</h3>
+      <div id="ultimasTarefas"></div>
+      <canvas id="graficoTarefas"></canvas>
+    </div>
+    <div id="financeiroRel" class="relatorio-subaba" style="display:none;">
+      <h3>Resumo Financeiro</h3>
+      <div id="resumoFinanceiro"></div>
+      <canvas id="graficoFinanceiro"></canvas>
+    </div>
+    <button onclick="exportarPDF()">Exportar PDF</button>
+  </div>
+
+  <div id="configuracoes" class="aba">
+    <h2>Configurações</h2>
+    <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
 // Configuração Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
@@ -198,10 +331,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Dados
+// Variáveis globais
 const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [], colheita = [];
 
-// Inicializar App
 function inicializarApp() {
   mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
   if (localStorage.getItem('tema') === 'claro') {
@@ -226,7 +358,7 @@ function alternarTema() {
   localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
 }
 
-// Aplicações
+// --- Aplicações ---
 function adicionarAplicacao() {
   const nova = {
     data: dataApp.value,
@@ -243,25 +375,31 @@ function adicionarAplicacao() {
 
 function atualizarAplicacoes() {
   const filtro = pesquisaAplicacoes.value.toLowerCase();
-  const filtroSetor = filtroSetorAplicacoes.value;
+  const setor = filtroSetorAplicacoes.value;
   listaAplicacoes.innerHTML = '';
+
   const agrupado = {};
-  aplicacoes.filter(a => (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtro)) && (filtroSetor === "" || a.setor === filtroSetor)).forEach((a, i) => {
+  aplicacoes.filter(a =>
+    (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtro)) &&
+    (setor === "" || a.setor === setor)
+  ).forEach((a, i) => {
     if (!agrupado[a.data]) agrupado[a.data] = [];
     agrupado[a.data].push({ ...a, i });
   });
+
   for (const data in agrupado) {
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
     titulo.textContent = data;
     listaAplicacoes.appendChild(titulo);
+
     agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `<span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
-      <div class="botoes-financeiro">
-      <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
-      </div>`;
+      div.innerHTML = `
+        <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
+        <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
+      `;
       listaAplicacoes.appendChild(div);
     });
   }
@@ -283,7 +421,7 @@ function carregarAplicacoes() {
   });
 }
 
-// Tarefas
+// --- Tarefas ---
 function adicionarTarefa() {
   const nova = {
     data: dataTarefa.value,
@@ -291,9 +429,9 @@ function adicionarTarefa() {
     prioridade: prioridadeTarefa.value,
     setor: setorTarefa.value,
     executada: false,
-    eAplicacao: document.getElementById('eAplicacaoCheckbox').checked,
-    dosagem: document.getElementById('dosagemAplicacao').value,
-    tipoAplicacao: document.getElementById('tipoAplicacao').value
+    eAplicacao: eAplicacaoCheckbox.checked,
+    dosagem: dosagemAplicacao.value,
+    tipoAplicacao: tipoAplicacao.value
   };
   if (!nova.data || !nova.descricao) return alert("Preencha tudo!");
   tarefas.push(nova);
@@ -307,60 +445,74 @@ function salvarTarefas() {
 
 function atualizarTarefas() {
   const filtro = pesquisaTarefas.value.toLowerCase();
-  const filtroSetor = filtroSetorTarefas.value;
+  const setor = filtroSetorTarefas.value;
   listaTarefas.innerHTML = '';
   listaTarefasFeitas.innerHTML = '';
+
   const agrupado = {};
-  tarefas.filter(t => (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) && (filtroSetor === "" || t.setor === filtroSetor)).forEach((t, i) => {
+  tarefas.filter(t =>
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (setor === "" || t.setor === setor)
+  ).forEach((t, i) => {
     if (!agrupado[t.data]) agrupado[t.data] = [];
     agrupado[t.data].push({ ...t, i });
   });
+
   for (const data in agrupado) {
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
     titulo.textContent = data;
     listaTarefas.appendChild(titulo);
+
     agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
+      const cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
       const div = document.createElement('div');
       div.className = 'item';
-      let cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
-      div.innerHTML = `<input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-      <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
-      <div class="botoes-financeiro">
-      <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
-      </div>`;
+      div.innerHTML = `
+        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+        <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
+      `;
       listaTarefas.appendChild(div);
     });
   }
-  tarefasFeitas.filter(t => (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) && (filtroSetor === "" || t.setor === filtroSetor)).forEach((t, i) => {
+
+  tarefasFeitas.filter(t =>
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+    (setor === "" || t.setor === setor)
+  ).forEach((t, i) => {
     const div = document.createElement('div');
     div.className = 'item';
-    div.innerHTML = `<input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-    <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-    <div class="botoes-financeiro">
-    <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
-    </div>`;
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+    `;
     listaTarefasFeitas.appendChild(div);
   });
 }
 
 function marcarTarefa(index, checked) {
   if (checked) {
-    const tarefaExecutada = tarefas.splice(index, 1)[0];
-    tarefaExecutada.executada = true;
-    tarefasFeitas.push(tarefaExecutada);
-    if (tarefaExecutada.eAplicacao) {
-      const novaAplicacao = {
-        data: tarefaExecutada.data,
-        produto: tarefaExecutada.descricao,
-        dosagem: tarefaExecutada.dosagem || '',
-        tipo: tarefaExecutada.tipoAplicacao || '',
-        setor: tarefaExecutada.setor || ''
-      };
-      aplicacoes.push(novaAplicacao);
+    const tarefa = tarefas.splice(index, 1)[0];
+    tarefa.executada = true;
+    tarefasFeitas.push(tarefa);
+
+    if (tarefa.eAplicacao) {
+      aplicacoes.push({
+        data: tarefa.data,
+        produto: tarefa.descricao,
+        dosagem: tarefa.dosagem,
+        tipo: tarefa.tipoAplicacao,
+        setor: tarefa.setor
+      });
       db.ref('Aplicacoes').set(aplicacoes);
       atualizarAplicacoes();
     }
+  } else {
+    const tarefa = tarefasFeitas.splice(index, 1)[0];
+    tarefa.executada = false;
+    tarefas.push(tarefa);
   }
   salvarTarefas();
   atualizarTarefas();
@@ -368,11 +520,12 @@ function marcarTarefa(index, checked) {
 
 function marcarTarefaFeita(index, checked) {
   if (!checked) {
-    tarefasFeitas[index].executada = false;
-    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+    const tarefa = tarefasFeitas.splice(index, 1)[0];
+    tarefa.executada = false;
+    tarefas.push(tarefa);
+    salvarTarefas();
+    atualizarTarefas();
   }
-  salvarTarefas();
-  atualizarTarefas();
 }
 
 function excluirTarefa(index, feita) {
@@ -383,9 +536,7 @@ function excluirTarefa(index, feita) {
 }
 
 function mostrarCamposAplicacao() {
-  const checkbox = document.getElementById('eAplicacaoCheckbox');
-  const campos = document.getElementById('camposAplicacao');
-  campos.style.display = checkbox.checked ? 'block' : 'none';
+  camposAplicacao.style.display = eAplicacaoCheckbox.checked ? 'block' : 'none';
 }
 
 function carregarTarefas() {
@@ -399,7 +550,7 @@ function carregarTarefas() {
   });
 }
 
-// Financeiro
+// --- Financeiro ---
 function adicionarFinanceiro() {
   const novo = {
     data: dataFin.value,
@@ -418,11 +569,9 @@ function atualizarFinanceiro() {
   const filtro = pesquisaFinanceiro.value.toLowerCase();
   financeiroVencer.innerHTML = '';
   financeiroPago.innerHTML = '';
-  const vencendoHoje = [];
-  const hoje = new Date().toISOString().split('T')[0];
-  const agrupado = {};
 
-  financeiro.filter(f => (`${f.data} ${f.produto}`.toLowerCase().includes(filtro))).forEach((f, i) => {
+  const agrupado = {};
+  financeiro.filter(f => `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
     if (!f.pago) {
       if (!agrupado[f.data]) agrupado[f.data] = [];
       agrupado[f.data].push({ ...f, i });
@@ -434,37 +583,29 @@ function atualizarFinanceiro() {
     titulo.className = 'grupo-data';
     titulo.textContent = data;
     financeiroVencer.appendChild(titulo);
+
     agrupado[data].forEach(({ produto, valor, tipo, i }) => {
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `<span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
-      <div class="botoes-financeiro">
-      <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
-      </div>`;
+      div.innerHTML = `
+        <span>${produto} - R$${valor.toFixed(2)} - ${tipo}</span>
+        <button class="botao-pagar" onclick="pagarConta(${i})">Pagar</button>
+      `;
       financeiroVencer.appendChild(div);
-      if (data <= hoje) vencendoHoje.push(1);
     });
   }
 
-  financeiro.filter(f => f.pago && (`${f.data} ${f.produto}`.toLowerCase().includes(filtro))).forEach((f, i) => {
+  financeiro.filter(f => f.pago && `${f.data} ${f.produto}`.toLowerCase().includes(filtro)).forEach((f, i) => {
     const div = document.createElement('div');
     div.className = 'item';
-    div.innerHTML = `<span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span>
-    <div class="botoes-financeiro">
-    <button class="botao-excluir" onclick="excluirConta(${i})">Excluir</button>
-    </div>`;
+    div.innerHTML = `
+      <span>${f.data} - ${f.produto} - R$${f.valor.toFixed(2)} - ${f.tipo}</span>
+      <button class="botao-excluir" onclick="excluirConta(${i})">Excluir</button>
+    `;
     financeiroPago.appendChild(div);
   });
 
-  const notificacao = document.getElementById('notificacao-financeiro');
-  if (vencendoHoje.length) {
-    notificacao.style.display = 'flex';
-    notificacao.innerText = vencendoHoje.length;
-  } else {
-    notificacao.style.display = 'none';
-  }
-
-  gerarGrafico();
+  gerarGraficoFinanceiro();
 }
 
 function pagarConta(index) {
@@ -489,21 +630,7 @@ function carregarFinanceiro() {
   });
 }
 
-function gerarGrafico() {
-  const ctx = document.getElementById('graficoGastos').getContext('2d');
-  if (window.grafico) window.grafico.destroy();
-  const totais = {};
-  financeiro.forEach(f => { if (f.pago) totais[f.tipo] = (totais[f.tipo] || 0) + f.valor; });
-  window.grafico = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: Object.keys(totais),
-      datasets: [{ label: 'Gastos Pagos', data: Object.values(totais), backgroundColor: '#66bb6a' }]
-    }
-  });
-}
-
-// Colheita
+// --- Colheita ---
 function adicionarColheita() {
   const nova = {
     data: dataColheita.value,
@@ -512,15 +639,10 @@ function adicionarColheita() {
     valorLata: parseFloat(valorLata.value),
     pago: false
   };
-  if (!nova.data || !nova.colhedor || !nova.quantidade || isNaN(nova.valorLata)) {
-    alert('Preencha todos os campos corretamente.');
-    return;
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || isNaN(nova.valorLata)) {
+    return alert("Preencha tudo!");
   }
   colheita.push(nova);
-  salvarColheita();
-}
-
-function salvarColheita() {
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 }
@@ -529,11 +651,11 @@ function atualizarColheita() {
   const filtro = pesquisaColheita.value.toLowerCase();
   colheitaPendente.innerHTML = '';
   colheitaPaga.innerHTML = '';
-  const agrupado = {};
 
+  const agrupado = {};
   colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
     if (!agrupado[c.data]) agrupado[c.data] = [];
-    agrupado[c.data].push({...c, i});
+    agrupado[c.data].push({ ...c, i });
   });
 
   renderizarColheita(false, agrupado, colheitaPendente);
@@ -542,53 +664,44 @@ function atualizarColheita() {
 }
 
 function renderizarColheita(pago, agrupado, container) {
-  let totalLatasGeral = 0;
-  let totalValorGeral = 0;
+  let totalGeral = 0;
+
   for (const data in agrupado) {
     const grupoData = agrupado[data].filter(c => c.pago === pago);
     if (grupoData.length === 0) continue;
+
     const tituloData = document.createElement('div');
     tituloData.className = 'grupo-data';
     tituloData.innerText = data;
     container.appendChild(tituloData);
 
-    let totalLatasDia = 0;
-    let totalValorDia = 0;
-
-    grupoData.forEach(({colhedor, quantidade, valorLata, i}) => {
-      totalLatasDia += quantidade;
-      totalValorDia += quantidade * valorLata;
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.innerHTML = `<span><strong>${colhedor}</strong> - ${quantidade} latas = <strong>R$${(quantidade*valorLata).toFixed(2)}</strong></span>
-      <div class="botoes-financeiro">
-      ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>` : ''}
-      <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
-      </div>`;
-      container.appendChild(item);
+    grupoData.forEach(({ colhedor, quantidade, valorLata, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span><strong>${colhedor}</strong> - ${quantidade} latas = <strong>R$${(quantidade * valorLata).toFixed(2)}</strong></span>
+        <div class="botoes-financeiro">
+          ${!pago ? `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>` : ''}
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
+      `;
+      container.appendChild(div);
+      totalGeral += quantidade;
     });
-
-    const resumoDia = document.createElement('div');
-    resumoDia.className = 'grupo-data';
-    resumoDia.style.fontSize = '14px';
-    resumoDia.innerText = `Total do dia: ${totalLatasDia} latas = R$${totalValorDia.toFixed(2)}`;
-    container.appendChild(resumoDia);
-
-    totalLatasGeral += totalLatasDia;
-    totalValorGeral += totalValorDia;
   }
 
-  if (totalLatasGeral > 0) {
-    const resumoGeral = document.createElement('div');
-    resumoGeral.className = 'grupo-data';
-    resumoGeral.style.marginTop = '20px';
-    resumoGeral.innerText = `Total Geral: ${totalLatasGeral} latas = R$${totalValorGeral.toFixed(2)}`;
-    container.appendChild(resumoGeral);
+  if (totalGeral > 0) {
+    const resumo = document.createElement('div');
+    resumo.className = 'grupo-data';
+    resumo.style.marginTop = '20px';
+    resumo.innerText = `Total de Latas: ${totalGeral}`;
+    container.appendChild(resumo);
   }
 }
 
 function pagarColheita(index) {
   colheita[index].pago = true;
+
   financeiro.push({
     data: colheita[index].data,
     produto: `Colheita - ${colheita[index].colhedor}`,
@@ -596,23 +709,17 @@ function pagarColheita(index) {
     tipo: 'Colheita',
     pago: true
   });
-  salvarColheita();
+
+  db.ref('Colheita').set(colheita);
   db.ref('Financeiro').set(financeiro);
+  atualizarColheita();
+  atualizarFinanceiro();
 }
 
 function excluirColheita(index) {
-  if (colheita[index].pago) {
-    const item = colheita[index];
-    const idxFin = financeiro.findIndex(f => 
-      f.data === item.data && f.produto.includes(item.colhedor) && f.valor === (item.quantidade * item.valorLata)
-    );
-    if (idxFin !== -1) {
-      financeiro.splice(idxFin, 1);
-      db.ref('Financeiro').set(financeiro);
-    }
-  }
   colheita.splice(index, 1);
-  salvarColheita();
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
 }
 
 function carregarColheita() {
@@ -628,11 +735,13 @@ function carregarColheita() {
 function gerarGraficoColheita() {
   const ctx = document.getElementById('graficoColheita').getContext('2d');
   if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
+
   const dias = {};
   colheita.forEach(c => {
     if (!dias[c.data]) dias[c.data] = 0;
     dias[c.data] += c.quantidade;
   });
+
   window.graficoColheitaChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -648,4 +757,82 @@ function gerarGraficoColheita() {
     }
   });
 }
+
+// --- Relatórios ---
+function mostrarRelatorio(tipo) {
+  document.querySelectorAll('.relatorio-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(tipo).style.display = 'block';
+
+  if (tipo === 'aplicacoesRel') gerarGraficoAplicacoes();
+  if (tipo === 'tarefasRel') gerarGraficoTarefas();
+  if (tipo === 'financeiroRel') gerarGraficoFinanceiro();
+}
+
+function gerarGraficoAplicacoes() {
+  const ultimas = aplicacoes.slice(-5).reverse();
+  const lista = ultimas.map(app => `<div class="item">${app.data} - ${app.produto} (${app.dosagem})</div>`).join('');
+  document.getElementById('ultimasAplicacoes').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoAplicacoes').getContext('2d');
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ultimas.map(a => a.produto),
+      datasets: [{ label: 'Aplicações', data: ultimas.map(a => parseFloat(a.dosagem) || 0) }]
+    }
+  });
+}
+
+function gerarGraficoTarefas() {
+  const ultimas = tarefasFeitas.slice(-5).reverse();
+  const lista = ultimas.map(t => `<div class="item">${t.data} - ${t.descricao} (${t.prioridade})</div>`).join('');
+  document.getElementById('ultimasTarefas').innerHTML = lista;
+
+  const ctx = document.getElementById('graficoTarefas').getContext('2d');
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Alta', 'Média', 'Baixa'],
+      datasets: [{
+        label: 'Prioridade',
+        data: [
+          ultimas.filter(t => t.prioridade === 'Alta').length,
+          ultimas.filter(t => t.prioridade === 'Média').length,
+          ultimas.filter(t => t.prioridade === 'Baixa').length
+        ],
+        backgroundColor: ['#f44336', '#ff9800', '#4caf50']
+      }]
+    }
+  });
+}
+
+function gerarGraficoFinanceiro() {
+  const pagos = financeiro.filter(f => f.pago);
+  const totalPago = pagos.reduce((acc, f) => acc + f.valor, 0);
+
+  document.getElementById('resumoFinanceiro').innerHTML = `<div class="item">Total Pago: R$ ${totalPago.toFixed(2)}</div>`;
+
+  const ctx = document.getElementById('graficoFinanceiro').getContext('2d');
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  const totaisPorTipo = {};
+
+  pagos.forEach(f => {
+    totaisPorTipo[f.tipo] = (totaisPorTipo[f.tipo] || 0) + f.valor;
+  });
+
+  window.graficoFinanceiro = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(totaisPorTipo),
+      datasets: [{
+        label: 'Financeiro',
+        data: Object.values(totaisPorTipo),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350']
+      }]
+    }
+  });
+}
+
 </script>

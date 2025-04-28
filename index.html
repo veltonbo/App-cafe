@@ -308,16 +308,31 @@
   </div>
 </div>
 
+<!-- Menu Colheita -->
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
-  
-  <input id="dataColheita" type="date">
-  <input id="colhedorColheita" placeholder="Nome do colhedor">
-  <input id="quantidadeColheita" placeholder="Quantas latas" type="number">
-  
-  <button onclick="salvarColheita()">Salvar</button>
 
-  <div id="listaColheita" style="margin-top:20px;"></div>
+  <!-- Valor da lata -->
+  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+
+  <!-- Dados da colheita -->
+  <input id="dataColheita" type="date" />
+  <input id="colhedor" placeholder="Nome do Colhedor" />
+  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+  <button onclick="adicionarColheita()">Salvar Colheita</button>
+
+  <!-- Pesquisa -->
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+
+  <!-- Separação -->
+  <h4>A Pagar</h4>
+  <div id="colheitaPendente"></div>
+
+  <h4>Pagos</h4>
+  <div id="colheitaPaga"></div>
+
+  <!-- Gráfico -->
+  <canvas id="graficoColheita"></canvas>
 </div>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -767,44 +782,99 @@ function gerarGraficoFinanceiro() {
   });
 }
 
-  const colheita = [];
-const valorPorLata = 10; // Você pode mudar esse valor conforme desejar.
+<script>
+// Banco de dados para a Colheita
+const colheita = [];
 
-function salvarColheita() {
+function adicionarColheita() {
+  const valorLataInput = document.getElementById('valorLata');
+  const valorPorLata = parseFloat(valorLataInput.value) || 0;
+
   const nova = {
     data: dataColheita.value,
-    colhedor: colhedorColheita.value,
-    quantidade: parseInt(quantidadeColheita.value),
+    colhedor: colhedor.value,
+    quantidade: parseInt(quantidadeLatas.value),
+    valorLata: valorPorLata,
     pago: false
   };
-  
-  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade)) return alert("Preencha tudo!");
+
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
+    return alert("Preencha todos os campos corretamente!");
+  }
 
   colheita.push(nova);
+  db.ref('Colheita').set(colheita);
   atualizarColheita();
 }
 
 function atualizarColheita() {
-  listaColheita.innerHTML = '';
+  const filtro = pesquisaColheita.value.toLowerCase();
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
 
-  colheita.forEach((c, i) => {
-    const total = c.quantidade * valorPorLata;
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <div>
-        <strong>${c.colhedor}</strong><br>
-        ${c.data}<br>
-        ${c.quantidade} latas<br>
-        Total: R$ ${total.toFixed(2)}
-      </div>
-      <div>
-        ${c.pago ? '<span style="color:lightgreen;">Pago</span>' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
-      </div>
-    `;
-    listaColheita.appendChild(div);
+  const agrupado = {};
+
+  colheita.filter(c => c.colhedor.toLowerCase().includes(filtro)).forEach((c, i) => {
+    if (!agrupado[c.colhedor]) agrupado[c.colhedor] = [];
+    agrupado[c.colhedor].push({ ...c, i });
   });
+
+  for (const nome in agrupado) {
+    const grupo = agrupado[nome];
+    
+    const totalLatas = grupo.reduce((sum, item) => sum + item.quantidade, 0);
+    const totalValor = grupo.reduce((sum, item) => sum + (item.quantidade * item.valorLata), 0);
+
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.textContent = `${nome} - Total: ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
+
+    const container = document.createElement('div');
+    container.appendChild(titulo);
+
+    grupo.forEach(({ data, quantidade, valorLata, pago, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${data} - ${quantidade} latas = R$${(quantidade * valorLata).toFixed(2)}</span>
+        <div class="botoes-financeiro">
+          ${pago ? '' : `<button class="botao-pagar" onclick="pagarColheita(${i})">Pagar</button>`}
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    if (grupo[0].pago) {
+      colheitaPaga.appendChild(container);
+    } else {
+      colheitaPendente.appendChild(container);
+    }
+  }
+
+  gerarGraficoColheita();
 }
+
+function pagarColheita(index) {
+  colheita[index].pago = true;
+
+  // Quando pagar, também adicionar no Financeiro
+  financeiro.push({
+    data: colheita[index].data,
+    produto: `Colheita - ${colheita[index].colhedor}`,
+    valor: colheita[index].quantidade * colheita[index].valorLata,
+    tipo: 'Colheita',
+    pago: true
+  });
+
+  db.ref('Colheita').set(colheita);
+  db.ref('Financeiro').set(financeiro);
+
+  atualizarColheita();
+  atualizarFinanceiro();
+}
+
+function excluirColheita(index) {
 
 function pagarColheita(index) {
   colheita[index].pago = true;

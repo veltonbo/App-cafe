@@ -339,6 +339,21 @@
 <h4>Latas Pagas</h4>
 <canvas id="graficoColheitaPaga" style="margin-top: 20px;"></canvas>
 </div>
+
+<div id="modalPagamento" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:flex; align-items:center; justify-content:center;">
+  <div style="background:#1e1e1e; padding:20px; border-radius:10px; width:300px; text-align:center;">
+    <h3>Confirmar Pagamento</h3>
+    <select id="tipoPagamento" style="margin: 15px 0;">
+      <option>Colheita</option>
+      <option>Salário</option>
+      <option>Adiantamento</option>
+      <option>Outros</option>
+    </select>
+    <br>
+    <button onclick="confirmarPagamentoColheita()" style="background:#4caf50;">Confirmar</button>
+    <button onclick="fecharModalPagamento()" style="background:#f44336; margin-top:10px;">Cancelar</button>
+  </div>
+</div>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

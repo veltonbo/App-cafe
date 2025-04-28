@@ -210,36 +210,48 @@
 
     <div id="tarefas" class="aba">
       <h2>Tarefas</h2>
-      <input id="dataTarefa" type="date">
-      <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-      <select id="prioridadeTarefa">
-        <option>Alta</option>
-        <option>Média</option>
-        <option>Baixa</option>
-      </select>
-      <select id="setorTarefa">
-        <option>Setor 01</option>
-        <option>Setor 02</option>
-      </select>
+<input id="dataTarefa" type="date">
+<input id="descricaoTarefa" placeholder="Descrição da tarefa">
+<select id="prioridadeTarefa">
+  <option>Alta</option>
+  <option>Média</option>
+  <option>Baixa</option>
+</select>
 
-      <!-- Checkbox: É uma aplicação -->
-      <div style="margin: 10px 0;">
-        <label><input type="checkbox" id="eAplicacao"> Esta tarefa é uma aplicação</label>
-      </div>
-      
-      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-      <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
-        <option value="">Todos os Setores</option>
-        <option value="Setor 01">Setor 01</option>
-        <option value="Setor 02">Setor 02</option>
-      </select>
-      
-      <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-      <h4>A Fazer</h4>
-      <div id="listaTarefas"></div>
-      <h4>Executadas</h4>
-      <div id="listaTarefasFeitas"></div>
-    </div>
+<select id="setorTarefa">
+  <option>Setor 01</option>
+  <option>Setor 02</option>
+</select>
+
+<!-- Checkbox para marcar que é uma aplicação -->
+<label style="margin-top:10px;">
+  <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
+</label>
+
+<!-- Campos que só aparecem se marcar -->
+<div id="camposAplicacao" style="display:none; margin-top:10px;">
+  <input id="dosagemAplicacao" placeholder="Dosagem">
+  <select id="tipoAplicacao">
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+</div>
+
+<button onclick="adicionarTarefa()">Salvar Tarefa</button>
+
+<select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+  <option value="">Todos os Setores</option>
+  <option value="Setor 01">Setor 01</option>
+  <option value="Setor 02">Setor 02</option>
+</select>
+
+<input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+<h4>A Fazer</h4>
+<div id="listaTarefas"></div>
+<h4>Executadas</h4>
+<div id="listaTarefasFeitas"></div>
 
     <div id="financeiro" class="aba">
       <h2>Financeiro</h2>

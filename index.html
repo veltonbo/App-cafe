@@ -904,9 +904,27 @@ function fecharModalPagamento() {
 }
 
   function excluirColheita(index) {
+  const colheitaRemovida = colheita[index];
+
+  // Remover da Colheita
   colheita.splice(index, 1);
   db.ref('Colheita').set(colheita);
+
+  // Também remover do Financeiro se existir
+  const descricaoFinanceiro = `Colheita - ${colheitaRemovida.colhedor}`;
+  const dataFinanceiro = colheitaRemovida.data;
+
+  const indexFinanceiro = financeiro.findIndex(f =>
+    f.produto === descricaoFinanceiro && f.data === dataFinanceiro
+  );
+
+  if (indexFinanceiro !== -1) {
+    financeiro.splice(indexFinanceiro, 1);
+    db.ref('Financeiro').set(financeiro);
+  }
+
   atualizarColheita();
+  atualizarFinanceiro();
 }
 
 function carregarColheita() {

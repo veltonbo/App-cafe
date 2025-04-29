@@ -121,6 +121,33 @@
     .menu-superior button.active, .menu-superior button:hover {
       color: #4caf50;
     }
+
+    /* Submenu Colheita */
+.menu-superior-subcolheita {
+  display: flex;
+  justify-content: center;
+  background-color: #1f1f1f;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.menu-superior-subcolheita button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 20px;
+  margin: 0 10px;
+  cursor: pointer;
+  transition: 0.3s;
+  position: relative;
+}
+
+.menu-superior-subcolheita button.active,
+.menu-superior-subcolheita button:hover {
+  color: #4caf50;
+}
+  
     .notificacao {
       background: red;
       color: white;
@@ -382,16 +409,21 @@
   </div>
 </div>
 
-<!-- Menu Colheita -->
+<!-- Submenu Colheita -->
+<div class="menu-superior" style="margin-bottom: 20px;">
+  <button id="btn-subcolheita-resumo" onclick="mostrarSubColheita('subColheitaResumo')"><i class="fas fa-list"></i></button>
+  <button id="btn-subcolheita-financeiro" onclick="mostrarSubColheita('subColheitaFinanceiro')"><i class="fas fa-dollar-sign"></i></button>
+</div>
 
-<div id="colheita" class="aba">
-  <h2>Colheita</h2>
-
+<!-- Área dos Submenus da Colheita -->
+<div id="subColheitaResumo" class="subcolheita-subaba">
+  <!-- Conteúdo atual da colheita (Valor da lata, registrar colheita, filtros, pendentes, pagos, gráficos) -->
+  
   <!-- Valor da Lata -->
   <h4>Valor da Lata (R$)</h4>
   <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
 
-  <!-- Registrar Colheita -->
+  <!-- Registrar Nova Colheita -->
   <h4>Registrar Nova Colheita</h4>
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
@@ -408,16 +440,16 @@
   <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
 
   <!-- Pendentes -->
-<div class="coluna-pendente">
-  <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
-  <div id="colheitaPendentes"></div>
-</div>
+  <div class="coluna-pendente">
+    <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
+    <div id="colheitaPendentes"></div>
+  </div>
 
-<!-- Pagos -->
-<div class="coluna-pago">
-  <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
-  <div id="colheitaPagos"></div>
-</div>
+  <!-- Pagos -->
+  <div class="coluna-pago">
+    <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
+    <div id="colheitaPagos"></div>
+  </div>
 
   <!-- Gráficos -->
   <h4>Gráfico Latas por Dia</h4>
@@ -426,8 +458,6 @@
   <h4>Gráfico Latas por Colhedor</h4>
   <canvas id="graficoColhedor"></canvas>
 
-  <div style="margin-bottom: 20px;">
-  
   <!-- Exportações -->
   <div style="margin-top: 20px;">
     <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
@@ -435,10 +465,30 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div id="subColheitaFinanceiro" class="subcolheita-subaba" style="display: none;">
+  <h3>Financeiro da Colheita</h3>
+  <div id="resumoColheitaFinanceiro" class="item" style="background-color: #2f2f2f; border-left: 4px solid #ffa726; margin-bottom: 20px;">
+    <strong>Resumo da Colheita:</strong><br>
+    Total Previsto: R$ 0,00 | Total Pago: R$ 0,00 | Pendentes: R$ 0,00
+  </div>
+  <canvas id="graficoColheitaFinanceiro"></canvas>
+</div>
 
 <script>
-const firebaseConfig = {
+function mostrarSubColheita(sub) {
+  document.querySelectorAll('.subcolheita-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(sub).style.display = 'block';
+
+  document.getElementById('btn-subcolheita-resumo').classList.remove('active');
+  document.getElementById('btn-subcolheita-financeiro').classList.remove('active');
+  
+  if (sub === 'subColheitaResumo') document.getElementById('btn-subcolheita-resumo').classList.add('active');
+  if (sub === 'subColheitaFinanceiro') document.getElementById('btn-subcolheita-financeiro').classList.add('active');
+}
+</script>
+  
+</script>
+ const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
   databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
@@ -1194,6 +1244,14 @@ function exportarRelatorioColheita() {
   a.download = `colheita_${dataHoje}.csv`;
   a.click();
 }
+
+  function mostrarSubColheita(subId) {
+    document.querySelectorAll('.subcolheita').forEach(div => div.style.display = 'none');
+    document.getElementById(subId).style.display = 'block';
+    
+    document.querySelectorAll('.menu-superior-subcolheita button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('btn-' + subId).classList.add('active');
+  }
 
   </script>
 

@@ -382,58 +382,81 @@
   </div>
 </div>
 
-<!-- Menu Colheita -->
-
+<!-- Menu Colheita com Submenu -->
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Valor da Lata -->
-  <h4>Valor da Lata (R$)</h4>
-  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
+  <!-- Submenu Colheita -->
+  <div class="menu-superior" style="margin-bottom: 20px;">
+    <button id="btn-colheita-status" onclick="mostrarSubColheita('colheitaStatus')"><i class="fas fa-clipboard-list"></i></button>
+    <button id="btn-colheita-pagamento" onclick="mostrarSubColheita('colheitaPagamento')"><i class="fas fa-hand-holding-usd"></i></button>
+  </div>
 
-  <!-- Registrar Colheita -->
-  <h4>Registrar Nova Colheita</h4>
-  <input id="dataColheita" type="date" />
-  <input id="colhedor" placeholder="Nome do Colhedor" />
-  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
-  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
+  <!-- Aba Status da Colheita -->
+  <div id="colheitaStatus" class="colheita-subaba">
+    <!-- Valor da Lata -->
+    <h4>Valor da Lata (R$)</h4>
+    <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
 
-  <!-- Filtros -->
-  <h4>Filtrar Colheitas</h4>
-  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
-  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+    <!-- Registrar Colheita -->
+    <h4>Registrar Nova Colheita</h4>
+    <input id="dataColheita" type="date" />
+    <input id="colhedor" placeholder="Nome do Colhedor" />
+    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+    <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
 
-  <!-- Resumo -->
-  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
+    <!-- Filtros -->
+    <h4>Filtrar Colheitas</h4>
+    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+    <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+    <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
-  <!-- Pendentes -->
-<div class="coluna-pendente">
-  <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
-  <div id="colheitaPendentes"></div>
-</div>
+    <!-- Resumo -->
+    <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
 
-<!-- Pagos -->
-<div class="coluna-pago">
-  <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
-  <div id="colheitaPagos"></div>
-</div>
+    <!-- Pendentes -->
+    <div class="coluna-pendente">
+      <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
+      <div id="colheitaPendentes"></div>
+    </div>
 
-  <!-- Gráficos -->
-  <h4>Gráfico Latas por Dia</h4>
-  <canvas id="graficoColheita"></canvas>
+    <!-- Pagos -->
+    <div class="coluna-pago">
+      <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
+      <div id="colheitaPagos"></div>
+    </div>
+  </div>
 
-  <h4>Gráfico Latas por Colhedor</h4>
-  <canvas id="graficoColhedor"></canvas>
+  <!-- Aba Pagamento da Colheita -->
+  <div id="colheitaPagamento" class="colheita-subaba" style="display: none;">
+    <h4>Gráfico Latas por Dia</h4>
+    <canvas id="graficoColheita"></canvas>
 
-  <div style="margin-bottom: 20px;">
-  
-  <!-- Exportações -->
-  <div style="margin-top: 20px;">
-    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <h4>Gráfico Latas por Colhedor</h4>
+    <canvas id="graficoColhedor"></canvas>
+
+    <div style="margin-top: 20px;">
+      <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+      <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    </div>
   </div>
 </div>
+
+<!-- Script para alternar abas de Colheita -->
+<script>
+  function mostrarSubColheita(id) {
+    document.querySelectorAll('.colheita-subaba').forEach(div => div.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+
+    document.getElementById('btn-colheita-status').classList.remove('active');
+    document.getElementById('btn-colheita-pagamento').classList.remove('active');
+    if (id === 'colheitaStatus') {
+      document.getElementById('btn-colheita-status').classList.add('active');
+    } else {
+      document.getElementById('btn-colheita-pagamento').classList.add('active');
+    }
+  }
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 

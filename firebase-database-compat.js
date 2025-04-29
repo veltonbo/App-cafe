@@ -1,1 +1,0 @@
-// Firebase database compat (adicione o conteúdo real depois)

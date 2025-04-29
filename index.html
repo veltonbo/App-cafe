@@ -1017,12 +1017,12 @@ function excluirColheita(index) {
 }
 
 function carregarColheita() {
-  db.ref('Colheita').on('value', snap => {
+  db.ref('Colheita').once('value').then(snap => {
     if (snap.exists()) {
       colheita.length = 0;
       colheita.push(...snap.val());
-      atualizarColheita();
     }
+    atualizarColheita();
   });
 }
 

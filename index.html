@@ -1245,7 +1245,16 @@ function exportarRelatorioColheita() {
   a.click();
 }
 
-  function mostrarSubColheita(subId)
+  function mostrarSubColheita(sub) {
+  document.querySelectorAll('.subcolheita-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(sub).style.display = 'block';
+
+  document.getElementById('btn-subcolheita-resumo').classList.remove('active');
+  document.getElementById('btn-subcolheita-financeiro').classList.remove('active');
+  
+  if (sub === 'subColheitaResumo') document.getElementById('btn-subcolheita-resumo').classList.add('active');
+  if (sub === 'subColheitaFinanceiro') document.getElementById('btn-subcolheita-financeiro').classList.add('active');
+}
 
   </script>
 

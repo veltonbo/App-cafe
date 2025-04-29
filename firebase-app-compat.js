@@ -1,0 +1,1 @@
+// Firebase app compat (adicione o conteúdo real depois)

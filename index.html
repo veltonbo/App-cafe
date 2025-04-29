@@ -958,18 +958,19 @@ function pagarTudoColhedor(nome) {
   const hoje = new Date().toISOString().split('T')[0];
   let alterou = false;
 
-  colheita.forEach(c => {
+  colheita.forEach((c, idx) => {
     if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0) {
       const restante = c.quantidade - c.pagoParcial;
       c.pagoParcial = c.quantidade;
       c.pago = true;
+      c.historicoPagamentos = c.historicoPagamentos || [];
       c.historicoPagamentos.push({ data: hoje, quantidade: restante });
       alterou = true;
     }
   });
 
   if (alterou) {
-    db.ref('Colheita').set([...colheita]).then(() => {
+    db.ref('Colheita').set(colheita).then(() => {
       atualizarColheita();
       alert(`Pagamento completo para ${nome} registrado com sucesso!`);
     });
@@ -986,12 +987,14 @@ function pagarParcialColhedor(nome) {
 
   colheita.sort((a, b) => a.data.localeCompare(b.data));
 
-  for (const c of colheita) {
+  for (let i = 0; i < colheita.length; i++) {
+    const c = colheita[i];
     if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0 && restante > 0) {
       const disponivel = c.quantidade - c.pagoParcial;
       const pagarAgora = Math.min(disponivel, restante);
 
       c.pagoParcial += pagarAgora;
+      c.historicoPagamentos = c.historicoPagamentos || [];
       c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
 
       if (c.pagoParcial >= c.quantidade) {
@@ -1004,12 +1007,13 @@ function pagarParcialColhedor(nome) {
   }
 
   if (alterou) {
-    db.ref('Colheita').set([...colheita]).then(() => {
+    db.ref('Colheita').set(colheita).then(() => {
       atualizarColheita();
       alert(`Pagamento parcial de ${quantidadePagar} latas para ${nome} registrado com sucesso!`);
     });
   }
 }
+
 
 function excluirColheita(index) {
   if (confirm("Tem certeza que deseja excluir esse lançamento?")) {

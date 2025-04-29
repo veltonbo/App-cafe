@@ -429,15 +429,16 @@
   </div>
 </div>
 
-  <!-- Seção: Relatório -->
-  <div id="colheitaRelatorio" class="colheita-subaba" style="display:none;">
-    <h4>Gráficos</h4>
-    <canvas id="graficoColheita"></canvas>
-    <canvas id="graficoColhedor"></canvas>
-    <div style="margin-top: 20px;">
-      <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-      <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-    </div>
+  <<!-- RELATÓRIO -->
+<div id="colheitaRelatorio" class="colheita-subaba" style="display:none;">
+  <h3>Relatórios da Colheita</h3>
+
+  <canvas id="graficoColheita" style="margin-bottom: 30px;"></canvas>
+  <canvas id="graficoColhedor"></canvas>
+
+  <div style="margin-top: 20px; display:flex; gap: 10px;">
+    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
   </div>
 </div>
 

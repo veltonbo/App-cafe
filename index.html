@@ -313,40 +313,55 @@
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Valor da Lata -->
-  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" onchange="salvarValorLata()" />
-
-  <!-- Filtro por Período -->
-  <div style="margin: 10px 0;">
-    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
-    <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+  <!-- Seção Valor da Lata -->
+  <div style="margin-bottom: 20px;">
+    <h4>Valor da Lata (R$)</h4>
+    <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
   </div>
 
-  <!-- Registro -->
-  <input id="dataColheita" type="date" />
-  <input id="colhedor" placeholder="Nome do Colhedor" />
-  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
-  <button onclick="adicionarColheita()">Salvar Colheita</button>
+  <!-- Seção Cadastro de Colheita -->
+  <div style="margin-bottom: 20px;">
+    <h4>Registrar Nova Colheita</h4>
+    <input id="dataColheita" type="date" />
+    <input id="colhedor" placeholder="Nome do Colhedor" />
+    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+    <button onclick="adicionarColheita()">Salvar Colheita</button>
+  </div>
 
-  <!-- Pesquisa -->
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarColheita()" />
+  <!-- Seção Filtros -->
+  <div style="margin-bottom: 20px;">
+    <h4>Filtrar Colheitas</h4>
+    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+    <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+    <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+  </div>
 
-  <!-- Separação -->
-  <h4 style="color:#ff9800;">Pendentes</h4>
-  <div id="colheitaPendente"></div>
+  <!-- Seção Lançamentos -->
+  <div style="margin-bottom: 20px;">
+    <h4 style="color: #ff9800;">Pendentes</h4>
+    <div id="colheitaPendente"></div>
+  </div>
 
-  <h4 style="color:#4caf50;">Pagos</h4>
-  <div id="colheitaPaga"></div>
+  <div style="margin-bottom: 20px;">
+    <h4 style="color: #4caf50;">Pagos</h4>
+    <div id="colheitaPaga"></div>
+  </div>
 
-  <!-- Gráficos -->
-  <h4>Gráfico Latas por Dia</h4>
-  <canvas id="graficoColheita"></canvas>
+  <!-- Seção Gráficos -->
+  <div style="margin-bottom: 20px;">
+    <h4>Gráfico Latas por Dia</h4>
+    <canvas id="graficoColheita"></canvas>
+  </div>
 
-  <h4>Gráfico Latas por Colhedor</h4>
-  <canvas id="graficoColhedor"></canvas>
+  <div style="margin-bottom: 20px;">
+    <h4>Gráfico Latas por Colhedor</h4>
+    <canvas id="graficoColhedor"></canvas>
+  </div>
 
-  <!-- Relatório -->
-  <button onclick="exportarRelatorioColheita()">Exportar Relatório PDF</button>
+  <!-- Seção Relatório -->
+  <div style="margin-bottom: 20px;">
+    <button onclick="exportarRelatorioColheita()">Exportar Relatório PDF</button>
+  </div>
 </div>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -796,7 +811,7 @@ function gerarGraficoFinanceiro() {
   });
 }
 
-// ----- Nova Colheita Melhorada -----
+// ----- Nova Colheita Organizada -----
 const colheita = [];
 let valorLataGlobal = 0;
 
@@ -833,6 +848,11 @@ function adicionarColheita() {
   colheita.push(nova);
   db.ref('Colheita').set(colheita);
   atualizarColheita();
+
+  // Limpar os campos
+  dataColheita.value = '';
+  colhedor.value = '';
+  quantidadeLatas.value = '';
 }
 
 function atualizarColheita() {
@@ -1014,7 +1034,7 @@ function exportarRelatorioColheita() {
   doc.save('relatorio_colheita.pdf');
 }
 
-// Inicializar
+// Inicializar ao abrir
 carregarColheita();
 carregarValorLata();
 

@@ -1121,19 +1121,19 @@ function exportarRelatorioColheita() {
     const pendentes = c.quantidade - pagas;
     const totalPago = (pagas * c.valorLata).toFixed(2);
     const totalPendente = (pendentes * c.valorLata).toFixed(2);
-    const historico = (c.historicoPagamentos || []).map(h => `${h.data} (${h.quantidade})`).join(" | ");
+    const historico = (c.historicoPagamentos || [])
+      .map(h => `${h.data} (${h.quantidade})`)
+      .join(" | ");
 
     csv += `${c.data},${c.colhedor},${c.quantidade},${pagas},${pendentes},${c.valorLata},${totalPago},${totalPendente},"${historico}"\n`;
   });
 
-  const dataAtual = new Date().toISOString().split('T')[0];
-  const nomeArquivo = `colheita_${dataAtual}.csv`;
-
+  const dataHoje = new Date().toISOString().split("T")[0];
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = nomeArquivo;
+  a.download = `colheita_${dataHoje}.csv`;
   a.click();
 }
   

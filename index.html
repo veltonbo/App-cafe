@@ -326,6 +326,10 @@
 
   <div id="financeiro" class="aba">
     <h2>Financeiro</h2>
+    <div id="resumoColheitaFinanceiro" class="item" style="background-color: #2f2f2f; border-left: 4px solid #ffa726; margin-bottom: 20px;">
+  <strong>Resumo da Colheita:</strong><br>
+  Total Previsto: R$ 0,00 | Total Pago: R$ 0,00 | Pendentes: R$ 0,00
+</div>
     <input id="dataFin" type="date">
     <input id="produtoFin" placeholder="Produto">
     <input id="valorFin" placeholder="Valor" type="number">
@@ -751,6 +755,24 @@ function atualizarFinanceiro() {
     notificacao.style.display = 'none';
   }
 
+  // Calcular resumo da colheita
+let totalPrevisto = 0, totalPago = 0;
+
+financeiro.forEach(f => {
+  if (f.tipo === 'Colheita') {
+    totalPrevisto += f.valor;
+    if (f.pago) totalPago += f.valor;
+  }
+});
+
+const totalPendente = totalPrevisto - totalPago;
+document.getElementById('resumoColheitaFinanceiro').innerHTML = `
+  <strong>Resumo da Colheita:</strong><br>
+  Total Previsto: R$ ${totalPrevisto.toFixed(2)} | 
+  Total Pago: R$ ${totalPago.toFixed(2)} | 
+  Pendentes: R$ ${totalPendente.toFixed(2)}
+`;
+
   gerarGrafico();
 }
 
@@ -790,6 +812,30 @@ function gerarGrafico() {
   });
 }
 
+  // Gráfico separado da Colheita
+const ctxColheita = document.getElementById('graficoColheitaFinanceiro').getContext('2d');
+if (window.graficoColheitaFinanceiro) window.graficoColheitaFinanceiro.destroy();
+
+const porColhedor = {};
+financeiro.forEach(f => {
+  if (f.tipo === 'Colheita') {
+    const nome = f.produto.replace('Colheita - ', '');
+    porColhedor[nome] = (porColhedor[nome] || 0) + f.valor;
+  }
+});
+
+window.graficoColheitaFinanceiro = new Chart(ctxColheita, {
+  type: 'pie',
+  data: {
+    labels: Object.keys(porColhedor),
+    datasets: [{
+      label: 'Colheita',
+      data: Object.values(porColhedor),
+      backgroundColor: ['#66bb6a', '#ffca28', '#ef5350', '#29b6f6', '#ab47bc']
+    }]
+  }
+});
+  
 function exportarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();

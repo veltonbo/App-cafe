@@ -313,10 +313,16 @@
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Valor fixo da lata -->
-  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
+  <!-- Valor da Lata -->
+  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" onchange="salvarValorLata()" />
 
-  <!-- Registro de colheita -->
+  <!-- Filtro por Período -->
+  <div style="margin: 10px 0;">
+    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+    <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+  </div>
+
+  <!-- Registro -->
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
   <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
@@ -326,14 +332,21 @@
   <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarColheita()" />
 
   <!-- Separação -->
-  <h4>Resumo por Dia</h4>
-  <div id="colheitaDia"></div>
+  <h4 style="color:#ff9800;">Pendentes</h4>
+  <div id="colheitaPendente"></div>
 
-  <h4>Resumo por Colhedor</h4>
-  <div id="colheitaResumo"></div>
+  <h4 style="color:#4caf50;">Pagos</h4>
+  <div id="colheitaPaga"></div>
 
-  <!-- Gráfico -->
+  <!-- Gráficos -->
+  <h4>Gráfico Latas por Dia</h4>
   <canvas id="graficoColheita"></canvas>
+
+  <h4>Gráfico Latas por Colhedor</h4>
+  <canvas id="graficoColhedor"></canvas>
+
+  <!-- Relatório -->
+  <button onclick="exportarRelatorioColheita()">Exportar Relatório PDF</button>
 </div>
   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -783,16 +796,33 @@ function gerarGraficoFinanceiro() {
   });
 }
 
-// ----- Nova Colheita -----
+// ----- Nova Colheita Melhorada -----
 const colheita = [];
+let valorLataGlobal = 0;
+
+function salvarValorLata() {
+  valorLataGlobal = parseFloat(document.getElementById('valorLata').value) || 0;
+  db.ref('ValorLata').set(valorLataGlobal);
+}
+
+function carregarValorLata() {
+  db.ref('ValorLata').on('value', snap => {
+    if (snap.exists()) {
+      valorLataGlobal = snap.val();
+      document.getElementById('valorLata').value = valorLataGlobal;
+    }
+  });
+}
 
 function adicionarColheita() {
-  const valorLataInput = parseFloat(document.getElementById('valorLata').value) || 0;
   const nova = {
     data: dataColheita.value,
     colhedor: colhedor.value.trim(),
     quantidade: parseInt(quantidadeLatas.value),
-    valorLata: valorLataInput,
+    valorLata: valorLataGlobal,
+    pago: false,
+    pagoParcial: 0,
+    historicoPagamentos: []
   };
 
   if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
@@ -807,70 +837,101 @@ function adicionarColheita() {
 
 function atualizarColheita() {
   const filtro = pesquisaColheita.value.toLowerCase();
-  colheitaDia.innerHTML = '';
-  colheitaResumo.innerHTML = '';
+  const inicio = filtroDataInicio.value;
+  const fim = filtroDataFim.value;
 
-  const porDia = {}; // Agrupar por dia
-  const porColhedor = {}; // Agrupar por colhedor
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
+
+  const agrupadoPendentes = {};
+  const agrupadoPagos = {};
 
   colheita.filter(c => 
-    `${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)
+    `${c.data} ${c.colhedor}`.toLowerCase().includes(filtro) &&
+    (!inicio || c.data >= inicio) &&
+    (!fim || c.data <= fim)
   ).forEach((c, i) => {
-    if (!porDia[c.data]) porDia[c.data] = [];
-    porDia[c.data].push({ ...c, index: i });
-
-    if (!porColhedor[c.colhedor]) porColhedor[c.colhedor] = [];
-    porColhedor[c.colhedor].push({ ...c, index: i });
+    if (c.pago || c.quantidade === c.pagoParcial) {
+      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+      agrupadoPagos[c.colhedor].push({ ...c, i });
+    } else {
+      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+      agrupadoPendentes[c.colhedor].push({ ...c, i });
+    }
   });
 
-  // Mostrar colheita por dia
-  for (const dia in porDia) {
-    const totalDia = porDia[dia].reduce((sum, c) => sum + c.quantidade, 0);
-    const diaDiv = document.createElement('div');
-    diaDiv.className = 'grupo-data';
-    diaDiv.innerText = `${dia} - Total: ${totalDia} latas`;
-    colheitaDia.appendChild(diaDiv);
-
-    porDia[dia].forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${c.colhedor} - ${c.quantidade} latas</span>
-        <button class="botao-excluir" onclick="excluirColheita(${c.index})">Excluir</button>
-      `;
-      colheitaDia.appendChild(div);
-    });
-  }
-
-  // Mostrar resumo por colhedor
-  for (const nome in porColhedor) {
-    const totalLatas = porColhedor[nome].reduce((sum, c) => sum + c.quantidade, 0);
-    const valorLata = porColhedor[nome][0]?.valorLata || 0;
-    const totalValor = totalLatas * valorLata;
-
-    const nomeDiv = document.createElement('div');
-    nomeDiv.className = 'grupo-data';
-    nomeDiv.innerText = `${nome} - ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
-    colheitaResumo.appendChild(nomeDiv);
-
-    porColhedor[nome].forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${c.data} - ${c.quantidade} latas (R$${(c.quantidade * c.valorLata).toFixed(2)})</span>
-        <button class="botao-excluir" onclick="excluirColheita(${c.index})">Excluir</button>
-      `;
-      colheitaResumo.appendChild(div);
-    });
-  }
+  montarLista(agrupadoPendentes, colheitaPendente, false);
+  montarLista(agrupadoPagos, colheitaPaga, true);
 
   gerarGraficoColheita();
+  gerarGraficoColhedor();
+}
+
+function montarLista(agrupado, container, pagos) {
+  for (const nome in agrupado) {
+    const grupo = agrupado[nome];
+    const totalLatas = grupo.reduce((sum, c) => sum + (c.quantidade - (pagos ? 0 : c.pagoParcial)), 0);
+    const valorLata = grupo[0]?.valorLata || 0;
+    const totalValor = totalLatas * valorLata;
+
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.innerText = `${nome} - ${totalLatas} latas = R$${totalValor.toFixed(2)}`;
+    container.appendChild(titulo);
+
+    grupo.forEach(({ data, quantidade, valorLata, pagoParcial, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      const pendente = quantidade - pagoParcial;
+      div.innerHTML = `
+        <span>${data} - ${pendente} latas (R$${(pendente * valorLata).toFixed(2)})</span>
+        ${!pagos ? `
+          <button class="botao-pagar" onclick="pagarTudo(${i})">Pagar Tudo</button>
+          <button class="botao-pagar" onclick="pagarParcial(${i})">Pagar Parcial</button>
+        ` : ''}
+        <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+}
+
+function pagarTudo(index) {
+  const hoje = new Date().toISOString().split('T')[0];
+  const c = colheita[index];
+  c.historicoPagamentos.push({ data: hoje, quantidade: c.quantidade - c.pagoParcial });
+  c.pagoParcial = c.quantidade;
+  c.pago = true;
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+}
+
+function pagarParcial(index) {
+  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar?"));
+  const hoje = new Date().toISOString().split('T')[0];
+  if (!quantidadePagar || quantidadePagar <= 0) return;
+  const c = colheita[index];
+
+  if (quantidadePagar + c.pagoParcial > c.quantidade) {
+    alert("Quantidade maior que o disponível!");
+    return;
+  }
+
+  c.pagoParcial += quantidadePagar;
+  c.historicoPagamentos.push({ data: hoje, quantidade: quantidadePagar });
+
+  if (c.pagoParcial === c.quantidade) c.pago = true;
+  
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
 }
 
 function excluirColheita(index) {
-  colheita.splice(index, 1);
-  db.ref('Colheita').set(colheita);
-  atualizarColheita();
+  if (confirm("Tem certeza que deseja excluir esse lançamento?")) {
+    colheita.splice(index, 1);
+    db.ref('Colheita').set(colheita);
+    atualizarColheita();
+  }
 }
 
 function carregarColheita() {
@@ -894,48 +955,67 @@ function gerarGraficoColheita() {
   });
 
   window.graficoColheitaChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: Object.keys(dias),
       datasets: [{
         label: 'Latas por Dia',
         data: Object.values(dias),
-        borderColor: '#66bb6a',
-        backgroundColor: '#4caf50',
-        fill: false,
-        tension: 0.3
+        backgroundColor: '#4caf50'
       }]
     }
   });
 }
 
-function gerarGraficoColheita() {
-  const ctx = document.getElementById('graficoColheita').getContext('2d');
-  if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
+function gerarGraficoColhedor() {
+  const ctx = document.getElementById('graficoColhedor').getContext('2d');
+  if (window.graficoColhedorChart) window.graficoColhedorChart.destroy();
 
-  const dias = {};
+  const nomes = {};
   colheita.forEach(c => {
-    if (!dias[c.data]) dias[c.data] = 0;
-    dias[c.data] += c.quantidade;
+    nomes[c.colhedor] = (nomes[c.colhedor] || 0) + c.quantidade;
   });
 
-  window.graficoColheitaChart = new Chart(ctx, {
-    type: 'line',
+  window.graficoColhedorChart = new Chart(ctx, {
+    type: 'pie',
     data: {
-      labels: Object.keys(dias),
+      labels: Object.keys(nomes),
       datasets: [{
-        label: 'Latas Colhidas por Dia',
-        data: Object.values(dias),
-        backgroundColor: '#4caf50',
-        borderColor: '#66bb6a',
-        fill: false,
-        tension: 0.3
+        label: 'Colheita por Colhedor',
+        data: Object.values(nomes),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350', '#ab47bc']
       }]
     }
   });
 }
 
-// Carregar os dados da Colheita assim que abrir o app
+function exportarRelatorioColheita() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text('Relatório de Colheita', 20, 20);
+
+  let y = 40;
+  colheita.forEach(c => {
+    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade} latas`, 20, y);
+    y += 8;
+    if (c.historicoPagamentos.length) {
+      c.historicoPagamentos.forEach(h => {
+        doc.text(`Pagamento: ${h.data} - ${h.quantidade} latas`, 30, y);
+        y += 6;
+      });
+    }
+    y += 4;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  doc.save('relatorio_colheita.pdf');
+}
+
+// Inicializar
 carregarColheita();
+carregarValorLata();
 
 </script>

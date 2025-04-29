@@ -352,6 +352,9 @@
     <button id="btn-relatorio-aplicacoes" onclick="mostrarRelatorio('aplicacoesRel')"><i class="fas fa-flask"></i></button>
     <button id="btn-relatorio-tarefas" onclick="mostrarRelatorio('tarefasRel')"><i class="fas fa-tasks"></i></button>
     <button id="btn-relatorio-financeiro" onclick="mostrarRelatorio('financeiroRel')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-relatorio-colheita" onclick="mostrarRelatorio('colheitaRel')">
+  <i class="fas fa-tractor"></i>
+</button>
   </div>
 
   <!-- Área dos relatórios -->
@@ -382,6 +385,20 @@
   </div>
 </div>
 
+  <!-- Nova Subaba: Colheita no Relatório -->
+<div id="colheitaRel" class="relatorio-subaba" style="display:none;">
+  <h3>Resumo da Colheita</h3>
+
+  <canvas id="graficoRelColhedorLatas" style="margin-top: 20px;"></canvas>
+  <canvas id="graficoRelColhedorValores" style="margin-top: 20px;"></canvas>
+
+  <div style="margin-top: 20px; text-align: center;">
+    <button onclick="enviarPagosAoFinanceiro()" class="botao-pagar">
+      <i class="fas fa-arrow-right"></i> Enviar valores pagos ao Financeiro
+    </button>
+  </div>
+</div>
+  
 <!-- Menu Colheita -->
 
 <div id="colheita" class="aba">
@@ -807,6 +824,7 @@ function mostrarRelatorio(tipo) {
   if (tipo === 'aplicacoesRel') gerarGraficoAplicacoes();
   if (tipo === 'tarefasRel') gerarGraficoTarefas();
   if (tipo === 'financeiroRel') gerarGraficoFinanceiro();
+  if (tipo === 'colheitaRel') gerarGraficoRelColheita();
 }
 
 // Gerar lista e gráfico de Aplicações
@@ -1195,6 +1213,77 @@ function exportarRelatorioColheita() {
   a.click();
 }
 
+  function gerarGraficoRelColheita() {
+  // Gráfico de Latas por Colhedor
+  const ctx1 = document.getElementById('graficoRelColhedorLatas').getContext('2d');
+  if (window.graficoRelColhedorLatas) window.graficoRelColhedorLatas.destroy();
+
+  const totalLatasPorColhedor = {};
+  colheita.forEach(c => {
+    totalLatasPorColhedor[c.colhedor] = (totalLatasPorColhedor[c.colhedor] || 0) + c.quantidade;
+  });
+
+  window.graficoRelColhedorLatas = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totalLatasPorColhedor),
+      datasets: [{
+        label: 'Total de Latas',
+        data: Object.values(totalLatasPorColhedor),
+        backgroundColor: '#66bb6a'
+      }]
+    }
+  });
+
+  // Gráfico de Valores Pagos por Colhedor
+  const ctx2 = document.getElementById('graficoRelColhedorValores').getContext('2d');
+  if (window.graficoRelColhedorValores) window.graficoRelColhedorValores.destroy();
+
+  const totalPagoPorColhedor = {};
+  colheita.forEach(c => {
+    const pago = c.pagoParcial * (c.valorLata || 0);
+    totalPagoPorColhedor[c.colhedor] = (totalPagoPorColhedor[c.colhedor] || 0) + pago;
+  });
+
+  window.graficoRelColhedorValores = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(totalPagoPorColhedor),
+      datasets: [{
+        label: 'Valor Pago (R$)',
+        data: Object.values(totalPagoPorColhedor),
+        backgroundColor: '#42a5f5'
+      }]
+    }
+  });
+}
+
+function enviarPagosAoFinanceiro() {
+  const hoje = new Date().toISOString().split('T')[0];
+  let novos = [];
+
+  colheita.forEach(c => {
+    if (c.pagoParcial > 0) {
+      const valor = c.pagoParcial * (c.valorLata || 0);
+      novos.push({
+        data: hoje,
+        produto: `Pagamento ${c.colhedor}`,
+        valor: valor,
+        tipo: 'Colheita',
+        pago: true
+      });
+    }
+  });
+
+  if (novos.length === 0) return alert("Nenhum pagamento disponível para enviar.");
+
+  financeiro.push(...novos);
+  db.ref('Financeiro').set(financeiro).then(() => {
+    alert("Pagamentos enviados ao Financeiro com sucesso!");
+    atualizarFinanceiro();
+    mostrarAba('financeiro');
+  });
+}
   </script>
 
   <!-- Modal Pagamento Parcial -->

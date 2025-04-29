@@ -349,55 +349,49 @@
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
 
-  <!-- Seção Valor da Lata -->
-  <div style="margin-bottom: 20px;">
-    <h4>Valor da Lata (R$)</h4>
-    <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
-  </div>
+  <!-- Valor da Lata -->
+  <h4>Valor da Lata (R$)</h4>
+  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
 
-  <!-- Seção Cadastro de Colheita -->
-    <h4>Registrar Nova Colheita</h4>
-    <div style="margin-bottom: 20px;">
-  <input id="dataColheita" type="date" placeholder="Data da Colheita">
-  <input id="colhedor" placeholder="Nome do Colhedor">
-  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-  <button onclick="adicionarColheita()">Salvar Colheita</button>
-</div>
+  <!-- Registrar Colheita -->
+  <h4>Registrar Nova Colheita</h4>
+  <input id="dataColheita" type="date" />
+  <input id="colhedor" placeholder="Nome do Colhedor" />
+  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
 
-  <!-- Seção Filtros -->
-    <h4>Filtrar Colheitas</h4>
-    <div style="margin-bottom: 20px;">
-  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()">
-  <input id="filtroDataFim" type="date" onchange="atualizarColheita()">
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()">
-</div>
+  <!-- Filtros -->
+  <h4>Filtrar Colheitas</h4>
+  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
 
-  <!-- Seção Lançamentos -->
-  <div style="margin-bottom: 20px;">
-    <h4 style="color: #ff9800;">Pendentes</h4>
-    <div id="colheitaPendentes"></div>
-  </div>
+  <!-- Resumo -->
+  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
 
-  <div style="margin-bottom: 20px;">
-    <h4 style="color: #4caf50;">Pagos</h4>
-    <div id="colheitaPagos"></div>
-  </div>
+  <!-- Pendentes -->
+  <h4 style="color: #ff9800;">Pendentes</h4>
+  <div id="colheitaPendentes"></div>
 
-  <!-- Seção Gráficos -->
-  <div style="margin-bottom: 20px;">
-    <h4>Gráfico Latas por Dia</h4>
-    <canvas id="graficoColheita"></canvas>
-  </div>
+  <!-- Pagos -->
+  <h4 style="color: #4caf50;">Pagos</h4>
+  <div id="colheitaPagos"></div>
+
+  <!-- Gráficos -->
+  <h4>Gráfico Latas por Dia</h4>
+  <canvas id="graficoColheita"></canvas>
+
+  <h4>Gráfico Latas por Colhedor</h4>
+  <canvas id="graficoColhedor"></canvas>
 
   <div style="margin-bottom: 20px;">
-    <h4>Gráfico Latas por Colhedor</h4>
-    <canvas id="graficoColhedor"></canvas>
-  </div>
-</div>
-
-  <!-- Seção Relatório -->
-  <div style="margin-bottom: 20px;">
-    <button onclick="exportarRelatorioColheita()">Exportar Relatório PDF</button>
+  <h4>Resumo Geral</h4>
+  <div id="resumoColheita"></div>
+  
+  <!-- Exportações -->
+  <div style="margin-top: 20px;">
+    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
   </div>
 </div>
 
@@ -915,6 +909,17 @@ function atualizarColheita() {
 
   gerarGraficoColheita();
   gerarGraficoColhedor();
+
+  // Exibir resumo geral da colheita
+const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * (c.valorLata || 0), 0);
+const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
+
+document.getElementById('resumoColheita').innerHTML = `
+  <div class="item"><strong>Total de Latas:</strong> ${totalLatas}</div>
+  <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
+  <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+`;
 }
 
 function montarGrupoColheita(grupo, container, pago) {
@@ -1103,6 +1108,54 @@ function exportarRelatorioColheita() {
   doc.save('relatorio_colheita.pdf');
 }
 
+function exportarCSVColheita() {
+  if (!colheita.length) {
+    alert("Nenhum dado de colheita disponível para exportação.");
+    return;
+  }
+
+  let csv = "Data,Colhedor,Quantidade,Latas Pagas,Valor da Lata,Valor Total,Pago,Histórico de Pagamentos\n";
+
+  colheita.forEach(c => {
+    const historico = (c.historicoPagamentos || [])
+      .map(h => `${h.data} (${h.quantidade})`)
+      .join(" | ");
+    
+    const valorTotal = (c.quantidade * (c.valorLata || 0)).toFixed(2);
+    csv += `${c.data},${c.colhedor},${c.quantidade},${c.pagoParcial},${c.valorLata || 0},${valorTotal},${c.pago ? "Sim" : "Não"},"${historico}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "colheita.csv");
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+  function exportarCSVColheita() {
+  let csv = 'Data,Colhedor,Quantidade,Latas Pagas,Latas Pendentes,Valor da Lata,Total Pago (R$),Total Pendente (R$)\n';
+
+  colheita.forEach(c => {
+    const pagas = c.pagoParcial || 0;
+    const pendentes = c.quantidade - pagas;
+    const totalPago = (pagas * c.valorLata).toFixed(2);
+    const totalPendente = (pendentes * c.valorLata).toFixed(2);
+
+    csv += `${c.data},${c.colhedor},${c.quantidade},${pagas},${pendentes},${c.valorLata},${totalPago},${totalPendente}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'colheita.csv';
+  a.click();
+}
+  
 // Inicializar ao abrir
 carregarColheita();
 carregarValorLata();

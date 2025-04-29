@@ -1245,13 +1245,7 @@ function exportarRelatorioColheita() {
   a.click();
 }
 
-  function mostrarSubColheita(subId) {
-    document.querySelectorAll('.subcolheita').forEach(div => div.style.display = 'none');
-    document.getElementById(subId).style.display = 'block';
-    
-    document.querySelectorAll('.menu-superior-subcolheita button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('btn-' + subId).classList.add('active');
-  }
+  function mostrarSubColheita(subId)
 
   </script>
 

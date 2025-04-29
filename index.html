@@ -400,13 +400,10 @@
     <button onclick="exportarRelatorioColheita()">Exportar Relatório PDF</button>
   </div>
 </div>
-  
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -920,13 +917,6 @@ function atualizarColheita() {
   gerarGraficoColhedor();
 }
 
-  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
-montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
-
-  gerarGraficoColheita();
-  gerarGraficoColhedor();
-}
-
 function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {
     const registros = grupo[nome];
@@ -992,45 +982,6 @@ function pagarParcialColhedor(nome) {
       c.pagoParcial += pagarAgora;
       c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
       if (c.pagoParcial === c.quantidade) c.pago = true;
-      restante -= pagarAgora;
-    }
-  });
-
-  db.ref('Colheita').set(colheita);
-  atualizarColheita();
-}
-
-function pagarTudoColhedor(nome) {
-  const hoje = new Date().toISOString().split('T')[0];
-  colheita.forEach(c => {
-    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
-      const restante = c.quantidade - c.pagoParcial;
-      c.pagoParcial = c.quantidade;
-      c.pago = true;
-      c.historicoPagamentos.push({ data: hoje, quantidade: restante });
-    }
-  });
-  db.ref('Colheita').set(colheita);
-  atualizarColheita();
-}
-
-function pagarParcialColhedor(nome) {
-  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar para " + nome + "?"));
-  if (!quantidadePagar || quantidadePagar <= 0) return;
-  const hoje = new Date().toISOString().split('T')[0];
-
-  let restante = quantidadePagar;
-
-  colheita.forEach(c => {
-    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
-      const disponivel = c.quantidade - c.pagoParcial;
-      if (restante <= 0) return;
-
-      const pagarAgora = Math.min(disponivel, restante);
-      c.pagoParcial += pagarAgora;
-      c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
-      if (c.pagoParcial === c.quantidade) c.pago = true;
-
       restante -= pagarAgora;
     }
   });
@@ -1130,5 +1081,4 @@ function exportarRelatorioColheita() {
 // Inicializar ao abrir
 carregarColheita();
 carregarValorLata();
-
 </script>

@@ -1213,4 +1213,11 @@ function exportarRelatorioColheita() {
 // Inicializar ao abrir
 carregarColheita();
 carregarValorLata();
+
+window.onload = () => {
+  inicializarApp();
+  carregarColheita();
+  carregarValorLata();
+};
+  
 </script>

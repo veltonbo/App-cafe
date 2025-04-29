@@ -392,32 +392,42 @@
     <button id="btn-colheita-relatorio" onclick="mostrarSubmenuColheita('colheitaRelatorio')"><i class="fas fa-chart-bar"></i></button>
   </div>
 
-  <!-- Seção: Registrar -->
-  <div id="colheitaRegistrar" class="colheita-subaba">
-    <h4>Registrar Nova Colheita</h4>
-    <input id="dataColheita" type="date" />
-    <input id="colhedor" placeholder="Nome do Colhedor" />
-    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
-    <input id="valorLata" type="number" placeholder="Valor da Lata (R$)" />
-    <button onclick="adicionarColheita()">Salvar</button>
+  <!-- REGISTRAR -->
+<div id="colheitaRegistrar" class="colheita-subaba">
+  <h3>Registrar Colheita</h3>
+  <input id="dataColheita" type="date" placeholder="Data da Colheita">
+  <input id="colhedor" placeholder="Nome do Colhedor">
+  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
+  <input id="valorLata" type="number" placeholder="Valor da Lata (R$)">
+  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
+</div>
+
+  <!-- LANCAMENTOS -->
+<div id="colheitaLancamentos" class="colheita-subaba" style="display:none;">
+  <h3>Lançamentos de Colheita</h3>
+
+  <!-- Filtros -->
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Buscar por colhedor..." oninput="atualizarColheita()">
+  <div style="display: flex; gap: 10px;">
+    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()">
+    <input id="filtroDataFim" type="date" onchange="atualizarColheita()">
   </div>
 
-  <!-- Seção: Lançamentos -->
-  <div id="colheitaLancamentos" class="colheita-subaba" style="display:none;">
-    <h4>Lançamentos de Colheita</h4>
-    <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar por Colhedor..." oninput="atualizarColheita()" />
-    <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
-    <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
-    <div id="resumoColheita"></div>
-    <div class="coluna-pendente">
-      <h4 style="color: #ff9800;">Pendentes</h4>
-      <div id="colheitaPendentes"></div>
-    </div>
-    <div class="coluna-pago">
-      <h4 style="color: #4caf50;">Pagos</h4>
-      <div id="colheitaPagos"></div>
-    </div>
+  <!-- Resumo -->
+  <div id="resumoColheita" class="item" style="margin-top: 15px;"></div>
+
+  <!-- Pendentes -->
+  <div class="coluna-pendente">
+    <h4 style="color: #ff9800;">Pendentes</h4>
+    <div id="colheitaPendentes"></div>
   </div>
+
+  <!-- Pagos -->
+  <div class="coluna-pago">
+    <h4 style="color: #4caf50;">Pagos</h4>
+    <div id="colheitaPagos"></div>
+  </div>
+</div>
 
   <!-- Seção: Relatório -->
   <div id="colheitaRelatorio" class="colheita-subaba" style="display:none;">

@@ -373,15 +373,15 @@
   </div>
 
   <!-- Seção Lançamentos -->
-<div style="margin-bottom: 20px;">
-  <h4 style="color: #ff9800;">Pendentes</h4>
-  <div id="colheitaPendentes"></div>
-</div>
+  <div style="margin-bottom: 20px;">
+    <h4 style="color: #ff9800;">Pendentes</h4>
+    <div id="colheitaPendentes"></div>
+  </div>
 
-<div style="margin-bottom: 20px;">
-  <h4 style="color: #4caf50;">Pagos</h4>
-  <div id="colheitaPagos"></div>
-</div>
+  <div style="margin-bottom: 20px;">
+    <h4 style="color: #4caf50;">Pagos</h4>
+    <div id="colheitaPagos"></div>
+  </div>
 
   <!-- Seção Gráficos -->
   <div style="margin-bottom: 20px;">
@@ -393,6 +393,7 @@
     <h4>Gráfico Latas por Colhedor</h4>
     <canvas id="graficoColhedor"></canvas>
   </div>
+</div>
 
   <!-- Seção Relatório -->
   <div style="margin-bottom: 20px;">
@@ -896,25 +897,28 @@ function atualizarColheita() {
   const inicio = filtroDataInicio.value;
   const fim = filtroDataFim.value;
 
-  colheitaPendente.innerHTML = '';
-  colheitaPaga.innerHTML = '';
+  colheitaPendentes.innerHTML = '';
+  colheitaPagos.innerHTML = '';
 
   const agrupadoPendentes = {};
   const agrupadoPagos = {};
 
   colheita.filter(c => 
-    `${c.data} ${c.colhedor}`.toLowerCase().includes(filtro) &&
+    (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
     (!inicio || c.data >= inicio) &&
     (!fim || c.data <= fim)
   ).forEach((c, i) => {
-    if (c.pago || c.quantidade === c.pagoParcial) {
-      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
-      agrupadoPagos[c.colhedor].push({ ...c, i });
-    } else {
-      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
-      agrupadoPendentes[c.colhedor].push({ ...c, i });
-    }
+    const grupo = c.pago || c.pagoParcial === c.quantidade ? agrupadoPagos : agrupadoPendentes;
+    if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
+    grupo[c.colhedor].push({ ...c, i });
   });
+
+  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+  montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
+
+  gerarGraficoColheita();
+  gerarGraficoColhedor();
+}
 
   montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
 montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
@@ -960,32 +964,77 @@ function montarGrupoColheita(grupo, container, pago) {
   }
 }
 
-function pagarTudo(index) {
+function pagarTudoColhedor(nome) {
   const hoje = new Date().toISOString().split('T')[0];
-  const c = colheita[index];
-  c.historicoPagamentos.push({ data: hoje, quantidade: c.quantidade - c.pagoParcial });
-  c.pagoParcial = c.quantidade;
-  c.pago = true;
+  colheita.forEach(c => {
+    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
+      const restante = c.quantidade - c.pagoParcial;
+      c.pagoParcial = c.quantidade;
+      c.pago = true;
+      c.historicoPagamentos.push({ data: hoje, quantidade: restante });
+    }
+  });
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 }
 
-function pagarParcial(index) {
-  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar?"));
-  const hoje = new Date().toISOString().split('T')[0];
+function pagarParcialColhedor(nome) {
+  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar para " + nome + "?"));
   if (!quantidadePagar || quantidadePagar <= 0) return;
-  const c = colheita[index];
 
-  if (quantidadePagar + c.pagoParcial > c.quantidade) {
-    alert("Quantidade maior que o disponível!");
-    return;
-  }
+  const hoje = new Date().toISOString().split('T')[0];
+  let restante = quantidadePagar;
 
-  c.pagoParcial += quantidadePagar;
-  c.historicoPagamentos.push({ data: hoje, quantidade: quantidadePagar });
+  colheita.forEach(c => {
+    if (c.colhedor === nome && c.pagoParcial < c.quantidade && restante > 0) {
+      const disponivel = c.quantidade - c.pagoParcial;
+      const pagarAgora = Math.min(disponivel, restante);
+      c.pagoParcial += pagarAgora;
+      c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
+      if (c.pagoParcial === c.quantidade) c.pago = true;
+      restante -= pagarAgora;
+    }
+  });
 
-  if (c.pagoParcial === c.quantidade) c.pago = true;
-  
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+}
+
+function pagarTudoColhedor(nome) {
+  const hoje = new Date().toISOString().split('T')[0];
+  colheita.forEach(c => {
+    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
+      const restante = c.quantidade - c.pagoParcial;
+      c.pagoParcial = c.quantidade;
+      c.pago = true;
+      c.historicoPagamentos.push({ data: hoje, quantidade: restante });
+    }
+  });
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+}
+
+function pagarParcialColhedor(nome) {
+  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar para " + nome + "?"));
+  if (!quantidadePagar || quantidadePagar <= 0) return;
+  const hoje = new Date().toISOString().split('T')[0];
+
+  let restante = quantidadePagar;
+
+  colheita.forEach(c => {
+    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
+      const disponivel = c.quantidade - c.pagoParcial;
+      if (restante <= 0) return;
+
+      const pagarAgora = Math.min(disponivel, restante);
+      c.pagoParcial += pagarAgora;
+      c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
+      if (c.pagoParcial === c.quantidade) c.pago = true;
+
+      restante -= pagarAgora;
+    }
+  });
+
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 }

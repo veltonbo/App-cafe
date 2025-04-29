@@ -913,9 +913,22 @@ function adicionarColheita() {
     return;
   }
 
+  // Salvar colheita
   colheita.push(nova);
   db.ref('Colheita').set(colheita);
   atualizarColheita();
+
+  // Criar automaticamente um lançamento no Financeiro
+  const gasto = {
+    data: nova.data,
+    produto: `Colheita - ${nova.colhedor}`,
+    valor: nova.quantidade * nova.valorLata,
+    tipo: "Colheita",
+    pago: false
+  };
+  financeiro.push(gasto);
+  db.ref('Financeiro').set(financeiro);
+  atualizarFinanceiro();
 
   // Limpar os campos
   dataColheita.value = '';

@@ -169,6 +169,42 @@
       margin-bottom: 5px;
       color: #66bb6a;
     }
+
+   .botoes-colheita {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.botao-pagar, .botao-excluir {
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.botao-pagar {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-pagar:hover {
+  background-color: #45a049;
+}
+
+.botao-excluir {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-excluir:hover {
+  background-color: #e53935;
+}
   </style>
 </head>
 
@@ -811,6 +847,7 @@ function gerarGraficoFinanceiro() {
   });
 }
 
+// ----- Nova Colheita Organizada -----
 const colheita = [];
 let valorLataGlobal = 0;
 
@@ -848,6 +885,7 @@ function adicionarColheita() {
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 
+  // Limpar os campos
   dataColheita.value = '';
   colhedor.value = '';
   quantidadeLatas.value = '';
@@ -858,11 +896,11 @@ function atualizarColheita() {
   const inicio = filtroDataInicio.value;
   const fim = filtroDataFim.value;
 
-  colheitaPendentes.innerHTML = '';
-  colheitaPagos.innerHTML = '';
+  colheitaPendente.innerHTML = '';
+  colheitaPaga.innerHTML = '';
 
-  const pendentes = {};
-  const pagos = {};
+  const agrupadoPendentes = {};
+  const agrupadoPagos = {};
 
   colheita.filter(c => 
     `${c.data} ${c.colhedor}`.toLowerCase().includes(filtro) &&
@@ -870,16 +908,16 @@ function atualizarColheita() {
     (!fim || c.data <= fim)
   ).forEach((c, i) => {
     if (c.pago || c.quantidade === c.pagoParcial) {
-      if (!pagos[c.colhedor]) pagos[c.colhedor] = [];
-      pagos[c.colhedor].push({ ...c, i });
+      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+      agrupadoPagos[c.colhedor].push({ ...c, i });
     } else {
-      if (!pendentes[c.colhedor]) pendentes[c.colhedor] = [];
-      pendentes[c.colhedor].push({ ...c, i });
+      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+      agrupadoPendentes[c.colhedor].push({ ...c, i });
     }
   });
 
-  montarGrupoColheita(pendentes, colheitaPendentes, false);
-  montarGrupoColheita(pagos, colheitaPagos, true);
+  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
 
   gerarGraficoColheita();
   gerarGraficoColhedor();
@@ -903,14 +941,16 @@ function montarGrupoColheita(grupo, container, pago) {
       div.className = 'item';
       div.innerHTML = `
         <span>${data} - ${pendente} latas (R$${(pendente * valorLata).toFixed(2)})</span>
-        <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        <div class="botoes-colheita">
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
       `;
       container.appendChild(div);
     });
 
     if (!pago) {
       const botoes = document.createElement('div');
-      botoes.style = 'display:flex; gap:10px; margin-top:10px;';
+      botoes.className = 'botoes-colheita';
       botoes.innerHTML = `
         <button class="botao-pagar" onclick="pagarTudoColhedor('${nome}')">Pagar Tudo</button>
         <button class="botao-pagar" onclick="pagarParcialColhedor('${nome}')">Pagar Parcial</button>
@@ -920,46 +960,32 @@ function montarGrupoColheita(grupo, container, pago) {
   }
 }
 
-function pagarTudoColhedor(nome) {
+function pagarTudo(index) {
   const hoje = new Date().toISOString().split('T')[0];
-
-  colheita.forEach(c => {
-    if (c.colhedor === nome && !(c.pago || c.pagoParcial === c.quantidade)) {
-      c.historicoPagamentos.push({ data: hoje, quantidade: c.quantidade - c.pagoParcial });
-      c.pagoParcial = c.quantidade;
-      c.pago = true;
-    }
-  });
-
+  const c = colheita[index];
+  c.historicoPagamentos.push({ data: hoje, quantidade: c.quantidade - c.pagoParcial });
+  c.pagoParcial = c.quantidade;
+  c.pago = true;
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 }
 
-function pagarParcialColhedor(nome) {
-  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar para " + nome + "?"));
+function pagarParcial(index) {
+  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar?"));
   const hoje = new Date().toISOString().split('T')[0];
   if (!quantidadePagar || quantidadePagar <= 0) return;
+  const c = colheita[index];
 
-  let restante = quantidadePagar;
+  if (quantidadePagar + c.pagoParcial > c.quantidade) {
+    alert("Quantidade maior que o disponível!");
+    return;
+  }
 
-  colheita.forEach(c => {
-    if (c.colhedor === nome && !(c.pago || c.pagoParcial === c.quantidade)) {
-      const disponivel = c.quantidade - c.pagoParcial;
-      if (restante <= 0) return;
-      if (disponivel >= restante) {
-        c.historicoPagamentos.push({ data: hoje, quantidade: restante });
-        c.pagoParcial += restante;
-        if (c.pagoParcial === c.quantidade) c.pago = true;
-        restante = 0;
-      } else {
-        c.historicoPagamentos.push({ data: hoje, quantidade: disponivel });
-        c.pagoParcial += disponivel;
-        c.pago = true;
-        restante -= disponivel;
-      }
-    }
-  });
+  c.pagoParcial += quantidadePagar;
+  c.historicoPagamentos.push({ data: hoje, quantidade: quantidadePagar });
 
+  if (c.pagoParcial === c.quantidade) c.pago = true;
+  
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 }
@@ -1027,7 +1053,32 @@ function gerarGraficoColhedor() {
   });
 }
 
-// Inicialização
+function exportarRelatorioColheita() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text('Relatório de Colheita', 20, 20);
+
+  let y = 40;
+  colheita.forEach(c => {
+    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade} latas`, 20, y);
+    y += 8;
+    if (c.historicoPagamentos.length) {
+      c.historicoPagamentos.forEach(h => {
+        doc.text(`Pagamento: ${h.data} - ${h.quantidade} latas`, 30, y);
+        y += 6;
+      });
+    }
+    y += 4;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  doc.save('relatorio_colheita.pdf');
+}
+
+// Inicializar ao abrir
 carregarColheita();
 carregarValorLata();
 

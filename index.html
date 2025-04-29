@@ -1232,6 +1232,16 @@ function exportarRelatorioColheita() {
   document.getElementById('colheita-' + id).style.display = 'block';
   document.getElementById('btn-colheita-' + id).classList.add('active');
 }
+
+  function mostrarSubmenuColheita(id) {
+  document.querySelectorAll('.colheita-subaba').forEach(div => div.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+
+  document.querySelectorAll('#colheita .menu-superior button').forEach(btn => btn.classList.remove('active'));
+  const btnId = 'btn-' + id;
+  const botao = document.getElementById(btnId);
+  if (botao) botao.classList.add('active');
+}
   </script>
 
   <!-- Modal Pagamento Parcial -->

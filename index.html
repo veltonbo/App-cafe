@@ -1108,51 +1108,32 @@ function exportarRelatorioColheita() {
   doc.save('relatorio_colheita.pdf');
 }
 
-function exportarCSVColheita() {
+  function exportarCSVColheita() {
   if (!colheita.length) {
     alert("Nenhum dado de colheita disponível para exportação.");
     return;
   }
 
-  let csv = "Data,Colhedor,Quantidade,Latas Pagas,Valor da Lata,Valor Total,Pago,Histórico de Pagamentos\n";
-
-  colheita.forEach(c => {
-    const historico = (c.historicoPagamentos || [])
-      .map(h => `${h.data} (${h.quantidade})`)
-      .join(" | ");
-    
-    const valorTotal = (c.quantidade * (c.valorLata || 0)).toFixed(2);
-    csv += `${c.data},${c.colhedor},${c.quantidade},${c.pagoParcial},${c.valorLata || 0},${valorTotal},${c.pago ? "Sim" : "Não"},"${historico}"\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "colheita.csv");
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-  function exportarCSVColheita() {
-  let csv = 'Data,Colhedor,Quantidade,Latas Pagas,Latas Pendentes,Valor da Lata,Total Pago (R$),Total Pendente (R$)\n';
+  let csv = 'Data,Colhedor,Quantidade,Latas Pagas,Latas Pendentes,Valor da Lata,Total Pago (R$),Total Pendente (R$),Histórico de Pagamentos\n';
 
   colheita.forEach(c => {
     const pagas = c.pagoParcial || 0;
     const pendentes = c.quantidade - pagas;
     const totalPago = (pagas * c.valorLata).toFixed(2);
     const totalPendente = (pendentes * c.valorLata).toFixed(2);
+    const historico = (c.historicoPagamentos || []).map(h => `${h.data} (${h.quantidade})`).join(" | ");
 
-    csv += `${c.data},${c.colhedor},${c.quantidade},${pagas},${pendentes},${c.valorLata},${totalPago},${totalPendente}\n`;
+    csv += `${c.data},${c.colhedor},${c.quantidade},${pagas},${pendentes},${c.valorLata},${totalPago},${totalPendente},"${historico}"\n`;
   });
+
+  const dataAtual = new Date().toISOString().split('T')[0];
+  const nomeArquivo = `colheita_${dataAtual}.csv`;
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'colheita.csv';
+  a.download = nomeArquivo;
   a.click();
 }
   

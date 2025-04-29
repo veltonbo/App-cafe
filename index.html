@@ -956,38 +956,56 @@ function montarGrupoColheita(grupo, container, pago) {
 
 function pagarTudoColhedor(nome) {
   const hoje = new Date().toISOString().split('T')[0];
+  let alterou = false;
+
   colheita.forEach(c => {
-    if (c.colhedor === nome && c.pagoParcial < c.quantidade) {
+    if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0) {
       const restante = c.quantidade - c.pagoParcial;
       c.pagoParcial = c.quantidade;
       c.pago = true;
       c.historicoPagamentos.push({ data: hoje, quantidade: restante });
+      alterou = true;
     }
   });
-  db.ref('Colheita').set(colheita);
-  atualizarColheita();
+
+  if (alterou) {
+    db.ref('Colheita').set([...colheita]);
+    atualizarColheita();
+  }
 }
 
 function pagarParcialColhedor(nome) {
-  const quantidadePagar = parseInt(prompt("Quantas latas deseja pagar para " + nome + "?"));
-  if (!quantidadePagar || quantidadePagar <= 0) return;
+  const quantidadePagar = parseInt(prompt(`Quantas latas deseja pagar para ${nome}?`));
+  if (isNaN(quantidadePagar) || quantidadePagar <= 0) return alert("Quantidade inválida!");
 
   const hoje = new Date().toISOString().split('T')[0];
   let restante = quantidadePagar;
+  let alterou = false;
 
-  colheita.forEach(c => {
-    if (c.colhedor === nome && c.pagoParcial < c.quantidade && restante > 0) {
+  // Paga na ordem de datas mais antigas
+  colheita.sort((a, b) => a.data.localeCompare(b.data));
+
+  for (const c of colheita) {
+    if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0 && restante > 0) {
       const disponivel = c.quantidade - c.pagoParcial;
       const pagarAgora = Math.min(disponivel, restante);
+
       c.pagoParcial += pagarAgora;
       c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
-      if (c.pagoParcial === c.quantidade) c.pago = true;
-      restante -= pagarAgora;
-    }
-  });
 
-  db.ref('Colheita').set(colheita);
-  atualizarColheita();
+      if (c.pagoParcial >= c.quantidade) {
+        c.pago = true;
+      }
+
+      restante -= pagarAgora;
+      alterou = true;
+    }
+  }
+
+  if (alterou) {
+    db.ref('Colheita').set([...colheita]);
+    atualizarColheita();
+  }
 }
 
 function excluirColheita(index) {

@@ -1029,8 +1029,16 @@ function pagarTudoColhedor(nome) {
   }
 }
 
+let colhedorAtual = '';
 function pagarParcialColhedor(nome) {
-  const quantidadePagar = parseInt(prompt(`Quantas latas deseja pagar para ${nome}?`));
+  colhedorAtual = nome;
+  document.getElementById('modalParcialTexto').innerText = `Quantas latas deseja pagar para ${nome}?`;
+  document.getElementById('inputParcial').value = '';
+  document.getElementById('modalParcial').style.display = 'flex';
+}
+
+function confirmarParcial() {
+  const quantidadePagar = parseInt(document.getElementById('inputParcial').value);
   if (isNaN(quantidadePagar) || quantidadePagar <= 0) return alert("Quantidade inválida!");
 
   const hoje = new Date().toISOString().split('T')[0];
@@ -1041,7 +1049,7 @@ function pagarParcialColhedor(nome) {
 
   for (let i = 0; i < colheita.length; i++) {
     const c = colheita[i];
-    if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0 && restante > 0) {
+    if (c.colhedor === colhedorAtual && (c.quantidade - c.pagoParcial) > 0 && restante > 0) {
       const disponivel = c.quantidade - c.pagoParcial;
       const pagarAgora = Math.min(disponivel, restante);
 
@@ -1061,9 +1069,14 @@ function pagarParcialColhedor(nome) {
   if (alterou) {
     db.ref('Colheita').set(colheita).then(() => {
       atualizarColheita();
-      alert(`Pagamento parcial de ${quantidadePagar} latas para ${nome} registrado com sucesso!`);
+      fecharModalParcial();
+      alert(`Pagamento parcial de ${quantidadePagar} latas para ${colhedorAtual} registrado com sucesso!`);
     });
   }
+}
+
+function fecharModalParcial() {
+  document.getElementById('modalParcial').style.display = 'none';
 }
 
 
@@ -1183,6 +1196,19 @@ function exportarRelatorioColheita() {
   a.download = `colheita_${dataHoje}.csv`;
   a.click();
 }
+
+  <!-- Modal Pagamento Parcial -->
+<div id="modalParcial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
+    <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
+    <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
+    <input type="number" id="inputParcial" placeholder="Quantidade de latas" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
+    <div style="margin-top:15px; display:flex; justify-content:space-between;">
+      <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
+      <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
+    </div>
+  </div>
+</div>
   
 // Inicializar ao abrir
 carregarColheita();

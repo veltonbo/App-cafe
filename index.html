@@ -969,8 +969,10 @@ function pagarTudoColhedor(nome) {
   });
 
   if (alterou) {
-    db.ref('Colheita').set([...colheita]);
-    atualizarColheita();
+    db.ref('Colheita').set([...colheita]).then(() => {
+      atualizarColheita();
+      alert(`Pagamento completo para ${nome} registrado com sucesso!`);
+    });
   }
 }
 
@@ -982,7 +984,6 @@ function pagarParcialColhedor(nome) {
   let restante = quantidadePagar;
   let alterou = false;
 
-  // Paga na ordem de datas mais antigas
   colheita.sort((a, b) => a.data.localeCompare(b.data));
 
   for (const c of colheita) {
@@ -1003,8 +1004,10 @@ function pagarParcialColhedor(nome) {
   }
 
   if (alterou) {
-    db.ref('Colheita').set([...colheita]);
-    atualizarColheita();
+    db.ref('Colheita').set([...colheita]).then(() => {
+      atualizarColheita();
+      alert(`Pagamento parcial de ${quantidadePagar} latas para ${nome} registrado com sucesso!`);
+    });
   }
 }
 

@@ -155,8 +155,6 @@
   </style>
 </head>
 
-<body onload="inicializarApp()">
-
 <!-- ========== INÍCIO MENU SUPERIOR ========== -->
 <div class="menu-superior">
   <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
@@ -1159,6 +1157,9 @@
 
 <script>
   // ========== INICIALIZAÇÃO FINAL ==========
-  carregarColheita();
-  carregarValorLata();
+  window.onload = function () {
+    inicializarApp();
+    carregarColheita();
+    carregarValorLata();
+  };
 </script>

@@ -346,6 +346,16 @@
     <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
   </div>
 </div>
+
+   <!-- Consultar Safras Anteriores -->
+<h4>Consultar Safras Anteriores</h4>
+<select id="safraConsulta" onchange="consultarSafraAnterior()">
+  <option value="">Selecione o ano</option>
+  <option value="2023">2023</option>
+  <option value="2024">2024</option>
+  <option value="2025">2025</option>
+</select>
+<div id="resultadoSafraAnterior" style="margin-top: 10px;"></div>
 <!-- ========== FIM: ABA COLHEITA ========== -->
 
 <!-- ========== INÍCIO: MODAL PAGAMENTO PARCIAL ========== -->
@@ -1209,6 +1219,37 @@ function fecharSafraAtual() {
       carregarAnoSafra();
       alert(`Safra ${anoAtualSafra - 1} encerrada e arquivada com sucesso! Agora iniciando safra ${anoAtualSafra}.`);
     });
+  });
+}
+
+   function consultarSafraAnterior() {
+  const ano = document.getElementById('safraConsulta').value;
+  const container = document.getElementById('resultadoSafraAnterior');
+  container.innerHTML = '';
+
+  if (!ano) return;
+
+  db.ref(`Colheita_${ano}`).once('value').then(snap => {
+    if (!snap.exists()) {
+      container.innerHTML = `<div class="item">Nenhum dado encontrado para ${ano}.</div>`;
+      return;
+    }
+
+    const dados = snap.val();
+    let totalLatas = 0;
+    let totalPago = 0;
+
+    dados.forEach(c => {
+      const pago = (c.pagoParcial || 0) * (c.valorLata || 0);
+      totalLatas += c.quantidade;
+      totalPago += pago;
+    });
+
+    container.innerHTML = `
+      <div class="item"><strong>Safra ${ano}</strong></div>
+      <div class="item">Total de Latas: ${totalLatas}</div>
+      <div class="item">Total Pago: R$ ${totalPago.toFixed(2)}</div>
+    `;
   });
 }
 </script>

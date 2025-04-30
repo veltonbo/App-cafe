@@ -363,7 +363,7 @@
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
     <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
     <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
-    <input type="number" id="inputParcial" placeholder="Quantidade de latas" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
+<input type="number" id="inputParcial" placeholder="Valor a pagar (R$)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
     <div style="margin-top:15px; display:flex; justify-content:space-between;">
       <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
       <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
@@ -1048,52 +1048,59 @@
     }
   }
 
-  let colhedorAtual = '';
   function pagarParcialColhedor(nome) {
-    colhedorAtual = nome;
-    document.getElementById('modalParcialTexto').innerText = `Quantas latas deseja pagar para ${nome}?`;
-    document.getElementById('inputParcial').value = '';
-    document.getElementById('modalParcial').style.display = 'flex';
-  }
+  colhedorAtual = nome;
+  document.getElementById('modalParcialTexto').innerText = `Qual valor (R$) deseja pagar para ${nome}?`;
+  document.getElementById('inputParcial').value = '';
+  document.getElementById('modalParcial').style.display = 'flex';
+}
 
   function confirmarParcial() {
-    const quantidadePagar = parseInt(document.getElementById('inputParcial').value);
-    if (isNaN(quantidadePagar) || quantidadePagar <= 0) return alert("Quantidade inválida!");
+  const valorPagar = parseFloat(document.getElementById('inputParcial').value);
+  if (isNaN(valorPagar) || valorPagar <= 0) return alert("Valor inválido!");
 
-    const hoje = new Date().toISOString().split('T')[0];
-    let restante = quantidadePagar;
-    let alterou = false;
+  const hoje = new Date().toISOString().split('T')[0];
+  let restanteValor = valorPagar;
+  let alterou = false;
 
-    colheita.sort((a, b) => a.data.localeCompare(b.data));
+  colheita.sort((a, b) => a.data.localeCompare(b.data));
 
-    for (let i = 0; i < colheita.length; i++) {
-      const c = colheita[i];
-      if (c.colhedor === colhedorAtual && (c.quantidade - c.pagoParcial) > 0 && restante > 0) {
-        const disponivel = c.quantidade - c.pagoParcial;
-        const pagarAgora = Math.min(disponivel, restante);
+  for (let i = 0; i < colheita.length; i++) {
+    const c = colheita[i];
+    if (c.colhedor === colhedorAtual && (c.quantidade - c.pagoParcial) > 0 && restanteValor > 0) {
+      const disponivelLatas = c.quantidade - c.pagoParcial;
+      const valorLata = c.valorLata || 0;
+      const valorDisponivel = disponivelLatas * valorLata;
 
-        c.pagoParcial += pagarAgora;
+      const valorParaEssa = Math.min(valorDisponivel, restanteValor);
+      const latasParaPagar = Math.floor(valorParaEssa / valorLata);
+
+      if (latasParaPagar > 0) {
+        c.pagoParcial += latasParaPagar;
         c.historicoPagamentos = c.historicoPagamentos || [];
-        c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
+        c.historicoPagamentos.push({ data: hoje, quantidade: latasParaPagar });
 
         if (c.pagoParcial >= c.quantidade) {
           c.pagoParcial = c.quantidade;
           c.pago = true;
         }
 
-        restante -= pagarAgora;
+        restanteValor -= latasParaPagar * valorLata;
         alterou = true;
       }
     }
-
-    if (alterou) {
-      db.ref('Colheita').set(colheita).then(() => {
-        atualizarColheita();
-        fecharModalParcial();
-        alert(`Pagamento parcial de ${quantidadePagar} latas para ${colhedorAtual} registrado com sucesso!`);
-      });
-    }
   }
+
+  if (alterou) {
+    db.ref('Colheita').set(colheita).then(() => {
+      atualizarColheita();
+      fecharModalParcial();
+      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} para ${colhedorAtual} registrado com sucesso!`);
+    });
+  } else {
+    alert("O valor informado não foi suficiente para pagar nenhuma lata.");
+  }
+}
 
   function fecharModalParcial() {
     document.getElementById('modalParcial').style.display = 'none';

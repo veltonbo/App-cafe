@@ -1177,6 +1177,40 @@
     a.download = `colheita_${dataHoje}.csv`;
     a.click();
   }
+
+   // ========== CONTROLE DE SAFRA ==========
+let anoAtualSafra = new Date().getFullYear();
+
+function carregarAnoSafra() {
+  db.ref('AnoAtualSafra').once('value').then(snap => {
+    if (snap.exists()) {
+      anoAtualSafra = snap.val();
+    } else {
+      db.ref('AnoAtualSafra').set(anoAtualSafra);
+    }
+    document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
+  });
+}
+
+function fecharSafraAtual() {
+  if (!confirm(`Tem certeza que deseja fechar a safra ${anoAtualSafra}? Os dados serão arquivados.`)) return;
+
+  const proximaSafra = anoAtualSafra + 1;
+
+  // Salvar os dados atuais no histórico da safra encerrada
+  db.ref(`Colheita_${anoAtualSafra}`).set(colheita).then(() => {
+    // Limpar Colheita atual
+    db.ref('Colheita').set([]).then(() => {
+      // Atualizar valor da safra atual
+      anoAtualSafra = proximaSafra;
+      db.ref('AnoAtualSafra').set(anoAtualSafra);
+      colheita.length = 0;
+      atualizarColheita();
+      carregarAnoSafra();
+      alert(`Safra ${anoAtualSafra - 1} encerrada e arquivada com sucesso! Agora iniciando safra ${anoAtualSafra}.`);
+    });
+  });
+}
 </script>
 
 <script>
@@ -1185,5 +1219,6 @@
     inicializarApp();
     carregarColheita();
     carregarValorLata();
+    carregarAnoSafra();
   };
 </script>

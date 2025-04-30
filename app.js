@@ -324,3 +324,9 @@ function inicializarApp() {
   carregarFinanceiro();
   carregarColheita();
 }
+
+<script>
+  const firebaseConfig = { ... }
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>

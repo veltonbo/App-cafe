@@ -1196,29 +1196,34 @@ function carregarAnoSafra() {
   db.ref('AnoAtualSafra').once('value').then(snap => {
     if (snap.exists()) {
       anoAtualSafra = snap.val();
+      document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
     } else {
+      anoAtualSafra = new Date().getFullYear();
       db.ref('AnoAtualSafra').set(anoAtualSafra);
+      document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
     }
-    document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
   });
 }
 
 function fecharSafraAtual() {
-  if (!confirm(`Tem certeza que deseja fechar a safra ${anoAtualSafra}? Os dados serão arquivados.`)) return;
+  if (!colheita.length) {
+    alert("Não há dados de colheita para encerrar.");
+    return;
+  }
+
+  if (!confirm(`Deseja realmente encerrar a safra ${anoAtualSafra}? Todos os dados serão arquivados e o novo ano será iniciado.`)) return;
 
   const proximaSafra = anoAtualSafra + 1;
 
-  // Salvar os dados atuais no histórico da safra encerrada
   db.ref(`Colheita_${anoAtualSafra}`).set(colheita).then(() => {
-    // Limpar Colheita atual
     db.ref('Colheita').set([]).then(() => {
-      // Atualizar valor da safra atual
       anoAtualSafra = proximaSafra;
-      db.ref('AnoAtualSafra').set(anoAtualSafra);
-      colheita.length = 0;
-      atualizarColheita();
-      carregarAnoSafra();
-      alert(`Safra ${anoAtualSafra - 1} encerrada e arquivada com sucesso! Agora iniciando safra ${anoAtualSafra}.`);
+      db.ref('AnoAtualSafra').set(anoAtualSafra).then(() => {
+        colheita.length = 0;
+        atualizarColheita();
+        carregarAnoSafra();
+        alert(`Safra ${anoAtualSafra - 1} encerrada e arquivada com sucesso! Agora iniciando a safra ${anoAtualSafra}.`);
+      });
     });
   });
 }
@@ -1258,34 +1263,31 @@ function fecharSafraAtual() {
   const ano = document.getElementById('safraConsulta').value;
   if (!ano) return alert("Selecione um ano para restaurar.");
 
-  if (!confirm(`Tem certeza que deseja restaurar a safra ${ano} como atual? A safra atual será salva antes de ser substituída.`)) return;
+  if (!confirm(`Tem certeza que deseja restaurar a safra ${ano} como atual? A safra atual será salva como backup.`)) return;
 
-  const anoAtual = new Date().getFullYear();
-
-  // 1. Backup da safra atual
+  // Backup da safra atual
   db.ref('Colheita').once('value').then(snapAtual => {
-    if (snapAtual.exists()) {
-      const dadosAtuais = snapAtual.val();
-      db.ref(`Colheita_${anoAtual}`).set(dadosAtuais).then(() => {
-        console.log(`Backup da safra ${anoAtual} salvo.`);
+    const dadosAtuais = snapAtual.exists() ? snapAtual.val() : [];
 
-        // 2. Restauração da safra selecionada
-        db.ref(`Colheita_${ano}`).once('value').then(snapAntiga => {
-          if (!snapAntiga.exists()) {
-            alert(`Nenhum dado encontrado para ${ano}.`);
-            return;
-          }
+    db.ref(`Colheita_${anoAtualSafra}`).set(dadosAtuais).then(() => {
+      // Restaurar a safra selecionada
+      db.ref(`Colheita_${ano}`).once('value').then(snapAntiga => {
+        if (!snapAntiga.exists()) {
+          alert(`Nenhum dado encontrado para a safra ${ano}.`);
+          return;
+        }
 
-          const dadosRestaurados = snapAntiga.val();
-          db.ref('Colheita').set(dadosRestaurados).then(() => {
-            alert(`Safra ${ano} restaurada como safra atual com sucesso!`);
+        const dadosRestaurados = snapAntiga.val();
+        db.ref('Colheita').set(dadosRestaurados).then(() => {
+          anoAtualSafra = parseInt(ano);
+          db.ref('AnoAtualSafra').set(anoAtualSafra).then(() => {
+            carregarAnoSafra();
             carregarColheita();
+            alert(`Safra ${ano} restaurada como atual com sucesso.`);
           });
         });
       });
-    } else {
-      alert("Não há safra atual para fazer backup.");
-    }
+    });
   });
 }
 </script>

@@ -382,6 +382,8 @@
 <h3>Safra</h3>
 <p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
 <button onclick="fecharSafraAtual()">Fechar Safra Atual</button>
+<button onclick="restaurarSafra()">Restaurar Safra Selecionada como Atual</button>
+</div>
 <!-- ========== FIM: ABA CONFIGURAÇÕES ========== -->
 
 </div> <!-- Fim da div .conteudo -->
@@ -1250,6 +1252,41 @@ function fecharSafraAtual() {
       <div class="item">Total de Latas: ${totalLatas}</div>
       <div class="item">Total Pago: R$ ${totalPago.toFixed(2)}</div>
     `;
+  });
+}
+
+   function restaurarSafra() {
+  const ano = document.getElementById('safraConsulta').value;
+  if (!ano) return alert("Selecione um ano para restaurar.");
+
+  if (!confirm(`Tem certeza que deseja restaurar a safra ${ano} como atual? A safra atual será salva antes de ser substituída.`)) return;
+
+  const anoAtual = new Date().getFullYear();
+
+  // 1. Backup da safra atual
+  db.ref('Colheita').once('value').then(snapAtual => {
+    if (snapAtual.exists()) {
+      const dadosAtuais = snapAtual.val();
+      db.ref(`Colheita_${anoAtual}`).set(dadosAtuais).then(() => {
+        console.log(`Backup da safra ${anoAtual} salvo.`);
+
+        // 2. Restauração da safra selecionada
+        db.ref(`Colheita_${ano}`).once('value').then(snapAntiga => {
+          if (!snapAntiga.exists()) {
+            alert(`Nenhum dado encontrado para ${ano}.`);
+            return;
+          }
+
+          const dadosRestaurados = snapAntiga.val();
+          db.ref('Colheita').set(dadosRestaurados).then(() => {
+            alert(`Safra ${ano} restaurada como safra atual com sucesso!`);
+            carregarColheita();
+          });
+        });
+      });
+    } else {
+      alert("Não há safra atual para fazer backup.");
+    }
   });
 }
 </script>

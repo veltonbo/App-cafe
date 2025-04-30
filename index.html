@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
 
-  <!-- Estilo -->
-  <link rel="stylesheet" href="estilo.css" />
-
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -18,11 +15,66 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Script principal -->
-  <script src="app.js" defer></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="estilo.css" />
 </head>
 
 <body>
-  <!-- Conteúdo será carregado dinamicamente via app.js -->
+  <script>
+    window.onload = function () {
+      inicializarApp();
+      mostrarSubmenuColheita('colheitaRegistrar');
+    };
+  </script>
+
+  <!-- Conteúdo da interface -->
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;">!</span></button>
+    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  </div>
+
+  <div class="conteudo">
+    <!-- Cada aba fica aqui dentro -->
+    <div id="aplicacoes" class="aba">... (conteúdo da aba Aplicações) ...</div>
+    <div id="tarefas" class="aba">... (conteúdo da aba Tarefas) ...</div>
+    <div id="financeiro" class="aba">... (conteúdo da aba Financeiro) ...</div>
+    <div id="relatorio" class="aba">... (conteúdo da aba Relatório) ...</div>
+    <div id="configuracoes" class="aba">... (conteúdo da aba Configurações) ...</div>
+  </div>
+
+  <div id="colheita" class="aba">
+    <!-- Submenu e seções da aba Colheita -->
+    <div class="menu-superior" style="margin-bottom: 20px;">
+      <button id="btn-colheita-registrar" onclick="mostrarSubmenuColheita('colheitaRegistrar')"><i class="fas fa-plus"></i></button>
+      <button id="btn-colheita-lancamentos" onclick="mostrarSubmenuColheita('colheitaLancamentos')"><i class="fas fa-list"></i></button>
+      <button id="btn-colheita-relatorio" onclick="mostrarSubmenuColheita('colheitaRelatorio')"><i class="fas fa-chart-bar"></i></button>
+    </div>
+    <div id="colheitaRegistrar" class="colheita-subaba">... (conteúdo do formulário de colheita) ...</div>
+    <div id="colheitaLancamentos" class="colheita-subaba" style="display:none;">... (lista de lançamentos) ...</div>
+    <div id="colheitaRelatorio" class="colheita-subaba" style="display:none;">... (relatórios da colheita) ...</div>
+  </div>
+
+  <!-- Modal de pagamento parcial -->
+  <div id="modalParcial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
+      <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
+      <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
+      <input type="number" id="inputParcial" placeholder="Quantidade de latas" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
+      <div style="margin-top:15px; display:flex; justify-content:space-between;">
+        <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
+        <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts finais -->
+  <script src="app.js"></script>
 </body>
 </html>

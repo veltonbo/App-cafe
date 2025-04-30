@@ -897,62 +897,61 @@
   }
 
   function atualizarColheita() {
-    const filtro = pesquisaColheita.value.toLowerCase();
-    const inicio = filtroDataInicio.value;
-    const fim = filtroDataFim.value;
+  const filtro = pesquisaColheita.value.toLowerCase();
+  const inicio = filtroDataInicio.value;
+  const fim = filtroDataFim.value;
 
-    colheitaPendentes.innerHTML = '';
-    colheitaPagos.innerHTML = '';
+  colheitaPendentes.innerHTML = '';
+  colheitaPagos.innerHTML = '';
 
-    const agrupadoPendentes = {};
-    const agrupadoPagos = {};
+  const agrupadoPendentes = {};
+  const agrupadoPagos = {};
 
-    colheita.filter(c =>
-  (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
-  (!inicio || c.data >= inicio) &&
-  (!fim || c.data <= fim)
-).forEach((c, i) => {
-  if (c.pagoParcial > 0) {
-  // Parte PAGA
-  if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
-  agrupadoPagos[c.colhedor].push({
-    ...c,
-    quantidade: c.pagoParcial,
-    pago: true,
-    i
+  colheita.filter(c =>
+    (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
+    (!inicio || c.data >= inicio) &&
+    (!fim || c.data <= fim)
+  ).forEach((c, i) => {
+    if (c.pagoParcial > 0) {
+      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+      agrupadoPagos[c.colhedor].push({
+        ...c,
+        quantidade: c.pagoParcial,
+        pago: true,
+        i
+      });
+    }
+
+    if (c.pagoParcial < c.quantidade) {
+      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+      agrupadoPendentes[c.colhedor].push({
+        ...c,
+        quantidade: c.quantidade - c.pagoParcial,
+        pago: false,
+        i
+      });
+    }
   });
+
+  // Correto: salvar após o forEach
+  db.ref('Colheita').set(colheita);
+
+  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+  montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
+
+  gerarGraficoColheita();
+  gerarGraficoColhedor();
+
+  const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+  const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * (c.valorLata || 0), 0);
+  const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
+
+  document.getElementById('resumoColheita').innerHTML = `
+    <div class="item"><strong>Total de Latas:</strong> ${totalLatas}</div>
+    <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
+    <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+  `;
 }
-
-if (c.pagoParcial < c.quantidade) {
-  // Parte PENDENTE
-  if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
-  agrupadoPendentes[c.colhedor].push({
-    ...c,
-    quantidade: c.quantidade - c.pagoParcial,
-    pago: false,
-    i
-  });
-}
-
-// Salva os dados atualizados no Firebase
-db.ref('Colheita').set(colheita);
-
-    montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
-    montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
-
-    gerarGraficoColheita();
-    gerarGraficoColhedor();
-
-    const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
-    const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * (c.valorLata || 0), 0);
-    const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
-
-    document.getElementById('resumoColheita').innerHTML = `
-      <div class="item"><strong>Total de Latas:</strong> ${totalLatas}</div>
-      <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
-      <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
-    `;
-  }
 
   function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {

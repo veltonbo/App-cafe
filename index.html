@@ -1321,6 +1321,7 @@ function fecharSafraAtual() {
             carregarAnoSafra();
             carregarColheita();
             alert(`Safra ${ano} restaurada como atual com sucesso.`);
+            document.getElementById('safraSelecionada').value = '';
           });
         });
       });

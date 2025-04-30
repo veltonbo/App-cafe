@@ -1208,13 +1208,22 @@
 let anoAtualSafra = new Date().getFullYear();
 
 function carregarAnoSafra() {
+  const anoSistema = new Date().getFullYear();
+
   db.ref('AnoAtualSafra').once('value').then(snap => {
     if (snap.exists() && snap.val()) {
-      anoAtualSafra = snap.val();
+      const anoSalvo = parseInt(snap.val());
+      if (isNaN(anoSalvo) || anoSalvo < 2000 || anoSalvo > anoSistema + 1) {
+        anoAtualSafra = anoSistema;
+        db.ref('AnoAtualSafra').set(anoAtualSafra);
+      } else {
+        anoAtualSafra = anoSalvo;
+      }
     } else {
-      anoAtualSafra = new Date().getFullYear();
+      anoAtualSafra = anoSistema;
       db.ref('AnoAtualSafra').set(anoAtualSafra);
     }
+
     document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
   });
 }

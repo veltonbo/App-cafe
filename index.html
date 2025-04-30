@@ -246,7 +246,13 @@
   </style>
 </head>
 
-<body onload="inicializarApp()">
+<body>
+<script>
+  window.onload = function() {
+    inicializarApp();
+    mostrarSubmenuColheita('colheitaRegistrar');
+  };
+</script>
 
 <div class="menu-superior">
   <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
@@ -387,10 +393,10 @@
 
   <!-- Submenu -->
   <div class="menu-superior" style="margin-bottom: 20px;">
-    <button id="btn-colheita-registrar" onclick="mostrarSubmenuColheita('colheitaRegistrar')"><i class="fas fa-plus"></i></button>
-    <button id="btn-colheita-lancamentos" onclick="mostrarSubmenuColheita('colheitaLancamentos')"><i class="fas fa-list"></i></button>
-    <button id="btn-colheita-relatorio" onclick="mostrarSubmenuColheita('colheitaRelatorio')"><i class="fas fa-chart-bar"></i></button>
-  </div>
+  <button id="btn-colheita-registrar" onclick="mostrarSubmenuColheita('colheitaRegistrar')"><i class="fas fa-plus"></i></button>
+  <button id="btn-colheita-lancamentos" onclick="mostrarSubmenuColheita('colheitaLancamentos')"><i class="fas fa-list"></i></button>
+  <button id="btn-colheita-relatorio" onclick="mostrarSubmenuColheita('colheitaRelatorio')"><i class="fas fa-chart-bar"></i></button>
+</div>
 
   <!-- REGISTRAR -->
 <div id="colheitaRegistrar" class="colheita-subaba">
@@ -1237,21 +1243,15 @@ function exportarRelatorioColheita() {
   a.click();
 }
 
-  function mostrarSubColheita(id) {
-  document.querySelectorAll('.subcolheita').forEach(s => s.style.display = 'none');
-  document.querySelectorAll('.menu-superior button').forEach(b => b.classList.remove('active'));
-  document.getElementById('colheita-' + id).style.display = 'block';
-  document.getElementById('btn-colheita-' + id).classList.add('active');
-}
-
   function mostrarSubmenuColheita(id) {
   document.querySelectorAll('.colheita-subaba').forEach(div => div.style.display = 'none');
   document.getElementById(id).style.display = 'block';
 
   document.querySelectorAll('#colheita .menu-superior button').forEach(btn => btn.classList.remove('active'));
-  const btnId = 'btn-' + id;
-  const botao = document.getElementById(btnId);
-  if (botao) botao.classList.add('active');
+  
+  if (id === 'colheitaRegistrar') document.getElementById('btn-colheita-registrar').classList.add('active');
+  else if (id === 'colheitaLancamentos') document.getElementById('btn-colheita-lancamentos').classList.add('active');
+  else if (id === 'colheitaRelatorio') document.getElementById('btn-colheita-relatorio').classList.add('active');
 }
   </script>
 

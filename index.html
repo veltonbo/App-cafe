@@ -379,9 +379,24 @@
 
   <hr style="margin: 20px 0;">
   <h3>Safra</h3>
-  <p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
-  <button onclick="fecharSafraAtual()">Fechar Safra Atual</button>
-  <button onclick="restaurarSafra()">Restaurar Safra Selecionada como Atual</button>
+<p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
+
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+  <button onclick="fecharSafraAtual()" style="background-color: #ff9800;">
+    <i class="fas fa-archive"></i> Fechar Safra Atual
+  </button>
+
+  <select id="safraSelecionada" style="margin-top: 10px;">
+  <option value="">Carregando safras disponíveis...</option>
+</select>
+
+  <button onclick="restaurarSafra()" style="background-color: #29b6f6;">
+    <i class="fas fa-undo-alt"></i> Restaurar Safra Selecionada
+  </button>
+
+  <button onclick="deletarSafra()" style="background-color: #f44336;">
+    <i class="fas fa-trash-alt"></i> Deletar Safra Selecionada
+  </button>
 </div>
 <!-- ========== FIM: ABA CONFIGURAÇÕES ========== -->
 
@@ -1205,6 +1220,28 @@ function carregarAnoSafra() {
   });
 }
 
+  function carregarSafrasDisponiveis() {
+  const select = document.getElementById('safraSelecionada');
+  select.innerHTML = '<option value="">Selecione a safra para restaurar ou deletar</option>';
+
+  db.ref().once('value').then(snap => {
+    const dados = snap.val();
+    const chaves = Object.keys(dados || {});
+
+    chaves.filter(k => k.startsWith('Colheita_')).forEach(chave => {
+      const ano = chave.split('_')[1];
+      const option = document.createElement('option');
+      option.value = ano;
+      option.textContent = `Safra ${ano}`;
+      select.appendChild(option);
+    });
+
+    if (select.options.length === 1) {
+      select.innerHTML = '<option value="">Nenhuma safra encontrada</option>';
+    }
+  });
+}
+
 function fecharSafraAtual() {
   if (!colheita.length) {
     alert("Não há dados de colheita para encerrar.");
@@ -1290,6 +1327,20 @@ function fecharSafraAtual() {
     });
   });
 }
+
+   function deletarSafra() {
+  const ano = document.getElementById('safraSelecionada').value;
+  if (!ano) return alert("Selecione uma safra para deletar.");
+
+  const confirma = confirm(`Tem certeza que deseja excluir permanentemente todos os dados da Safra ${ano}? Esta ação não poderá ser desfeita.`);
+  if (!confirma) return;
+
+  db.ref(`Colheita_${ano}`).remove().then(() => {
+    alert(`Safra ${ano} deletada com sucesso.`);
+  }).catch(() => {
+    alert("Erro ao deletar a safra.");
+  });
+}
 </script>
 
 <script>
@@ -1299,5 +1350,6 @@ function fecharSafraAtual() {
     carregarColheita();
     carregarValorLata();
     carregarAnoSafra();
+    carregarSafrasDisponiveis();
   };
 </script>

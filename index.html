@@ -309,7 +309,7 @@
   <h4>Registrar Nova Colheita</h4>
   <input id="dataColheita" type="date" />
   <input id="colhedor" placeholder="Nome do Colhedor" />
-  <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" />
+  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas" />
   <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
 
   <!-- Filtros -->
@@ -905,7 +905,7 @@
     const nova = {
       data: dataColheita.value,
       colhedor: colhedor.value.trim(),
-      quantidade: parseInt(quantidadeLatas.value),
+      quantidade: parseFloat(quantidadeLatas.value),
       valorLata: valorLataGlobal,
       pago: false,
       pagoParcial: 0,

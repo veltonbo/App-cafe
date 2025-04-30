@@ -1297,7 +1297,7 @@ function fecharSafraAtual() {
 }
 
    function restaurarSafra() {
-  const ano = document.getElementById('safraConsulta').value;
+  const ano = document.getElementById('safraSelecionada').value;
   if (!ano) return alert("Selecione um ano para restaurar.");
 
   if (!confirm(`Tem certeza que deseja restaurar a safra ${ano} como atual? A safra atual será salva como backup.`)) return;
@@ -1337,7 +1337,8 @@ function fecharSafraAtual() {
 
   db.ref(`Colheita_${ano}`).remove().then(() => {
     alert(`Safra ${ano} deletada com sucesso.`);
-  }).catch(() => {
+    carregarSafrasDisponiveis();
+    }).catch(() => {
     alert("Erro ao deletar a safra.");
   });
 }

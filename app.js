@@ -1,4 +1,4 @@
-// Firebase Config
+// Inicializar Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -8,10 +8,13 @@ const firebaseConfig = {
   messagingSenderId: "808931200634",
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
-
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+window.addEventListener("DOMContentLoaded", () => {
+  inicializarApp();
+  mostrarSubmenuColheita('colheitaRegistrar');
+});
 
 // Variáveis globais
 const aplicacoes = [], tarefas = [], tarefasFeitas = [], financeiro = [], colheita = [];

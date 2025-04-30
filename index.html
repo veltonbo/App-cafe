@@ -957,7 +957,7 @@ db.ref('Colheita').set(colheita);
   function montarGrupoColheita(grupo, container, pago) {
     for (const nome in grupo) {
       const registros = grupo[nome];
-      const totalLatas = registros.reduce((sum, c) => sum + (c.quantidade - (pago ? 0 : c.pagoParcial)), 0);
+      const totalLatas = registros.reduce((sum, c) => sum + c.quantidade, 0);
       const valorLata = registros[0]?.valorLata || 0;
       const valorTotal = totalLatas * valorLata;
 

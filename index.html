@@ -1,56 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
 
-  <!-- CSS Externo -->
-  <link rel="stylesheet" href="estilo.css">
+  <!-- Estilo -->
+  <link rel="stylesheet" href="estilo.css" />
 
-  <!-- Firebase Compat -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Script principal -->
+  <script src="app.js" defer></script>
 </head>
 
 <body>
-  <!-- Menu e conteúdo do app -->
-  <div class="menu-superior">
-    <!-- Botões de navegação -->
-    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
-    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i><span id="notificacao-financeiro" class="notificacao" style="display:none;">!</span></button>
-    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
-    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
-    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
-  </div>
-
-  <div class="conteudo">
-    <!-- As abas e menus serão carregados dinamicamente pelo JS -->
-    <div id="app-content"></div>
-  </div>
-
-  <!-- Modal para pagamento parcial -->
-  <div id="modalParcial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
-      <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
-      <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
-      <input type="number" id="inputParcial" placeholder="Quantidade de latas" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
-      <div style="margin-top:15px; display:flex; justify-content:space-between;">
-        <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
-        <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Script principal -->
-  <script src="app.js"></script>
+  <!-- Conteúdo será carregado dinamicamente via app.js -->
 </body>
 </html>

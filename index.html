@@ -912,15 +912,27 @@
   (!inicio || c.data >= inicio) &&
   (!fim || c.data <= fim)
 ).forEach((c, i) => {
-  if (c.pagoParcial >= c.quantidade) {
-    c.pagoParcial = c.quantidade;
-    c.pago = true;
-  }
+  if (c.pagoParcial > 0) {
+  // Parte PAGA
+  if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+  agrupadoPagos[c.colhedor].push({
+    ...c,
+    quantidade: c.pagoParcial,
+    pago: true,
+    i
+  });
+}
 
-  const grupo = (c.pago || c.pagoParcial >= c.quantidade) ? agrupadoPagos : agrupadoPendentes;
-  if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
-  grupo[c.colhedor].push({ ...c, i });
-});
+if (c.pagoParcial < c.quantidade) {
+  // Parte PENDENTE
+  if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+  agrupadoPendentes[c.colhedor].push({
+    ...c,
+    quantidade: c.quantidade - c.pagoParcial,
+    pago: false,
+    i
+  });
+}
 
 // Salva os dados atualizados no Firebase
 db.ref('Colheita').set(colheita);

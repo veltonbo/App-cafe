@@ -978,15 +978,16 @@
   const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
 
   document.getElementById('resumoColheita').innerHTML = `
-  <div class="item"><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
-  <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
-  <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
-`;
+    <div class="item"><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
+    <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
+    <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+  `;
+}
 
   function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {
     const registros = grupo[nome];
-    const totalLatas = registros.reduce((sum, c) => sum + c.quantidade, 0); // CORRETO
+    const totalLatas = registros.reduce((sum, c) => sum + c.quantidade, 0);
     const valorLata = registros[0]?.valorLata || 0;
     const valorTotal = totalLatas * valorLata;
 
@@ -1002,11 +1003,11 @@
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `
-  <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
-  <div class="botoes-colheita">
-    <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
-  </div>
-  `;
+        <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
+        <div class="botoes-colheita">
+          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+        </div>
+      `;
       bloco.appendChild(div);
     });
 

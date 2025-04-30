@@ -1209,14 +1209,13 @@ let anoAtualSafra = new Date().getFullYear();
 
 function carregarAnoSafra() {
   db.ref('AnoAtualSafra').once('value').then(snap => {
-    if (snap.exists()) {
+    if (snap.exists() && snap.val()) {
       anoAtualSafra = snap.val();
-      document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
     } else {
       anoAtualSafra = new Date().getFullYear();
       db.ref('AnoAtualSafra').set(anoAtualSafra);
-      document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
     }
+    document.getElementById('anoSafraAtual').innerText = anoAtualSafra;
   });
 }
 

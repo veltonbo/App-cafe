@@ -908,14 +908,22 @@
     const agrupadoPagos = {};
 
     colheita.filter(c =>
-      (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
-      (!inicio || c.data >= inicio) &&
-      (!fim || c.data <= fim)
-    ).forEach((c, i) => {
-      const grupo = c.pago || c.pagoParcial === c.quantidade ? agrupadoPagos : agrupadoPendentes;
-      if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
-      grupo[c.colhedor].push({ ...c, i });
-    });
+  (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
+  (!inicio || c.data >= inicio) &&
+  (!fim || c.data <= fim)
+).forEach((c, i) => {
+  if (c.pagoParcial >= c.quantidade) {
+    c.pagoParcial = c.quantidade;
+    c.pago = true;
+  }
+
+  const grupo = (c.pago || c.pagoParcial >= c.quantidade) ? agrupadoPagos : agrupadoPendentes;
+  if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
+  grupo[c.colhedor].push({ ...c, i });
+});
+
+// Salva os dados atualizados no Firebase
+db.ref('Colheita').set(colheita);
 
     montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
     montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
@@ -1028,6 +1036,7 @@
         c.historicoPagamentos.push({ data: hoje, quantidade: pagarAgora });
 
         if (c.pagoParcial >= c.quantidade) {
+          c.pagoParcial = c.quantidade;
           c.pago = true;
         }
 

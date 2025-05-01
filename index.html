@@ -975,6 +975,20 @@
 }
 </script>
 
+  <script>
+  function mostrarAba(abaId) {
+    document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
+    document.getElementById(abaId).classList.add('active');
+
+    document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
+    const btnId = 'btn-' + abaId;
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
+
+    localStorage.setItem('aba', abaId);
+  }
+</script>
+  
 <script>
   // ========== INICIALIZAÇÃO FINAL ==========
   window.onload = function () {

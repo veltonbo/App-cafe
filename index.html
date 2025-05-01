@@ -173,6 +173,22 @@
   margin-top: 10px;
 }
 
+  .botao-excluir-pagamento {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-right: 5px;
+}
+
+.botao-excluir-pagamento:hover {
+  background-color: #fb8c00;
+} 
+
   </style>
 </head>
 
@@ -1029,7 +1045,7 @@
         <div class="botoes-colheita">
           ${pago
             ? `
-              <button class="botao-excluir" onclick="excluirPagamento(${i})">Excluir Pagamento</button>
+              <button class="botao-excluir-pagamento" onclick="excluirPagamento(${i})">Excluir Pagamento</button>
               <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir Lançamento</button>
             `
             : `

@@ -1027,7 +1027,14 @@
       div.innerHTML = `
         <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
         <div class="botoes-colheita">
-          <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+          ${pago
+            ? `
+              <button class="botao-excluir" onclick="excluirPagamento(${i})">Excluir Pagamento</button>
+              <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir Lançamento</button>
+            `
+            : `
+              <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>
+            `}
         </div>
       `;
       bloco.appendChild(div);
@@ -1138,6 +1145,23 @@
       atualizarColheita();
     }
   }
+
+  function excluirPagamento(index) {
+  const c = colheita[index];
+  if (!c || c.pagoParcial === 0) return;
+
+  const confirmar = confirm("Deseja excluir somente o pagamento deste lançamento? A quantidade voltará como pendente.");
+  if (!confirmar) return;
+
+  c.pagoParcial = 0;
+  c.pago = false;
+  c.historicoPagamentos = [];
+
+  db.ref('Colheita').set(colheita).then(() => {
+    atualizarColheita();
+    alert("Pagamento excluído e valor retornado como pendente.");
+  });
+}
 
   function gerarGraficoColheita() {
   const ctx = document.getElementById('graficoColheita').getContext('2d');

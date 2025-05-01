@@ -1056,7 +1056,7 @@
 }
 
   function confirmarParcial() {
-  const latasParaPagar = Math.floor((valorParaEssa / valorLata) * 100) / 100;
+  const valorPagar = parseFloat(document.getElementById('inputParcial').value);
   if (isNaN(valorPagar) || valorPagar <= 0) return alert("Valor inválido!");
 
   const hoje = new Date().toISOString().split('T')[0];
@@ -1073,7 +1073,9 @@
       const valorDisponivel = disponivelLatas * valorLata;
 
       const valorParaEssa = Math.min(valorDisponivel, restanteValor);
-      const latasParaPagar = Math.round((valorParaEssa / valorLata) * 100) / 100;
+
+      // Ajuste: arredondar para baixo com 2 casas decimais
+      const latasParaPagar = Math.floor((valorParaEssa / valorLata) * 100) / 100;
 
       if (latasParaPagar > 0) {
         c.pagoParcial += latasParaPagar;
@@ -1090,6 +1092,17 @@
       }
     }
   }
+
+  if (alterou) {
+    db.ref('Colheita').set(colheita).then(() => {
+      atualizarColheita();
+      fecharModalParcial();
+      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} para ${colhedorAtual} registrado com sucesso!`);
+    });
+  } else {
+    alert("O valor informado não foi suficiente para pagar nenhuma lata.");
+  }
+}
 
   if (alterou) {
     db.ref('Colheita').set(colheita).then(() => {

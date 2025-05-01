@@ -625,6 +625,132 @@
   }
 </script>
 
+  <script>
+// ========== FINANCEIRO ==========
+const gastos = [];
+let graficoGastosChart;
+
+function adicionarFinanceiro() {
+  const gasto = {
+    data: dataFin.value,
+    produto: produtoFin.value,
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false
+  };
+
+  if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
+
+  gastos.push(gasto);
+  db.ref('Financeiro').set(gastos);
+  atualizarFinanceiro();
+
+  dataFin.value = '';
+  produtoFin.value = '';
+  valorFin.value = '';
+}
+
+function atualizarFinanceiro() {
+  const filtro = pesquisaFinanceiro.value.toLowerCase();
+  const venc = document.getElementById('financeiroVencer');
+  const pagos = document.getElementById('financeiroPago');
+  venc.innerHTML = '';
+  pagos.innerHTML = '';
+
+  const dadosVencer = {};
+  const dadosPago = {};
+
+  gastos.forEach((g, i) => {
+    const txt = `${g.data} ${g.produto} ${g.tipo}`.toLowerCase();
+    if (!txt.includes(filtro)) return;
+
+    const grupo = g.pago ? dadosPago : dadosVencer;
+    if (!grupo[g.data]) grupo[g.data] = [];
+    grupo[g.data].push({ ...g, i });
+  });
+
+  renderizarFinanceiro(dadosVencer, venc, false);
+  renderizarFinanceiro(dadosPago, pagos, true);
+
+  gerarGraficoFinanceiro();
+}
+
+function renderizarFinanceiro(grupo, container, pago) {
+  for (const data in grupo) {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.innerText = data;
+    container.appendChild(titulo);
+
+    grupo[data].forEach(({ produto, valor, tipo, i }) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${produto} - R$ ${valor.toFixed(2)} (${tipo})</span>
+        <div class="botoes-financeiro">
+          ${!pago ? `<button onclick="marcarPago(${i})">Pagar</button>` : ''}
+          <button class="botao-excluir" onclick="excluirFinanceiro(${i})">Excluir</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+}
+
+function marcarPago(index) {
+  if (gastos[index]) {
+    gastos[index].pago = true;
+    db.ref('Financeiro').set(gastos);
+    atualizarFinanceiro();
+  }
+}
+
+function excluirFinanceiro(index) {
+  if (confirm("Deseja realmente excluir este gasto?")) {
+    gastos.splice(index, 1);
+    db.ref('Financeiro').set(gastos);
+    atualizarFinanceiro();
+  }
+}
+
+function carregarFinanceiro() {
+  db.ref('Financeiro').on('value', snap => {
+    if (snap.exists()) {
+      gastos.length = 0;
+      gastos.push(...snap.val());
+      atualizarFinanceiro();
+    }
+  });
+}
+
+function gerarGraficoFinanceiro() {
+  const ctx = document.getElementById('graficoGastos').getContext('2d');
+  if (graficoGastosChart) graficoGastosChart.destroy();
+
+  const categorias = {};
+  gastos.forEach(g => {
+    if (!g.pago) return;
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+  });
+
+  const labels = Object.keys(categorias);
+  const valores = Object.values(categorias);
+
+  graficoGastosChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: valores,
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350']
+      }]
+    }
+  });
+}
+</script>
 
 <script>
   // ========== COLHEITA ==========

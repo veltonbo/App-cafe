@@ -429,3 +429,92 @@
   </div>
 </div>
 <!-- FIM MODAL -->
+
+  <!-- PARTE 5: Scripts Relatório, Configurações, Tema e Inicialização -->
+<script>
+  function mostrarRelatorio(id) {
+    document.querySelectorAll('.relatorio-subaba').forEach(div => div.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+  }
+
+  function exportarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Resumo de Relatório", 20, 20);
+    doc.save("relatorio.pdf");
+  }
+
+  function carregarAnoSafra() {
+    const anoAtual = new Date().getFullYear();
+    document.getElementById("anoSafraAtual").innerText = anoAtual;
+  }
+
+  function carregarSafrasDisponiveis() {
+    db.ref('Safras').once('value', snap => {
+      const select = document.getElementById('safraSelecionada');
+      select.innerHTML = '<option value="">Selecione</option>';
+      if (snap.exists()) {
+        Object.keys(snap.val()).forEach(ano => {
+          const opt = document.createElement('option');
+          opt.value = ano;
+          opt.textContent = ano;
+          select.appendChild(opt);
+        });
+      }
+    });
+  }
+
+  function fecharSafraAtual() {
+    const ano = new Date().getFullYear().toString();
+    db.ref(`Safras/${ano}`).set({
+      aplicacoes,
+      tarefas: [...tarefas, ...tarefasFeitas],
+      financeiro: gastos,
+      colheita
+    }).then(() => alert("Safra fechada com sucesso!"));
+  }
+
+  function restaurarSafra() {
+    const ano = document.getElementById("safraSelecionada").value;
+    if (!ano) return;
+    db.ref(`Safras/${ano}`).once('value').then(snap => {
+      if (!snap.exists()) return alert("Dados não encontrados.");
+      const dados = snap.val();
+      aplicacoes.length = 0;
+      tarefas.length = 0;
+      tarefasFeitas.length = 0;
+      gastos.length = 0;
+      colheita.length = 0;
+
+      aplicacoes.push(...(dados.aplicacoes || []));
+      (dados.tarefas || []).forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+      gastos.push(...(dados.financeiro || []));
+      colheita.push(...(dados.colheita || []));
+
+      db.ref('Aplicacoes').set(aplicacoes);
+      db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
+      db.ref('Financeiro').set(gastos);
+      db.ref('Colheita').set(colheita);
+      atualizarAplicacoes();
+      atualizarTarefas();
+      atualizarFinanceiro();
+      atualizarColheita();
+      alert("Safra restaurada com sucesso!");
+    });
+  }
+
+  function deletarSafra() {
+    const ano = document.getElementById("safraSelecionada").value;
+    if (!ano || !confirm("Deseja deletar a safra selecionada?")) return;
+    db.ref(`Safras/${ano}`).remove().then(() => {
+      alert("Safra deletada.");
+      carregarSafrasDisponiveis();
+    });
+  }
+
+  function alternarTema() {
+    document.body.classList.toggle("claro");
+    const temaAtual = document.body.classList.contains("claro") ? "claro" : "escuro";
+    localStorage.setItem("tema", temaAtual);
+  }
+</script>

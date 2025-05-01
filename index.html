@@ -964,15 +964,20 @@
     a.click();
   }
   
+  <script>
   function inicializarApp() {
-  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+
+    // Aplica tema claro se estiver salvo
+    if (localStorage.getItem('tema') === 'claro') {
+      document.body.classList.add('claro');
+    }
+
+    // Carrega os dados das abas principais
+    carregarAplicacoes?.();
+    carregarTarefas?.();
+    carregarFinanceiro?.();
   }
-  carregarAplicacoes();
-  carregarTarefas();
-  carregarFinanceiro();
-}
 </script>
 
   <script>
@@ -989,15 +994,6 @@
   }
 </script>
 
-  <script>
-  function inicializarApp() {
-    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-    carregarAplicacoes?.();
-    carregarTarefas?.();
-    carregarFinanceiro?.();
-  }
-</script>
-  
 <script>
   // ========== INICIALIZAÇÃO FINAL ==========
   window.onload = function () {

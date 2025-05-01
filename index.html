@@ -963,24 +963,23 @@
     a.download = `colheita_${dataHoje}.csv`;
     a.click();
   }
-  
-  <script>
+
   function inicializarApp() {
     mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
 
-    // Aplica tema claro se estiver salvo
     if (localStorage.getItem('tema') === 'claro') {
       document.body.classList.add('claro');
     }
 
-    // Carrega os dados das abas principais
     carregarAplicacoes?.();
     carregarTarefas?.();
     carregarFinanceiro?.();
+    carregarColheita?.();
+    carregarValorLata?.();
+    carregarAnoSafra?.();
+    carregarSafrasDisponiveis?.();
   }
-</script>
 
-  <script>
   function mostrarAba(abaId) {
     document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
     document.getElementById(abaId).classList.add('active');
@@ -992,15 +991,6 @@
 
     localStorage.setItem('aba', abaId);
   }
-</script>
 
-<script>
-  // ========== INICIALIZAÇÃO FINAL ==========
-  window.onload = function () {
-    inicializarApp();
-    carregarColheita();
-    carregarValorLata();
-    carregarAnoSafra();
-    carregarSafrasDisponiveis();
-  };
+  window.onload = inicializarApp;
 </script>

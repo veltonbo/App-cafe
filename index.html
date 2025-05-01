@@ -1115,6 +1115,17 @@
   }
 }
 
+  if (alterou) {
+    db.ref('Colheita').set(colheita).then(() => {
+      atualizarColheita();
+      fecharModalParcial();
+      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} para ${colhedorAtual} registrado com sucesso!`);
+    });
+  } else {
+    alert("O valor informado não foi suficiente para pagar nenhuma lata.");
+  }
+}
+
   function fecharModalParcial() {
     document.getElementById('modalParcial').style.display = 'none';
   }

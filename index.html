@@ -1121,7 +1121,7 @@
       const valorDisponivel = disponivelLatas * valorLata;
 
       const valorParaEssa = Math.min(valorDisponivel, restanteValor);
-      const latasParaPagar = Math.floor((valorParaEssa / valorLata) * 100) / 100;
+      const latasParaPagar = parseFloat((valorParaEssa / valorLata).toFixed(10)); // Corrigido com alta precisão
 
       if (latasParaPagar > 0) {
         c.pagoParcial += latasParaPagar;
@@ -1134,10 +1134,22 @@
         }
 
         restanteValor -= latasParaPagar * valorLata;
+        restanteValor = parseFloat(restanteValor.toFixed(2)); // Corrige centavos restantes
         alterou = true;
       }
     }
   }
+
+  if (alterou) {
+    db.ref('Colheita').set(colheita).then(() => {
+      atualizarColheita();
+      fecharModalParcial();
+      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} para ${colhedorAtual} registrado com sucesso!`);
+    });
+  } else {
+    alert("O valor informado não foi suficiente para pagar nenhuma lata.");
+  }
+}
 
   if (alterou) {
     db.ref('Colheita').set(colheita).then(() => {

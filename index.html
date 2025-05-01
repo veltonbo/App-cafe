@@ -1056,7 +1056,7 @@
 }
 
   function confirmarParcial() {
-  const valorPagar = parseFloat(document.getElementById('inputParcial').value);
+  const latasParaPagar = Math.floor((valorParaEssa / valorLata) * 100) / 100;
   if (isNaN(valorPagar) || valorPagar <= 0) return alert("Valor inválido!");
 
   const hoje = new Date().toISOString().split('T')[0];

@@ -963,6 +963,16 @@
     a.download = `colheita_${dataHoje}.csv`;
     a.click();
   }
+  
+  function inicializarApp() {
+  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
+  }
+  carregarAplicacoes();
+  carregarTarefas();
+  carregarFinanceiro();
+}
 </script>
 
 <script>

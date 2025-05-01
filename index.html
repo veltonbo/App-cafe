@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0e0e0e;
+      color: #e0e0e0;
+    }
+
+    .menu-superior {
+      display: flex;
+      justify-content: space-around;
+      background: #1a1a1a;
+      padding: 12px 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .menu-superior button {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .menu-superior button.active,
+    .menu-superior button:hover {
+      color: #4caf50;
+    }
+
+    .conteudo {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .aba {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .aba.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #4caf50;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      background: #1e1e1e;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    input::placeholder, select {
+      color: #aaa;
+    }
+
+    button {
+      background-color: #4caf50;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .campo-pesquisa {
+      background: #111;
+      border: 1px solid #333;
+    }
+
+    .grupo-data {
+      margin-top: 25px;
+      font-weight: bold;
+      background: #222;
+      border-left: 4px solid #4caf50;
+      padding: 8px 12px;
+      border-radius: 5px;
+    }
+
+    .item {
+      background: #181818;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 4px solid #66bb6a;
+    }
+
+    .item span {
+      flex: 1;
+      color: #ddd;
+    }
+
+    .botoes {
+      display: flex;
+      gap: 6px;
+    }
+
+    .botao-excluir {
+      background-color: #f44336;
+    }
+
+    .botao-excluir:hover {
+      background-color: #e53935;
+    }
+
+    canvas {
+      background: #1a1a1a;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  </div>
+
+  <div class="conteudo">
+    <!-- As abas do app virão aqui nas próximas partes -->
+
+<!-- INÍCIO ABA APLICAÇÕES -->
+<div id="aplicacoes" class="aba active">
+  <h2>Aplicações</h2>
+
+  <input id="dataApp" type="date" />
+  <input id="produtoApp" placeholder="Produto" />
+  <input id="dosagemApp" placeholder="Dosagem" />
+  <select id="tipoApp">
+    <option value="">Tipo</option>
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+  <select id="setorApp">
+    <option value="">Setor</option>
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+
+  <button onclick="adicionarAplicacao()"><i class="fas fa-save"></i> Salvar Aplicação</button>
+
+  <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()" />
+
+  <div id="listaAplicacoes"></div>
+</div>
+<!-- FIM ABA APLICAÇÕES -->
+
+<script>
+  const aplicacoes = [];
+
+  function adicionarAplicacao() {
+    const nova = {
+      data: dataApp.value,
+      produto: produtoApp.value.trim(),
+      dosagem: dosagemApp.value.trim(),
+      tipo: tipoApp.value,
+      setor: setorApp.value
+    };
+
+    if (!nova.data || !nova.produto || !nova.dosagem || !nova.tipo || !nova.setor) {
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    aplicacoes.push(nova);
+    db.ref("Aplicacoes").set(aplicacoes);
+    atualizarAplicacoes();
+
+    dataApp.value = "";
+    produtoApp.value = "";
+    dosagemApp.value = "";
+    tipoApp.value = "";
+    setorApp.value = "";
+  }
+
+  function atualizarAplicacoes() {
+    const filtroTexto = pesquisaAplicacoes.value.toLowerCase();
+    const filtroSetor = filtroSetorAplicacoes.value;
+    listaAplicacoes.innerHTML = "";
+
+    const agrupado = {};
+
+    aplicacoes
+      .filter(a =>
+        (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtroTexto)) &&
+        (filtroSetor === "" || a.setor === filtroSetor)
+      )
+      .forEach((a, i) => {
+        if (!agrupado[a.data]) agrupado[a.data] = [];
+        agrupado[a.data].push({ ...a, i });
+      });
+
+    for (const data in agrupado) {
+      const titulo = document.createElement("div");
+      titulo.className = "grupo-data";
+      titulo.textContent = data;
+      listaAplicacoes.appendChild(titulo);
+
+      agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
+          <div class="botoes">
+            <button class="botao-excluir" onclick="excluirAplicacao(${i})"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        `;
+        listaAplicacoes.appendChild(item);
+      });
+    }
+  }
+
+  function excluirAplicacao(index) {
+    aplicacoes.splice(index, 1);
+    db.ref("Aplicacoes").set(aplicacoes);
+    atualizarAplicacoes();
+  }
+
+  function carregarAplicacoes() {
+    db.ref("Aplicacoes").on("value", snap => {
+      if (snap.exists()) {
+        aplicacoes.length = 0;
+        aplicacoes.push(...snap.val());
+        atualizarAplicacoes();
+      }
+    });
+  }
+</script>
+
+<!-- INÍCIO ABA TAREFAS -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+
+  <input id="dataTarefa" type="date" />
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa" />
+  <select id="prioridadeTarefa">
+    <option value="">Prioridade</option>
+    <option>Alta</option>
+    <option>Média</option>
+    <option>Baixa</option>
+  </select>
+  <select id="setorTarefa">
+    <option value="">Setor</option>
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+
+  <label style="margin-top:10px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
+  </label>
+
+  <div id="camposAplicacao" style="display:none; margin-top:10px;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option value="">Tipo</option>
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
+
+  <button onclick="adicionarTarefa()"><i class="fas fa-save"></i> Salvar Tarefa</button>
+
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()" />
+
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>
+<!-- FIM ABA TAREFAS -->
+
+<script>
+  const tarefas = [];
+  const tarefasFeitas = [];
+
+  function adicionarTarefa() {
+    const nova = {
+      data: dataTarefa.value,
+      descricao: descricaoTarefa.value.trim(),
+      prioridade: prioridadeTarefa.value,
+      setor: setorTarefa.value,
+      executada: false,
+      eAplicacao: eAplicacaoCheckbox.checked,
+      dosagem: dosagemAplicacao.value,
+      tipoAplicacao: tipoAplicacao.value
+    };
+
+    if (!nova.data || !nova.descricao || !nova.prioridade || !nova.setor) {
+      alert("Preencha todos os campos da tarefa!");
+      return;
+    }
+
+    tarefas.push(nova);
+    salvarTarefas();
+    atualizarTarefas();
+
+    dataTarefa.value = "";
+    descricaoTarefa.value = "";
+    prioridadeTarefa.value = "";
+    setorTarefa.value = "";
+    eAplicacaoCheckbox.checked = false;
+    mostrarCamposAplicacao();
+    dosagemAplicacao.value = "";
+    tipoAplicacao.value = "";
+  }
+
+  function salvarTarefas() {
+    db.ref("Tarefas").set([...tarefas, ...tarefasFeitas]);
+  }
+
+  function atualizarTarefas() {
+    const filtro = pesquisaTarefas.value.toLowerCase();
+    const filtroSetor = filtroSetorTarefas.value;
+
+    listaTarefas.innerHTML = "";
+    listaTarefasFeitas.innerHTML = "";
+
+    const criarItem = (t, i, feito) => {
+      const cor = t.prioridade === "Alta" ? "#f44336" :
+                  t.prioridade === "Média" ? "#ff9800" : "#4caf50";
+
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <input type="checkbox" ${feito ? "checked" : ""} onchange="marcarTarefa(${i}, ${feito})">
+        <span style="color:${cor}">${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+        <div class="botoes">
+          <button class="botao-excluir" onclick="excluirTarefa(${i}, ${feito})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      `;
+      return div;
+    };
+
+    tarefas.forEach((t, i) => {
+      if (
+        (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+        (filtroSetor === "" || t.setor === filtroSetor)
+      ) {
+        listaTarefas.appendChild(criarItem(t, i, false));
+      }
+    });
+
+    tarefasFeitas.forEach((t, i) => {
+      if (
+        (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+        (filtroSetor === "" || t.setor === filtroSetor)
+      ) {
+        listaTarefasFeitas.appendChild(criarItem(t, i, true));
+      }
+    });
+  }
+
+  function marcarTarefa(index, feita) {
+    if (!feita) {
+      const t = tarefas[index];
+      t.executada = true;
+      tarefas.splice(index, 1);
+      tarefasFeitas.push(t);
+
+      if (t.eAplicacao) {
+        const novaAplic = {
+          data: t.data,
+          produto: t.descricao,
+          dosagem: t.dosagem,
+          tipo: t.tipoAplicacao,
+          setor: t.setor
+        };
+        aplicacoes.push(novaAplic);
+        db.ref("Aplicacoes").set(aplicacoes);
+        atualizarAplicacoes();
+      }
+    } else {
+      const t = tarefasFeitas[index];
+      t.executada = false;
+      tarefasFeitas.splice(index, 1);
+      tarefas.push(t);
+    }
+
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function excluirTarefa(index, feita) {
+    if (feita) tarefasFeitas.splice(index, 1);
+    else tarefas.splice(index, 1);
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function mostrarCamposAplicacao() {
+    document.getElementById("camposAplicacao").style.display = eAplicacaoCheckbox.checked ? "block" : "none";
+  }
+
+  function carregarTarefas() {
+    db.ref("Tarefas").on("value", snap => {
+      tarefas.length = 0;
+      tarefasFeitas.length = 0;
+      if (snap.exists()) {
+        snap.val().forEach(t => {
+          if (t.executada) tarefasFeitas.push(t);
+          else tarefas.push(t);
+        });
+        atualizarTarefas();
+      }
+    });
+  }
+</script>
+
+<!-- INÍCIO ABA FINANCEIRO -->
+<div id="financeiro" class="aba">
+  <h2>Financeiro</h2>
+
+  <input id="dataFin" type="date" />
+  <input id="produtoFin" placeholder="Produto ou Descrição" />
+  <input id="valorFin" type="number" placeholder="Valor (R$)" />
+  <select id="tipoFin">
+    <option value="">Categoria</option>
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+    <option>Ferramenta</option>
+    <option>Serviço</option>
+    <option>Outro</option>
+  </select>
+
+  <button onclick="adicionarFinanceiro()"><i class="fas fa-save"></i> Salvar Gasto</button>
+
+  <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()" />
+
+  <h4>A Vencer</h4>
+  <div id="financeiroVencer"></div>
+
+  <h4>Pagos</h4>
+  <div id="financeiroPago"></div>
+
+  <h4>Gráfico de Gastos Pagos</h4>
+  <canvas id="graficoGastos" height="200"></canvas>
+</div>
+<!-- FIM ABA FINANCEIRO -->
+
+<script>
+  const gastos = [];
+  let graficoGastosChart;
+
+  function adicionarFinanceiro() {
+    const g = {
+      data: dataFin.value,
+      produto: produtoFin.value.trim(),
+      valor: parseFloat(valorFin.value),
+      tipo: tipoFin.value,
+      pago: false
+    };
+
+    if (!g.data || !g.produto || isNaN(g.valor) || !g.tipo) {
+      alert("Preencha todos os campos corretamente!");
+      return;
+    }
+
+    gastos.push(g);
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+
+    dataFin.value = "";
+    produtoFin.value = "";
+    valorFin.value = "";
+    tipoFin.value = "";
+  }
+
+  function atualizarFinanceiro() {
+    const filtro = pesquisaFinanceiro.value.toLowerCase();
+    const venc = document.getElementById("financeiroVencer");
+    const pagos = document.getElementById("financeiroPago");
+
+    venc.innerHTML = "";
+    pagos.innerHTML = "";
+
+    const grupoVencer = {};
+    const grupoPago = {};
+
+    gastos.forEach((g, i) => {
+      const texto = `${g.data} ${g.produto} ${g.tipo}`.toLowerCase();
+      if (!texto.includes(filtro)) return;
+
+      const grupo = g.pago ? grupoPago : grupoVencer;
+      if (!grupo[g.data]) grupo[g.data] = [];
+      grupo[g.data].push({ ...g, i });
+    });
+
+    renderizarFinanceiro(grupoVencer, venc, false);
+    renderizarFinanceiro(grupoPago, pagos, true);
+    gerarGraficoFinanceiro();
+  }
+
+  function renderizarFinanceiro(grupo, container, pago) {
+    for (const data in grupo) {
+      const titulo = document.createElement("div");
+      titulo.className = "grupo-data";
+      titulo.innerText = data;
+      container.appendChild(titulo);
+
+      grupo[data].forEach(({ produto, valor, tipo, i }) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <span>${produto} - R$ ${valor.toFixed(2)} (${tipo})</span>
+          <div class="botoes-financeiro">
+            ${!pago ? `<button onclick="marcarPago(${i})">Pagar</button>` : ""}
+            <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  }
+
+  function marcarPago(index) {
+    if (gastos[index]) {
+      gastos[index].pago = true;
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+    }
+  }
+
+  function excluirFinanceiro(index) {
+    if (!confirm("Deseja excluir este lançamento?")) return;
+    gastos.splice(index, 1);
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+
+  function carregarFinanceiro() {
+    db.ref("Financeiro").on("value", snap => {
+      gastos.length = 0;
+      if (snap.exists()) {
+        gastos.push(...snap.val());
+        atualizarFinanceiro();
+      }
+    });
+  }
+
+  function gerarGraficoFinanceiro() {
+    const ctx = document.getElementById("graficoGastos").getContext("2d");
+    if (graficoGastosChart) graficoGastosChart.destroy();
+
+    const categorias = {};
+    gastos.forEach(g => {
+      if (!g.pago) return;
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    });
+
+    const labels = Object.keys(categorias);
+    const valores = Object.values(categorias);
+
+    graficoGastosChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{
+          data: valores,
+          backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc', '#ff7043', '#26a69a']
+        }]
+      }
+    });
+  }
+</script>
+

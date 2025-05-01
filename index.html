@@ -988,6 +988,15 @@
     localStorage.setItem('aba', abaId);
   }
 </script>
+
+  <script>
+  function inicializarApp() {
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+    carregarAplicacoes?.();
+    carregarTarefas?.();
+    carregarFinanceiro?.();
+  }
+</script>
   
 <script>
   // ========== INICIALIZAÇÃO FINAL ==========

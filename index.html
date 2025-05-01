@@ -152,6 +152,27 @@
       background-color: #e53935;
     }
 
+    .botao-pagar {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-pagar:hover {
+  background-color: #1976d2;
+}
+
+.botoes-colheita {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
   </style>
 </head>
 
@@ -1104,16 +1125,6 @@
   } else {
     alert("O valor informado não foi suficiente para pagar nenhuma lata.");
   }
-}
-
-  if (alterou) {
-  db.ref('Colheita').set(colheita).then(() => {
-    atualizarColheita();
-    fecharModalParcial();
-    alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} para ${colhedorAtual} registrado com sucesso!`);
-  }); // <- esse é o fechamento correto do .then
-} else {
-  alert("O valor informado não foi suficiente para pagar nenhuma lata.");
 }
 
   function fecharModalParcial() {

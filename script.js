@@ -896,6 +896,7 @@ function atualizarRelatorioAplicacoes() {
   });
 }
 
+// ========== FUNÇÃO PARA CARREGAR COLHEITA ==========
 function carregarColheita() {
   db.ref("Colheita").once("value").then(snapshot => {
     if (snapshot.exists()) {
@@ -906,6 +907,7 @@ function carregarColheita() {
   });
 }
 
+// ========== FUNÇÃO PARA ATUALIZAR FINANCEIRO ==========
 function atualizarFinanceiro() {
   const containerVencer = document.getElementById("gastosAVencer");
   const containerPago = document.getElementById("gastosPagos");

@@ -767,33 +767,55 @@
   }
 
   function adicionarFinanceiro() {
-    const gasto = {
-      data: dataFin.value,
-      produto: produtoFin.value.trim(),
-      descricao: descricaoFin.value.trim(),
-      valor: parseFloat(valorFin.value),
-      tipo: tipoFin.value,
-      pago: false,
-      parcelas: document.getElementById("parceladoFin").checked ? parseInt(parcelasFin.value) || 1 : 1
-    };
+  const gasto = {
+    data: dataFin.value,
+    produto: produtoFin.value.trim(),
+    descricao: descricaoFin.value.trim(),
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false,
+    parcelas: document.getElementById("parceladoFin").checked ? parseInt(parcelasFin.value) || 1 : 1
+  };
 
-    if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
-      alert("Preencha todos os campos corretamente!");
-      return;
+  if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
+
+  // GERAÇÃO DAS PARCELAS DETALHADAS
+  if (gasto.parcelas > 1) {
+    const parcelas = [];
+    const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
+    const dataBase = new Date(gasto.data);
+
+    for (let i = 0; i < gasto.parcelas; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
+        numero: i + 1,
+        valor: valorParcela,
+        vencimento: vencStr,
+        pago: false
+      });
     }
 
-    gastos.push(gasto);
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-
-    dataFin.value = "";
-    produtoFin.value = "";
-    descricaoFin.value = "";
-    valorFin.value = "";
-    parcelasFin.value = "";
-    parceladoFin.checked = false;
-    mostrarParcelas();
+    gasto.parcelasDetalhes = parcelas;
   }
+
+  gastos.push(gasto);
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+
+  // Limpa o formulário
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+}
 
   function atualizarFinanceiro() {
   const filtroTexto = pesquisaFinanceiro.value.toLowerCase();

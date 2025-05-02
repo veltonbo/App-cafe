@@ -772,48 +772,48 @@
   }
 
   function renderizarFinanceiro(grupo, container, pago) {
-    for (const mes in grupo) {
-      const titulo = document.createElement("div");
-      titulo.className = "grupo-data";
-      titulo.innerText = formatarMes(mes);
-      container.appendChild(titulo);
+  for (const mes in grupo) {
+    const titulo = document.createElement("div");
+    titulo.className = "grupo-data";
+    titulo.innerText = formatarMes(mes);
+    container.appendChild(titulo);
 
-      let totalMes = 0;
+    let totalMes = 0;
 
-      grupo[mes].forEach(({ produto, descricao, valor, tipo, parcelas, i }) => {
-        totalMes += valor;
+    grupo[mes].forEach(({ produto, descricao, valor, tipo, parcelas, i }) => {
+      totalMes += valor;
 
-        const icone = tipo === "Adubo" ? "leaf"
-                    : tipo === "Fungicida" ? "bug"
-                    : tipo === "Inseticida" ? "spray-can"
-                    : tipo === "Herbicida" ? "recycle"
-                    : "tag";
+      const icone = tipo === "Adubo" ? "leaf"
+                  : tipo === "Fungicida" ? "bug"
+                  : tipo === "Inseticida" ? "spray-can"
+                  : tipo === "Herbicida" ? "recycle"
+                  : "tag";
 
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `
-          <div.innerHTML = `
-  <span>
-    <i class="fas fa-${icone}"></i> 
-    <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-    ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-    ${(parcelas || 1) > 1 ? `<br><small>${parcelas}x</small>` : ''}
-  </span>
-  <div class="botoes-financeiro">
-    ${!pago ? `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>` 
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${(parcelas || 1) > 1 ? `<br><small>${parcelas}x</small>` : ''}
+        </span>
+        <div class="botoes-financeiro">
+          ${!pago
+            ? `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
             : `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`}
-    <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
-  </div>
-`;
-        container.appendChild(div);
-      });
+          <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
 
-      const totalDiv = document.createElement("div");
-      totalDiv.className = "grupo-data";
-      totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
-      container.appendChild(totalDiv);
-    }
+    const totalDiv = document.createElement("div");
+    totalDiv.className = "grupo-data";
+    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
+    container.appendChild(totalDiv);
   }
+}
 
   function marcarPago(index) {
     if (gastos[index]) {

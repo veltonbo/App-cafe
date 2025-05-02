@@ -2042,7 +2042,33 @@ function atualizarRelatorioCompleto() {
   atualizarRelatorioTarefas();
   atualizarRelatorioFinanceiro();
 }
- document.addEventListener("DOMContentLoaded", atualizarRelatorioCompleto);
+ 
+// Aguarda os dados carregarem antes de gerar o relatório
+function aguardarDadosCarregados(callback) {
+  let tentativas = 0;
+  const checar = setInterval(() => {
+    tentativas++;
+    if (
+      aplicacoes.length > 0 ||
+      tarefas.length > 0 ||
+      tarefasFeitas.length > 0 ||
+      gastos.length > 0 ||
+      colheita.length > 0
+    ) {
+      clearInterval(checar);
+      callback();
+    } else if (tentativas > 50) {
+      clearInterval(checar);
+      alert("Não foi possível carregar os dados do relatório.");
+    }
+  }, 200);
+}
+
+// Substitui clique no botão de relatório para aguardar os dados
+document.getElementById("btn-relatorio").addEventListener("click", () => {
+  mostrarAba("relatorio");
+  aguardarDadosCarregados(gerarRelatorioCompleto);
+});
 </script>
 
   <script>

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
 
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
 
@@ -14,18 +18,260 @@
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  </div>
+  <div class="conteudo">
 
-  <!-- Seu conteúdo HTML já existente (menus, abas, inputs etc.) deve ser mantido aqui -->
+    <!-- ========== MENU APLICACOES ========== -->
+<div id="aplicacoes" class="aba">
+  <h2>Aplicações</h2>
+  <input id="dataApp" type="date" />
+  <input id="produtoApp" placeholder="Produto" />
+  <input id="dosagemApp" placeholder="Dosagem" />
+  <select id="tipoApp">
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+  <select id="setorApp">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+  <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
 
-  <!-- Inclusão do JavaScript externo -->
-  <script src="script.js"></script>
-</body>
+  <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()" />
+  <div id="listaAplicacoes"></div>
+</div>
+
+<!-- ========== MENU TAREFAS ========== -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+  <input id="dataTarefa" type="date" />
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa" />
+  <select id="prioridadeTarefa">
+    <option>Alta</option>
+    <option>Média</option>
+    <option>Baixa</option>
+  </select>
+  <select id="setorTarefa">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+  <label style="margin-top:10px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()" /> É Aplicação
+  </label>
+  <div id="camposAplicacao" style="display:none; margin-top:10px;">
+    <input id="dosagemAplicacao" placeholder="Dosagem" />
+    <select id="tipoAplicacao">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
+
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()" />
+
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>
+
+    <!-- ========== MENU FINANCEIRO ========== -->
+<div id="financeiro" class="aba">
+  <h2>Financeiro</h2>
+
+  <input id="dataFin" type="date" />
+  <input id="produtoFin" placeholder="Produto" />
+  <input id="descricaoFin" placeholder="Descrição detalhada (opcional)" />
+  <input id="valorFin" type="number" placeholder="Valor (R$)" />
+  <select id="tipoFin">
+    <option value="Adubo">Adubo</option>
+    <option value="Fungicida">Fungicida</option>
+    <option value="Inseticida">Inseticida</option>
+    <option value="Herbicida">Herbicida</option>
+    <option value="Outro">Outro</option>
+  </select>
+  <label>
+    <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()" />
+    Parcelado
+  </label>
+  <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
+
+  <button onclick="adicionarFinanceiro()">
+    <i class="fas fa-save"></i> Salvar Gasto
+  </button>
+
+  <hr />
+
+  <h3>Filtrar Gastos</h3>
+  <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()" />
+  <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()" />
+  <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
+    <option value="">Todos os Tipos</option>
+    <option value="Adubo">Adubo</option>
+    <option value="Fungicida">Fungicida</option>
+    <option value="Inseticida">Inseticida</option>
+    <option value="Herbicida">Herbicida</option>
+    <option value="Outro">Outro</option>
+  </select>
+  <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
+    <option value="">Todos</option>
+    <option value="pago">Pagos</option>
+    <option value="vencer">A Vencer</option>
+  </select>
+  <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()" />
+
+  <hr />
+
+  <h4 style="color: #ff9800;">A Vencer</h4>
+  <div id="financeiroVencer"></div>
+
+  <h4 style="color: #4caf50;">Pagos</h4>
+  <div id="financeiroPago"></div>
+
+  <h4>Resumo do Mês</h4>
+  <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
+
+  <h4>Gráfico de Gastos Pagos</h4>
+  <canvas id="graficoGastos"></canvas>
+
+  <div style="margin-top: 20px;">
+    <button onclick="exportarFinanceiroCSV()">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+    <button onclick="exportarFinanceiroPDF()">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
+  </div>
+</div>
+
+    <!-- ========== CONFIGURAÇÕES DE SAFRA ==========
+(cont.) -->
+
+function restaurarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para restaurar.");
+    return;
+  }
+  const confirmar = confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`);
+  if (!confirmar) return;
+
+  db.ref(safra).once("value").then(snap => {
+    const dados = snap.val();
+    if (!dados) {
+      alert("Dados da safra não encontrados.");
+      return;
+    }
+    return Promise.all([
+      db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+      db.ref("Tarefas").set(dados.Tarefas || []),
+      db.ref("Financeiro").set(dados.Financeiro || []),
+      db.ref("Colheita").set(dados.Colheita || []),
+      db.ref("ValorLata").set(dados.ValorLata || 0)
+    ]).then(() => {
+      alert(`Safra ${safra} restaurada com sucesso.`);
+      location.reload();
+    });
+  });
+}
+
+function deletarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para deletar.");
+    return;
+  }
+  const confirmar = confirm(`Deseja excluir permanentemente a safra ${safra}? Esta ação não poderá ser desfeita.`);
+  if (!confirmar) return;
+
+  db.ref(safra).remove().then(() => {
+    alert(`Safra ${safra} deletada com sucesso.`);
+    carregarSafrasDisponiveis();
+  });
+}
+
+function fazerBackup() {
+  const backup = {};
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    backup.Aplicacoes = app.val() || [];
+    backup.Tarefas = tar.val() || [];
+    backup.Financeiro = fin.val() || [];
+    backup.Colheita = col.val() || [];
+    backup.ValorLata = lata.val() || 0;
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
+}
+
+function importarBackup() {
+  const input = document.getElementById("arquivoBackup");
+  const file = input.files[0];
+  if (!file) return alert("Nenhum arquivo selecionado.");
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const dados = JSON.parse(e.target.result);
+      Promise.all([
+        db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+        db.ref("Tarefas").set(dados.Tarefas || []),
+        db.ref("Financeiro").set(dados.Financeiro || []),
+        db.ref("Colheita").set(dados.Colheita || []),
+        db.ref("ValorLata").set(dados.ValorLata || 0)
+      ]).then(() => {
+        alert("Backup importado com sucesso!");
+        location.reload();
+      });
+    } catch (err) {
+      alert("Erro ao importar o backup. Verifique se o arquivo é válido.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+  // ========== TEMA CLARO/ESCURO ==========
+  function alternarTema() {
+    document.body.classList.toggle('claro');
+    localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+  }
+
+    </body>
 </html>

@@ -12,7 +12,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-<script>
 // ========== INICIALIZAÇÃO DO APP ==========
   function inicializarApp() {
     mostrarAba(localStorage.getItem('aba') || 'aplicacoes');

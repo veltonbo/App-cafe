@@ -43,7 +43,9 @@ const db = firebase.database();
   }
 
   window.onload = inicializarApp;
+</script>
 
+<script>
   // ========== FUNÇÕES MENU APLICAÇÕES ==========
   function adicionarAplicacao() {
     const nova = {

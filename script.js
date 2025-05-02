@@ -22,6 +22,8 @@ const colheita = [];
 let valorLataGlobal = 0;
 let colhedorAtual = '';
 let graficoGastosChart = null;
+let gastoAtualIndex = null;
+let parcelaParaExcluir = null;
 
 // ===== Inicialização da interface =====
 window.onload = () => {

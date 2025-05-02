@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café</title>
+
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+
+    .conteudo {
+      padding: 20px;
+      padding-bottom: 80px;
+      max-width: 800px;
+      margin: auto;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .aba { display: none; }
+    .aba.active { display: block; }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background-color: #2c2c2c;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4caf50;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .menu-superior {
+      display: flex;
+      justify-content: center;
+      background-color: #1f1f1f;
+      padding: 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .menu-superior button {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 22px;
+      margin: 0 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .menu-superior button.active,
+    .menu-superior button:hover {
+      color: #4caf50;
+    }
+
+    .campo-pesquisa {
+      padding: 10px;
+      background: #2c2c2c;
+      border: 1px solid #555;
+      border-radius: 8px;
+      margin: 10px 0;
+      color: white;
+      font-size: 16px;
+    }
+
+    .item {
+      background: #1e1e1e;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-left: 4px solid #66bb6a;
+    }
+
+    .item span {
+      flex-grow: 1;
+      overflow-wrap: break-word;
+    }
+
+    .grupo-data {
+      font-weight: bold;
+      margin-top: 25px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background-color: #2f2f2f;
+      border-left: 5px solid #4caf50;
+      border-radius: 6px;
+    }
+
+    .botoes-financeiro {
+      display: flex;
+      gap: 5px;
+    }
+
+    .botao-excluir {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .botao-excluir:hover {
+      background-color: #e53935;
+    }
+
+    .botao-parcelas {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-parcelas:hover {
+  background-color: #1976d2;
+}
+
+    /* === ESTILOS DO MENU RELATÓRIO === */
+.relatorio-subaba {
+  padding: 10px 0;
+}
+
+.relatorio-subaba h3 {
+  margin-bottom: 10px;
+  color: #66bb6a;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+#relatorio canvas {
+  background: #1e1e1e;
+  border-radius: 8px;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+#resumoFinanceiro .item {
+  background-color: #2c2c2c;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#ultimasAplicacoes .item,
+#ultimasTarefas .item {
+  background-color: #1e1e1e;
+  border-left: 4px solid #66bb6a;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#resumoFinanceiro .item strong {
+  color: #fff;
+}
+
+#relatorio button {
+  margin-top: 20px;
+  margin-right: 10px;
+  padding: 10px 15px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#relatorio button:hover {
+  background-color: #45a049;
+}
+
+.menu-superior button i {
+  pointer-events: none;
+}
+
+<style>
+  #modalParcelas .parcela-item {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #modalParcelas .parcela-item label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    word-break: break-word;
+  }
+
+  #modalParcelas input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+    input[type="file"] {
+  background-color: #2c2c2c;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  color: #e0e0e0;
+  font-size: 16px;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.claro input[type="file"] {
+  background-color: #f9f9f9;
+  color: #333;
+  border-color: #ccc;
+}
+</style>
+</style>
+</head>
+<body>
+
+<!-- ========== MENU SUPERIOR ========== -->
+<div class="menu-superior">
+  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+  <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+  <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+</div>
+
+<div class="conteudo">
+
+<!-- ========== MENU APLICACOES ========== -->
+<div id="aplicacoes" class="aba">
+  <h2>Aplicações</h2>
+  <input id="dataApp" type="date">
+  <input id="produtoApp" placeholder="Produto">
+  <input id="dosagemApp" placeholder="Dosagem">
+  <select id="tipoApp">
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
+  </select>
+  <select id="setorApp">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+  <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+
+  <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+
+  <div id="listaAplicacoes"></div>
+</div>
+
+<!-- ========== MENU TAREFAS ========== -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+  <input id="dataTarefa" type="date">
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+  <select id="prioridadeTarefa">
+    <option>Alta</option>
+    <option>Média</option>
+    <option>Baixa</option>
+  </select>
+  <select id="setorTarefa">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+  <label style="margin-top:10px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
+  </label>
+
+  <div id="camposAplicacao" style="display:none; margin-top:10px;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
+
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>
+
+<!-- ========== MENU FINANCEIRO ========== -->
+<div id="financeiro" class="aba">
+  <h2>Financeiro</h2>
+
+  <input id="dataFin" type="date">
+  <input id="produtoFin" placeholder="Produto">
+  <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
+  <input id="valorFin" type="number" placeholder="Valor (R$)">
+  <select id="tipoFin">
+    <option value="Adubo">Adubo</option>
+    <option value="Fungicida">Fungicida</option>
+    <option value="Inseticida">Inseticida</option>
+    <option value="Herbicida">Herbicida</option>
+    <option value="Outro">Outro</option>
+  </select>
+  <label style="margin-top: 5px;">
+    <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
+  </label>
+  <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
+
+  <button onclick="adicionarFinanceiro()">
+    <i class="fas fa-save"></i> Salvar Gasto
+  </button>
+
+  <hr>
+
+  <h3>Filtrar Gastos</h3>
+  <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
+  <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+  <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
+    <option value="">Todos os Tipos</option>
+    <option value="Adubo">Adubo</option>
+    <option value="Fungicida">Fungicida</option>
+    <option value="Inseticida">Inseticida</option>
+    <option value="Herbicida">Herbicida</option>
+    <option value="Outro">Outro</option>
+  </select>
+  <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
+    <option value="">Todos</option>
+    <option value="pago">Pagos</option>
+    <option value="vencer">A Vencer</option>
+  </select>
+  <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+
+  <hr>
+
+  <h4 style="color: #ff9800;">A Vencer</h4>
+  <div id="financeiroVencer"></div>
+
+  <h4 style="color: #4caf50;">Pagos</h4>
+  <div id="financeiroPago"></div>
+
+  <h4>Resumo do Mês</h4>
+  <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
+
+  <h4>Gráfico de Gastos Pagos</h4>
+  <canvas id="graficoGastos"></canvas>
+
+  <div style="margin-top: 20px;">
+    <button onclick="exportarFinanceiroCSV()">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+    <button onclick="exportarFinanceiroPDF()">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
+  </div>
+</div>
+
+  <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
+<div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
+    <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
+    <table style="width:100%; border-collapse:collapse; color:white;">
+      <thead>
+        <tr style="border-bottom:1px solid #555;">
+          <th style="text-align:left; padding:8px;">#</th>
+          <th style="text-align:left; padding:8px;">Vencimento</th>
+          <th style="text-align:right; padding:8px;">Valor (R$)</th>
+          <th style="text-align:center; padding:8px;">Pago</th>
+        </tr>
+      </thead>
+      <tbody id="parcelasLista"></tbody>
+    </table>
+    <div style="margin-top:20px; text-align:right;">
+      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+  <div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+    <p style="color:white; font-size:16px;">Deseja excluir:</p>
+    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
+    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
+    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
+<div id="relatorio" class="aba">
+  <h2>Relatório Geral</h2>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <input id="filtroDataInicioRel" type="date" />
+    <input id="filtroDataFimRel" type="date" />
+    <select id="filtroSetorRel">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <button onclick="gerarRelatorioCompleto()">Gerar Relatório</button>
+  </div>
+
+  <div class="menu-superior" style="margin-bottom: 20px;">
+    <button id="btn-rel-aplicacoes" onclick="mostrarRelatorioCompleto('rel-aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-rel-tarefas" onclick="mostrarRelatorioCompleto('rel-tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-rel-financeiro" onclick="mostrarRelatorioCompleto('rel-financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-rel-colheita" onclick="mostrarRelatorioCompleto('rel-colheita')"><i class="fas fa-tractor"></i></button>
+  </div>
+
+  <!-- APLICAÇÕES -->
+  <div id="rel-aplicacoes" class="relatorio-subaba">
+    <h3>Aplicações</h3>
+    <div id="resumoRelAplicacoes"></div>
+    <canvas id="graficoRelAplicacoes"></canvas>
+  </div>
+
+  <!-- TAREFAS -->
+  <div id="rel-tarefas" class="relatorio-subaba" style="display:none;">
+    <h3>Tarefas</h3>
+    <div id="resumoRelTarefas"></div>
+    <canvas id="graficoRelTarefas"></canvas>
+  </div>
+
+  <!-- FINANCEIRO -->
+  <div id="rel-financeiro" class="relatorio-subaba" style="display:none;">
+    <h3>Financeiro</h3>
+    <div id="resumoRelFinanceiro"></div>
+    <canvas id="graficoRelFinanceiro"></canvas>
+  </div>
+
+  <!-- COLHEITA -->
+  <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
+    <h3>Colheita</h3>
+    <div id="resumoRelColheita"></div>
+    <canvas id="graficoRelColheita"></canvas>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <button onclick="exportarRelatorioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+  </div>
+</div>
+
+<!-- ========== MENU COLHEITA ========== -->
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+
+  <h4>Valor da Lata (R$)</h4>
+  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
+
+  <h4>Registrar Nova Colheita</h4>
+  <input id="dataColheita" type="date" />
+  <input id="colhedor" placeholder="Nome do Colhedor" />
+  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas" />
+  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
+
+  <h4>Filtrar Colheitas</h4>
+  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+
+  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
+
+  <div class="coluna-pendente">
+    <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
+    <div id="colheitaPendentes"></div>
+  </div>
+
+  <div class="coluna-pago">
+    <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
+    <div id="colheitaPagos"></div>
+  </div>
+
+  <h4>Gráfico Latas por Dia</h4>
+  <canvas id="graficoColheita"></canvas>
+
+  <h4>Gráfico Latas por Colhedor</h4>
+  <canvas id="graficoColhedor"></canvas>
+
+  <div style="margin-top: 20px; margin-bottom: 20px;">
+    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+  </div>
+
+  <h4>Consultar Safras Anteriores</h4>
+  <select id="safraConsulta" onchange="consultarSafraAnterior()">
+    <option value="">Selecione o ano</option>
+    <option value="2023">2023</option>
+    <option value="2024">2024</option>
+    <option value="2025">2025</option>
+  </select>
+  <div id="resultadoSafraAnterior" style="margin-top: 10px;"></div>
+</div>
+
+<!-- ========== MODAL PAGAMENTO PARCIAL ========== -->
+<div id="modalParcial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
+    <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
+    <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
+    <input type="number" id="inputParcial" placeholder="Valor a pagar (R$)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
+    <div style="margin-top:15px; display:flex; justify-content:space-between;">
+      <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
+      <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MENU CONFIGURAÇÕES ========== -->
+<div id="configuracoes" class="aba">
+  <h2>Configurações</h2>
+  <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
+
+  <hr style="margin: 20px 0;">
+  <h3>Safra</h3>
+  <p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
+
+  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+    <button onclick="fecharSafraAtual()" style="background-color: #ff9800;">
+      <i class="fas fa-archive"></i> Fechar Safra Atual
+    </button>
+
+    <select id="safraSelecionada" style="margin-top: 10px;">
+      <option value="">Carregando safras disponíveis...</option>
+    </select>
+
+    <button onclick="restaurarSafra()" style="background-color: #29b6f6;">
+      <i class="fas fa-undo-alt"></i> Restaurar Safra Selecionada
+    </button>
+
+    <button onclick="deletarSafra()" style="background-color: #f44336;">
+      <i class="fas fa-trash-alt"></i> Deletar Safra Selecionada
+    </button>
+  </div>
+
+  <hr style="margin: 20px 0;">
+  <hr style="margin: 20px 0;">
+<h3>Backup Manual</h3>
+<button onclick="fazerBackup()"><i class="fas fa-download"></i> Fazer Backup</button>
+
+<input type="file" id="arquivoBackup" accept=".json">
+<button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
+
+<!-- ========== INÍCIO DOS SCRIPTS JAVASCRIPT ========== -->
+<script>
+  // ========== CONFIGURAÇÃO DO FIREBASE ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com",
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ========== VARIÁVEIS GLOBAIS ==========
+  const aplicacoes = [];
+  const tarefas = [];
+  const tarefasFeitas = [];
+  const colheita = [];
+  const gastos = [];
+  let valorLataGlobal = 0;
+  let colhedorAtual = '';
+  let graficoGastosChart;
+</script>
+
+<script>
+  // ========== INICIALIZAÇÃO DO APP ==========
+  function inicializarApp() {
+    mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+
+    if (localStorage.getItem('tema') === 'claro') {
+      document.body.classList.add('claro');
+    }
+
+    carregarAplicacoes();
+    carregarTarefas();
+    carregarFinanceiro();
+    carregarColheita();
+    carregarValorLata();
+    carregarAnoSafra();
+    carregarSafrasDisponiveis();
+  }
+
+  function mostrarAba(abaId) {
+    document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
+    document.getElementById(abaId).classList.add('active');
+
+    document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
+    const btnId = 'btn-' + abaId;
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
+
+    localStorage.setItem('aba', abaId);
+  }
+
+  window.onload = inicializarApp;
+</script>
+
+<script>
+  // ========== FUNÇÕES MENU APLICAÇÕES ==========
+  function adicionarAplicacao() {
+    const nova = {
+      data: dataApp.value,
+      produto: produtoApp.value,
+      dosagem: dosagemApp.value,
+      tipo: tipoApp.value,
+      setor: setorApp.value
+    };
+    if (!nova.data || !nova.produto || !nova.dosagem) {
+      alert("Preencha todos os campos da aplicação!");
+      return;
+    }
+    aplicacoes.push(nova);
+    db.ref('Aplicacoes').set(aplicacoes);
+    atualizarAplicacoes();
+  }
+
+  function atualizarAplicacoes() {
+    const filtro = pesquisaAplicacoes.value.toLowerCase();
+    const filtroSetor = filtroSetorAplicacoes.value;
+    listaAplicacoes.innerHTML = '';
+    const agrupado = {};
+    aplicacoes.filter(a =>
+      (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtro)) &&
+      (filtroSetor === "" || a.setor === filtroSetor)
+    ).forEach((a, i) => {
+      if (!agrupado[a.data]) agrupado[a.data] = [];
+      agrupado[a.data].push({ ...a, i });
+    });
+    for (const data in agrupado) {
+      const titulo = document.createElement('div');
+      titulo.className = 'grupo-data';
+      titulo.textContent = data;
+      listaAplicacoes.appendChild(titulo);
+      agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
+          <div class="botoes-financeiro">
+            <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
+          </div>
+        `;
+        listaAplicacoes.appendChild(div);
+      });
+    }
+  }
+
+  function excluirAplicacao(index) {
+    aplicacoes.splice(index, 1);
+    db.ref('Aplicacoes').set(aplicacoes);
+    atualizarAplicacoes();
+  }
+
+  function carregarAplicacoes() {
+    db.ref('Aplicacoes').on('value', snap => {
+      if (snap.exists()) {
+        aplicacoes.length = 0;
+        aplicacoes.push(...snap.val());
+        atualizarAplicacoes();
+      }
+    });
+  }
+</script>
+
+<script>
+  // ========== FUNÇÕES MENU TAREFAS ==========
+  function adicionarTarefa() {
+    const nova = {
+      data: dataTarefa.value,
+      descricao: descricaoTarefa.value,
+      prioridade: prioridadeTarefa.value,
+      setor: setorTarefa.value,
+      executada: false,
+      eAplicacao: eAplicacaoCheckbox.checked,
+      dosagem: dosagemAplicacao.value,
+      tipoAplicacao: tipoAplicacao.value
+    };
+
+    if (!nova.data || !nova.descricao) {
+      alert("Preencha todos os campos da tarefa!");
+      return;
+    }
+
+    tarefas.push(nova);
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function salvarTarefas() {
+    db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
+  }
+
+  function atualizarTarefas() {
+    const filtro = pesquisaTarefas.value.toLowerCase();
+    const filtroSetor = filtroSetorTarefas.value;
+    listaTarefas.innerHTML = '';
+    listaTarefasFeitas.innerHTML = '';
+    const agrupado = {};
+
+    tarefas.filter(t =>
+      (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+      (filtroSetor === "" || t.setor === filtroSetor)
+    ).forEach((t, i) => {
+      if (!agrupado[t.data]) agrupado[t.data] = [];
+      agrupado[t.data].push({ ...t, i });
+    });
+
+    for (const data in agrupado) {
+      const titulo = document.createElement('div');
+      titulo.className = 'grupo-data';
+      titulo.textContent = data;
+      listaTarefas.appendChild(titulo);
+      agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
+        const cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+          <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+          <div class="botoes-financeiro">
+            <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
+          </div>
+        `;
+        listaTarefas.appendChild(div);
+      });
+    }
+
+    tarefasFeitas.filter(t =>
+      (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
+      (filtroSetor === "" || t.setor === filtroSetor)
+    ).forEach((t, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+        <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+        </div>
+      `;
+      listaTarefasFeitas.appendChild(div);
+    });
+  }
+
+  function marcarTarefa(index, checked) {
+    if (checked) {
+      const tarefaExecutada = tarefas.splice(index, 1)[0];
+      tarefaExecutada.executada = true;
+      tarefasFeitas.push(tarefaExecutada);
+
+      if (tarefaExecutada.eAplicacao) {
+        const novaAplicacao = {
+          data: tarefaExecutada.data,
+          produto: tarefaExecutada.descricao,
+          dosagem: tarefaExecutada.dosagem || '',
+          tipo: tarefaExecutada.tipoAplicacao || '',
+          setor: tarefaExecutada.setor || ''
+        };
+        aplicacoes.push(novaAplicacao);
+        db.ref('Aplicacoes').set(aplicacoes);
+        atualizarAplicacoes();
+      }
+    } else {
+      tarefasFeitas[index].executada = false;
+      tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+    }
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function marcarTarefaFeita(index, checked) {
+    if (!checked) {
+      tarefasFeitas[index].executada = false;
+      tarefas.push(tarefasFeitas.splice(index, 1)[0]);
+    }
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function excluirTarefa(index, feita) {
+    if (feita) {
+      tarefasFeitas.splice(index, 1);
+    } else {
+      tarefas.splice(index, 1);
+    }
+    salvarTarefas();
+    atualizarTarefas();
+  }
+
+  function mostrarCamposAplicacao() {
+    camposAplicacao.style.display = eAplicacaoCheckbox.checked ? 'block' : 'none';
+  }
+
+  function carregarTarefas() {
+    db.ref('Tarefas').on('value', snap => {
+      if (snap.exists()) {
+        tarefas.length = 0;
+        tarefasFeitas.length = 0;
+        snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+        atualizarTarefas();
+      }
+    });
+  }
+</script>
+
+<script>
+  // ========== FUNÇÕES MENU FINANCEIRO ==========
+  function mostrarParcelas() {
+    const checkbox = document.getElementById("parceladoFin");
+    document.getElementById("parcelasFin").style.display = checkbox.checked ? "block" : "none";
+  }
+
+  function adicionarFinanceiro() {
+  const gasto = {
+    data: dataFin.value,
+    produto: produtoFin.value.trim(),
+    descricao: descricaoFin.value.trim(),
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false,
+    parcelas: document.getElementById("parceladoFin").checked ? parseInt(parcelasFin.value) || 1 : 1
+  };
+
+  if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
+
+  // GERAÇÃO DAS PARCELAS DETALHADAS
+  if (gasto.parcelas > 1) {
+    const parcelas = [];
+    const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
+    const dataBase = new Date(gasto.data);
+
+    for (let i = 0; i < gasto.parcelas; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
+        numero: i + 1,
+        valor: valorParcela,
+        vencimento: vencStr,
+        pago: false
+      });
+    }
+
+    gasto.parcelasDetalhes = parcelas;
+  }
+
+  gastos.push(gasto);
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+
+  // Limpa o formulário
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+}
+
+  function atualizarFinanceiro() {
+  const filtroTexto = pesquisaFinanceiro.value.toLowerCase();
+  const tipoFiltro = filtroTipoFin.value;
+  const statusFiltro = filtroStatusFin.value;
+  const dataIni = filtroDataInicioFin.value;
+  const dataFim = filtroDataFimFin.value;
+
+  const venc = document.getElementById("financeiroVencer");
+  const pagos = document.getElementById("financeiroPago");
+  venc.innerHTML = "";
+  pagos.innerHTML = "";
+
+  const dadosVencer = {};
+  const dadosPago = {};
+
+  gastos.forEach((g, index) => {
+    const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
+    if (!txt.includes(filtroTexto)) return;
+    if (tipoFiltro && g.tipo !== tipoFiltro) return;
+
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach((p, parcelaIndex) => {
+        const grupo = p.pago ? dadosPago : dadosVencer;
+        if (statusFiltro === "pago" && !p.pago) return;
+        if (statusFiltro === "vencer" && p.pago) return;
+        if (dataIni && p.vencimento < dataIni) return;
+        if (dataFim && p.vencimento > dataFim) return;
+        const mes = p.vencimento.slice(0, 7);
+        if (!grupo[mes]) grupo[mes] = [];
+        grupo[mes].push({
+          produto: `${g.produto} (Parcela ${p.numero})`,
+          descricao: g.descricao,
+          valor: p.valor,
+          tipo: g.tipo,
+          vencimento: p.vencimento,
+          pago: p.pago,
+          i: index,
+          parcelaIndex,
+          isParcela: true
+        });
+      });
+    } else {
+      if (statusFiltro === "pago" && !g.pago) return;
+      if (statusFiltro === "vencer" && g.pago) return;
+      if (dataIni && g.data < dataIni) return;
+      if (dataFim && g.data > dataFim) return;
+      const grupo = g.pago ? dadosPago : dadosVencer;
+      const mes = g.data.slice(0, 7);
+      if (!grupo[mes]) grupo[mes] = [];
+      grupo[mes].push({ ...g, i: index, isParcela: false });
+    }
+  });
+
+  renderizarFinanceiro(dadosVencer, venc, false);
+  renderizarFinanceiro(dadosPago, pagos, true);
+  gerarResumoFinanceiro();
+  gerarGraficoFinanceiro();
+}
+
+  function renderizarFinanceiro(grupo, container, pago) {
+  for (const mes in grupo) {
+    const titulo = document.createElement("div");
+    titulo.className = "grupo-data";
+    titulo.innerText = formatarMes(mes);
+    container.appendChild(titulo);
+
+    let totalMes = 0;
+
+    grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
+      totalMes += valor;
+
+      const icone = tipo === "Adubo" ? "leaf"
+                  : tipo === "Fungicida" ? "bug"
+                  : tipo === "Inseticida" ? "spray-can"
+                  : tipo === "Herbicida" ? "recycle"
+                  : "tag";
+
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+        </span>
+        <div class="botoes-financeiro">
+          ${isParcela
+            ? `<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
+            : pago
+              ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
+              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
+          }
+          <button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    const totalDiv = document.createElement("div");
+    totalDiv.className = "grupo-data";
+    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
+    container.appendChild(totalDiv);
+  }
+}
+
+  function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
+
+  const parcela = gasto.parcelasDetalhes[parcelaIndex];
+  parcela.pago = !parcela.pago;
+
+  // Atualiza o status geral
+  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
+  function marcarPago(index) {
+    if (gastos[index]) {
+      gastos[index].pago = true;
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+    }
+  }
+
+  function desfazerPagamento(index) {
+    if (gastos[index]) {
+      gastos[index].pago = false;
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+    }
+  }
+
+  function confirmarExclusaoParcela(index, parcelaIndex) {
+  indexGastoExcluir = index;
+  parcelaParaExcluir = parcelaIndex;
+  document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
+}
+
+function excluirApenasParcela() {
+  const g = gastos[indexGastoExcluir];
+  g.parcelasDetalhes.splice(parcelaParaExcluir, 1);
+
+  if (g.parcelasDetalhes.length === 0) {
+    gastos.splice(indexGastoExcluir, 1);
+  } else {
+    g.parcelas = g.parcelasDetalhes.length;
+    g.valor = g.parcelasDetalhes.reduce((soma, p) => soma + p.valor, 0);
+    g.pago = g.parcelasDetalhes.every(p => p.pago);
+  }
+
+  db.ref("Financeiro").set(gastos);
+  fecharModalExcluirParcela();
+  atualizarFinanceiro();
+}
+
+function excluirTodasParcelas() {
+  gastos.splice(indexGastoExcluir, 1);
+  db.ref("Financeiro").set(gastos);
+  fecharModalExcluirParcela();
+  atualizarFinanceiro();
+}
+
+function fecharModalExcluirParcela() {
+  document.getElementById("modalConfirmarExclusaoParcela").style.display = "none";
+  indexGastoExcluir = null;
+  parcelaParaExcluir = null;
+}
+
+  function excluirFinanceiro(index, parcelaIndex = null) {
+  const g = gastos[index];
+
+  // Se for uma parcela individual
+  if (parcelaIndex !== null && g.parcelasDetalhes) {
+    // Remove apenas a parcela
+    g.parcelasDetalhes.splice(parcelaIndex, 1);
+
+    // Se não restou nenhuma parcela, remove o gasto inteiro
+    if (g.parcelasDetalhes.length === 0) {
+      gastos.splice(index, 1);
+    } else {
+      // Atualiza o valor total e número de parcelas
+      g.parcelas = g.parcelasDetalhes.length;
+      g.valor = g.parcelasDetalhes.reduce((soma, p) => soma + p.valor, 0);
+      g.pago = g.parcelasDetalhes.every(p => p.pago);
+    }
+  } else {
+    // Confirmação para excluir gasto inteiro
+    if (!confirm("Deseja excluir este gasto por completo?")) return;
+    gastos.splice(index, 1);
+  }
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
+  function carregarFinanceiro() {
+    db.ref("Financeiro").on("value", snap => {
+      if (snap.exists()) {
+        gastos.length = 0;
+        gastos.push(...snap.val());
+        atualizarFinanceiro();
+      }
+    });
+  }
+
+  function gerarResumoFinanceiro() {
+    let totalPago = 0;
+    let totalVencer = 0;
+
+    gastos.forEach(g => {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    });
+
+    document.getElementById("resumoFinanceiroMensal").innerHTML = `
+      <div>Total Pago: R$ ${totalPago.toFixed(2)}</div>
+      <div>Total A Vencer: R$ ${totalVencer.toFixed(2)}</div>
+      <div>Total Geral: R$ ${(totalPago + totalVencer).toFixed(2)}</div>
+    `;
+  }
+
+  function gerarGraficoFinanceiro() {
+    const ctx = document.getElementById("graficoGastos").getContext("2d");
+    if (graficoGastosChart) graficoGastosChart.destroy();
+
+    const categorias = {};
+    gastos.forEach(g => {
+      if (!g.pago) return;
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    });
+
+    const labels = Object.keys(categorias);
+    const valores = Object.values(categorias);
+    const total = valores.reduce((soma, v) => soma + v, 0);
+    const labelsComPercentual = labels.map((label, i) => {
+      const percent = ((valores[i] / total) * 100).toFixed(1);
+      return `${label} (${percent}%)`;
+    });
+
+    graficoGastosChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labelsComPercentual,
+        datasets: [{
+          data: valores,
+          backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc']
+        }]
+      }
+    });
+  }
+
+  function formatarMes(mes) {
+    const [ano, mesNum] = mes.split("-");
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
+  }
+</script>
+
+  <script>
+  function exportarFinanceiroCSV() {
+    if (!gastos.length) {
+      alert("Nenhum gasto registrado.");
+      return;
+    }
+
+    let csv = "Data,Produto,Descrição,Valor,Tipo,Parcelas,Status\n";
+    let total = 0;
+
+    gastos.forEach(g => {
+      const status = g.pago ? "Pago" : "A Vencer";
+      csv += `${g.data},"${g.produto}","${g.descricao || ""}",${g.valor.toFixed(2)},${g.tipo},${g.parcelas},${status}\n`;
+      total += g.valor;
+    });
+
+    csv += `\nTOTAL GERAL, , ,${total.toFixed(2)}\n`;
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const hoje = new Date().toISOString().split("T")[0];
+    a.href = url;
+    a.download = `financeiro_${hoje}.csv`;
+    a.click();
+  }
+
+  function exportarFinanceiroPDF() {
+    if (!gastos.length) {
+      alert("Nenhum gasto registrado.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text("Relatório Financeiro", 20, 20);
+    let y = 30;
+    let total = 0;
+
+    gastos.forEach(g => {
+      const status = g.pago ? "Pago" : "A Vencer";
+      const linha = `${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} - ${g.tipo} - ${status}`;
+      doc.text(linha, 20, y);
+      if (g.descricao) {
+        y += 6;
+        doc.setFontSize(11);
+        doc.text(`Descrição: ${g.descricao}`, 25, y);
+        doc.setFontSize(14);
+      }
+      if (g.parcelas > 1) {
+        y += 6;
+        doc.setFontSize(11);
+        doc.text(`Parcelas: ${g.parcelas}`, 25, y);
+        doc.setFontSize(14);
+      }
+      y += 10;
+      total += g.valor;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.setFontSize(13);
+    doc.text(`TOTAL GERAL: R$ ${total.toFixed(2)}`, 20, y);
+    const hoje = new Date().toISOString().split("T")[0];
+    doc.save(`financeiro_${hoje}.pdf`);
+  }
+</script>
+
+  <script>
+    let gastoAtualIndex = null;
+
+function abrirModalParcelas(index) {
+  const gasto = gastos[index];
+  gastoAtualIndex = index;
+
+  if (!gasto.parcelasDetalhes || gasto.parcelasDetalhes.length === 0) {
+    const total = gasto.valor;
+    const num = gasto.parcelas;
+    const valorParcela = parseFloat((total / num).toFixed(2));
+    const parcelas = [];
+    let dataBase = new Date(gasto.data);
+
+    for (let i = 0; i < num; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
+        numero: i + 1,
+        valor: valorParcela,
+        vencimento: vencStr,
+        pago: false
+      });
+    }
+
+    gasto.parcelasDetalhes = parcelas;
+  }
+
+  const container = document.getElementById("parcelasLista");
+  container.innerHTML = "";
+
+  gasto.parcelasDetalhes.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #444";
+    tr.innerHTML = `
+      <td style="padding:8px;">${p.numero}</td>
+      <td style="padding:8px;">${p.vencimento}</td>
+      <td style="padding:8px; text-align:right;">${p.valor.toFixed(2)}</td>
+      <td style="padding:8px; text-align:center;">
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${index}, ${i})">
+      </td>
+    `;
+    container.appendChild(tr);
+  });
+
+  document.getElementById("modalParcelas").style.display = "flex";
+}
+
+function renderizarModalParcelas(parcelas) {
+  const container = document.getElementById("parcelasLista");
+  container.innerHTML = "";
+  parcelas.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #444";
+    tr.innerHTML = `
+      <td style="padding:8px;">${p.numero}</td>
+      <td style="padding:8px;">${p.vencimento}</td>
+      <td style="padding:8px; text-align:right;">${p.valor.toFixed(2)}</td>
+      <td style="padding:8px; text-align:center;">
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${gastoAtualIndex}, ${i})">
+      </td>
+    `;
+    container.appendChild(tr);
+  });
+}
+
+function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
+
+  const parcela = gasto.parcelasDetalhes[parcelaIndex];
+  parcela.pago = !parcela.pago;
+
+  // Atualiza status geral com base em todas as parcelas
+  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
+function fecharModalParcelas() {
+  document.getElementById("modalParcelas").style.display = "none";
+}
+</script>
+
+<script>
+  // ========== FUNÇÕES MENU COLHEITA ==========
+  function carregarValorLata() {
+    db.ref('ValorLata').on('value', snap => {
+      if (snap.exists()) {
+        valorLataGlobal = snap.val();
+        document.getElementById('valorLata').value = valorLataGlobal;
+      }
+    });
+  }
+
+  function salvarValorLata() {
+    valorLataGlobal = parseFloat(document.getElementById('valorLata').value) || 0;
+    db.ref('ValorLata').set(valorLataGlobal);
+  }
+
+  function adicionarColheita() {
+    const nova = {
+      data: dataColheita.value,
+      colhedor: colhedor.value.trim(),
+      quantidade: parseFloat(quantidadeLatas.value),
+      valorLata: valorLataGlobal,
+      pago: false,
+      pagoParcial: 0,
+      historicoPagamentos: []
+    };
+
+    if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
+      alert("Preencha todos os campos corretamente!");
+      return;
+    }
+
+    colheita.push(nova);
+    db.ref('Colheita').set(colheita);
+    atualizarColheita();
+
+    dataColheita.value = '';
+    colhedor.value = '';
+    quantidadeLatas.value = '';
+  }
+
+  function carregarColheita() {
+    db.ref('Colheita').once('value').then(snap => {
+      if (snap.exists()) {
+        colheita.length = 0;
+        colheita.push(...snap.val());
+      }
+      atualizarColheita();
+    });
+  }
+
+  function atualizarColheita() {
+    const filtro = pesquisaColheita.value.toLowerCase();
+    const inicio = filtroDataInicio.value;
+    const fim = filtroDataFim.value;
+    colheitaPendentes.innerHTML = '';
+    colheitaPagos.innerHTML = '';
+    const agrupadoPendentes = {};
+    const agrupadoPagos = {};
+
+    colheita.filter(c =>
+      (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
+      (!inicio || c.data >= inicio) &&
+      (!fim || c.data <= fim)
+    ).forEach((c, i) => {
+      if (c.pagoParcial > 0) {
+        if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+        agrupadoPagos[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
+      }
+      if (c.pagoParcial < c.quantidade) {
+        if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+        agrupadoPendentes[c.colhedor].push({ ...c, quantidade: c.quantidade - c.pagoParcial, pago: false, i });
+      }
+    });
+
+    db.ref('Colheita').set(colheita);
+    montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+    montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
+    gerarGraficoColheita();
+    gerarGraficoColhedor();
+
+    const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+    const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * (c.valorLata || 0), 0);
+    const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
+
+    document.getElementById('resumoColheita').innerHTML = `
+      <div class="item"><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
+      <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
+      <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+    `;
+  }
+
+  function montarGrupoColheita(grupo, container, pago) {
+    for (const nome in grupo) {
+      const registros = grupo[nome];
+      const totalLatas = registros.reduce((sum, c) => sum + c.quantidade, 0);
+      const valorLata = registros[0]?.valorLata || 0;
+      const valorTotal = totalLatas * valorLata;
+
+      const bloco = document.createElement('div');
+      bloco.className = 'bloco-colhedor';
+
+      const titulo = document.createElement('div');
+      titulo.className = 'grupo-data';
+      titulo.innerHTML = `<strong>${nome}</strong> - ${totalLatas.toFixed(2)} latas = R$${valorTotal.toFixed(2)}`;
+      bloco.appendChild(titulo);
+
+      registros.forEach(({ data, quantidade, valorLata, i }) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
+          <div class="botoes-colheita">
+            ${pago
+              ? `<button class="botao-excluir-pagamento" onclick="excluirPagamento(${i})">Excluir Pagamento</button>
+                 <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir Lançamento</button>`
+              : `<button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>`
+            }
+          </div>
+        `;
+        bloco.appendChild(div);
+      });
+
+      if (!pago) {
+        const botoes = document.createElement('div');
+        botoes.className = 'botoes-colheita';
+        botoes.innerHTML = `
+          <button class="botao-pagar" onclick="pagarTudoColhedor('${nome}')">Pagar Tudo</button>
+          <button class="botao-pagar" onclick="pagarParcialColhedor('${nome}')">Pagar Parcial</button>
+        `;
+        bloco.appendChild(botoes);
+      }
+
+      container.appendChild(bloco);
+    }
+  }
+
+  function excluirColheita(index) {
+    if (confirm("Deseja excluir esse lançamento de colheita?")) {
+      colheita.splice(index, 1);
+      db.ref('Colheita').set(colheita);
+      atualizarColheita();
+    }
+  }
+
+  function pagarTudoColhedor(nome) {
+    const hoje = new Date().toISOString().split('T')[0];
+    let alterou = false;
+
+    colheita.forEach(c => {
+      if (c.colhedor === nome && (c.quantidade - c.pagoParcial) > 0) {
+        const restante = c.quantidade - c.pagoParcial;
+        c.pagoParcial = c.quantidade;
+        c.pago = true;
+        c.historicoPagamentos = c.historicoPagamentos || [];
+        c.historicoPagamentos.push({ data: hoje, quantidade: restante });
+        alterou = true;
+      }
+    });
+
+    if (alterou) {
+      db.ref('Colheita').set(colheita).then(() => {
+        atualizarColheita();
+        alert(`Pagamento completo para ${nome} registrado com sucesso!`);
+      });
+    }
+  }
+
+  function pagarParcialColhedor(nome) {
+    colhedorAtual = nome;
+    modalParcialTexto.innerText = `Qual valor (R$) deseja pagar para ${nome}?`;
+    inputParcial.value = '';
+    modalParcial.style.display = 'flex';
+  }
+
+  function confirmarParcial() {
+    const valorPagar = parseFloat(inputParcial.value);
+    if (isNaN(valorPagar) || valorPagar <= 0) {
+      alert("Valor inválido!");
+      return;
+    }
+
+    const hoje = new Date().toISOString().split('T')[0];
+    let restanteValor = valorPagar;
+    let alterou = false;
+
+    colheita.sort((a, b) => a.data.localeCompare(b.data));
+
+    for (let i = 0; i < colheita.length; i++) {
+      const c = colheita[i];
+      if (c.colhedor === colhedorAtual && (c.quantidade - c.pagoParcial) > 0 && restanteValor > 0) {
+        const disponivelLatas = c.quantidade - c.pagoParcial;
+        const valorDisponivel = disponivelLatas * c.valorLata;
+        const valorParaEssa = Math.min(valorDisponivel, restanteValor);
+        const latasParaPagar = parseFloat((valorParaEssa / c.valorLata).toFixed(10));
+
+        if (latasParaPagar > 0) {
+          c.pagoParcial += latasParaPagar;
+          c.historicoPagamentos = c.historicoPagamentos || [];
+          c.historicoPagamentos.push({ data: hoje, quantidade: latasParaPagar });
+          if (c.pagoParcial >= c.quantidade) {
+            c.pagoParcial = c.quantidade;
+            c.pago = true;
+          }
+          restanteValor -= latasParaPagar * c.valorLata;
+          restanteValor = parseFloat(restanteValor.toFixed(2));
+          alterou = true;
+        }
+      }
+    }
+
+    if (alterou) {
+      db.ref('Colheita').set(colheita).then(() => {
+        atualizarColheita();
+        fecharModalParcial();
+        alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} registrado com sucesso!`);
+      });
+    } else {
+      alert("O valor informado não foi suficiente para pagar nenhuma lata.");
+    }
+  }
+
+  function fecharModalParcial() {
+    modalParcial.style.display = 'none';
+  }
+
+  function excluirPagamento(index) {
+    const c = colheita[index];
+    if (!c || c.pagoParcial === 0) return;
+    if (!confirm("Deseja excluir somente o pagamento deste lançamento? A quantidade voltará como pendente.")) return;
+
+    c.pagoParcial = 0;
+    c.pago = false;
+    c.historicoPagamentos = [];
+    db.ref('Colheita').set(colheita).then(() => {
+      atualizarColheita();
+      alert("Pagamento excluído e valor retornado como pendente.");
+    });
+  }
+
+  function gerarGraficoColheita() {
+    const ctx = document.getElementById('graficoColheita').getContext('2d');
+    if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
+
+    const dias = {};
+    colheita.forEach(c => {
+      dias[c.data] = (dias[c.data] || 0) + c.quantidade;
+    });
+
+    window.graficoColheitaChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(dias),
+        datasets: [{
+          label: 'Latas por Dia',
+          data: Object.values(dias).map(v => parseFloat(v.toFixed(2))),
+          backgroundColor: '#4caf50'
+        }]
+      }
+    });
+  }
+
+  function gerarGraficoColhedor() {
+    const ctx = document.getElementById('graficoColhedor').getContext('2d');
+    if (window.graficoColhedorChart) window.graficoColhedorChart.destroy();
+
+    const nomes = {};
+    colheita.forEach(c => {
+      nomes[c.colhedor] = (nomes[c.colhedor] || 0) + c.quantidade;
+    });
+
+    window.graficoColhedorChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(nomes),
+        datasets: [{
+          data: Object.values(nomes).map(v => parseFloat(v.toFixed(2))),
+          backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350', '#ab47bc']
+        }]
+      }
+    });
+  }
+</script>
+
+<script>
+  // ========== EXPORTAR RELATÓRIO DE COLHEITA ==========
+  function exportarRelatorioColheita() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text('Relatório de Colheita', 20, 20);
+    let y = 40;
+
+    colheita.forEach(c => {
+      doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`, 20, y);
+      y += 8;
+      if (c.historicoPagamentos.length) {
+        c.historicoPagamentos.forEach(h => {
+          doc.text(`Pagamento: ${h.data} - ${h.quantidade.toFixed(2)} latas`, 30, y);
+          y += 6;
+        });
+      }
+      y += 4;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save('relatorio_colheita.pdf');
+  }
+
+  // ========== EXPORTAR CSV DE COLHEITA ==========
+  function exportarCSVColheita() {
+    if (!colheita.length) {
+      alert("Nenhum dado de colheita disponível para exportação.");
+      return;
+    }
+
+    let csv = 'Data,Colhedor,Quantidade,Latas Pagas,Latas Pendentes,Valor da Lata,Total Pago (R$),Total Pendente (R$),Histórico de Pagamentos\n';
+
+    colheita.forEach(c => {
+      const pagas = c.pagoParcial || 0;
+      const pendentes = c.quantidade - pagas;
+      const totalPago = (pagas * c.valorLata).toFixed(2);
+      const totalPendente = (pendentes * c.valorLata).toFixed(2);
+      const historico = (c.historicoPagamentos || []).map(h => `${h.data} (${h.quantidade.toFixed(2)})`).join(" | ");
+
+      csv += `${c.data},${c.colhedor},${c.quantidade.toFixed(2)},${pagas.toFixed(2)},${pendentes.toFixed(2)},${c.valorLata.toFixed(2)},${totalPago},${totalPendente},"${historico}"\n`;
+    });
+
+    const dataHoje = new Date().toISOString().split("T")[0];
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `colheita_${dataHoje}.csv`;
+    a.click();
+  }
+
+  // ========== CONFIGURAÇÕES DE SAFRA ==========
+  function carregarAnoSafra() {
+  const ano = new Date().getFullYear();
+  document.getElementById("anoSafraAtual").innerText = ano;
+}
+
+function carregarSafrasDisponiveis() {
+  const select = document.getElementById("safraSelecionada");
+  select.innerHTML = "<option value=''>Selecione o ano</option>";
+  db.ref().once("value").then(snapshot => {
+    Object.keys(snapshot.val() || {}).forEach(key => {
+      if (!["Aplicacoes", "Tarefas", "Financeiro", "Colheita", "ValorLata"].includes(key)) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.innerText = key;
+        select.appendChild(option);
+      }
+    });
+  });
+}
+
+function fecharSafraAtual() {
+  const ano = new Date().getFullYear();
+  const confirmacao = confirm(`Deseja fechar a safra ${ano}? Isso arquivará os dados atuais.`);
+  if (!confirmacao) return;
+
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    const dados = {
+      Aplicacoes: app.val() || [],
+      Tarefas: tar.val() || [],
+      Financeiro: fin.val() || [],
+      Colheita: col.val() || [],
+      ValorLata: lata.val() || 0
+    };
+    return db.ref(ano).set(dados).then(() => {
+      db.ref("Aplicacoes").remove();
+      db.ref("Tarefas").remove();
+      db.ref("Financeiro").remove();
+      db.ref("Colheita").remove();
+      db.ref("ValorLata").remove();
+      alert(`Safra ${ano} fechada com sucesso.`);
+      location.reload();
+    });
+  });
+}
+
+function restaurarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para restaurar.");
+    return;
+  }
+  const confirmar = confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`);
+  if (!confirmar) return;
+
+  db.ref(safra).once("value").then(snap => {
+    const dados = snap.val();
+    if (!dados) {
+      alert("Dados da safra não encontrados.");
+      return;
+    }
+    return Promise.all([
+      db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+      db.ref("Tarefas").set(dados.Tarefas || []),
+      db.ref("Financeiro").set(dados.Financeiro || []),
+      db.ref("Colheita").set(dados.Colheita || []),
+      db.ref("ValorLata").set(dados.ValorLata || 0)
+    ]).then(() => {
+      alert(`Safra ${safra} restaurada com sucesso.`);
+      location.reload();
+    });
+  });
+}
+
+function deletarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para deletar.");
+    return;
+  }
+  const confirmar = confirm(`Deseja excluir permanentemente a safra ${safra}? Esta ação não poderá ser desfeita.`);
+  if (!confirmar) return;
+
+  db.ref(safra).remove().then(() => {
+    alert(`Safra ${safra} deletada com sucesso.`);
+    carregarSafrasDisponiveis();
+  });
+}
+
+function fazerBackup() {
+  const backup = {};
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    backup.Aplicacoes = app.val() || [];
+    backup.Tarefas = tar.val() || [];
+    backup.Financeiro = fin.val() || [];
+    backup.Colheita = col.val() || [];
+    backup.ValorLata = lata.val() || 0;
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
+}
+
+function importarBackup() {
+  const input = document.getElementById("arquivoBackup");
+  const file = input.files[0];
+  if (!file) return alert("Nenhum arquivo selecionado.");
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const dados = JSON.parse(e.target.result);
+      Promise.all([
+        db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+        db.ref("Tarefas").set(dados.Tarefas || []),
+        db.ref("Financeiro").set(dados.Financeiro || []),
+        db.ref("Colheita").set(dados.Colheita || []),
+        db.ref("ValorLata").set(dados.ValorLata || 0)
+      ]).then(() => {
+        alert("Backup importado com sucesso!");
+        location.reload();
+      });
+    } catch (err) {
+      alert("Erro ao importar o backup. Verifique se o arquivo é válido.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+  // ========== TEMA CLARO/ESCURO ==========
+  function alternarTema() {
+    document.body.classList.toggle('claro');
+    localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+  }
+</script>
+
+  <script>
+// ========== SCRIPT COMPLETO DO MENU RELATÓRIO ==========
+<script>
+  function mostrarRelatorioCompleto(id) {
+    document.querySelectorAll('.relatorio-subaba').forEach(div => {
+      div.style.display = 'none';
+    });
+    document.getElementById(id).style.display = 'block';
+
+    // Atualiza os botões
+    document.querySelectorAll('#relatorio .menu-superior button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    const btnAtivo = document.querySelector(`#btn-${id}`);
+    if (btnAtivo) btnAtivo.classList.add('active');
+  }
+</script>
+
+// ====== RENDERIZAR APLICAÇÕES NO RELATÓRIO ======
+function atualizarRelatorioAplicacoes() {
+  const container = document.getElementById("ultimasAplicacoes");
+  container.innerHTML = "";
+  const contagem = {};
+
+  aplicacoes.forEach(app => {
+    const key = app.tipo || "Outro";
+    contagem[key] = (contagem[key] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${app.data}</strong> - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoAplicacoes").getContext("2d");
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        label: 'Aplicações por Tipo',
+        data: Object.values(contagem),
+        backgroundColor: '#4caf50'
+      }]
+    }
+  });
+}
+
+// ====== RENDERIZAR TAREFAS NO RELATÓRIO ======
+function atualizarRelatorioTarefas() {
+  const container = document.getElementById("ultimasTarefas");
+  container.innerHTML = "";
+  const contagem = { Alta: 0, Média: 0, Baixa: 0 };
+
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    contagem[t.prioridade] = (contagem[t.prioridade] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${t.data}</strong> - ${t.descricao} (${t.prioridade}) - ${t.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoTarefas").getContext("2d");
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        data: Object.values(contagem),
+        backgroundColor: ['#f44336', '#ff9800', '#4caf50']
+      }]
+    }
+  });
+}
+
+// ====== RENDERIZAR FINANCEIRO NO RELATÓRIO ======
+function atualizarRelatorioFinanceiro() {
+  const container = document.getElementById("resumoFinanceiro");
+  container.innerHTML = "";
+
+  const categorias = {};
+  let total = 0;
+
+  gastos.forEach(g => {
+    if (!g.pago) return;
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    total += g.valor;
+  });
+
+  Object.entries(categorias).forEach(([cat, val]) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${cat}</strong>: R$ ${val.toFixed(2)}`;
+    container.appendChild(div);
+  });
+
+  const divTotal = document.createElement("div");
+  divTotal.className = "item";
+  divTotal.innerHTML = `<strong>Total Geral:</strong> R$ ${total.toFixed(2)}`;
+  container.appendChild(divTotal);
+
+  const ctx = document.getElementById("graficoFinanceiro").getContext("2d");
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  window.graficoFinanceiro = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(categorias),
+      datasets: [{
+        data: Object.values(categorias),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc']
+      }]
+    }
+  });
+}
+
+// ====== EXPORTAR RELATÓRIO COMPLETO EM PDF ======
+function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+
+  doc.setFontSize(16);
+  doc.text("Relatório Geral - Manejo Café", 20, y);
+  y += 10;
+
+  doc.setFontSize(12);
+  doc.text("Aplicações:", 20, y); y += 8;
+  aplicacoes.forEach(a => {
+    doc.text(`${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo} - ${a.setor}`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Tarefas:", 20, y); y += 8;
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    doc.text(`${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Financeiro (pagos):", 20, y); y += 8;
+  gastos.filter(g => g.pago).forEach(g => {
+    doc.text(`${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Colheita:", 20, y); y += 8;
+  colheita.forEach(c => {
+    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  const hoje = new Date().toISOString().split("T")[0];
+  doc.save(`relatorio_manejo_cafe_${hoje}.pdf`);
+}
+
+// ====== EXPORTAR RELATÓRIO EM CSV ======
+function exportarRelatorioCSV() {
+  let csv = "Tipo,Data,Descrição,Setor,Valor\n";
+
+  aplicacoes.forEach(a => {
+    csv += `Aplicação,${a.data},"${a.produto} (${a.dosagem})",${a.setor},\n`;
+  });
+
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    csv += `Tarefa,${t.data},"${t.descricao} (${t.prioridade})",${t.setor},\n`;
+  });
+
+  gastos.filter(g => g.pago).forEach(g => {
+    csv += `Financeiro,${g.data},"${g.produto}",,${g.valor.toFixed(2)}\n`;
+  });
+
+  colheita.forEach(c => {
+    const total = (c.quantidade * c.valorLata).toFixed(2);
+    csv += `Colheita,${c.data},${c.colhedor},,${total}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `relatorio_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+}
+
+// ====== ATUALIZAÇÃO INICIAL DO RELATÓRIO ======
+function atualizarRelatorioCompleto() {
+  atualizarRelatorioAplicacoes();
+  atualizarRelatorioTarefas();
+  atualizarRelatorioFinanceiro();
+}
+
+document.addEventListener("DOMContentLoaded", atualizarRelatorioCompleto);
+</script>
+
+  <script>
+    let parcelaParaExcluir = null;
+    let indexGastoExcluir = null;
+  </script>
+  
+<style>
+  .botoes-financeiro button {
+    background-color: #2c2c2c;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .botoes-financeiro button:hover {
+    background-color: #444;
+  }
+
+  .grupo-data small {
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  #resumoFinanceiroMensal {
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 4px solid #4caf50;
+  }
+
+  #resumoFinanceiroMensal div {
+    margin-bottom: 5px;
+  }
+
+  .claro #resumoFinanceiroMensal {
+    background: #f9f9f9;
+    color: #333;
+    border-left-color: #2e7d32;
+  }
+</style> 

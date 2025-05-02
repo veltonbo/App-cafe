@@ -1,4 +1,4 @@
-// ===== Firebase Config =====
+// ========== CONFIGURAÇÃO DO FIREBASE ==========
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -8,24 +8,28 @@ const firebaseConfig = {
   messagingSenderId: "808931200634",
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ===== Dados globais =====
+// ========== VARIÁVEIS GLOBAIS ==========
 const aplicacoes = [];
 const tarefas = [];
 const tarefasFeitas = [];
-const gastos = [];
 const colheita = [];
-
+const gastos = [];
 let valorLataGlobal = 0;
 let colhedorAtual = '';
 let graficoGastosChart = null;
+let graficoColheitaChart = null;
+let graficoColhedorChart = null;
+let indexGastoExcluir = null;
+let parcelaParaExcluir = null;
+let gastoAtualIndex = null;
 
-// ===== Inicialização da interface =====
-window.onload = () => {
+// ========== INICIALIZAÇÃO DO APP ==========
+function inicializarApp() {
   mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+
   if (localStorage.getItem('tema') === 'claro') {
     document.body.classList.add('claro');
   }
@@ -37,143 +41,137 @@ window.onload = () => {
   carregarValorLata();
   carregarAnoSafra();
   carregarSafrasDisponiveis();
-};
+}
 
-// ===== Controle de abas =====
+// Alterna a visualização entre abas
 function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
   document.getElementById(abaId).classList.add('active');
 
   document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
-  const btn = document.getElementById('btn-' + abaId);
+  const btnId = 'btn-' + abaId;
+  const btn = document.getElementById(btnId);
   if (btn) btn.classList.add('active');
 
   localStorage.setItem('aba', abaId);
 }
 
-// ===== Tema claro/escuro =====
+// Tema claro/escuro
 function alternarTema() {
   document.body.classList.toggle('claro');
   localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
 }
 
-// ===== Aplicações =====
+// Executa inicialização quando a página é carregada
+window.onload = inicializarApp;
 
+// ========== FUNÇÕES MENU APLICAÇÕES ==========
 function adicionarAplicacao() {
-  const data = document.getElementById("dataApp").value;
-  const produto = document.getElementById("produtoApp").value.trim();
-  const dosagem = document.getElementById("dosagemApp").value.trim();
-  const tipo = document.getElementById("tipoApp").value;
-  const setor = document.getElementById("setorApp").value;
+  const nova = {
+    data: dataApp.value,
+    produto: produtoApp.value,
+    dosagem: dosagemApp.value,
+    tipo: tipoApp.value,
+    setor: setorApp.value
+  };
 
-  if (!data || !produto || !dosagem) {
+  if (!nova.data || !nova.produto || !nova.dosagem) {
     alert("Preencha todos os campos da aplicação!");
     return;
   }
 
-  const nova = { data, produto, dosagem, tipo, setor };
   aplicacoes.push(nova);
-  db.ref('Aplicacoes').set(aplicacoes).then(() => {
-    atualizarAplicacoes();
-  });
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+
+  // Limpa os campos após salvar
+  dataApp.value = '';
+  produtoApp.value = '';
+  dosagemApp.value = '';
 }
 
 function atualizarAplicacoes() {
-  const filtroTexto = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-  const filtroSetor = document.getElementById("filtroSetorAplicacoes").value;
-  const lista = document.getElementById("listaAplicacoes");
+  const filtro = pesquisaAplicacoes.value.toLowerCase();
+  const filtroSetor = filtroSetorAplicacoes.value;
+  listaAplicacoes.innerHTML = '';
 
-  lista.innerHTML = '';
   const agrupado = {};
 
-  aplicacoes.filter(a =>
-    (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtroTexto)) &&
-    (filtroSetor === "" || a.setor === filtroSetor)
-  ).forEach((a, i) => {
-    if (!agrupado[a.data]) agrupado[a.data] = [];
-    agrupado[a.data].push({ ...a, i });
-  });
+  aplicacoes
+    .filter(a =>
+      (`${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase().includes(filtro)) &&
+      (filtroSetor === "" || a.setor === filtroSetor)
+    )
+    .forEach((a, i) => {
+      if (!agrupado[a.data]) agrupado[a.data] = [];
+      agrupado[a.data].push({ ...a, i });
+    });
 
   for (const data in agrupado) {
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
     titulo.textContent = data;
-    lista.appendChild(titulo);
+    listaAplicacoes.appendChild(titulo);
 
     agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
-      const item = document.createElement('div');
-      item.className = 'item';
-
-      const span = document.createElement('span');
-      span.textContent = `${produto} (${dosagem}) - ${tipo} - ${setor}`;
-
-      const botoes = document.createElement('div');
-      botoes.className = 'botoes-financeiro';
-
-      const btnExcluir = document.createElement('button');
-      btnExcluir.className = 'botao-excluir';
-      btnExcluir.type = 'button';
-      btnExcluir.textContent = 'Excluir';
-      btnExcluir.onclick = () => excluirAplicacao(i);
-
-      botoes.appendChild(btnExcluir);
-      item.appendChild(span);
-      item.appendChild(botoes);
-      lista.appendChild(item);
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
+        </div>
+      `;
+      listaAplicacoes.appendChild(div);
     });
   }
 }
 
 function excluirAplicacao(index) {
   aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes).then(() => {
-    atualizarAplicacoes();
-  });
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
 }
 
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
-    aplicacoes.length = 0;
     if (snap.exists()) {
-      const data = snap.val();
-      if (Array.isArray(data)) {
-        aplicacoes.push(...data);
-      }
+      aplicacoes.length = 0;
+      aplicacoes.push(...snap.val());
+      atualizarAplicacoes();
     }
-    atualizarAplicacoes();
   });
 }
 
-// ===== Tarefas =====
-
+// ========== FUNÇÕES MENU TAREFAS ==========
 function adicionarTarefa() {
-  const data = document.getElementById("dataTarefa").value;
-  const descricao = document.getElementById("descricaoTarefa").value.trim();
-  const prioridade = document.getElementById("prioridadeTarefa").value;
-  const setor = document.getElementById("setorTarefa").value;
-  const eAplicacao = document.getElementById("eAplicacaoCheckbox").checked;
-  const dosagem = document.getElementById("dosagemAplicacao").value.trim();
-  const tipoAplicacao = document.getElementById("tipoAplicacao").value;
+  const nova = {
+    data: dataTarefa.value,
+    descricao: descricaoTarefa.value,
+    prioridade: prioridadeTarefa.value,
+    setor: setorTarefa.value,
+    executada: false,
+    eAplicacao: eAplicacaoCheckbox.checked,
+    dosagem: dosagemAplicacao.value,
+    tipoAplicacao: tipoAplicacao.value
+  };
 
-  if (!data || !descricao) {
+  if (!nova.data || !nova.descricao) {
     alert("Preencha todos os campos da tarefa!");
     return;
   }
 
-  const nova = {
-    data,
-    descricao,
-    prioridade,
-    setor,
-    executada: false,
-    eAplicacao,
-    dosagem,
-    tipoAplicacao
-  };
-
   tarefas.push(nova);
   salvarTarefas();
   atualizarTarefas();
+
+  // Limpa os campos
+  dataTarefa.value = '';
+  descricaoTarefa.value = '';
+  prioridadeTarefa.value = 'Alta';
+  setorTarefa.value = 'Setor 01';
+  eAplicacaoCheckbox.checked = false;
+  mostrarCamposAplicacao();
 }
 
 function salvarTarefas() {
@@ -181,18 +179,14 @@ function salvarTarefas() {
 }
 
 function atualizarTarefas() {
-  const filtroTexto = document.getElementById("pesquisaTarefas").value.toLowerCase();
-  const filtroSetor = document.getElementById("filtroSetorTarefas").value;
-  const lista = document.getElementById("listaTarefas");
-  const listaFeitas = document.getElementById("listaTarefasFeitas");
-
-  lista.innerHTML = '';
-  listaFeitas.innerHTML = '';
-
+  const filtro = pesquisaTarefas.value.toLowerCase();
+  const filtroSetor = filtroSetorTarefas.value;
+  listaTarefas.innerHTML = '';
+  listaTarefasFeitas.innerHTML = '';
   const agrupado = {};
 
   tarefas.filter(t =>
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtroTexto)) &&
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
     (filtroSetor === "" || t.setor === filtroSetor)
   ).forEach((t, i) => {
     if (!agrupado[t.data]) agrupado[t.data] = [];
@@ -203,108 +197,74 @@ function atualizarTarefas() {
     const titulo = document.createElement('div');
     titulo.className = 'grupo-data';
     titulo.textContent = data;
-    lista.appendChild(titulo);
+    listaTarefas.appendChild(titulo);
 
     agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
-      const item = document.createElement('div');
-      item.className = 'item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.onchange = () => marcarTarefa(i, checkbox.checked);
-
-      const span = document.createElement('span');
-      span.style.color = prioridade === 'Alta' ? '#f44336' :
-                         prioridade === 'Média' ? '#ff9800' : '#4caf50';
-      span.textContent = `${descricao} (${prioridade}) - ${setor}`;
-
-      const botoes = document.createElement('div');
-      botoes.className = 'botoes-financeiro';
-
-      const btnExcluir = document.createElement('button');
-      btnExcluir.className = 'botao-excluir';
-      btnExcluir.type = 'button';
-      btnExcluir.textContent = 'Excluir';
-      btnExcluir.onclick = () => excluirTarefa(i, false);
-
-      botoes.appendChild(btnExcluir);
-      item.appendChild(checkbox);
-      item.appendChild(span);
-      item.appendChild(botoes);
-      lista.appendChild(item);
+      const cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
+        <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
+        </div>
+      `;
+      listaTarefas.appendChild(div);
     });
   }
 
   tarefasFeitas.filter(t =>
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtroTexto)) &&
+    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
     (filtroSetor === "" || t.setor === filtroSetor)
   ).forEach((t, i) => {
-    const item = document.createElement('div');
-    item.className = 'item';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = true;
-    checkbox.onchange = () => marcarTarefaFeita(i, checkbox.checked);
-
-    const span = document.createElement('span');
-    span.textContent = `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`;
-
-    const botoes = document.createElement('div');
-    botoes.className = 'botoes-financeiro';
-
-    const btnExcluir = document.createElement('button');
-    btnExcluir.className = 'botao-excluir';
-    btnExcluir.type = 'button';
-    btnExcluir.textContent = 'Excluir';
-    btnExcluir.onclick = () => excluirTarefa(i, true);
-
-    botoes.appendChild(btnExcluir);
-    item.appendChild(checkbox);
-    item.appendChild(span);
-    item.appendChild(botoes);
-    listaFeitas.appendChild(item);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+      </div>
+    `;
+    listaTarefasFeitas.appendChild(div);
   });
 }
 
 function marcarTarefa(index, checked) {
-  if (!tarefas[index]) return;
-
   if (checked) {
-    const t = tarefas.splice(index, 1)[0];
-    t.executada = true;
-    tarefasFeitas.push(t);
+    const tarefaExecutada = tarefas.splice(index, 1)[0];
+    tarefaExecutada.executada = true;
+    tarefasFeitas.push(tarefaExecutada);
 
-    if (t.eAplicacao) {
+    // Se for aplicação, também salva no módulo Aplicações
+    if (tarefaExecutada.eAplicacao) {
       const novaAplicacao = {
-        data: t.data,
-        produto: t.descricao,
-        dosagem: t.dosagem || '',
-        tipo: t.tipoAplicacao || '',
-        setor: t.setor || ''
+        data: tarefaExecutada.data,
+        produto: tarefaExecutada.descricao,
+        dosagem: tarefaExecutada.dosagem || '',
+        tipo: tarefaExecutada.tipoAplicacao || '',
+        setor: tarefaExecutada.setor || ''
       };
       aplicacoes.push(novaAplicacao);
       db.ref('Aplicacoes').set(aplicacoes);
       atualizarAplicacoes();
     }
   } else {
-    const t = tarefasFeitas.splice(index, 1)[0];
-    t.executada = false;
-    tarefas.push(t);
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
   }
-
   salvarTarefas();
   atualizarTarefas();
 }
 
 function marcarTarefaFeita(index, checked) {
   if (!checked) {
-    const t = tarefasFeitas.splice(index, 1)[0];
-    t.executada = false;
-    tarefas.push(t);
-    salvarTarefas();
-    atualizarTarefas();
+    tarefasFeitas[index].executada = false;
+    tarefas.push(tarefasFeitas.splice(index, 1)[0]);
   }
+  salvarTarefas();
+  atualizarTarefas();
 }
 
 function excluirTarefa(index, feita) {
@@ -318,96 +278,83 @@ function excluirTarefa(index, feita) {
 }
 
 function mostrarCamposAplicacao() {
-  const campos = document.getElementById("camposAplicacao");
-  const checkbox = document.getElementById("eAplicacaoCheckbox");
-  campos.style.display = checkbox.checked ? 'block' : 'none';
+  camposAplicacao.style.display = eAplicacaoCheckbox.checked ? 'block' : 'none';
 }
 
 function carregarTarefas() {
   db.ref('Tarefas').on('value', snap => {
-    tarefas.length = 0;
-    tarefasFeitas.length = 0;
-
     if (snap.exists()) {
-      const data = snap.val();
-      if (Array.isArray(data)) {
-        data.forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
-      }
+      tarefas.length = 0;
+      tarefasFeitas.length = 0;
+      snap.val().forEach(t => (t.executada ? tarefasFeitas : tarefas).push(t));
+      atualizarTarefas();
     }
-
-    atualizarTarefas();
   });
 }
 
-// ===== Financeiro =====
-
+// ========== FUNÇÕES MENU FINANCEIRO ==========
 function mostrarParcelas() {
   const checkbox = document.getElementById("parceladoFin");
   document.getElementById("parcelasFin").style.display = checkbox.checked ? "block" : "none";
 }
 
 function adicionarFinanceiro() {
-  const data = document.getElementById("dataFin").value;
-  const produto = document.getElementById("produtoFin").value.trim();
-  const descricao = document.getElementById("descricaoFin").value.trim();
-  const valor = parseFloat(document.getElementById("valorFin").value);
-  const tipo = document.getElementById("tipoFin").value;
-  const parcelado = document.getElementById("parceladoFin").checked;
-  const parcelasQtd = parcelado ? parseInt(document.getElementById("parcelasFin").value) || 1 : 1;
+  const gasto = {
+    data: dataFin.value,
+    produto: produtoFin.value.trim(),
+    descricao: descricaoFin.value.trim(),
+    valor: parseFloat(valorFin.value),
+    tipo: tipoFin.value,
+    pago: false,
+    parcelas: document.getElementById("parceladoFin").checked ? parseInt(parcelasFin.value) || 1 : 1
+  };
 
-  if (!data || !produto || isNaN(valor) || valor <= 0) {
+  if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
     alert("Preencha todos os campos corretamente!");
     return;
   }
 
-  const gasto = {
-    data,
-    produto,
-    descricao,
-    valor,
-    tipo,
-    pago: false,
-    parcelas: parcelasQtd
-  };
+  // GERAÇÃO DAS PARCELAS DETALHADAS
+  if (gasto.parcelas > 1) {
+    const parcelas = [];
+    const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
+    const dataBase = new Date(gasto.data);
 
-  if (parcelasQtd > 1) {
-    const valorParcela = parseFloat((valor / parcelasQtd).toFixed(2));
-    const base = new Date(data);
-    gasto.parcelasDetalhes = [];
-
-    for (let i = 0; i < parcelasQtd; i++) {
-      const venc = new Date(base);
-      venc.setMonth(venc.getMonth() + i);
-      const vencimento = venc.toISOString().split("T")[0];
-      gasto.parcelasDetalhes.push({
+    for (let i = 0; i < gasto.parcelas; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
         numero: i + 1,
         valor: valorParcela,
-        vencimento,
+        vencimento: vencStr,
         pago: false
       });
     }
+
+    gasto.parcelasDetalhes = parcelas;
   }
 
   gastos.push(gasto);
-  db.ref("Financeiro").set(gastos).then(() => {
-    atualizarFinanceiro();
-  });
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
 
-  document.getElementById("dataFin").value = "";
-  document.getElementById("produtoFin").value = "";
-  document.getElementById("descricaoFin").value = "";
-  document.getElementById("valorFin").value = "";
-  document.getElementById("parcelasFin").value = "";
-  document.getElementById("parceladoFin").checked = false;
+  // Limpa o formulário
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
   mostrarParcelas();
 }
 
 function atualizarFinanceiro() {
-  const filtroTexto = document.getElementById("pesquisaFinanceiro").value.toLowerCase();
-  const tipoFiltro = document.getElementById("filtroTipoFin").value;
-  const statusFiltro = document.getElementById("filtroStatusFin").value;
-  const dataIni = document.getElementById("filtroDataInicioFin").value;
-  const dataFim = document.getElementById("filtroDataFimFin").value;
+  const filtroTexto = pesquisaFinanceiro.value.toLowerCase();
+  const tipoFiltro = filtroTipoFin.value;
+  const statusFiltro = filtroStatusFin.value;
+  const dataIni = filtroDataInicioFin.value;
+  const dataFim = filtroDataFimFin.value;
 
   const venc = document.getElementById("financeiroVencer");
   const pagos = document.getElementById("financeiroPago");
@@ -418,22 +365,19 @@ function atualizarFinanceiro() {
   const dadosPago = {};
 
   gastos.forEach((g, index) => {
-    const texto = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
-    if (!texto.includes(filtroTexto)) return;
+    const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
+    if (!txt.includes(filtroTexto)) return;
     if (tipoFiltro && g.tipo !== tipoFiltro) return;
 
-    const grupo = g.pago ? dadosPago : dadosVencer;
-
-    if (g.parcelasDetalhes?.length) {
-      g.parcelasDetalhes.forEach((p, pIndex) => {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach((p, parcelaIndex) => {
+        const grupo = p.pago ? dadosPago : dadosVencer;
         if (statusFiltro === "pago" && !p.pago) return;
         if (statusFiltro === "vencer" && p.pago) return;
         if (dataIni && p.vencimento < dataIni) return;
         if (dataFim && p.vencimento > dataFim) return;
-
         const mes = p.vencimento.slice(0, 7);
         if (!grupo[mes]) grupo[mes] = [];
-
         grupo[mes].push({
           produto: `${g.produto} (Parcela ${p.numero})`,
           descricao: g.descricao,
@@ -442,7 +386,7 @@ function atualizarFinanceiro() {
           vencimento: p.vencimento,
           pago: p.pago,
           i: index,
-          parcelaIndex: pIndex,
+          parcelaIndex,
           isParcela: true
         });
       });
@@ -451,7 +395,7 @@ function atualizarFinanceiro() {
       if (statusFiltro === "vencer" && g.pago) return;
       if (dataIni && g.data < dataIni) return;
       if (dataFim && g.data > dataFim) return;
-
+      const grupo = g.pago ? dadosPago : dadosVencer;
       const mes = g.data.slice(0, 7);
       if (!grupo[mes]) grupo[mes] = [];
       grupo[mes].push({ ...g, i: index, isParcela: false });
@@ -468,7 +412,7 @@ function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
-    titulo.textContent = formatarMes(mes);
+    titulo.innerText = formatarMes(mes);
     container.appendChild(titulo);
 
     let totalMes = 0;
@@ -476,44 +420,32 @@ function renderizarFinanceiro(grupo, container, pago) {
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
 
-      const icone = tipo === "Adubo" ? "leaf" :
-                    tipo === "Fungicida" ? "bug" :
-                    tipo === "Inseticida" ? "spray-can" :
-                    tipo === "Herbicida" ? "recycle" : "tag";
+      const icone = tipo === "Adubo" ? "leaf"
+                  : tipo === "Fungicida" ? "bug"
+                  : tipo === "Inseticida" ? "spray-can"
+                  : tipo === "Herbicida" ? "recycle"
+                  : "tag";
 
-      const item = document.createElement("div");
-      item.className = "item";
-
-      const span = document.createElement("span");
-      span.innerHTML = `<i class="fas fa-${icone}"></i> 
-        <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-        ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-        ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}`;
-
-      const botoes = document.createElement("div");
-      botoes.className = "botoes-financeiro";
-
-      const btnStatus = document.createElement("button");
-      btnStatus.type = "button";
-      btnStatus.innerHTML = `<i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>`;
-      btnStatus.onclick = () => {
-        if (isParcela) alternarParcela(i, parcelaIndex);
-        else if (pago) desfazerPagamento(i);
-        else marcarPago(i);
-      };
-
-      const btnExcluir = document.createElement("button");
-      btnExcluir.type = "button";
-      btnExcluir.className = "botao-excluir";
-      btnExcluir.innerHTML = `<i class="fas fa-trash"></i>`;
-      btnExcluir.onclick = () => confirmarExclusaoParcela(i, parcelaIndex);
-
-      botoes.appendChild(btnStatus);
-      botoes.appendChild(btnExcluir);
-
-      item.appendChild(span);
-      item.appendChild(botoes);
-      container.appendChild(item);
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+        </span>
+        <div class="botoes-financeiro">
+          ${isParcela
+            ? `<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
+            : pago
+              ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
+              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
+          }
+          <button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      container.appendChild(div);
     });
 
     const totalDiv = document.createElement("div");
@@ -523,30 +455,80 @@ function renderizarFinanceiro(grupo, container, pago) {
   }
 }
 
-function alternarParcela(i, parcelaIndex) {
-  const gasto = gastos[i];
-  if (!gasto?.parcelasDetalhes) return;
+function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
 
   const parcela = gasto.parcelasDetalhes[parcelaIndex];
   parcela.pago = !parcela.pago;
 
+  // Atualiza o status geral
   gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
 
-  db.ref("Financeiro").set(gastos).then(() => atualizarFinanceiro());
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
 }
 
-function marcarPago(i) {
-  if (gastos[i]) {
-    gastos[i].pago = true;
-    db.ref("Financeiro").set(gastos).then(() => atualizarFinanceiro());
+function marcarPago(index) {
+  if (gastos[index]) {
+    gastos[index].pago = true;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
   }
 }
 
-function desfazerPagamento(i) {
-  if (gastos[i]) {
-    gastos[i].pago = false;
-    db.ref("Financeiro").set(gastos).then(() => atualizarFinanceiro());
+function desfazerPagamento(index) {
+  if (gastos[index]) {
+    gastos[index].pago = false;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
   }
+}
+
+function confirmarExclusaoParcela(index, parcelaIndex) {
+  indexGastoExcluir = index;
+  parcelaParaExcluir = parcelaIndex;
+  document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
+}
+
+function excluirApenasParcela() {
+  const g = gastos[indexGastoExcluir];
+  g.parcelasDetalhes.splice(parcelaParaExcluir, 1);
+
+  if (g.parcelasDetalhes.length === 0) {
+    gastos.splice(indexGastoExcluir, 1);
+  } else {
+    g.parcelas = g.parcelasDetalhes.length;
+    g.valor = g.parcelasDetalhes.reduce((soma, p) => soma + p.valor, 0);
+    g.pago = g.parcelasDetalhes.every(p => p.pago);
+  }
+
+  db.ref("Financeiro").set(gastos);
+  fecharModalExcluirParcela();
+  atualizarFinanceiro();
+}
+
+function excluirTodasParcelas() {
+  gastos.splice(indexGastoExcluir, 1);
+  db.ref("Financeiro").set(gastos);
+  fecharModalExcluirParcela();
+  atualizarFinanceiro();
+}
+
+function fecharModalExcluirParcela() {
+  document.getElementById("modalConfirmarExclusaoParcela").style.display = "none";
+  indexGastoExcluir = null;
+  parcelaParaExcluir = null;
+}
+
+function carregarFinanceiro() {
+  db.ref("Financeiro").on("value", snap => {
+    if (snap.exists()) {
+      gastos.length = 0;
+      gastos.push(...snap.val());
+      atualizarFinanceiro();
+    }
+  });
 }
 
 function gerarResumoFinanceiro() {
@@ -558,8 +540,7 @@ function gerarResumoFinanceiro() {
     else totalVencer += g.valor;
   });
 
-  const div = document.getElementById("resumoFinanceiroMensal");
-  div.innerHTML = `
+  document.getElementById("resumoFinanceiroMensal").innerHTML = `
     <div>Total Pago: R$ ${totalPago.toFixed(2)}</div>
     <div>Total A Vencer: R$ ${totalVencer.toFixed(2)}</div>
     <div>Total Geral: R$ ${(totalPago + totalVencer).toFixed(2)}</div>
@@ -572,16 +553,16 @@ function gerarGraficoFinanceiro() {
 
   const categorias = {};
   gastos.forEach(g => {
-    if (g.pago) categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    if (!g.pago) return;
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
   });
 
   const labels = Object.keys(categorias);
   const valores = Object.values(categorias);
   const total = valores.reduce((soma, v) => soma + v, 0);
-
-  const labelsComPercentual = labels.map((l, i) => {
+  const labelsComPercentual = labels.map((label, i) => {
     const percent = ((valores[i] / total) * 100).toFixed(1);
-    return `${l} (${percent}%)`;
+    return `${label} (${percent}%)`;
   });
 
   graficoGastosChart = new Chart(ctx, {
@@ -596,26 +577,129 @@ function gerarGraficoFinanceiro() {
   });
 }
 
-function formatarMes(mes) {
-  const [ano, mesNum] = mes.split("-");
-  const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-  return `${nomes[parseInt(mesNum) - 1]} de ${ano}`;
+function exportarFinanceiroCSV() {
+  if (!gastos.length) {
+    alert("Nenhum gasto registrado.");
+    return;
+  }
+
+  let csv = "Data,Produto,Descrição,Valor,Tipo,Parcelas,Status\n";
+  let total = 0;
+
+  gastos.forEach(g => {
+    const status = g.pago ? "Pago" : "A Vencer";
+    csv += `${g.data},"${g.produto}","${g.descricao || ""}",${g.valor.toFixed(2)},${g.tipo},${g.parcelas},${status}\n`;
+    total += g.valor;
+  });
+
+  csv += `\nTOTAL GERAL, , ,${total.toFixed(2)}\n`;
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const hoje = new Date().toISOString().split("T")[0];
+  a.href = url;
+  a.download = `financeiro_${hoje}.csv`;
+  a.click();
 }
 
-function carregarFinanceiro() {
-  db.ref("Financeiro").on("value", snap => {
-    gastos.length = 0;
-    if (snap.exists()) {
-      const data = snap.val();
-      if (Array.isArray(data)) {
-        gastos.push(...data);
-      }
+function exportarFinanceiroPDF() {
+  if (!gastos.length) {
+    alert("Nenhum gasto registrado.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text("Relatório Financeiro", 20, 20);
+  let y = 30;
+  let total = 0;
+
+  gastos.forEach(g => {
+    const status = g.pago ? "Pago" : "A Vencer";
+    const linha = `${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} - ${g.tipo} - ${status}`;
+    doc.text(linha, 20, y);
+    if (g.descricao) {
+      y += 6;
+      doc.setFontSize(11);
+      doc.text(`Descrição: ${g.descricao}`, 25, y);
+      doc.setFontSize(14);
     }
-    atualizarFinanceiro();
+    if (g.parcelas > 1) {
+      y += 6;
+      doc.setFontSize(11);
+      doc.text(`Parcelas: ${g.parcelas}`, 25, y);
+      doc.setFontSize(14);
+    }
+    y += 10;
+    total += g.valor;
+
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  doc.setFontSize(13);
+  doc.text(`TOTAL GERAL: R$ ${total.toFixed(2)}`, 20, y);
+  const hoje = new Date().toISOString().split("T")[0];
+  doc.save(`financeiro_${hoje}.pdf`);
+}
+
+let gastoAtualIndex = null;
+
+function abrirModalParcelas(index) {
+  const gasto = gastos[index];
+  gastoAtualIndex = index;
+
+  if (!gasto.parcelasDetalhes || gasto.parcelasDetalhes.length === 0) {
+    const total = gasto.valor;
+    const num = gasto.parcelas;
+    const valorParcela = parseFloat((total / num).toFixed(2));
+    const parcelas = [];
+    let dataBase = new Date(gasto.data);
+
+    for (let i = 0; i < num; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
+        numero: i + 1,
+        valor: valorParcela,
+        vencimento: vencStr,
+        pago: false
+      });
+    }
+
+    gasto.parcelasDetalhes = parcelas;
+  }
+
+  renderizarModalParcelas(gasto.parcelasDetalhes);
+  document.getElementById("modalParcelas").style.display = "flex";
+}
+
+function renderizarModalParcelas(parcelas) {
+  const container = document.getElementById("parcelasLista");
+  container.innerHTML = "";
+  parcelas.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #444";
+    tr.innerHTML = `
+      <td style="padding:8px;">${p.numero}</td>
+      <td style="padding:8px;">${p.vencimento}</td>
+      <td style="padding:8px; text-align:right;">${p.valor.toFixed(2)}</td>
+      <td style="padding:8px; text-align:center;">
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${gastoAtualIndex}, ${i})">
+      </td>
+    `;
+    container.appendChild(tr);
   });
 }
 
-// ===== Colheita =====
+function fecharModalParcelas() {
+  document.getElementById("modalParcelas").style.display = "none";
+}
 
 function carregarValorLata() {
   db.ref('ValorLata').on('value', snap => {
@@ -632,37 +716,34 @@ function salvarValorLata() {
 }
 
 function adicionarColheita() {
-  const data = document.getElementById("dataColheita").value;
-  const colhedor = document.getElementById("colhedor").value.trim();
-  const quantidade = parseFloat(document.getElementById("quantidadeLatas").value);
-
-  if (!data || !colhedor || isNaN(quantidade) || quantidade <= 0) {
-    alert("Preencha todos os campos corretamente!");
-    return;
-  }
-
   const nova = {
-    data,
-    colhedor,
-    quantidade,
+    data: dataColheita.value,
+    colhedor: colhedor.value.trim(),
+    quantidade: parseFloat(quantidadeLatas.value),
     valorLata: valorLataGlobal,
     pago: false,
     pagoParcial: 0,
     historicoPagamentos: []
   };
 
-  colheita.push(nova);
-  db.ref('Colheita').set(colheita).then(() => atualizarColheita());
+  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
 
-  document.getElementById("dataColheita").value = '';
-  document.getElementById("colhedor").value = '';
-  document.getElementById("quantidadeLatas").value = '';
+  colheita.push(nova);
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+
+  dataColheita.value = '';
+  colhedor.value = '';
+  quantidadeLatas.value = '';
 }
 
 function carregarColheita() {
-  db.ref('Colheita').on('value', snap => {
-    colheita.length = 0;
+  db.ref('Colheita').once('value').then(snap => {
     if (snap.exists()) {
+      colheita.length = 0;
       colheita.push(...snap.val());
     }
     atualizarColheita();
@@ -670,18 +751,13 @@ function carregarColheita() {
 }
 
 function atualizarColheita() {
-  const filtro = document.getElementById("pesquisaColheita").value.toLowerCase();
-  const inicio = document.getElementById("filtroDataInicio").value;
-  const fim = document.getElementById("filtroDataFim").value;
-  const pendentes = document.getElementById("colheitaPendentes");
-  const pagos = document.getElementById("colheitaPagos");
-  const resumo = document.getElementById("resumoColheita");
-
-  pendentes.innerHTML = '';
-  pagos.innerHTML = '';
-
-  const agrupadoPend = {};
-  const agrupadoPago = {};
+  const filtro = pesquisaColheita.value.toLowerCase();
+  const inicio = filtroDataInicio.value;
+  const fim = filtroDataFim.value;
+  colheitaPendentes.innerHTML = '';
+  colheitaPagos.innerHTML = '';
+  const agrupadoPendentes = {};
+  const agrupadoPagos = {};
 
   colheita.filter(c =>
     (`${c.data} ${c.colhedor}`.toLowerCase().includes(filtro)) &&
@@ -689,52 +765,50 @@ function atualizarColheita() {
     (!fim || c.data <= fim)
   ).forEach((c, i) => {
     if (c.pagoParcial > 0) {
-      if (!agrupadoPago[c.colhedor]) agrupadoPago[c.colhedor] = [];
-      agrupadoPago[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
+      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
+      agrupadoPagos[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
     }
     if (c.pagoParcial < c.quantidade) {
-      if (!agrupadoPend[c.colhedor]) agrupadoPend[c.colhedor] = [];
-      agrupadoPend[c.colhedor].push({ ...c, quantidade: c.quantidade - c.pagoParcial, pago: false, i });
+      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
+      agrupadoPendentes[c.colhedor].push({ ...c, quantidade: c.quantidade - c.pagoParcial, pago: false, i });
     }
   });
 
   db.ref('Colheita').set(colheita);
+  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+  montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
+  gerarGraficoColheita();
+  gerarGraficoColhedor();
 
-  montarGrupoColheita(agrupadoPend, pendentes, false);
-  montarGrupoColheita(agrupadoPago, pagos, true);
+  const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+  const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * (c.valorLata || 0), 0);
+  const totalPendente = colheita.reduce((soma, c) => soma + (c.quantidade - c.pagoParcial) * (c.valorLata || 0), 0);
 
-  const totalLatas = colheita.reduce((s, c) => s + c.quantidade, 0);
-  const totalPago = colheita.reduce((s, c) => s + (c.pagoParcial * (c.valorLata || 0)), 0);
-  const totalPendente = colheita.reduce((s, c) => s + ((c.quantidade - c.pagoParcial) * (c.valorLata || 0)), 0);
-
-  resumo.innerHTML = `
+  document.getElementById('resumoColheita').innerHTML = `
     <div class="item"><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
     <div class="item"><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
     <div class="item"><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
   `;
-
-  gerarGraficoColheita();
-  gerarGraficoColhedor();
 }
 
 function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {
     const registros = grupo[nome];
-    const totalLatas = registros.reduce((s, c) => s + c.quantidade, 0);
-    const valorLata = registros[0].valorLata || 0;
+    const totalLatas = registros.reduce((sum, c) => sum + c.quantidade, 0);
+    const valorLata = registros[0]?.valorLata || 0;
     const valorTotal = totalLatas * valorLata;
 
-    const bloco = document.createElement("div");
-    bloco.className = "bloco-colhedor";
+    const bloco = document.createElement('div');
+    bloco.className = 'bloco-colhedor';
 
-    const titulo = document.createElement("div");
-    titulo.className = "grupo-data";
-    titulo.innerHTML = `<strong>${nome}</strong> - ${totalLatas.toFixed(2)} latas = R$ ${valorTotal.toFixed(2)}`;
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-data';
+    titulo.innerHTML = `<strong>${nome}</strong> - ${totalLatas.toFixed(2)} latas = R$${valorTotal.toFixed(2)}`;
     bloco.appendChild(titulo);
 
     registros.forEach(({ data, quantidade, valorLata, i }) => {
-      const div = document.createElement("div");
-      div.className = "item";
+      const div = document.createElement('div');
+      div.className = 'item';
       div.innerHTML = `
         <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
         <div class="botoes-colheita">
@@ -749,8 +823,8 @@ function montarGrupoColheita(grupo, container, pago) {
     });
 
     if (!pago) {
-      const botoes = document.createElement("div");
-      botoes.className = "botoes-colheita";
+      const botoes = document.createElement('div');
+      botoes.className = 'botoes-colheita';
       botoes.innerHTML = `
         <button class="botao-pagar" onclick="pagarTudoColhedor('${nome}')">Pagar Tudo</button>
         <button class="botao-pagar" onclick="pagarParcialColhedor('${nome}')">Pagar Parcial</button>
@@ -759,6 +833,14 @@ function montarGrupoColheita(grupo, container, pago) {
     }
 
     container.appendChild(bloco);
+  }
+}
+
+function excluirColheita(index) {
+  if (confirm("Deseja excluir esse lançamento de colheita?")) {
+    colheita.splice(index, 1);
+    db.ref('Colheita').set(colheita);
+    atualizarColheita();
   }
 }
 
@@ -787,50 +869,52 @@ function pagarTudoColhedor(nome) {
 
 function pagarParcialColhedor(nome) {
   colhedorAtual = nome;
-  document.getElementById("modalParcialTexto").innerText = `Qual valor (R$) deseja pagar para ${nome}?`;
-  document.getElementById("inputParcial").value = '';
-  document.getElementById("modalParcial").style.display = 'flex';
+  modalParcialTexto.innerText = `Qual valor (R$) deseja pagar para ${nome}?`;
+  inputParcial.value = '';
+  modalParcial.style.display = 'flex';
 }
 
 function confirmarParcial() {
-  const valorPagar = parseFloat(document.getElementById("inputParcial").value);
+  const valorPagar = parseFloat(inputParcial.value);
   if (isNaN(valorPagar) || valorPagar <= 0) {
     alert("Valor inválido!");
     return;
   }
 
   const hoje = new Date().toISOString().split('T')[0];
-  let restante = valorPagar;
+  let restanteValor = valorPagar;
   let alterou = false;
 
   colheita.sort((a, b) => a.data.localeCompare(b.data));
 
-  for (const c of colheita) {
-    if (c.colhedor !== colhedorAtual || c.quantidade <= c.pagoParcial || restante <= 0) continue;
+  for (let i = 0; i < colheita.length; i++) {
+    const c = colheita[i];
+    if (c.colhedor === colhedorAtual && (c.quantidade - c.pagoParcial) > 0 && restanteValor > 0) {
+      const disponivelLatas = c.quantidade - c.pagoParcial;
+      const valorDisponivel = disponivelLatas * c.valorLata;
+      const valorParaEssa = Math.min(valorDisponivel, restanteValor);
+      const latasParaPagar = parseFloat((valorParaEssa / c.valorLata).toFixed(10));
 
-    const latasDisp = c.quantidade - c.pagoParcial;
-    const valorDisp = latasDisp * c.valorLata;
-    const pagar = Math.min(valorDisp, restante);
-    const latas = pagar / c.valorLata;
-
-    c.pagoParcial += latas;
-    c.historicoPagamentos = c.historicoPagamentos || [];
-    c.historicoPagamentos.push({ data: hoje, quantidade: latas });
-
-    if (c.pagoParcial >= c.quantidade) {
-      c.pagoParcial = c.quantidade;
-      c.pago = true;
+      if (latasParaPagar > 0) {
+        c.pagoParcial += latasParaPagar;
+        c.historicoPagamentos = c.historicoPagamentos || [];
+        c.historicoPagamentos.push({ data: hoje, quantidade: latasParaPagar });
+        if (c.pagoParcial >= c.quantidade) {
+          c.pagoParcial = c.quantidade;
+          c.pago = true;
+        }
+        restanteValor -= latasParaPagar * c.valorLata;
+        restanteValor = parseFloat(restanteValor.toFixed(2));
+        alterou = true;
+      }
     }
-
-    restante -= pagar;
-    alterou = true;
   }
 
   if (alterou) {
     db.ref('Colheita').set(colheita).then(() => {
       atualizarColheita();
       fecharModalParcial();
-      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} registrado!`);
+      alert(`Pagamento parcial de R$ ${valorPagar.toFixed(2)} registrado com sucesso!`);
     });
   } else {
     alert("O valor informado não foi suficiente para pagar nenhuma lata.");
@@ -838,30 +922,25 @@ function confirmarParcial() {
 }
 
 function fecharModalParcial() {
-  document.getElementById("modalParcial").style.display = "none";
+  modalParcial.style.display = 'none';
 }
 
 function excluirPagamento(index) {
   const c = colheita[index];
   if (!c || c.pagoParcial === 0) return;
-
   if (!confirm("Deseja excluir somente o pagamento deste lançamento? A quantidade voltará como pendente.")) return;
 
   c.pagoParcial = 0;
   c.pago = false;
   c.historicoPagamentos = [];
-  db.ref('Colheita').set(colheita).then(() => atualizarColheita());
-}
-
-function excluirColheita(index) {
-  if (confirm("Deseja excluir esse lançamento de colheita?")) {
-    colheita.splice(index, 1);
-    db.ref('Colheita').set(colheita).then(() => atualizarColheita());
-  }
+  db.ref('Colheita').set(colheita).then(() => {
+    atualizarColheita();
+    alert("Pagamento excluído e valor retornado como pendente.");
+  });
 }
 
 function gerarGraficoColheita() {
-  const ctx = document.getElementById("graficoColheita").getContext("2d");
+  const ctx = document.getElementById('graficoColheita').getContext('2d');
   if (window.graficoColheitaChart) window.graficoColheitaChart.destroy();
 
   const dias = {};
@@ -870,20 +949,20 @@ function gerarGraficoColheita() {
   });
 
   window.graficoColheitaChart = new Chart(ctx, {
-    type: "bar",
+    type: 'bar',
     data: {
       labels: Object.keys(dias),
       datasets: [{
-        label: "Latas por Dia",
-        data: Object.values(dias),
-        backgroundColor: "#4caf50"
+        label: 'Latas por Dia',
+        data: Object.values(dias).map(v => parseFloat(v.toFixed(2))),
+        backgroundColor: '#4caf50'
       }]
     }
   });
 }
 
 function gerarGraficoColhedor() {
-  const ctx = document.getElementById("graficoColhedor").getContext("2d");
+  const ctx = document.getElementById('graficoColhedor').getContext('2d');
   if (window.graficoColhedorChart) window.graficoColhedorChart.destroy();
 
   const nomes = {};
@@ -892,14 +971,223 @@ function gerarGraficoColhedor() {
   });
 
   window.graficoColhedorChart = new Chart(ctx, {
-    type: "pie",
+    type: 'pie',
     data: {
       labels: Object.keys(nomes),
       datasets: [{
-        data: Object.values(nomes),
-        backgroundColor: ["#66bb6a", "#29b6f6", "#ffca28", "#ef5350", "#ab47bc"]
+        data: Object.values(nomes).map(v => parseFloat(v.toFixed(2))),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffca28', '#ef5350', '#ab47bc']
       }]
     }
   });
 }
 
+// ========== EXPORTAR RELATÓRIO DE COLHEITA ==========
+function exportarRelatorioColheita() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text('Relatório de Colheita', 20, 20);
+  let y = 40;
+
+  colheita.forEach(c => {
+    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`, 20, y);
+    y += 8;
+    if (c.historicoPagamentos.length) {
+      c.historicoPagamentos.forEach(h => {
+        doc.text(`Pagamento: ${h.data} - ${h.quantidade.toFixed(2)} latas`, 30, y);
+        y += 6;
+      });
+    }
+    y += 4;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  doc.save('relatorio_colheita.pdf');
+}
+
+// ========== EXPORTAR CSV DE COLHEITA ==========
+function exportarCSVColheita() {
+  if (!colheita.length) {
+    alert("Nenhum dado de colheita disponível para exportação.");
+    return;
+  }
+
+  let csv = 'Data,Colhedor,Quantidade,Latas Pagas,Latas Pendentes,Valor da Lata,Total Pago (R$),Total Pendente (R$),Histórico de Pagamentos\n';
+
+  colheita.forEach(c => {
+    const pagas = c.pagoParcial || 0;
+    const pendentes = c.quantidade - pagas;
+    const totalPago = (pagas * c.valorLata).toFixed(2);
+    const totalPendente = (pendentes * c.valorLata).toFixed(2);
+    const historico = (c.historicoPagamentos || []).map(h => `${h.data} (${h.quantidade.toFixed(2)})`).join(" | ");
+
+    csv += `${c.data},${c.colhedor},${c.quantidade.toFixed(2)},${pagas.toFixed(2)},${pendentes.toFixed(2)},${c.valorLata.toFixed(2)},${totalPago},${totalPendente},"${historico}"\n`;
+  });
+
+  const dataHoje = new Date().toISOString().split("T")[0];
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `colheita_${dataHoje}.csv`;
+  a.click();
+}
+
+// ========== CONFIGURAÇÕES DE SAFRA ==========
+function carregarAnoSafra() {
+  const ano = new Date().getFullYear();
+  document.getElementById("anoSafraAtual").innerText = ano;
+}
+
+function carregarSafrasDisponiveis() {
+  const select = document.getElementById("safraSelecionada");
+  select.innerHTML = "<option value=''>Selecione o ano</option>";
+  db.ref().once("value").then(snapshot => {
+    Object.keys(snapshot.val() || {}).forEach(key => {
+      if (!["Aplicacoes", "Tarefas", "Financeiro", "Colheita", "ValorLata"].includes(key)) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.innerText = key;
+        select.appendChild(option);
+      }
+    });
+  });
+}
+
+function fecharSafraAtual() {
+  const ano = new Date().getFullYear();
+  const confirmacao = confirm(`Deseja fechar a safra ${ano}? Isso arquivará os dados atuais.`);
+  if (!confirmacao) return;
+
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    const dados = {
+      Aplicacoes: app.val() || [],
+      Tarefas: tar.val() || [],
+      Financeiro: fin.val() || [],
+      Colheita: col.val() || [],
+      ValorLata: lata.val() || 0
+    };
+    return db.ref(ano).set(dados).then(() => {
+      db.ref("Aplicacoes").remove();
+      db.ref("Tarefas").remove();
+      db.ref("Financeiro").remove();
+      db.ref("Colheita").remove();
+      db.ref("ValorLata").remove();
+      alert(`Safra ${ano} fechada com sucesso.`);
+      location.reload();
+    });
+  });
+}
+
+function restaurarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para restaurar.");
+    return;
+  }
+  const confirmar = confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`);
+  if (!confirmar) return;
+
+  db.ref(safra).once("value").then(snap => {
+    const dados = snap.val();
+    if (!dados) {
+      alert("Dados da safra não encontrados.");
+      return;
+    }
+    return Promise.all([
+      db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+      db.ref("Tarefas").set(dados.Tarefas || []),
+      db.ref("Financeiro").set(dados.Financeiro || []),
+      db.ref("Colheita").set(dados.Colheita || []),
+      db.ref("ValorLata").set(dados.ValorLata || 0)
+    ]).then(() => {
+      alert(`Safra ${safra} restaurada com sucesso.`);
+      location.reload();
+    });
+  });
+}
+
+function deletarSafra() {
+  const safra = document.getElementById("safraSelecionada").value;
+  if (!safra) {
+    alert("Selecione uma safra para deletar.");
+    return;
+  }
+  const confirmar = confirm(`Deseja excluir permanentemente a safra ${safra}? Esta ação não poderá ser desfeita.`);
+  if (!confirmar) return;
+
+  db.ref(safra).remove().then(() => {
+    alert(`Safra ${safra} deletada com sucesso.`);
+    carregarSafrasDisponiveis();
+  });
+}
+
+// ========== BACKUP MANUAL ==========
+function fazerBackup() {
+  const backup = {};
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    backup.Aplicacoes = app.val() || [];
+    backup.Tarefas = tar.val() || [];
+    backup.Financeiro = fin.val() || [];
+    backup.Colheita = col.val() || [];
+    backup.ValorLata = lata.val() || 0;
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
+}
+
+function importarBackup() {
+  const input = document.getElementById("arquivoBackup");
+  const file = input.files[0];
+  if (!file) return alert("Nenhum arquivo selecionado.");
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const dados = JSON.parse(e.target.result);
+      Promise.all([
+        db.ref("Aplicacoes").set(dados.Aplicacoes || []),
+        db.ref("Tarefas").set(dados.Tarefas || []),
+        db.ref("Financeiro").set(dados.Financeiro || []),
+        db.ref("Colheita").set(dados.Colheita || []),
+        db.ref("ValorLata").set(dados.ValorLata || 0)
+      ]).then(() => {
+        alert("Backup importado com sucesso!");
+        location.reload();
+      });
+    } catch (err) {
+      alert("Erro ao importar o backup. Verifique se o arquivo é válido.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ========== TEMA CLARO/ESCURO ==========
+function alternarTema() {
+  document.body.classList.toggle('claro');
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+}
+
+// ========== VARIÁVEIS DE CONTROLE DE PARCELAS ==========
+let parcelaParaExcluir = null;
+let indexGastoExcluir = null;

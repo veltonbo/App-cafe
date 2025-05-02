@@ -895,3 +895,43 @@ function atualizarRelatorioAplicacoes() {
     container.appendChild(div);
   });
 }
+
+function carregarColheita() {
+  db.ref("Colheita").once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      colheita.length = 0;
+      colheita.push(...snapshot.val());
+      atualizarColheita();
+    }
+  });
+}
+
+function atualizarFinanceiro() {
+  const containerVencer = document.getElementById("gastosAVencer");
+  const containerPago = document.getElementById("gastosPagos");
+
+  containerVencer.innerHTML = "";
+  containerPago.innerHTML = "";
+
+  gastos.forEach((gasto, index) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${gasto.data} - ${gasto.descricao} (${gasto.categoria}) - R$ ${parseFloat(gasto.valor).toFixed(2)}</span>
+      <div class="botoes-financeiro">
+        ${gasto.pago
+          ? `<button onclick="desfazerPagamento(${index})" style="background:#ff9800;"><i class="fas fa-undo"></i></button>`
+          : `<button onclick="marcarPago(${index})" style="background:#4caf50;"><i class="fas fa-check"></i></button>`
+        }
+        <button class="botao-excluir" onclick="confirmarExclusaoParcela(${index}, null)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    if (gasto.pago) {
+      containerPago.appendChild(div);
+    } else {
+      containerVencer.appendChild(div);
+    }
+  });
+}

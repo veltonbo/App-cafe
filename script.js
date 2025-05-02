@@ -836,3 +836,62 @@ function importarBackup() {
   reader.readAsText(file);
 }
 
+function carregarFinanceiro() {
+  db.ref("Financeiro").once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      gastos.length = 0;
+      gastos.push(...snapshot.val());
+      atualizarFinanceiro();
+    }
+  });
+}
+
+function salvarValorLata() {
+  const valor = parseFloat(document.getElementById("valorLata").value);
+  if (!isNaN(valor)) {
+    valorLataGlobal = valor;
+    db.ref("ValorLata").set(valor);
+  }
+}
+
+function mostrarParcelas() {
+  const temParcelas = document.getElementById("temParcelas").checked;
+  document.getElementById("campoParcelas").style.display = temParcelas ? "block" : "none";
+}
+
+function adicionarColheita() {
+  const data = document.getElementById("dataColheita").value;
+  const quantidade = parseFloat(document.getElementById("quantidadeLatas").value);
+  const colhedor = document.getElementById("colhedor").value.trim();
+  const valorLata = parseFloat(document.getElementById("valorLata").value);
+
+  if (!data || isNaN(quantidade) || !colhedor || isNaN(valorLata)) {
+    alert("Preencha todos os campos da colheita.");
+    return;
+  }
+
+  const nova = { data, quantidade, colhedor, valorLata, pago: false };
+  colheita.push(nova);
+  db.ref("Colheita").set(colheita).then(() => {
+    atualizarColheita();
+  });
+}
+
+function atualizarRelatorioAplicacoes() {
+  const container = document.getElementById("relatorioAplicacoes");
+  container.innerHTML = "";
+
+  if (aplicacoes.length === 0) {
+    container.innerHTML = "<p>Nenhuma aplicação registrada.</p>";
+    return;
+  }
+
+  aplicacoes.forEach(app => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${app.data} - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}</span>
+    `;
+    container.appendChild(div);
+  });
+}

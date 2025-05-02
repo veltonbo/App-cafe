@@ -910,7 +910,7 @@
               ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
               : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
           }
-          <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
+          <button class="botao-excluir" onclick="excluirFinanceiro(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
         </div>
       `;
       container.appendChild(div);
@@ -953,13 +953,32 @@
     }
   }
 
-  function excluirFinanceiro(index) {
-    if (confirm("Deseja excluir este gasto?")) {
+  function excluirFinanceiro(index, parcelaIndex = null) {
+  const g = gastos[index];
+
+  // Se for uma parcela individual
+  if (parcelaIndex !== null && g.parcelasDetalhes) {
+    // Remove apenas a parcela
+    g.parcelasDetalhes.splice(parcelaIndex, 1);
+
+    // Se não restou nenhuma parcela, remove o gasto inteiro
+    if (g.parcelasDetalhes.length === 0) {
       gastos.splice(index, 1);
-      db.ref("Financeiro").set(gastos);
-      atualizarFinanceiro();
+    } else {
+      // Atualiza o valor total e número de parcelas
+      g.parcelas = g.parcelasDetalhes.length;
+      g.valor = g.parcelasDetalhes.reduce((soma, p) => soma + p.valor, 0);
+      g.pago = g.parcelasDetalhes.every(p => p.pago);
     }
+  } else {
+    // Confirmação para excluir gasto inteiro
+    if (!confirm("Deseja excluir este gasto por completo?")) return;
+    gastos.splice(index, 1);
   }
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
 
   function carregarFinanceiro() {
     db.ref("Financeiro").on("value", snap => {

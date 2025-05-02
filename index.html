@@ -751,7 +751,7 @@
     const dadosPago = {};
 
     gastos.forEach((g, i) => {
-      const txt = `${g.data} ${g.produto} ${g.descricao} ${g.tipo}`.toLowerCase();
+      const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
       if (!txt.includes(filtroTexto)) return;
       if (tipoFiltro && g.tipo !== tipoFiltro) return;
       if (statusFiltro === "pago" && !g.pago) return;
@@ -796,7 +796,7 @@
             <i class="fas fa-${icone}"></i> 
             <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
             ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-            ${parcelas > 1 ? `<br><small>${parcelas}x</small>` : ''}
+            ${(g.parcelas || 1) > 1 ? `<br><small>${g.parcelas}x</small>` : ''}
           </span>
           <div class="botoes-financeiro">
             ${!pago ? `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>` 

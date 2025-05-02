@@ -380,9 +380,18 @@
 
   <!-- Scripts personalizados do projeto -->
   <script src="firebase-config.js"></script>
-  <script src="colheita.js"></script>
-  <script src="relatorio.js"></script>
-  <script src="configuracoes.js"></script>
-  <script src="main.js" defer></script>
+<script src="colheita.js"></script>
+<script src="relatorio.js"></script>
+<script src="configuracoes.js"></script>
+<script src="main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof inicializarApp === 'function') {
+      inicializarApp();
+    } else {
+      alert("Erro: função inicializarApp não encontrada.");
+    }
+  });
+</script>
 </body>
 </html>

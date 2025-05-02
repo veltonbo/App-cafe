@@ -937,3 +937,33 @@ function atualizarFinanceiro() {
     }
   });
 }
+
+function carregarValorLata() {
+  db.ref("ValorLata").once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      valorLataGlobal = snapshot.val();
+      const input = document.getElementById("valorLata");
+      if (input) input.value = valorLataGlobal;
+    }
+  });
+}
+
+function atualizarColheita() {
+  const containerPendente = document.getElementById("listaColheitaPendente");
+  const containerPago = document.getElementById("listaColheitaPaga");
+  containerPendente.innerHTML = "";
+  containerPago.innerHTML = "";
+
+  const pendente = {};
+  const pago = {};
+
+  colheita.forEach((c, i) => {
+    const grupo = c.pago ? pago : pendente;
+    if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
+    grupo[c.colhedor].push({ ...c, i });
+  });
+
+  montarGrupoColheita(pendente, containerPendente, false);
+  montarGrupoColheita(pago, containerPago, true);
+}
+

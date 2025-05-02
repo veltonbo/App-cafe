@@ -369,21 +369,11 @@
 <button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
 
 </div>
-  <!-- Firebase, módulos e script principal -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- Bibliotecas adicionais -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
-
-  <!-- Scripts personalizados do projeto -->
-  <script src="firebase-config.js"></script>
-<script src="colheita.js"></script>
-<script src="relatorio.js"></script>
-<script src="configuracoes.js"></script>
-<script src="main.js"></script>
+  <script defer src="firebase-config.js"></script>
+<script defer src="main.js"></script>
+<script defer src="colheita.js"></script>
+<script defer src="configuracoes.js"></script>
+<script defer src="relatorio.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof inicializarApp === 'function') {

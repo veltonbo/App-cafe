@@ -822,9 +822,11 @@
           ${(parcelas || 1) > 1 ? `<br><small>${parcelas}x</small>` : ''}
         </span>
         <div class="botoes-financeiro">
-          ${!pago
-            ? `<button onclick="abrirModalParcelas(${i})" class="botao-parcelas"><i class="fas fa-tasks"></i></button>
-            : `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`}
+          ${(parcelas || 1) > 1
+            ? `<button onclick="abrirModalParcelas(${i})"><i class="fas fa-tasks"></i></button>`
+            : pago
+              ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
+              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
           <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
         </div>
       `;

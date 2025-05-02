@@ -349,13 +349,23 @@
   </div>
 </div>
 
-  <!-- ========== MODAL DE PARCELAS ========== -->
+  <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
 <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:12px; width:90%; max-width:420px; max-height:90vh; overflow:auto; box-shadow:0 0 12px #000;">
-    <h3 style="color:#66bb6a; text-align:center; margin-bottom:15px;">Controle de Parcelas</h3>
-    <div id="parcelasLista"></div>
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
+    <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
+    <table style="width:100%; border-collapse:collapse; color:white;">
+      <thead>
+        <tr style="border-bottom:1px solid #555;">
+          <th style="text-align:left; padding:8px;">#</th>
+          <th style="text-align:left; padding:8px;">Vencimento</th>
+          <th style="text-align:right; padding:8px;">Valor (R$)</th>
+          <th style="text-align:center; padding:8px;">Pago</th>
+        </tr>
+      </thead>
+      <tbody id="parcelasLista"></tbody>
+    </table>
     <div style="margin-top:20px; text-align:right;">
-      <button onclick="fecharModalParcelas()" style="background:#f44336; padding:8px 16px; border:none; border-radius:6px; color:white; font-weight:bold;">Fechar</button>
+      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
     </div>
   </div>
 </div>
@@ -786,44 +796,63 @@
   }
 
   function atualizarFinanceiro() {
-    const filtroTexto = pesquisaFinanceiro.value.toLowerCase();
-    const tipoFiltro = filtroTipoFin.value;
-    const statusFiltro = filtroStatusFin.value;
-    const dataIni = filtroDataInicioFin.value;
-    const dataFim = filtroDataFimFin.value;
+  const filtroTexto = pesquisaFinanceiro.value.toLowerCase();
+  const tipoFiltro = filtroTipoFin.value;
+  const statusFiltro = filtroStatusFin.value;
+  const dataIni = filtroDataInicioFin.value;
+  const dataFim = filtroDataFimFin.value;
 
-    const venc = document.getElementById("financeiroVencer");
-    const pagos = document.getElementById("financeiroPago");
-    venc.innerHTML = "";
-    pagos.innerHTML = "";
+  const venc = document.getElementById("financeiroVencer");
+  const pagos = document.getElementById("financeiroPago");
+  venc.innerHTML = "";
+  pagos.innerHTML = "";
 
-    const dadosVencer = {};
-    const dadosPago = {};
+  const dadosVencer = {};
+  const dadosPago = {};
 
-    gastos.forEach((g, i) => {
-      const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
-      if (!txt.includes(filtroTexto)) return;
-      if (tipoFiltro && g.tipo !== tipoFiltro) return;
+  gastos.forEach((g, index) => {
+    const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
+    if (!txt.includes(filtroTexto)) return;
+    if (tipoFiltro && g.tipo !== tipoFiltro) return;
+
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach((p, parcelaIndex) => {
+        const grupo = p.pago ? dadosPago : dadosVencer;
+        if (statusFiltro === "pago" && !p.pago) return;
+        if (statusFiltro === "vencer" && p.pago) return;
+        if (dataIni && p.vencimento < dataIni) return;
+        if (dataFim && p.vencimento > dataFim) return;
+        const mes = p.vencimento.slice(0, 7);
+        if (!grupo[mes]) grupo[mes] = [];
+        grupo[mes].push({
+          produto: `${g.produto} (Parcela ${p.numero})`,
+          descricao: g.descricao,
+          valor: p.valor,
+          tipo: g.tipo,
+          vencimento: p.vencimento,
+          pago: p.pago,
+          i: index,
+          parcelaIndex,
+          isParcela: true
+        });
+      });
+    } else {
       if (statusFiltro === "pago" && !g.pago) return;
       if (statusFiltro === "vencer" && g.pago) return;
       if (dataIni && g.data < dataIni) return;
       if (dataFim && g.data > dataFim) return;
-
-      const isPago = g.parcelasDetalhes 
-  ? g.parcelasDetalhes.some(p => p.pago)
-  : g.pago;
-
-const grupo = isPago ? dadosPago : dadosVencer;
-      const mes = g.data.slice(0, 7); // Ex: "2025-07"
+      const grupo = g.pago ? dadosPago : dadosVencer;
+      const mes = g.data.slice(0, 7);
       if (!grupo[mes]) grupo[mes] = [];
-      grupo[mes].push({ ...g, i });
-    });
+      grupo[mes].push({ ...g, i: index, isParcela: false });
+    }
+  });
 
-    renderizarFinanceiro(dadosVencer, venc, false);
-    renderizarFinanceiro(dadosPago, pagos, true);
-    gerarGraficoFinanceiro();
-    gerarResumoFinanceiro();
-  }
+  renderizarFinanceiro(dadosVencer, venc, false);
+  renderizarFinanceiro(dadosPago, pagos, true);
+  gerarResumoFinanceiro();
+  gerarGraficoFinanceiro();
+}
 
   function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {
@@ -834,7 +863,7 @@ const grupo = isPago ? dadosPago : dadosVencer;
 
     let totalMes = 0;
 
-    grupo[mes].forEach(({ produto, descricao, valor, tipo, parcelas, i }) => {
+    grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
 
       const icone = tipo === "Adubo" ? "leaf"
@@ -850,14 +879,15 @@ const grupo = isPago ? dadosPago : dadosVencer;
           <i class="fas fa-${icone}"></i> 
           <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-          ${(parcelas || 1) > 1 ? `<br><small>${parcelas}x</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
         <div class="botoes-financeiro">
-          ${(parcelas || 1) > 1
-            ? `<button onclick="abrirModalParcelas(${i})"><i class="fas fa-tasks"></i></button>`
+          ${isParcela
+            ? `<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
             : pago
               ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
-              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
+              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
+          }
           <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
         </div>
       `;
@@ -869,6 +899,20 @@ const grupo = isPago ? dadosPago : dadosVencer;
     totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
     container.appendChild(totalDiv);
   }
+}
+
+  function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
+
+  const parcela = gasto.parcelasDetalhes[parcelaIndex];
+  parcela.pago = !parcela.pago;
+
+  // Atualiza o status geral
+  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
 }
 
   function marcarPago(index) {
@@ -1060,7 +1104,23 @@ function abrirModalParcelas(index) {
     gasto.parcelasDetalhes = parcelas;
   }
 
-  renderizarModalParcelas(gasto.parcelasDetalhes);
+  const container = document.getElementById("parcelasLista");
+  container.innerHTML = "";
+
+  gasto.parcelasDetalhes.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #444";
+    tr.innerHTML = `
+      <td style="padding:8px;">${p.numero}</td>
+      <td style="padding:8px;">${p.vencimento}</td>
+      <td style="padding:8px; text-align:right;">${p.valor.toFixed(2)}</td>
+      <td style="padding:8px; text-align:center;">
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${index}, ${i})">
+      </td>
+    `;
+    container.appendChild(tr);
+  });
+
   document.getElementById("modalParcelas").style.display = "flex";
 }
 

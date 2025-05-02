@@ -149,6 +149,21 @@
     .botao-excluir:hover {
       background-color: #e53935;
     }
+
+    .botao-parcelas {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-parcelas:hover {
+  background-color: #1976d2;
+}
   </style>
 </head>
 <body>
@@ -304,6 +319,17 @@
     <button onclick="exportarFinanceiroPDF()">
       <i class="fas fa-file-pdf"></i> Exportar PDF
     </button>
+  </div>
+</div>
+
+  <!-- ========== MODAL DE PARCELAS ========= -->
+<div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:400px; max-height:90vh; overflow:auto;">
+    <h3 style="color:#66bb6a;">Controle de Parcelas</h3>
+    <div id="parcelasLista"></div>
+    <div style="margin-top:15px; text-align:right;">
+      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -797,7 +823,7 @@
         </span>
         <div class="botoes-financeiro">
           ${!pago
-            ? `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`
+            ? `<button onclick="abrirModalParcelas(${i})" class="botao-parcelas"><i class="fas fa-tasks"></i></button>
             : `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`}
           <button class="botao-excluir" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
         </div>
@@ -970,6 +996,73 @@
     const hoje = new Date().toISOString().split("T")[0];
     doc.save(`financeiro_${hoje}.pdf`);
   }
+</script>
+
+  <script>
+    let gastoAtualIndex = null;
+
+function abrirModalParcelas(index) {
+  const gasto = gastos[index];
+  gastoAtualIndex = index;
+
+  if (!gasto.parcelasDetalhes || gasto.parcelasDetalhes.length === 0) {
+    // Se ainda não tiver parcelas geradas, gerar agora
+    const total = gasto.valor;
+    const num = gasto.parcelas;
+    const valorParcela = parseFloat((total / num).toFixed(2));
+    const parcelas = [];
+    let dataBase = new Date(gasto.data);
+
+    for (let i = 0; i < num; i++) {
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
+      const vencStr = vencimento.toISOString().split("T")[0];
+      parcelas.push({
+        numero: i + 1,
+        valor: valorParcela,
+        vencimento: vencStr,
+        pago: false
+      });
+    }
+
+    gasto.parcelasDetalhes = parcelas;
+  }
+
+  // Renderizar no modal
+  const container = document.getElementById("parcelasLista");
+  container.innerHTML = "";
+
+  gasto.parcelasDetalhes.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.style = "margin-bottom:10px; background:#1f1f1f; padding:8px; border-radius:6px;";
+    div.innerHTML = `
+      <label>
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${i})">
+        Parcela ${p.numero} - R$ ${p.valor.toFixed(2)} - Venc: ${p.vencimento}
+      </label>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById("modalParcelas").style.display = "flex";
+}
+
+function alternarParcela(parcelaIndex) {
+  const gasto = gastos[gastoAtualIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
+
+  const parcela = gasto.parcelasDetalhes[parcelaIndex];
+  parcela.pago = !parcela.pago;
+
+  // Atualiza o status geral
+  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
+function fecharModalParcelas() {
+  document.getElementById("modalParcelas").style.display = "none";
+}
 </script>
 
 <script>

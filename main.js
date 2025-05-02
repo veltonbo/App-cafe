@@ -1,6 +1,7 @@
 function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
-  document.getElementById(abaId).classList.add('active');
+  const abaSelecionada = document.getElementById(abaId);
+  if (abaSelecionada) abaSelecionada.classList.add('active');
 
   document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
   const btnId = 'btn-' + abaId;
@@ -10,18 +11,23 @@ function mostrarAba(abaId) {
   localStorage.setItem('aba', abaId);
 }
 
-window.onload = function inicializarApp() {
-  mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
+  mostrarAba(abaInicial);
 
   if (localStorage.getItem('tema') === 'claro') {
     document.body.classList.add('claro');
   }
 
-  carregarAplicacoes?.();
-  carregarTarefas?.();
-  carregarFinanceiro?.();
-  carregarColheita?.();
-  carregarValorLata?.();
-  carregarAnoSafra?.();
-  carregarSafrasDisponiveis?.();
+  // Chama as funções de carregamento se estiverem disponíveis
+  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+  if (typeof carregarTarefas === "function") carregarTarefas();
+  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+  if (typeof carregarColheita === "function") carregarColheita();
+  if (typeof carregarValorLata === "function") carregarValorLata();
+  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
 }
+
+// Executa ao carregar a página
+window.addEventListener('DOMContentLoaded', inicializarApp);

@@ -13,25 +13,16 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ===== Dados globais =====
-const aplicacoes = [];
-const tarefas = [];
-const tarefasFeitas = [];
-const gastos = [];
-const colheita = [];
-
+const aplicacoes = [], tarefas = [], tarefasFeitas = [], gastos = [], colheita = [];
 let valorLataGlobal = 0;
-let colhedorAtual = '';
 let graficoGastosChart = null;
-let gastoAtualIndex = null;
+let indexGastoExcluir = null;
 let parcelaParaExcluir = null;
 
 // ===== Inicialização da interface =====
 window.onload = () => {
   mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
-  }
-
+  if (localStorage.getItem('tema') === 'claro') document.body.classList.add('claro');
   carregarAplicacoes();
   carregarTarefas();
   carregarFinanceiro();
@@ -45,11 +36,9 @@ window.onload = () => {
 function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
   document.getElementById(abaId).classList.add('active');
-
   document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
   const btn = document.getElementById('btn-' + abaId);
   if (btn) btn.classList.add('active');
-
   localStorage.setItem('aba', abaId);
 }
 
@@ -60,7 +49,6 @@ function alternarTema() {
 }
 
 // ===== Aplicações =====
-
 function adicionarAplicacao() {
   const data = document.getElementById("dataApp").value;
   const produto = document.getElementById("produtoApp").value.trim();
@@ -68,16 +56,10 @@ function adicionarAplicacao() {
   const tipo = document.getElementById("tipoApp").value;
   const setor = document.getElementById("setorApp").value;
 
-  if (!data || !produto || !dosagem) {
-    alert("Preencha todos os campos da aplicação!");
-    return;
-  }
+  if (!data || !produto || !dosagem) return alert("Preencha todos os campos da aplicação!");
 
-  const nova = { data, produto, dosagem, tipo, setor };
-  aplicacoes.push(nova);
-  db.ref('Aplicacoes').set(aplicacoes).then(() => {
-    atualizarAplicacoes();
-  });
+  aplicacoes.push({ data, produto, dosagem, tipo, setor });
+  db.ref("Aplicacoes").set(aplicacoes).then(atualizarAplicacoes);
 }
 
 function atualizarAplicacoes() {
@@ -87,7 +69,6 @@ function atualizarAplicacoes() {
   container.innerHTML = "";
 
   const agrupado = {};
-
   aplicacoes.forEach((a, i) => {
     const texto = `${a.data} ${a.produto} ${a.dosagem} ${a.tipo} ${a.setor}`.toLowerCase();
     if (texto.includes(filtro) && (filtroSetor === "" || a.setor === filtroSetor)) {
@@ -109,8 +90,7 @@ function atualizarAplicacoes() {
         <span>${produto} (${dosagem}) - ${tipo} - ${setor}</span>
         <div class="botoes-financeiro">
           <button class="botao-excluir" onclick="excluirAplicacao(${i})"><i class="fas fa-trash-alt"></i></button>
-        </div>
-      `;
+        </div>`;
       container.appendChild(div);
     });
   });
@@ -118,20 +98,18 @@ function atualizarAplicacoes() {
 
 function excluirAplicacao(index) {
   aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes).then(() => {
+  db.ref("Aplicacoes").set(aplicacoes).then(atualizarAplicacoes);
+}
+
+function carregarAplicacoes() {
+  db.ref("Aplicacoes").on("value", snap => {
+    aplicacoes.length = 0;
+    if (snap.exists()) aplicacoes.push(...snap.val());
     atualizarAplicacoes();
   });
 }
 
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snap => {
-    if (snap.exists()) {
-      aplicacoes.length = 0;
-      aplicacoes.push(...snap.val());
-    }
-    atualizarAplicacoes();
-  });
-}
+// ===== Tarefas =====
 
 function mostrarCamposAplicacao() {
   const campos = document.getElementById("camposAplicacao");
@@ -161,147 +139,22 @@ function adicionarTarefa() {
 }
 
 function salvarTarefas() {
-  db.ref('Tarefas').set([...tarefas, ...tarefasFeitas]);
-}
-
-function marcarTarefa(index, marcado) {
-  const tarefa = tarefas.splice(index, 1)[0];
-  tarefa.executada = true;
-  tarefasFeitas.push(tarefa);
-  salvarTarefas();
-  atualizarTarefas();
-
-  if (tarefa.eAplicacao) {
-    const novaAplicacao = {
-      data: tarefa.data,
-      produto: tarefa.descricao,
-      dosagem: tarefa.dosagem,
-      tipo: tarefa.tipoAplicacao,
-      setor: tarefa.setor
-    };
-    aplicacoes.push(novaAplicacao);
-    db.ref('Aplicacoes').set(aplicacoes).then(() => {
-      atualizarAplicacoes();
-    });
-  }
-}
-
-function desfazerTarefa(index) {
-  const tarefa = tarefasFeitas.splice(index, 1)[0];
-  tarefa.executada = false;
-  tarefas.push(tarefa);
-
-  if (tarefa.eAplicacao) {
-    const idx = aplicacoes.findIndex(app =>
-      app.data === tarefa.data &&
-      app.produto === tarefa.descricao &&
-      app.setor === tarefa.setor
-    );
-    if (idx > -1) {
-      aplicacoes.splice(idx, 1);
-      db.ref('Aplicacoes').set(aplicacoes).then(() => {
-        atualizarAplicacoes();
-      });
-    }
-  }
-
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function atualizarTarefas() {
-  const listaAFazer = document.getElementById("listaTarefas");
-  const listaExecutadas = document.getElementById("listaTarefasFeitas");
-  const filtro = document.getElementById("pesquisaTarefas").value.toLowerCase();
-  const setorFiltro = document.getElementById("filtroSetorTarefas").value;
-
-  listaAFazer.innerHTML = "";
-  listaExecutadas.innerHTML = "";
-
-  tarefas.forEach((t, i) => {
-    if (
-      (setorFiltro && t.setor !== setorFiltro) ||
-      (filtro && !t.descricao.toLowerCase().includes(filtro))
-    ) return;
-
-    const div = document.createElement("div");
-    div.className = "item";
-    const cor = t.prioridade === "Alta" ? "#f44336" :
-                t.prioridade === "Média" ? "#ff9800" : "#4caf50";
-
-    div.innerHTML = `
-      <span style="color:${cor}">${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button onclick="marcarTarefa(${i})" style="background-color: #4caf50;">
-          <i class="fas fa-check"></i>
-        </button>
-        <button onclick="excluirTarefa(${i}, false)" class="botao-excluir">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    listaAFazer.appendChild(div);
-  });
-
-  tarefasFeitas.forEach((t, i) => {
-    if (
-      (setorFiltro && t.setor !== setorFiltro) ||
-      (filtro && !t.descricao.toLowerCase().includes(filtro))
-    ) return;
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button onclick="desfazerTarefa(${i})" style="background-color: #ff9800;">
-          <i class="fas fa-undo"></i>
-        </button>
-        <button onclick="excluirTarefa(${i}, true)" class="botao-excluir">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    listaExecutadas.appendChild(div);
-  });
-}
-
-function excluirTarefa(index, feita) {
-  if (feita) {
-    tarefasFeitas.splice(index, 1);
-  } else {
-    tarefas.splice(index, 1);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function carregarTarefas() {
-  db.ref("Tarefas").once("value").then(snapshot => {
-    if (snapshot.exists()) {
-      tarefas.length = 0;
-      tarefasFeitas.length = 0;
-      snapshot.val().forEach(t => {
-        (t.executada ? tarefasFeitas : tarefas).push(t);
-      });
-      atualizarTarefas();
-    }
-  });
+  const todas = [...tarefas, ...tarefasFeitas];
+  db.ref("Tarefas").set(todas);
 }
 
 function marcarTarefa(index) {
-  const tarefa = tarefas[index];
+  const tarefa = tarefas.splice(index, 1)[0];
   tarefa.executada = true;
-  tarefas.splice(index, 1);
   tarefasFeitas.push(tarefa);
 
   if (tarefa.eAplicacao) {
     const novaAplicacao = {
       data: tarefa.data,
       produto: tarefa.descricao,
-      dosagem: tarefa.dosagem,
-      tipo: tarefa.tipoAplicacao,
-      setor: tarefa.setor
+      dosagem: tarefa.dosagem || '',
+      tipo: tarefa.tipoAplicacao || '',
+      setor: tarefa.setor || ''
     };
     aplicacoes.push(novaAplicacao);
     db.ref("Aplicacoes").set(aplicacoes);
@@ -313,232 +166,26 @@ function marcarTarefa(index) {
 }
 
 function desfazerTarefa(index) {
-  const tarefa = tarefasFeitas[index];
-  tarefa.executada = false;
-  tarefasFeitas.splice(index, 1);
-  tarefas.push(tarefa);
-
-  if (tarefa.eAplicacao) {
-    // Remove a aplicação correspondente
-    const indexRemover = aplicacoes.findIndex(a =>
-      a.data === tarefa.data &&
-      a.produto === tarefa.descricao &&
-      a.setor === tarefa.setor
-    );
-    if (indexRemover >= 0) {
-      aplicacoes.splice(indexRemover, 1);
-      db.ref("Aplicacoes").set(aplicacoes);
-    }
-  }
-
-  salvarTarefas();
-  atualizarTarefas();
-  atualizarAplicacoes();
-}
-
-function atualizarTarefas() {
-  listaTarefas.innerHTML = "";
-  listaTarefasFeitas.innerHTML = "";
-
-  const filtro = pesquisaTarefas.value.toLowerCase();
-  const setorFiltro = filtroSetorTarefas.value;
-
-  tarefas.forEach((t, i) => {
-    if (
-      (!t.data || !t.descricao) ||
-      (!t.descricao.toLowerCase().includes(filtro) && !t.setor.toLowerCase().includes(filtro)) ||
-      (setorFiltro && t.setor !== setorFiltro)
-    ) return;
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button class="botao-executar" onclick="marcarTarefa(${i})">
-          <i class="fas fa-check"></i>
-        </button>
-        <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    listaTarefas.appendChild(div);
-  });
-
-  tarefasFeitas.forEach((t, i) => {
-    if (
-      (!t.descricao.toLowerCase().includes(filtro) && !t.setor.toLowerCase().includes(filtro)) ||
-      (setorFiltro && t.setor !== setorFiltro)
-    ) return;
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button class="botao-desfazer" onclick="desfazerTarefa(${i})">
-          <i class="fas fa-undo"></i>
-        </button>
-        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    listaTarefasFeitas.appendChild(div);
-  });
-}
-
-function marcarTarefa(index) {
-  const tarefa = tarefas[index];
-  if (!tarefa) return;
-
-  tarefas.splice(index, 1);
-  tarefa.executada = true;
-  tarefasFeitas.push(tarefa);
-  salvarTarefas();
-
-  if (tarefa.eAplicacao) {
-    const novaAplicacao = {
-      data: tarefa.data,
-      produto: tarefa.descricao,
-      dosagem: tarefa.dosagem || '',
-      tipo: tarefa.tipoAplicacao || '',
-      setor: tarefa.setor || ''
-    };
-    aplicacoes.push(novaAplicacao);
-    db.ref('Aplicacoes').set(aplicacoes);
-  }
-
-  atualizarTarefas();
-  atualizarAplicacoes();
-}
-
-function desfazerTarefa(index) {
-  const tarefa = tarefasFeitas[index];
-  if (!tarefa) return;
-
-  tarefasFeitas.splice(index, 1);
+  const tarefa = tarefasFeitas.splice(index, 1)[0];
   tarefa.executada = false;
   tarefas.push(tarefa);
-  salvarTarefas();
 
-  // Remove aplicação associada
   if (tarefa.eAplicacao) {
     const idx = aplicacoes.findIndex(app =>
       app.data === tarefa.data &&
       app.produto === tarefa.descricao &&
+      app.tipo === tarefa.tipoAplicacao &&
       app.setor === tarefa.setor
     );
-    if (idx >= 0) {
+    if (idx !== -1) {
       aplicacoes.splice(idx, 1);
       db.ref("Aplicacoes").set(aplicacoes);
     }
   }
 
+  salvarTarefas();
   atualizarTarefas();
   atualizarAplicacoes();
-}
-
-function excluirTarefa(index, feita) {
-  if (feita) {
-    tarefasFeitas.splice(index, 1);
-  } else {
-    tarefas.splice(index, 1);
-  }
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function atualizarTarefas() {
-  const filtro = pesquisaTarefas.value.toLowerCase();
-  const filtroSetor = filtroSetorTarefas.value;
-  listaTarefas.innerHTML = '';
-  listaTarefasFeitas.innerHTML = '';
-
-  tarefas.forEach((t, i) => {
-    if (
-      (`${t.data} ${t.descricao} ${t.setor}`.toLowerCase().includes(filtro)) &&
-      (filtroSetor === '' || t.setor === filtroSetor)
-    ) {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-        <div class="botoes-financeiro">
-          <button onclick="marcarTarefa(${i})" style="background:#4caf50;"><i class="fas fa-check"></i></button>
-          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      listaTarefas.appendChild(div);
-    }
-  });
-
-  tarefasFeitas.forEach((t, i) => {
-    if (
-      (`${t.data} ${t.descricao} ${t.setor}`.toLowerCase().includes(filtro)) &&
-      (filtroSetor === '' || t.setor === filtroSetor)
-    ) {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-        <div class="botoes-financeiro">
-          <button onclick="desfazerTarefa(${i})" style="background:#ff9800;"><i class="fas fa-undo"></i></button>
-          <button class="botao-excluir" onclick="excluirTarefa(${i}, true)"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      listaTarefasFeitas.appendChild(div);
-    }
-  });
-}
-
-function marcarTarefa(index) {
-  const tarefa = tarefas[index];
-  tarefas.splice(index, 1);
-  tarefa.executada = true;
-  tarefasFeitas.push(tarefa);
-
-  if (tarefa.eAplicacao) {
-    const novaAplicacao = {
-      data: tarefa.data,
-      produto: tarefa.descricao,
-      dosagem: tarefa.dosagem,
-      tipo: tarefa.tipoAplicacao,
-      setor: tarefa.setor
-    };
-    aplicacoes.push(novaAplicacao);
-    db.ref('Aplicacoes').set(aplicacoes);
-    atualizarAplicacoes();
-  }
-
-  salvarTarefas();
-  atualizarTarefas();
-}
-
-function desfazerTarefa(index) {
-  const tarefa = tarefasFeitas[index];
-  tarefasFeitas.splice(index, 1);
-  tarefa.executada = false;
-  tarefas.push(tarefa);
-
-  if (tarefa.eAplicacao) {
-    // Remove a aplicação correspondente
-    const appIndex = aplicacoes.findIndex(a =>
-      a.data === tarefa.data &&
-      a.produto === tarefa.descricao &&
-      a.tipo === tarefa.tipoAplicacao &&
-      a.setor === tarefa.setor
-    );
-    if (appIndex !== -1) {
-      aplicacoes.splice(appIndex, 1);
-      db.ref('Aplicacoes').set(aplicacoes);
-      atualizarAplicacoes();
-    }
-  }
-
-  salvarTarefas();
-  atualizarTarefas();
 }
 
 function excluirTarefa(index, feita) {
@@ -546,27 +193,124 @@ function excluirTarefa(index, feita) {
   const tarefa = lista[index];
 
   if (feita && tarefa.eAplicacao) {
-    const appIndex = aplicacoes.findIndex(a =>
-      a.data === tarefa.data &&
-      a.produto === tarefa.descricao &&
-      a.tipo === tarefa.tipoAplicacao &&
-      a.setor === tarefa.setor
+    const idx = aplicacoes.findIndex(app =>
+      app.data === tarefa.data &&
+      app.produto === tarefa.descricao &&
+      app.tipo === tarefa.tipoAplicacao &&
+      app.setor === tarefa.setor
     );
-    if (appIndex !== -1) {
-      aplicacoes.splice(appIndex, 1);
-      db.ref('Aplicacoes').set(aplicacoes);
-      atualizarAplicacoes();
+    if (idx !== -1) {
+      aplicacoes.splice(idx, 1);
+      db.ref("Aplicacoes").set(aplicacoes);
     }
   }
 
   lista.splice(index, 1);
   salvarTarefas();
   atualizarTarefas();
+  atualizarAplicacoes();
 }
 
-function salvarTarefas() {
-  const todas = [...tarefas, ...tarefasFeitas];
-  db.ref('Tarefas').set(todas);
+function atualizarTarefas() {
+  const listaTarefas = document.getElementById("listaTarefas");
+  const listaTarefasFeitas = document.getElementById("listaTarefasFeitas");
+  const filtro = document.getElementById("pesquisaTarefas").value.toLowerCase();
+  const setorFiltro = document.getElementById("filtroSetorTarefas").value;
+
+  listaTarefas.innerHTML = '';
+  listaTarefasFeitas.innerHTML = '';
+
+  tarefas.forEach((t, i) => {
+    if (
+      (!t.data || !t.descricao) ||
+      (!`${t.data} ${t.descricao} ${t.setor}`.toLowerCase().includes(filtro)) ||
+      (setorFiltro && t.setor !== setorFiltro)
+    ) return;
+
+    const cor = t.prioridade === "Alta" ? "#f44336" :
+                t.prioridade === "Média" ? "#ff9800" : "#4caf50";
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span style="color:${cor}">${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-executar" onclick="marcarTarefa(${i})"><i class="fas fa-check"></i></button>
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, false)"><i class="fas fa-trash"></i></button>
+      </div>`;
+    listaTarefas.appendChild(div);
+  });
+
+  tarefasFeitas.forEach((t, i) => {
+    if (
+      (!`${t.data} ${t.descricao} ${t.setor}`.toLowerCase().includes(filtro)) ||
+      (setorFiltro && t.setor !== setorFiltro)
+    ) return;
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <div class="botoes-financeiro">
+        <button class="botao-desfazer" onclick="desfazerTarefa(${i})"><i class="fas fa-undo"></i></button>
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)"><i class="fas fa-trash"></i></button>
+      </div>`;
+    listaTarefasFeitas.appendChild(div);
+  });
+}
+
+function carregarTarefas() {
+  db.ref("Tarefas").once("value").then(snapshot => {
+    tarefas.length = 0;
+    tarefasFeitas.length = 0;
+    if (snapshot.exists()) {
+      snapshot.val().forEach(t => {
+        (t.executada ? tarefasFeitas : tarefas).push(t);
+      });
+    }
+    atualizarTarefas();
+  });
+}
+
+// ===== FINANCEIRO =====
+
+function carregarFinanceiro() {
+  db.ref("Financeiro").once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      gastos.length = 0;
+      gastos.push(...snapshot.val());
+    }
+    atualizarFinanceiro();
+  });
+}
+
+function atualizarFinanceiro() {
+  const containerVencer = document.getElementById("gastosAVencer");
+  const containerPago = document.getElementById("gastosPagos");
+  containerVencer.innerHTML = "";
+  containerPago.innerHTML = "";
+
+  gastos.forEach((gasto, index) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${gasto.data} - ${gasto.descricao} (${gasto.categoria}) - R$ ${parseFloat(gasto.valor).toFixed(2)}</span>
+      <div class="botoes-financeiro">
+        ${gasto.pago
+          ? `<button onclick="desfazerPagamento(${index})" style="background:#ff9800;"><i class="fas fa-undo"></i></button>`
+          : `<button onclick="marcarPago(${index})" style="background:#4caf50;"><i class="fas fa-check"></i></button>`
+        }
+        <button class="botao-excluir" onclick="confirmarExclusaoParcela(${index}, null)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    if (gasto.pago) {
+      containerPago.appendChild(div);
+    } else {
+      containerVencer.appendChild(div);
+    }
+  });
 }
 
 function marcarPago(index) {
@@ -579,14 +323,15 @@ function marcarPago(index) {
 function desfazerPagamento(index) {
   if (!gastos[index]) return;
   gastos[index].pago = false;
-
   if (gastos[index].parcelasDetalhes) {
     gastos[index].parcelasDetalhes.forEach(p => p.pago = false);
   }
-
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 }
+
+let indexGastoExcluir = null;
+let parcelaParaExcluir = null;
 
 function confirmarExclusaoParcela(index, parcelaIndex) {
   indexGastoExcluir = index;
@@ -624,6 +369,37 @@ function fecharModalExcluirParcela() {
   document.getElementById("modalConfirmarExclusaoParcela").style.display = "none";
   indexGastoExcluir = null;
   parcelaParaExcluir = null;
+}
+
+// ===== COLHEITA =====
+
+function carregarColheita() {
+  db.ref("Colheita").once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      colheita.length = 0;
+      colheita.push(...snapshot.val());
+    }
+    atualizarColheita();
+  });
+}
+
+function atualizarColheita() {
+  const containerPendente = document.getElementById("listaColheitaPendente");
+  const containerPago = document.getElementById("listaColheitaPaga");
+  containerPendente.innerHTML = "";
+  containerPago.innerHTML = "";
+
+  const pendente = {};
+  const pago = {};
+
+  colheita.forEach((c, i) => {
+    const grupo = c.pago ? pago : pendente;
+    if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
+    grupo[c.colhedor].push({ ...c, i });
+  });
+
+  montarGrupoColheita(pendente, containerPendente, false);
+  montarGrupoColheita(pago, containerPago, true);
 }
 
 function montarGrupoColheita(grupo, container, pago) {
@@ -670,23 +446,8 @@ function montarGrupoColheita(grupo, container, pago) {
   }
 }
 
-// ========== MOSTRAR ABA DE RELATÓRIO ==========
-function mostrarRelatorioCompleto(id) {
-  document.querySelectorAll('.relatorio-subaba').forEach(div => {
-    div.style.display = 'none';
-  });
+// ===== RELATÓRIOS =====
 
-  document.getElementById(id).style.display = 'block';
-
-  // Ativa o botão correspondente
-  document.querySelectorAll('#relatorio .menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const btnAtivo = document.getElementById(`btn-${id}`);
-  if (btnAtivo) btnAtivo.classList.add('active');
-}
-
-// ========== GERAR RELATÓRIO COMPLETO ==========
 function gerarRelatorioCompleto() {
   atualizarRelatorioAplicacoes();
   atualizarRelatorioTarefas();
@@ -694,14 +455,102 @@ function gerarRelatorioCompleto() {
   atualizarRelatorioColheita();
 }
 
-// ========== ATUALIZAÇÃO INICIAL DO RELATÓRIO ==========
+function mostrarRelatorioCompleto(id) {
+  document.querySelectorAll('.relatorio-subaba').forEach(div => {
+    div.style.display = 'none';
+  });
+
+  document.getElementById(id).style.display = 'block';
+
+  document.querySelectorAll('#relatorio .menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const btnAtivo = document.getElementById(`btn-${id}`);
+  if (btnAtivo) btnAtivo.classList.add('active');
+}
+
 document.getElementById("btn-relatorio").addEventListener("click", () => {
   mostrarAba("relatorio");
   gerarRelatorioCompleto();
-  mostrarRelatorioCompleto('rel-aplicacoes'); // Mostrar subaba inicial
+  mostrarRelatorioCompleto('rel-aplicacoes');
 });
 
-// ========== FUNÇÕES MENU CONFIGURAÇÕES ==========
+function atualizarRelatorioAplicacoes() {
+  const container = document.getElementById("relatorioAplicacoes");
+  container.innerHTML = "";
+  if (aplicacoes.length === 0) {
+    container.innerHTML = "<p>Nenhuma aplicação registrada.</p>";
+    return;
+  }
+
+  aplicacoes.forEach(app => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${app.data} - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function atualizarRelatorioTarefas() {
+  const container = document.getElementById("relatorioTarefas");
+  container.innerHTML = "";
+  const todas = [...tarefas, ...tarefasFeitas];
+
+  if (todas.length === 0) {
+    container.innerHTML = "<p>Nenhuma tarefa registrada.</p>";
+    return;
+  }
+
+  todas.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor} - ${t.executada ? "Executada" : "Pendente"}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function atualizarRelatorioFinanceiro() {
+  const container = document.getElementById("relatorioFinanceiro");
+  container.innerHTML = "";
+  if (gastos.length === 0) {
+    container.innerHTML = "<p>Nenhum lançamento financeiro registrado.</p>";
+    return;
+  }
+
+  gastos.forEach(g => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${g.data} - ${g.descricao} (${g.categoria}) - R$ ${parseFloat(g.valor).toFixed(2)} - ${g.pago ? "Pago" : "Em aberto"}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function atualizarRelatorioColheita() {
+  const container = document.getElementById("relatorioColheita");
+  container.innerHTML = "";
+  if (colheita.length === 0) {
+    container.innerHTML = "<p>Nenhuma colheita registrada.</p>";
+    return;
+  }
+
+  colheita.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${c.data} - ${c.colhedor} - ${c.quantidade} latas - R$${(c.quantidade * c.valorLata).toFixed(2)} - ${c.pago ? "Pago" : "Pendente"}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ===== CONFIGURAÇÕES DE SAFRA =====
+
 function carregarAnoSafra() {
   const ano = new Date().getFullYear();
   document.getElementById("anoSafraAtual").innerText = ano;
@@ -740,7 +589,6 @@ function fecharSafraAtual() {
       Colheita: col.val() || [],
       ValorLata: lata.val() || 0
     };
-
     db.ref(ano).set(dados).then(() => {
       db.ref("Aplicacoes").remove();
       db.ref("Tarefas").remove();
@@ -785,6 +633,8 @@ function deletarSafra() {
     carregarSafrasDisponiveis();
   });
 }
+
+// ===== BACKUP =====
 
 function fazerBackup() {
   const backup = {};
@@ -835,135 +685,3 @@ function importarBackup() {
   };
   reader.readAsText(file);
 }
-
-function carregarFinanceiro() {
-  db.ref("Financeiro").once("value").then(snapshot => {
-    if (snapshot.exists()) {
-      gastos.length = 0;
-      gastos.push(...snapshot.val());
-      atualizarFinanceiro();
-    }
-  });
-}
-
-function salvarValorLata() {
-  const valor = parseFloat(document.getElementById("valorLata").value);
-  if (!isNaN(valor)) {
-    valorLataGlobal = valor;
-    db.ref("ValorLata").set(valor);
-  }
-}
-
-function mostrarParcelas() {
-  const temParcelas = document.getElementById("temParcelas").checked;
-  document.getElementById("campoParcelas").style.display = temParcelas ? "block" : "none";
-}
-
-function adicionarColheita() {
-  const data = document.getElementById("dataColheita").value;
-  const quantidade = parseFloat(document.getElementById("quantidadeLatas").value);
-  const colhedor = document.getElementById("colhedor").value.trim();
-  const valorLata = parseFloat(document.getElementById("valorLata").value);
-
-  if (!data || isNaN(quantidade) || !colhedor || isNaN(valorLata)) {
-    alert("Preencha todos os campos da colheita.");
-    return;
-  }
-
-  const nova = { data, quantidade, colhedor, valorLata, pago: false };
-  colheita.push(nova);
-  db.ref("Colheita").set(colheita).then(() => {
-    atualizarColheita();
-  });
-}
-
-function atualizarRelatorioAplicacoes() {
-  const container = document.getElementById("relatorioAplicacoes");
-  container.innerHTML = "";
-
-  if (aplicacoes.length === 0) {
-    container.innerHTML = "<p>Nenhuma aplicação registrada.</p>";
-    return;
-  }
-
-  aplicacoes.forEach(app => {
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}</span>
-    `;
-    container.appendChild(div);
-  });
-}
-
-// ========== FUNÇÃO PARA CARREGAR COLHEITA ==========
-function carregarColheita() {
-  db.ref("Colheita").once("value").then(snapshot => {
-    if (snapshot.exists()) {
-      colheita.length = 0;
-      colheita.push(...snapshot.val());
-      atualizarColheita();
-    }
-  });
-}
-
-// ========== FUNÇÃO PARA ATUALIZAR FINANCEIRO ==========
-function atualizarFinanceiro() {
-  const containerVencer = document.getElementById("gastosAVencer");
-  const containerPago = document.getElementById("gastosPagos");
-
-  containerVencer.innerHTML = "";
-  containerPago.innerHTML = "";
-
-  gastos.forEach((gasto, index) => {
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <span>${gasto.data} - ${gasto.descricao} (${gasto.categoria}) - R$ ${parseFloat(gasto.valor).toFixed(2)}</span>
-      <div class="botoes-financeiro">
-        ${gasto.pago
-          ? `<button onclick="desfazerPagamento(${index})" style="background:#ff9800;"><i class="fas fa-undo"></i></button>`
-          : `<button onclick="marcarPago(${index})" style="background:#4caf50;"><i class="fas fa-check"></i></button>`
-        }
-        <button class="botao-excluir" onclick="confirmarExclusaoParcela(${index}, null)">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    if (gasto.pago) {
-      containerPago.appendChild(div);
-    } else {
-      containerVencer.appendChild(div);
-    }
-  });
-}
-
-function carregarValorLata() {
-  db.ref("ValorLata").once("value").then(snapshot => {
-    if (snapshot.exists()) {
-      valorLataGlobal = snapshot.val();
-      const input = document.getElementById("valorLata");
-      if (input) input.value = valorLataGlobal;
-    }
-  });
-}
-
-function atualizarColheita() {
-  const containerPendente = document.getElementById("listaColheitaPendente");
-  const containerPago = document.getElementById("listaColheitaPaga");
-  containerPendente.innerHTML = "";
-  containerPago.innerHTML = "";
-
-  const pendente = {};
-  const pago = {};
-
-  colheita.forEach((c, i) => {
-    const grupo = c.pago ? pago : pendente;
-    if (!grupo[c.colhedor]) grupo[c.colhedor] = [];
-    grupo[c.colhedor].push({ ...c, i });
-  });
-
-  montarGrupoColheita(pendente, containerPendente, false);
-  montarGrupoColheita(pago, containerPago, true);
-}
-

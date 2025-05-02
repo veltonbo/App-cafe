@@ -12,6 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+<script>
 // ========== INICIALIZAÇÃO DO APP ==========
   function inicializarApp() {
     mostrarAba(localStorage.getItem('aba') || 'aplicacoes');
@@ -42,9 +43,7 @@ const db = firebase.database();
   }
 
   window.onload = inicializarApp;
-</script>
 
-<script>
   // ========== FUNÇÕES MENU APLICAÇÕES ==========
   function adicionarAplicacao() {
     const nova = {
@@ -109,9 +108,7 @@ const db = firebase.database();
       }
     });
   }
-</script>
 
-<script>
   // ========== FUNÇÕES MENU TAREFAS ==========
   function adicionarTarefa() {
     const nova = {
@@ -250,9 +247,7 @@ const db = firebase.database();
       }
     });
   }
-</script>
 
-<script>
   // ========== FUNÇÕES MENU FINANCEIRO ==========
   function mostrarParcelas() {
     const checkbox = document.getElementById("parceladoFin");
@@ -571,9 +566,7 @@ function fecharModalExcluirParcela() {
                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
   }
-</script>
 
-  <script>
   function exportarFinanceiroCSV() {
     if (!gastos.length) {
       alert("Nenhum gasto registrado.");
@@ -643,9 +636,7 @@ function fecharModalExcluirParcela() {
     const hoje = new Date().toISOString().split("T")[0];
     doc.save(`financeiro_${hoje}.pdf`);
   }
-</script>
 
-  <script>
     let gastoAtualIndex = null;
 
 function abrirModalParcelas(index) {
@@ -729,9 +720,7 @@ function alternarParcela(gastoIndex, parcelaIndex) {
 function fecharModalParcelas() {
   document.getElementById("modalParcelas").style.display = "none";
 }
-</script>
 
-<script>
   // ========== FUNÇÕES MENU COLHEITA ==========
   function carregarValorLata() {
     db.ref('ValorLata').on('value', snap => {
@@ -1013,9 +1002,7 @@ function fecharModalParcelas() {
       }
     });
   }
-</script>
 
-<script>
   // ========== EXPORTAR RELATÓRIO DE COLHEITA ==========
   function exportarRelatorioColheita() {
     const { jsPDF } = window.jspdf;
@@ -1220,9 +1207,7 @@ function importarBackup() {
     document.body.classList.toggle('claro');
     localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
   }
-</script>
 
-  <script>
 // ========== SCRIPT COMPLETO DO MENU RELATÓRIO ==========
   function mostrarRelatorioCompleto(id) {
     document.querySelectorAll('.relatorio-subaba').forEach(div => {
@@ -1237,9 +1222,7 @@ function importarBackup() {
     const btnAtivo = document.querySelector(`#btn-${id}`);
     if (btnAtivo) btnAtivo.classList.add('active');
   }
-</script>
 
-  <script>
 // ====== RENDERIZAR APLICAÇÕES NO RELATÓRIO ======
 function atualizarRelatorioAplicacoes() {
   const container = document.getElementById("ultimasAplicacoes");
@@ -1442,14 +1425,10 @@ document.getElementById("btn-relatorio").addEventListener("click", () => {
   mostrarAba("relatorio");
   aguardarDadosCarregados(gerarRelatorioCompleto);
 });
-</script>
 
-  <script>
     let parcelaParaExcluir = null;
     let indexGastoExcluir = null;
-  </script>
 
-  <script>
 function gerarRelatorioCompleto() {
   atualizarRelatorioAplicacoes();
   atualizarRelatorioTarefas();

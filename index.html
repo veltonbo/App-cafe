@@ -164,6 +164,30 @@
 .botao-parcelas:hover {
   background-color: #1976d2;
 }
+
+<style>
+  .parcela-item {
+    background-color: #1e1e1e;
+    border-left: 5px solid #4caf50;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .parcela-item.pendente {
+    border-left-color: #ff9800;
+  }
+  .parcela-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-grow: 1;
+    font-size: 15px;
+  }
+</style>
   </style>
 </head>
 <body>
@@ -322,13 +346,13 @@
   </div>
 </div>
 
-  <!-- ========== MODAL DE PARCELAS ========= -->
+  <!-- ========== MODAL DE PARCELAS ========== -->
 <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:400px; max-height:90vh; overflow:auto;">
-    <h3 style="color:#66bb6a;">Controle de Parcelas</h3>
+  <div style="background:#2c2c2c; padding:20px; border-radius:12px; width:90%; max-width:420px; max-height:90vh; overflow:auto; box-shadow:0 0 12px #000;">
+    <h3 style="color:#66bb6a; text-align:center; margin-bottom:15px;">Controle de Parcelas</h3>
     <div id="parcelasLista"></div>
-    <div style="margin-top:15px; text-align:right;">
-      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+    <div style="margin-top:20px; text-align:right;">
+      <button onclick="fecharModalParcelas()" style="background:#f44336; padding:8px 16px; border:none; border-radius:6px; color:white; font-weight:bold;">Fechar</button>
     </div>
   </div>
 </div>
@@ -782,7 +806,11 @@
       if (dataIni && g.data < dataIni) return;
       if (dataFim && g.data > dataFim) return;
 
-      const grupo = g.pago ? dadosPago : dadosVencer;
+      const isPago = g.parcelasDetalhes 
+  ? g.parcelasDetalhes.some(p => p.pago)
+  : g.pago;
+
+const grupo = isPago ? dadosPago : dadosVencer;
       const mes = g.data.slice(0, 7); // Ex: "2025-07"
       if (!grupo[mes]) grupo[mes] = [];
       grupo[mes].push({ ...g, i });
@@ -1008,7 +1036,6 @@ function abrirModalParcelas(index) {
   gastoAtualIndex = index;
 
   if (!gasto.parcelasDetalhes || gasto.parcelasDetalhes.length === 0) {
-    // Se ainda não tiver parcelas geradas, gerar agora
     const total = gasto.valor;
     const num = gasto.parcelas;
     const valorParcela = parseFloat((total / num).toFixed(2));
@@ -1030,13 +1057,16 @@ function abrirModalParcelas(index) {
     gasto.parcelasDetalhes = parcelas;
   }
 
-  // Renderizar no modal
+  renderizarModalParcelas(gasto.parcelasDetalhes);
+  document.getElementById("modalParcelas").style.display = "flex";
+}
+
+function renderizarModalParcelas(parcelas) {
   const container = document.getElementById("parcelasLista");
   container.innerHTML = "";
-
-  gasto.parcelasDetalhes.forEach((p, i) => {
+  parcelas.forEach((p, i) => {
     const div = document.createElement("div");
-    div.style = "margin-bottom:10px; background:#1f1f1f; padding:8px; border-radius:6px;";
+    div.className = `parcela-item ${p.pago ? '' : 'pendente'}`;
     div.innerHTML = `
       <label>
         <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${i})">
@@ -1045,8 +1075,6 @@ function abrirModalParcelas(index) {
     `;
     container.appendChild(div);
   });
-
-  document.getElementById("modalParcelas").style.display = "flex";
 }
 
 function alternarParcela(parcelaIndex) {
@@ -1056,9 +1084,11 @@ function alternarParcela(parcelaIndex) {
   const parcela = gasto.parcelasDetalhes[parcelaIndex];
   parcela.pago = !parcela.pago;
 
-  // Atualiza o status geral
+  // Atualiza status geral com base em todas as parcelas
   gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+
   db.ref("Financeiro").set(gastos);
+  renderizarModalParcelas(gasto.parcelasDetalhes);
   atualizarFinanceiro();
 }
 

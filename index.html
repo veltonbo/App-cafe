@@ -2049,6 +2049,149 @@ function atualizarRelatorioCompleto() {
     let parcelaParaExcluir = null;
     let indexGastoExcluir = null;
   </script>
+
+  <script>
+function gerarRelatorioCompleto() {
+  atualizarRelatorioAplicacoes();
+  atualizarRelatorioTarefas();
+  atualizarRelatorioFinanceiro();
+  atualizarRelatorioColheita();
+}
+
+function atualizarRelatorioAplicacoes() {
+  const container = document.getElementById("resumoRelAplicacoes");
+  container.innerHTML = "";
+  const contagem = {};
+
+  aplicacoes.forEach(app => {
+    const tipo = app.tipo || "Outro";
+    contagem[tipo] = (contagem[tipo] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${app.data}</strong> - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoRelAplicacoes").getContext("2d");
+  if (window.graficoRelAplicacoesChart) window.graficoRelAplicacoesChart.destroy();
+  window.graficoRelAplicacoesChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        label: "Aplicações por Tipo",
+        data: Object.values(contagem),
+        backgroundColor: "#66bb6a"
+      }]
+    }
+  });
+}
+
+function atualizarRelatorioTarefas() {
+  const container = document.getElementById("resumoRelTarefas");
+  container.innerHTML = "";
+  const contagem = { Alta: 0, Média: 0, Baixa: 0 };
+
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    contagem[t.prioridade] = (contagem[t.prioridade] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${t.data}</strong> - ${t.descricao} (${t.prioridade}) - ${t.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoRelTarefas").getContext("2d");
+  if (window.graficoRelTarefasChart) window.graficoRelTarefasChart.destroy();
+  window.graficoRelTarefasChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        data: Object.values(contagem),
+        backgroundColor: ["#f44336", "#ff9800", "#4caf50"]
+      }]
+    }
+  });
+}
+
+function atualizarRelatorioFinanceiro() {
+  const container = document.getElementById("resumoRelFinanceiro");
+  container.innerHTML = "";
+  const categorias = {};
+  let total = 0;
+
+  gastos.filter(g => g.pago).forEach(g => {
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    total += g.valor;
+  });
+
+  Object.entries(categorias).forEach(([tipo, valor]) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${tipo}</strong>: R$ ${valor.toFixed(2)}`;
+    container.appendChild(div);
+  });
+
+  const totalDiv = document.createElement("div");
+  totalDiv.className = "item";
+  totalDiv.innerHTML = `<strong>Total Geral:</strong> R$ ${total.toFixed(2)}`;
+  container.appendChild(totalDiv);
+
+  const ctx = document.getElementById("graficoRelFinanceiro").getContext("2d");
+  if (window.graficoRelFinanceiroChart) window.graficoRelFinanceiroChart.destroy();
+  window.graficoRelFinanceiroChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(categorias),
+      datasets: [{
+        data: Object.values(categorias),
+        backgroundColor: ["#66bb6a", "#29b6f6", "#ffa726", "#ef5350", "#ab47bc"]
+      }]
+    }
+  });
+}
+
+function atualizarRelatorioColheita() {
+  const container = document.getElementById("resumoRelColheita");
+  container.innerHTML = "";
+
+  const colhedores = {};
+  let totalLatas = 0;
+  let totalValor = 0;
+
+  colheita.forEach(c => {
+    colhedores[c.colhedor] = (colhedores[c.colhedor] || 0) + c.quantidade;
+    totalLatas += c.quantidade;
+    totalValor += c.quantidade * c.valorLata;
+  });
+
+  Object.entries(colhedores).forEach(([colhedor, latas]) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${colhedor}</strong>: ${latas.toFixed(2)} latas`;
+    container.appendChild(div);
+  });
+
+  const totalDiv = document.createElement("div");
+  totalDiv.className = "item";
+  totalDiv.innerHTML = `<strong>Total Geral:</strong> ${totalLatas.toFixed(2)} latas - R$ ${totalValor.toFixed(2)}`;
+  container.appendChild(totalDiv);
+
+  const ctx = document.getElementById("graficoRelColheita").getContext("2d");
+  if (window.graficoRelColheitaChart) window.graficoRelColheitaChart.destroy();
+  window.graficoRelColheitaChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(colhedores),
+      datasets: [{
+        label: "Latas por Colhedor",
+        data: Object.values(colhedores).map(v => parseFloat(v.toFixed(2))),
+        backgroundColor: "#4caf50"
+      }]
+    }
+  });
+}
+</script>
   
 <style>
   .botoes-financeiro button {

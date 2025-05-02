@@ -1851,10 +1851,21 @@ function importarBackup() {
 
   <script>
 // ========== SCRIPT COMPLETO DO MENU RELATÓRIO ==========
-function mostrarRelatorio(abaId) {
-  document.querySelectorAll('.relatorio-subaba').forEach(el => el.style.display = 'none');
-  document.getElementById(abaId).style.display = 'block';
-}
+<script>
+  function mostrarRelatorioCompleto(id) {
+    document.querySelectorAll('.relatorio-subaba').forEach(div => {
+      div.style.display = 'none';
+    });
+    document.getElementById(id).style.display = 'block';
+
+    // Atualiza os botões
+    document.querySelectorAll('#relatorio .menu-superior button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    const btnAtivo = document.querySelector(`#btn-${id}`);
+    if (btnAtivo) btnAtivo.classList.add('active');
+  }
+</script>
 
 // ====== RENDERIZAR APLICAÇÕES NO RELATÓRIO ======
 function atualizarRelatorioAplicacoes() {

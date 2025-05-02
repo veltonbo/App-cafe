@@ -1,9 +1,15 @@
 function mostrarAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('active'));
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) abaSelecionada.classList.add('active');
+  document.querySelectorAll('.aba').forEach(aba => {
+    aba.style.display = 'none';
+  });
 
-  document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
+  const abaSelecionada = document.getElementById(abaId);
+  if (abaSelecionada) abaSelecionada.style.display = 'block';
+
+  document.querySelectorAll('.menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
   const btnId = 'btn-' + abaId;
   const btn = document.getElementById(btnId);
   if (btn) btn.classList.add('active');

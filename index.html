@@ -166,29 +166,32 @@
 }
 
 <style>
-  .parcela-item {
+  #modalParcelas .parcela-item {
     background-color: #1e1e1e;
-    border-left: 5px solid #4caf50;
+    color: #e0e0e0;
     padding: 10px;
     margin-bottom: 10px;
-    border-radius: 8px;
-    color: white;
+    border-radius: 6px;
+    font-size: 15px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .parcela-item.pendente {
-    border-left-color: #ff9800;
-  }
-  .parcela-item label {
+
+  #modalParcelas .parcela-item label {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-grow: 1;
-    font-size: 15px;
+    gap: 10px;
+    word-break: break-word;
+  }
+
+  #modalParcelas input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
   }
 </style>
-  </style>
+</style>
 </head>
 <body>
 

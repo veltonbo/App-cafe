@@ -165,6 +165,67 @@
   background-color: #1976d2;
 }
 
+    /* === ESTILOS DO MENU RELATÓRIO === */
+.relatorio-subaba {
+  padding: 10px 0;
+}
+
+.relatorio-subaba h3 {
+  margin-bottom: 10px;
+  color: #66bb6a;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+#relatorio canvas {
+  background: #1e1e1e;
+  border-radius: 8px;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+#resumoFinanceiro .item {
+  background-color: #2c2c2c;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#ultimasAplicacoes .item,
+#ultimasTarefas .item {
+  background-color: #1e1e1e;
+  border-left: 4px solid #66bb6a;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#resumoFinanceiro .item strong {
+  color: #fff;
+}
+
+#relatorio button {
+  margin-top: 20px;
+  margin-right: 10px;
+  padding: 10px 15px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#relatorio button:hover {
+  background-color: #45a049;
+}
+
+.menu-superior button i {
+  pointer-events: none;
+}
+
 <style>
   #modalParcelas .parcela-item {
     background-color: #1e1e1e;
@@ -396,34 +457,60 @@
   </div>
 </div>
 
-<!-- ========== MENU RELATÓRIO ========== -->
+<!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
 <div id="relatorio" class="aba">
-  <h2>Relatório</h2>
+  <h2>Relatório Geral</h2>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <input id="filtroDataInicioRel" type="date" />
+    <input id="filtroDataFimRel" type="date" />
+    <select id="filtroSetorRel">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <button onclick="gerarRelatorioCompleto()">Gerar Relatório</button>
+  </div>
+
   <div class="menu-superior" style="margin-bottom: 20px;">
-    <button id="btn-relatorio-aplicacoes" onclick="mostrarRelatorio('aplicacoesRel')"><i class="fas fa-flask"></i></button>
-    <button id="btn-relatorio-tarefas" onclick="mostrarRelatorio('tarefasRel')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-relatorio-financeiro" onclick="mostrarRelatorio('financeiroRel')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-rel-aplicacoes" onclick="mostrarRelatorioCompleto('rel-aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-rel-tarefas" onclick="mostrarRelatorioCompleto('rel-tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-rel-financeiro" onclick="mostrarRelatorioCompleto('rel-financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-rel-colheita" onclick="mostrarRelatorioCompleto('rel-colheita')"><i class="fas fa-tractor"></i></button>
   </div>
 
-  <div id="aplicacoesRel" class="relatorio-subaba">
-    <h3>Últimas Aplicações</h3>
-    <div id="ultimasAplicacoes"></div>
-    <canvas id="graficoAplicacoes" style="margin-top: 20px;"></canvas>
+  <!-- APLICAÇÕES -->
+  <div id="rel-aplicacoes" class="relatorio-subaba">
+    <h3>Aplicações</h3>
+    <div id="resumoRelAplicacoes"></div>
+    <canvas id="graficoRelAplicacoes"></canvas>
   </div>
 
-  <div id="tarefasRel" class="relatorio-subaba" style="display:none;">
-    <h3>Últimas Tarefas</h3>
-    <div id="ultimasTarefas"></div>
-    <canvas id="graficoTarefas" style="margin-top: 20px;"></canvas>
+  <!-- TAREFAS -->
+  <div id="rel-tarefas" class="relatorio-subaba" style="display:none;">
+    <h3>Tarefas</h3>
+    <div id="resumoRelTarefas"></div>
+    <canvas id="graficoRelTarefas"></canvas>
   </div>
 
-  <div id="financeiroRel" class="relatorio-subaba" style="display:none;">
-    <h3>Resumo Financeiro</h3>
-    <div id="resumoFinanceiro"></div>
-    <canvas id="graficoFinanceiro" style="margin-top: 20px;"></canvas>
+  <!-- FINANCEIRO -->
+  <div id="rel-financeiro" class="relatorio-subaba" style="display:none;">
+    <h3>Financeiro</h3>
+    <div id="resumoRelFinanceiro"></div>
+    <canvas id="graficoRelFinanceiro"></canvas>
   </div>
 
-  <button onclick="exportarPDF()">Exportar PDF</button>
+  <!-- COLHEITA -->
+  <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
+    <h3>Colheita</h3>
+    <div id="resumoRelColheita"></div>
+    <canvas id="graficoRelColheita"></canvas>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <button onclick="exportarRelatorioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+  </div>
 </div>
 
 <!-- ========== MENU COLHEITA ========== -->
@@ -1760,6 +1847,192 @@ function importarBackup() {
     document.body.classList.toggle('claro');
     localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
   }
+</script>
+
+  <script>
+// ========== SCRIPT COMPLETO DO MENU RELATÓRIO ==========
+function mostrarRelatorio(abaId) {
+  document.querySelectorAll('.relatorio-subaba').forEach(el => el.style.display = 'none');
+  document.getElementById(abaId).style.display = 'block';
+}
+
+// ====== RENDERIZAR APLICAÇÕES NO RELATÓRIO ======
+function atualizarRelatorioAplicacoes() {
+  const container = document.getElementById("ultimasAplicacoes");
+  container.innerHTML = "";
+  const contagem = {};
+
+  aplicacoes.forEach(app => {
+    const key = app.tipo || "Outro";
+    contagem[key] = (contagem[key] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${app.data}</strong> - ${app.produto} (${app.dosagem}) - ${app.tipo} - ${app.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoAplicacoes").getContext("2d");
+  if (window.graficoAplicacoes) window.graficoAplicacoes.destroy();
+  window.graficoAplicacoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        label: 'Aplicações por Tipo',
+        data: Object.values(contagem),
+        backgroundColor: '#4caf50'
+      }]
+    }
+  });
+}
+
+// ====== RENDERIZAR TAREFAS NO RELATÓRIO ======
+function atualizarRelatorioTarefas() {
+  const container = document.getElementById("ultimasTarefas");
+  container.innerHTML = "";
+  const contagem = { Alta: 0, Média: 0, Baixa: 0 };
+
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    contagem[t.prioridade] = (contagem[t.prioridade] || 0) + 1;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${t.data}</strong> - ${t.descricao} (${t.prioridade}) - ${t.setor}`;
+    container.appendChild(div);
+  });
+
+  const ctx = document.getElementById("graficoTarefas").getContext("2d");
+  if (window.graficoTarefas) window.graficoTarefas.destroy();
+  window.graficoTarefas = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(contagem),
+      datasets: [{
+        data: Object.values(contagem),
+        backgroundColor: ['#f44336', '#ff9800', '#4caf50']
+      }]
+    }
+  });
+}
+
+// ====== RENDERIZAR FINANCEIRO NO RELATÓRIO ======
+function atualizarRelatorioFinanceiro() {
+  const container = document.getElementById("resumoFinanceiro");
+  container.innerHTML = "";
+
+  const categorias = {};
+  let total = 0;
+
+  gastos.forEach(g => {
+    if (!g.pago) return;
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    total += g.valor;
+  });
+
+  Object.entries(categorias).forEach(([cat, val]) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<strong>${cat}</strong>: R$ ${val.toFixed(2)}`;
+    container.appendChild(div);
+  });
+
+  const divTotal = document.createElement("div");
+  divTotal.className = "item";
+  divTotal.innerHTML = `<strong>Total Geral:</strong> R$ ${total.toFixed(2)}`;
+  container.appendChild(divTotal);
+
+  const ctx = document.getElementById("graficoFinanceiro").getContext("2d");
+  if (window.graficoFinanceiro) window.graficoFinanceiro.destroy();
+  window.graficoFinanceiro = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(categorias),
+      datasets: [{
+        data: Object.values(categorias),
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc']
+      }]
+    }
+  });
+}
+
+// ====== EXPORTAR RELATÓRIO COMPLETO EM PDF ======
+function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+
+  doc.setFontSize(16);
+  doc.text("Relatório Geral - Manejo Café", 20, y);
+  y += 10;
+
+  doc.setFontSize(12);
+  doc.text("Aplicações:", 20, y); y += 8;
+  aplicacoes.forEach(a => {
+    doc.text(`${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo} - ${a.setor}`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Tarefas:", 20, y); y += 8;
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    doc.text(`${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Financeiro (pagos):", 20, y); y += 8;
+  gastos.filter(g => g.pago).forEach(g => {
+    doc.text(`${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  y += 8;
+  doc.text("Colheita:", 20, y); y += 8;
+  colheita.forEach(c => {
+    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`, 20, y);
+    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  const hoje = new Date().toISOString().split("T")[0];
+  doc.save(`relatorio_manejo_cafe_${hoje}.pdf`);
+}
+
+// ====== EXPORTAR RELATÓRIO EM CSV ======
+function exportarRelatorioCSV() {
+  let csv = "Tipo,Data,Descrição,Setor,Valor\n";
+
+  aplicacoes.forEach(a => {
+    csv += `Aplicação,${a.data},"${a.produto} (${a.dosagem})",${a.setor},\n`;
+  });
+
+  tarefas.concat(tarefasFeitas).forEach(t => {
+    csv += `Tarefa,${t.data},"${t.descricao} (${t.prioridade})",${t.setor},\n`;
+  });
+
+  gastos.filter(g => g.pago).forEach(g => {
+    csv += `Financeiro,${g.data},"${g.produto}",,${g.valor.toFixed(2)}\n`;
+  });
+
+  colheita.forEach(c => {
+    const total = (c.quantidade * c.valorLata).toFixed(2);
+    csv += `Colheita,${c.data},${c.colhedor},,${total}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `relatorio_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+}
+
+// ====== ATUALIZAÇÃO INICIAL DO RELATÓRIO ======
+function atualizarRelatorioCompleto() {
+  atualizarRelatorioAplicacoes();
+  atualizarRelatorioTarefas();
+  atualizarRelatorioFinanceiro();
+}
+
+document.addEventListener("DOMContentLoaded", atualizarRelatorioCompleto);
 </script>
 
   <script>

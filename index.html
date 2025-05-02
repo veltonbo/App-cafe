@@ -1214,21 +1214,22 @@ function renderizarModalParcelas(parcelas) {
   const container = document.getElementById("parcelasLista");
   container.innerHTML = "";
   parcelas.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = `parcela-item ${p.pago ? '' : 'pendente'}`;
-    div.className = "parcela-item";
-div.innerHTML = `
-  <label>
-    <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${i})">
-    Parcela ${p.numero}: R$ ${p.valor.toFixed(2)} <br>Vencimento: ${p.vencimento}
-  </label>
-`;
-    container.appendChild(div);
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #444";
+    tr.innerHTML = `
+      <td style="padding:8px;">${p.numero}</td>
+      <td style="padding:8px;">${p.vencimento}</td>
+      <td style="padding:8px; text-align:right;">${p.valor.toFixed(2)}</td>
+      <td style="padding:8px; text-align:center;">
+        <input type="checkbox" ${p.pago ? "checked" : ""} onchange="alternarParcela(${gastoAtualIndex}, ${i})">
+      </td>
+    `;
+    container.appendChild(tr);
   });
 }
 
-function alternarParcela(parcelaIndex) {
-  const gasto = gastos[gastoAtualIndex];
+function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
   if (!gasto || !gasto.parcelasDetalhes) return;
 
   const parcela = gasto.parcelasDetalhes[parcelaIndex];
@@ -1238,7 +1239,6 @@ function alternarParcela(parcelaIndex) {
   gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
 
   db.ref("Financeiro").set(gastos);
-  renderizarModalParcelas(gasto.parcelasDetalhes);
   atualizarFinanceiro();
 }
 

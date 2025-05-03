@@ -95,9 +95,12 @@ function adicionarAplicacao() {
   atualizarAplicacoes();
   atualizarSugestoesProduto();
 
+  // Limpa os campos após salvar
   document.getElementById('dataApp').value = '';
   document.getElementById('produtoApp').value = '';
   document.getElementById('dosagemApp').value = '';
+  document.getElementById('tipoApp').value = 'Adubo';
+  document.getElementById('setorApp').value = 'Setor 01';
 }
 
 function excluirAplicacao(index) {

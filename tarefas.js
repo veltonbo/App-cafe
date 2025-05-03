@@ -1,8 +1,9 @@
-// ====== VARIÁVEIS ======
+// ====== VARIÁVEIS GLOBAIS ======
 let tarefas = [];
 let tarefasFeitas = [];
 
-// ====== ADICIONAR NOVA TAREFA ======
+// ====== FUNÇÕES MENU TAREFAS ======
+
 function adicionarTarefa() {
   const nova = {
     data: dataTarefa.value,
@@ -23,12 +24,6 @@ function adicionarTarefa() {
   tarefas.push(nova);
   salvarTarefas();
   atualizarTarefas();
-
-  dataTarefa.value = '';
-  descricaoTarefa.value = '';
-  dosagemAplicacao.value = '';
-  eAplicacaoCheckbox.checked = false;
-  mostrarCamposAplicacao();
 }
 
 function salvarTarefas() {
@@ -109,6 +104,7 @@ function marcarTarefa(index, checked) {
     tarefasFeitas[index].executada = false;
     tarefas.push(tarefasFeitas.splice(index, 1)[0]);
   }
+
   salvarTarefas();
   atualizarTarefas();
 }
@@ -118,6 +114,7 @@ function marcarTarefaFeita(index, checked) {
     tarefasFeitas[index].executada = false;
     tarefas.push(tarefasFeitas.splice(index, 1)[0]);
   }
+
   salvarTarefas();
   atualizarTarefas();
 }
@@ -128,12 +125,12 @@ function excluirTarefa(index, feita) {
   } else {
     tarefas.splice(index, 1);
   }
+
   salvarTarefas();
   atualizarTarefas();
 }
 
 function mostrarCamposAplicacao() {
-  const camposAplicacao = document.getElementById("camposAplicacao");
   camposAplicacao.style.display = eAplicacaoCheckbox.checked ? 'block' : 'none';
 }
 

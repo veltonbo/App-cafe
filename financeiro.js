@@ -353,3 +353,4 @@ function excluirTodasParcelas() {
 function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }
+

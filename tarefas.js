@@ -31,65 +31,77 @@ function salvarTarefas() {
 }
 
 function atualizarTarefas() {
-  const filtro = pesquisaTarefas.value.toLowerCase();
-  const filtroSetor = filtroSetorTarefas.value;
-  listaTarefas.innerHTML = '';
-  listaTarefasFeitas.innerHTML = '';
-  const agrupado = {};
+  const listaAFazer = document.getElementById('listaTarefas');
+  const listaFeitas = document.getElementById('listaTarefasFeitas');
+  listaAFazer.innerHTML = '';
+  listaFeitas.innerHTML = '';
 
-  tarefas.filter(t =>
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
-    (filtroSetor === "" || t.setor === filtroSetor)
-  ).forEach((t, i) => {
-    if (!agrupado[t.data]) agrupado[t.data] = [];
-    agrupado[t.data].push({ ...t, i });
-  });
+  const filtroSetor = document.getElementById('filtroSetorTarefas').value;
+  const termoBusca = document.getElementById('pesquisaTarefas').value.toLowerCase();
 
-  for (const data in agrupado) {
-    const titulo = document.createElement('div');
-    titulo.className = 'grupo-data';
-    titulo.textContent = data;
-    listaTarefas.appendChild(titulo);
-    agrupado[data].forEach(({ descricao, prioridade, setor, i }) => {
-      const cor = prioridade === 'Alta' ? '#f44336' : prioridade === 'Média' ? '#ff9800' : '#4caf50';
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
-        <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
+  const agrupadasAFazer = {};
+  const agrupadasFeitas = {};
+
+  tarefas
+    .filter(t =>
+      (!filtroSetor || t.setor === filtroSetor) &&
+      (`${t.descricao} ${t.setor}`.toLowerCase().includes(termoBusca))
+    )
+    .forEach((t, i) => {
+      const destino = t.feita ? agrupadasFeitas : agrupadasAFazer;
+      if (!destino[t.data]) destino[t.data] = [];
+      destino[t.data].push({ ...t, i });
+    });
+
+  // Tarefas a Fazer
+  for (const data in agrupadasAFazer) {
+    const grupo = document.createElement('div');
+    grupo.className = 'grupo-data';
+    grupo.textContent = data;
+    listaAFazer.appendChild(grupo);
+
+    agrupadasAFazer[data].forEach(({ descricao, prioridade, setor, i }) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${descricao} (${prioridade}) - ${setor}</span>
         <div class="botoes-financeiro">
-          <button class="botao-financeiro" onclick="marcarTarefa(${i}, true)">
+          <button class="botao-financeiro" title="Concluir" onclick="marcarTarefaComoFeita(${i})">
             <i class="fas fa-check"></i>
           </button>
-          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">
-            <i class="fas fa-trash"></i>
+          <button class="botao-excluir" title="Excluir" onclick="excluirTarefa(${i})">
+            <i class="fas fa-trash-alt"></i>
           </button>
         </div>
       `;
-      listaTarefas.appendChild(div);
+      listaAFazer.appendChild(item);
     });
   }
 
-  tarefasFeitas.filter(t =>
-    (`${t.data} ${t.descricao} ${t.prioridade} ${t.setor}`.toLowerCase().includes(filtro)) &&
-    (filtroSetor === "" || t.setor === filtroSetor)
-  ).forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-financeiro">
-        <button class="botao-financeiro" onclick="marcarTarefaFeita(${i}, false)">
-          <i class="fas fa-undo"></i>
-        </button>
-        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    listaTarefasFeitas.appendChild(div);
-  });
+  // Tarefas Executadas
+  for (const data in agrupadasFeitas) {
+    const grupo = document.createElement('div');
+    grupo.className = 'grupo-data';
+    grupo.textContent = data;
+    listaFeitas.appendChild(grupo);
+
+    agrupadasFeitas[data].forEach(({ descricao, prioridade, setor, i }) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${descricao} (${prioridade}) - ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-financeiro" title="Desfazer" onclick="desfazerTarefa(${i})">
+            <i class="fas fa-undo-alt"></i>
+          </button>
+          <button class="botao-excluir" title="Excluir" onclick="excluirTarefa(${i})">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      `;
+      listaFeitas.appendChild(item);
+    });
+  }
 }
 
 function marcarTarefa(index, checked) {

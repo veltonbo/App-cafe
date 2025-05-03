@@ -146,6 +146,10 @@ function editarAplicacao(index) {
   document.getElementById('tipoApp').value = app.tipo;
   document.getElementById('setorApp').value = app.setor;
 
+  indiceEdicaoApp = index;
+  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Edição";
+}
+
   // Remove o antigo e permite salvar novamente
   aplicacoes.splice(index, 1);
   db.ref('Aplicacoes').set(aplicacoes);

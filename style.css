@@ -447,3 +447,8 @@ input[type="file"] {
 .botao-azul:hover {
   background-color: #1976d2;
 }
+
+.item {
+  position: relative;
+  padding-right: 80px; /* espaço para os botões no canto direito */
+}

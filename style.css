@@ -96,9 +96,6 @@ button:hover {
   justify-content: space-between;
   gap: 8px;
   border-left: 4px solid #66bb6a;
-  position: relative;
-  padding-right: 90px; /* espaço para os botões */
-}
 }
 
 .item span {

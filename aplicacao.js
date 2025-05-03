@@ -1,6 +1,5 @@
 // ====== VARIÁVEL GLOBAL ======
 let aplicacoes = [];
-let indiceEdicaoApp = null;
 
 // ====== FUNÇÕES MENU APLICAÇÕES ======
 function carregarAplicacoes() {

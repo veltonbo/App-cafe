@@ -87,6 +87,7 @@ function adicionarAplicacao() {
     aplicacoes[indiceEdicaoApp] = nova;
     indiceEdicaoApp = null;
     document.getElementById('btnSalvarAplicacao').innerText = "Salvar Aplicação";
+    document.getElementById('btnCancelarEdicaoApp').style.display = 'none';
   } else {
     aplicacoes.push(nova);
   }
@@ -95,7 +96,7 @@ function adicionarAplicacao() {
   atualizarAplicacoes();
   atualizarSugestoesProduto();
 
-  // Limpa os campos após salvar
+  // Limpa os campos SEMPRE após salvar
   document.getElementById('dataApp').value = '';
   document.getElementById('produtoApp').value = '';
   document.getElementById('dosagemApp').value = '';

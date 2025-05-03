@@ -96,12 +96,12 @@ function adicionarAplicacao() {
   atualizarAplicacoes();
   atualizarSugestoesProduto();
 
-  // Limpa os campos SEMPRE após salvar
-  document.getElementById('dataApp').value = '';
-  document.getElementById('produtoApp').value = '';
-  document.getElementById('dosagemApp').value = '';
-  document.getElementById('tipoApp').value = 'Adubo';
-  document.getElementById('setorApp').value = 'Setor 01';
+  // Limpeza final dos campos
+document.getElementById('dataApp').value = '';
+document.getElementById('produtoApp').value = '';
+document.getElementById('dosagemApp').value = '';
+document.getElementById('tipoApp').value = 'Adubo';
+document.getElementById('setorApp').value = 'Setor 01';
 }
 
 function excluirAplicacao(index) {
@@ -166,4 +166,13 @@ function cancelarEdicaoAplicacao() {
 
   // Esconde o botão cancelar
   document.getElementById('btnCancelarEdicaoApp').style.display = 'none';
+}
+
+function atualizarSugestoesProdutoApp() {
+  const datalist = document.getElementById('sugestoesProdutoApp');
+  const produtosUnicos = [...new Set(aplicacoes.map(app => app.produto.trim()).filter(Boolean))];
+
+  datalist.innerHTML = produtosUnicos
+    .map(prod => `<option value="${prod}">`)
+    .join('');
 }

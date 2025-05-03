@@ -26,10 +26,14 @@ function atualizarAplicacoes() {
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <div class="botoes-financeiro">
-          <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
-        </div>
+        item.innerHTML = `
+  <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+  <div class="botoes-financeiro">
+    <button class="botao-excluir" onclick="excluirAplicacao(${i})">
+      <i class="fas fa-trash-alt"></i> Excluir
+    </button>
+  </div>
+`;
       `;
       lista.appendChild(item);
     });

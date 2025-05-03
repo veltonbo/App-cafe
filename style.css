@@ -450,5 +450,13 @@ input[type="file"] {
 
 .item {
   position: relative;
-  padding-right: 80px; /* espaço para os botões no canto direito */
+  padding-right: 90px; /* espaço para os botões flutuantes */
+}
+.botoes-aplicacao {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 5px;
 }

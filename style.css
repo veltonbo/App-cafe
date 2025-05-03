@@ -282,3 +282,25 @@ input[type="file"] {
   color: #333;
   border-left-color: #2e7d32;
 }
+
+.botao-padrao {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+  color: white;
+}
+
+.botao-padrao:hover {
+  opacity: 0.9;
+}
+
+.botao-excluir {
+  background-color: #f44336;
+}
+
+.botao-pagar {
+  background-color: #4caf50;
+}

@@ -1,9 +1,18 @@
-// ========== CONFIGURAÇÕES DE SAFRA ==========
-function carregarAnoSafra() {
-  const ano = new Date().getFullYear();
-  document.getElementById("anoSafraAtual").innerText = ano;
+// ===== VARIÁVEIS =====
+let anoAtual = new Date().getFullYear();
+
+// ===== TEMA CLARO/ESCURO =====
+function alternarTema() {
+  document.body.classList.toggle('claro');
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
 }
 
+// ===== CARREGAR ANO DA SAFRA ATUAL =====
+function carregarAnoSafra() {
+  document.getElementById("anoSafraAtual").innerText = anoAtual;
+}
+
+// ===== CARREGAR SAFRAS DISPONÍVEIS PARA RESTAURAR =====
 function carregarSafrasDisponiveis() {
   const select = document.getElementById("safraSelecionada");
   select.innerHTML = "<option value=''>Selecione o ano</option>";
@@ -19,9 +28,10 @@ function carregarSafrasDisponiveis() {
   });
 }
 
+// ===== FECHAR SAFRA ATUAL (ARQUIVAR) =====
 function fecharSafraAtual() {
-  const ano = new Date().getFullYear();
-  if (!confirm(`Deseja fechar a safra ${ano}? Isso arquivará os dados atuais.`)) return;
+  const confirmacao = confirm(`Deseja fechar a safra ${anoAtual}? Isso arquivará os dados atuais.`);
+  if (!confirmacao) return;
 
   Promise.all([
     db.ref("Aplicacoes").once("value"),
@@ -37,27 +47,34 @@ function fecharSafraAtual() {
       Colheita: col.val() || [],
       ValorLata: lata.val() || 0
     };
-    return db.ref(ano).set(dados).then(() => {
+    return db.ref(anoAtual).set(dados).then(() => {
       db.ref("Aplicacoes").remove();
       db.ref("Tarefas").remove();
       db.ref("Financeiro").remove();
       db.ref("Colheita").remove();
       db.ref("ValorLata").remove();
-      alert(`Safra ${ano} fechada com sucesso.`);
+      alert(`Safra ${anoAtual} fechada com sucesso.`);
       location.reload();
     });
   });
 }
 
+// ===== RESTAURAR SAFRA ARQUIVADA =====
 function restaurarSafra() {
   const safra = document.getElementById("safraSelecionada").value;
-  if (!safra) return alert("Selecione uma safra para restaurar.");
-  if (!confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`)) return;
+  if (!safra) {
+    alert("Selecione uma safra para restaurar.");
+    return;
+  }
+  const confirmar = confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`);
+  if (!confirmar) return;
 
   db.ref(safra).once("value").then(snap => {
     const dados = snap.val();
-    if (!dados) return alert("Dados da safra não encontrados.");
-
+    if (!dados) {
+      alert("Dados da safra não encontrados.");
+      return;
+    }
     return Promise.all([
       db.ref("Aplicacoes").set(dados.Aplicacoes || []),
       db.ref("Tarefas").set(dados.Tarefas || []),
@@ -71,6 +88,7 @@ function restaurarSafra() {
   });
 }
 
+// ===== DELETAR SAFRA DEFINITIVAMENTE =====
 function deletarSafra() {
   const safra = document.getElementById("safraSelecionada").value;
   if (!safra) {
@@ -86,6 +104,7 @@ function deletarSafra() {
   });
 }
 
+// ===== BACKUP MANUAL =====
 function fazerBackup() {
   const backup = {};
   Promise.all([
@@ -113,10 +132,7 @@ function fazerBackup() {
 function importarBackup() {
   const input = document.getElementById("arquivoBackup");
   const file = input.files[0];
-  if (!file) {
-    alert("Nenhum arquivo selecionado.");
-    return;
-  }
+  if (!file) return alert("Nenhum arquivo selecionado.");
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -137,10 +153,4 @@ function importarBackup() {
     }
   };
   reader.readAsText(file);
-}
-
-function alternarTema() {
-  document.body.classList.toggle('claro');
-  const temaAtual = document.body.classList.contains('claro') ? 'claro' : 'escuro';
-  localStorage.setItem('tema', temaAtual);
 }

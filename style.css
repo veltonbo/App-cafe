@@ -349,3 +349,46 @@ input[type="file"] {
     transform: translateY(0);
   }
 }
+
+.botao-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-circular.verde {
+  background-color: #4caf50;
+}
+
+.botao-circular.verde:hover {
+  background-color: #388e3c;
+}
+
+.botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botao-circular.vermelho:hover {
+  background-color: #d32f2f;
+}
+
+.botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botao-circular.azul:hover {
+  background-color: #1976d2;
+}
+
+.botoes-aplicacoes {
+  display: flex;
+  gap: 6px;
+}

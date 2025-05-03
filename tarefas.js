@@ -58,7 +58,12 @@ function atualizarTarefas() {
         <input type="checkbox" onchange="marcarTarefa(${i}, this.checked)">
         <span style="color:${cor}">${descricao} (${prioridade}) - ${setor}</span>
         <div class="botoes-financeiro">
-          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">Excluir</button>
+          <button class="botao-financeiro" onclick="marcarTarefa(${i}, true)">
+            <i class="fas fa-check"></i>
+          </button>
+          <button class="botao-excluir" onclick="excluirTarefa(${i}, false)">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
       `;
       listaTarefas.appendChild(div);
@@ -75,7 +80,12 @@ function atualizarTarefas() {
       <input type="checkbox" checked onchange="marcarTarefaFeita(${i}, this.checked)">
       <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
       <div class="botoes-financeiro">
-        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">Excluir</button>
+        <button class="botao-financeiro" onclick="marcarTarefaFeita(${i}, false)">
+          <i class="fas fa-undo"></i>
+        </button>
+        <button class="botao-excluir" onclick="excluirTarefa(${i}, true)">
+          <i class="fas fa-trash"></i>
+        </button>
       </div>
     `;
     listaTarefasFeitas.appendChild(div);

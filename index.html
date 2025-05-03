@@ -58,7 +58,12 @@
     <option>Setor 01</option>
     <option>Setor 02</option>
   </select>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
   <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+  <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
+    Cancelar Edição
+  </button>
+</div>
 
   <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
     <option value="">Todos os Setores</option>

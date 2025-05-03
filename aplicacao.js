@@ -2,18 +2,50 @@
 let aplicacoes = [];
 
 // ====== FUNÇÕES MENU APLICAÇÕES ======
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').once('value').then(snap => {
+    aplicacoes = snap.exists() ? snap.val() : [];
+    atualizarAplicacoes();
+  });
+}
+
+function atualizarAplicacoes() {
+  const lista = document.getElementById('listaAplicacoes');
+  lista.innerHTML = '';
+
+  const filtroSetor = document.getElementById('filtroSetorAplicacoes').value;
+  const termoBusca = document.getElementById('pesquisaAplicacoes').value.toLowerCase();
+
+  aplicacoes
+    .filter(app =>
+      (!filtroSetor || app.setor === filtroSetor) &&
+      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
+    )
+    .sort((a, b) => (a.data > b.data ? -1 : 1))
+    .forEach((app, i) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
+        </div>
+      `;
+      lista.appendChild(item);
+    });
+}
 
 function adicionarAplicacao() {
   const nova = {
-    data: dataApp.value,
-    produto: produtoApp.value.trim(),
-    dosagem: dosagemApp.value.trim(),
-    tipo: tipoApp.value,
-    setor: setorApp.value
+    data: document.getElementById('dataApp').value,
+    produto: document.getElementById('produtoApp').value.trim(),
+    dosagem: document.getElementById('dosagemApp').value.trim(),
+    tipo: document.getElementById('tipoApp').value,
+    setor: document.getElementById('setorApp').value
   };
 
-  if (!nova.data || !nova.produto || !nova.dosagem || !nova.tipo || !nova.setor) {
-    alert("Preencha todos os campos da aplicação!");
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos!");
     return;
   }
 
@@ -21,65 +53,15 @@ function adicionarAplicacao() {
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
 
-  dataApp.value = '';
-  produtoApp.value = '';
-  dosagemApp.value = '';
-  tipoApp.selectedIndex = 0;
-  setorApp.selectedIndex = 0;
-}
-
-function atualizarAplicacoes() {
-  const filtro = pesquisaAplicacoes.value.toLowerCase();
-  const setorSelecionado = filtroSetorAplicacoes.value;
-  const lista = document.getElementById('listaAplicacoes');
-  lista.innerHTML = '';
-
-  const agrupado = {};
-
-  aplicacoes
-    .filter(app =>
-      (`${app.data} ${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(filtro)) &&
-      (setorSelecionado === "" || app.setor === setorSelecionado)
-    )
-    .forEach((app, i) => {
-      if (!agrupado[app.data]) agrupado[app.data] = [];
-      agrupado[app.data].push({ ...app, i });
-    });
-
-  for (const data in agrupado) {
-    const titulo = document.createElement('div');
-    titulo.className = 'grupo-data';
-    titulo.textContent = data;
-    lista.appendChild(titulo);
-
-    agrupado[data].forEach(({ produto, dosagem, tipo, setor, i }) => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${produto} - ${dosagem} (${tipo}) - ${setor}</span>
-        <div class="botoes-financeiro">
-          <button class="botao-excluir" onclick="excluirAplicacao(${i})">Excluir</button>
-        </div>
-      `;
-      lista.appendChild(div);
-    });
-  }
+  document.getElementById('dataApp').value = '';
+  document.getElementById('produtoApp').value = '';
+  document.getElementById('dosagemApp').value = '';
 }
 
 function excluirAplicacao(index) {
-  if (confirm("Deseja excluir essa aplicação?")) {
-    aplicacoes.splice(index, 1);
-    db.ref('Aplicacoes').set(aplicacoes);
-    atualizarAplicacoes();
-  }
-}
+  if (!confirm("Deseja excluir esta aplicação?")) return;
 
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snap => {
-    if (snap.exists()) {
-      aplicacoes.length = 0;
-      aplicacoes.push(...snap.val());
-    }
-    atualizarAplicacoes();
-  });
+  aplicacoes.splice(index, 1);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
 }

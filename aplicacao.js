@@ -53,41 +53,38 @@ function atualizarAplicacoes() {
 }
 
 function adicionarAplicacao() {
-  const data = document.getElementById('dataApp');
-  const produto = document.getElementById('produtoApp');
-  const dosagem = document.getElementById('dosagemApp');
-  const tipo = document.getElementById('tipoApp');
-  const setor = document.getElementById('setorApp');
+  const nova = {
+    data: document.getElementById('dataApp').value,
+    produto: document.getElementById('produtoApp').value.trim(),
+    dosagem: document.getElementById('dosagemApp').value.trim(),
+    tipo: document.getElementById('tipoApp').value,
+    setor: document.getElementById('setorApp').value
+  };
 
-  // Remover erros visuais
-  [data, produto, dosagem].forEach(el => el.classList.remove('input-erro'));
-
-  let erro = false;
-
-  if (!data.value) { data.classList.add('input-erro'); erro = true; }
-  if (!produto.value.trim()) { produto.classList.add('input-erro'); erro = true; }
-  if (!dosagem.value.trim()) { dosagem.classList.add('input-erro'); erro = true; }
-
-  if (erro) {
-    alert("Preencha todos os campos obrigatórios.");
+  const hoje = new Date().toISOString().split('T')[0];
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos!");
     return;
   }
 
-  const nova = {
-    data: data.value,
-    produto: produto.value.trim(),
-    dosagem: dosagem.value.trim(),
-    tipo: tipo.value,
-    setor: setor.value
-  };
+  if (nova.data > hoje) {
+    alert("A data não pode ser no futuro.");
+    return;
+  }
+
+  if (isNaN(parseFloat(nova.dosagem)) || parseFloat(nova.dosagem) <= 0) {
+    alert("A dosagem deve ser um número positivo.");
+    return;
+  }
 
   aplicacoes.push(nova);
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
+  atualizarSugestoesProduto();
 
-  data.value = '';
-  produto.value = '';
-  dosagem.value = '';
+  document.getElementById('dataApp').value = '';
+  document.getElementById('produtoApp').value = '';
+  document.getElementById('dosagemApp').value = '';
 }
 
 function excluirAplicacao(index) {

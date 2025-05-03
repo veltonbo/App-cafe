@@ -1,5 +1,6 @@
 // ====== VARIÁVEL GLOBAL ======
 let aplicacoes = [];
+let indiceEdicaoApp = null;
 
 // ====== FUNÇÕES MENU APLICAÇÕES ======
 function carregarAplicacoes() {
@@ -81,7 +82,14 @@ function adicionarAplicacao() {
     return;
   }
 
-  aplicacoes.push(nova);
+  if (indiceEdicaoApp !== null) {
+    aplicacoes[indiceEdicaoApp] = nova;
+    indiceEdicaoApp = null;
+    document.getElementById('btnSalvarAplicacao').innerText = "Salvar Aplicação";
+  } else {
+    aplicacoes.push(nova);
+  }
+
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
   atualizarSugestoesProduto();

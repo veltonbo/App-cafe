@@ -40,16 +40,15 @@ function atualizarAplicacoes() {
       const item = document.createElement('div');
       item.className = 'item fade-in';
       item.innerHTML = `
-        <span>${produto} (${tipo}) - ${dosagem} - ${setor}</span>
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
         <div class="botoes-aplicacoes">
-        <button class="botao-circular vermelho" title="Excluir" onclick="excluirAplicacao(${i})">
-        <i class="fas fa-times"></i>
-  </button>
-</div>
+          <button class="botao-circular vermelho" title="Excluir" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       `;
       lista.appendChild(item);
     });
-  }
 }
 
 function adicionarAplicacao() {

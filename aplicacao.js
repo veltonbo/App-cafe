@@ -39,11 +39,15 @@ function atualizarAplicacoes() {
     agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
+      item.style.position = 'relative';
       item.innerHTML = `
         <span>${produto} (${tipo}) - ${dosagem} - ${setor}</span>
-        <div class="botoes-financeiro">
-          <button class="botao-excluir" onclick="excluirAlgo()">
-           <i class="fas fa-trash-alt"></i> Excluir
+        <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); display:flex; gap:5px;">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-trash-alt"></i>
           </button>
         </div>
       `;
@@ -122,4 +126,22 @@ function atualizarSugestoesProduto() {
   datalist.innerHTML = produtosUnicos
     .map(prod => `<option value="${prod}">`)
     .join('');
+}
+
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  if (!app) return;
+
+  document.getElementById('dataApp').value = app.data;
+  document.getElementById('produtoApp').value = app.produto;
+  document.getElementById('dosagemApp').value = app.dosagem;
+  document.getElementById('tipoApp').value = app.tipo;
+  document.getElementById('setorApp').value = app.setor;
+
+  // Remove o antigo e permite salvar novamente
+  aplicacoes.splice(index, 1);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+
+  alert("Você está editando uma aplicação. Após ajustar os campos, clique em 'Salvar Aplicação'.");
 }

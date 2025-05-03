@@ -41,10 +41,10 @@ function atualizarAplicacoes() {
       item.className = 'item fade-in';
       item.innerHTML = `
         <span>${produto} (${tipo}) - ${dosagem} - ${setor}</span>
-        <div class="botoes-aplicacoes">
+        <div class="botoes-financeiro">
           <button class="botao-aplicacao" title="Excluir" onclick="excluirAplicacao(${i})">
-           <i class="fas fa-trash-alt"></i>
-            </button>
+            <i class="fas fa-trash-alt"></i>
+          </button>
         </div>
       `;
       lista.appendChild(item);

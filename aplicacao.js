@@ -23,26 +23,25 @@ function atualizarAplicacoes() {
       (!filtroSetor || app.setor === filtroSetor) &&
       (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
     )
-    .sort((a, b) => b.data.localeCompare(a.data))
+    .sort((a, b) => (a.data > b.data ? -1 : 1))
     .forEach((app, i) => {
-      const setor = app.setor;
-      if (!agrupado[setor]) agrupado[setor] = [];
-      agrupado[setor].push({ ...app, index: i });
+      if (!agrupado[app.data]) agrupado[app.data] = [];
+      agrupado[app.data].push({ ...app, i });
     });
 
-  for (const setor in agrupado) {
-    const setorHeader = document.createElement('div');
-    setorHeader.className = 'grupo-data';
-    setorHeader.textContent = setor;
-    lista.appendChild(setorHeader);
+  for (const data in agrupado) {
+    const grupo = document.createElement('div');
+    grupo.className = 'grupo-data';
+    grupo.textContent = data;
+    lista.appendChild(grupo);
 
-    agrupado[setor].forEach(app => {
+    agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
       item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem}</span>
+        <span>${produto} (${tipo}) - ${dosagem} - ${setor}</span>
         <div class="botoes-financeiro">
-          <button class="botao-excluir" onclick="excluirAplicacao(${app.index})">
+          <button class="botao-excluir" onclick="excluirAplicacao(${i})">
             <i class="fas fa-trash-alt"></i> Excluir
           </button>
         </div>

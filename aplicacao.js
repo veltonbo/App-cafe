@@ -24,41 +24,57 @@ function atualizarAplicacoes() {
     .sort((a, b) => (a.data > b.data ? -1 : 1))
     .forEach((app, i) => {
       const item = document.createElement('div');
-      item.className = 'item';
+      item.className = 'item aparecendo';
+
       item.innerHTML = `
-  <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-  <div class="botoes-financeiro">
-    <button class="botao-excluir" onclick="excluirAplicacao(${i})">
-      <i class="fas fa-trash-alt"></i> Excluir
-    </button>
-  </div>
-`;
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-excluir" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-trash-alt"></i> Excluir
+          </button>
+        </div>
+      `;
 
       lista.appendChild(item);
     });
 }
 
 function adicionarAplicacao() {
-  const nova = {
-    data: document.getElementById('dataApp').value,
-    produto: document.getElementById('produtoApp').value.trim(),
-    dosagem: document.getElementById('dosagemApp').value.trim(),
-    tipo: document.getElementById('tipoApp').value,
-    setor: document.getElementById('setorApp').value
-  };
+  const data = document.getElementById('dataApp');
+  const produto = document.getElementById('produtoApp');
+  const dosagem = document.getElementById('dosagemApp');
+  const tipo = document.getElementById('tipoApp');
+  const setor = document.getElementById('setorApp');
 
-  if (!nova.data || !nova.produto || !nova.dosagem) {
-    alert("Preencha todos os campos!");
+  // Remover erros visuais
+  [data, produto, dosagem].forEach(el => el.classList.remove('input-erro'));
+
+  let erro = false;
+
+  if (!data.value) { data.classList.add('input-erro'); erro = true; }
+  if (!produto.value.trim()) { produto.classList.add('input-erro'); erro = true; }
+  if (!dosagem.value.trim()) { dosagem.classList.add('input-erro'); erro = true; }
+
+  if (erro) {
+    alert("Preencha todos os campos obrigatórios.");
     return;
   }
+
+  const nova = {
+    data: data.value,
+    produto: produto.value.trim(),
+    dosagem: dosagem.value.trim(),
+    tipo: tipo.value,
+    setor: setor.value
+  };
 
   aplicacoes.push(nova);
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
 
-  document.getElementById('dataApp').value = '';
-  document.getElementById('produtoApp').value = '';
-  document.getElementById('dosagemApp').value = '';
+  data.value = '';
+  produto.value = '';
+  dosagem.value = '';
 }
 
 function excluirAplicacao(index) {

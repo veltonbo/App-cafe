@@ -42,8 +42,8 @@ function atualizarAplicacoes() {
       item.innerHTML = `
         <span>${produto} (${tipo}) - ${dosagem} - ${setor}</span>
         <div class="botoes-financeiro">
-          <button class="botao-aplicacao" title="Excluir" onclick="excluirAplicacao(${i})">
-            <i class="fas fa-trash-alt"></i>
+          <button class="botao-icon botao-vermelho" title="Excluir">
+           <i class="fas fa-trash-alt"></i>
           </button>
         </div>
       `;

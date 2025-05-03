@@ -40,17 +40,19 @@ function atualizarAplicacoes() {
     agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
+
       item.innerHTML = `
-  <span>${produto} (${tipo}) – ${dosagem} – ${setor}</span>
-  <div class="botoes-financeiro">
-    <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-      <i class="fas fa-edit"></i>
-    </button>
-    <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-      <i class="fas fa-trash-alt"></i>
-    </button>
-  </div>
-`;
+        <span>${produto} (${tipo}) – ${dosagem} – ${setor}</span>
+        <div class="botoes-financeiro">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      `;
+
       lista.appendChild(item);
     });
   }

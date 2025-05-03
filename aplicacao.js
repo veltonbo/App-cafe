@@ -151,4 +151,3 @@ function editarAplicacao(index) {
   document.getElementById('btnSalvarAplicacao').innerText = "Salvar Edição";
 
   alert("Você está editando uma aplicação. Após ajustar os campos, clique em 'Salvar Edição'.");
-}

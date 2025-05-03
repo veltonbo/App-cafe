@@ -40,10 +40,11 @@ function atualizarAplicacoes() {
     agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
+      item.style.position = 'relative'; // necessário para posicionar botões
 
       item.innerHTML = `
         <span>${produto} (${tipo}) – ${dosagem} – ${setor}</span>
-        <div class="botoes-financeiro">
+        <div class="botoes-aplicacao">
           <button class="botao-circular azul" onclick="editarAplicacao(${i})">
             <i class="fas fa-edit"></i>
           </button>
@@ -128,14 +129,7 @@ function exportarAplicacoesCSV() {
   link.click();
 }
 
-function atualizarSugestoesProduto() {
-  const datalist = document.getElementById('sugestoesProdutoApp');
-  const produtosUnicos = [...new Set(aplicacoes.map(app => app.produto.trim()).filter(Boolean))];
-
-  datalist.innerHTML = produtosUnicos
-    .map(prod => `<option value="${prod}">`)
-    .join('');
-}
+let indiceEdicaoApp = null;
 
 function editarAplicacao(index) {
   const app = aplicacoes[index];

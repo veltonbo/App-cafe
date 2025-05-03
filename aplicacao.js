@@ -6,7 +6,7 @@ function carregarAplicacoes() {
   db.ref('Aplicacoes').once('value').then(snap => {
     aplicacoes = snap.exists() ? snap.val() : [];
     atualizarAplicacoes();
-    atualizarSugestoesProduto();
+    atualizarSugestoesProdutoApp();
   });
 }
 

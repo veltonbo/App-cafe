@@ -308,3 +308,25 @@ input[type="file"] {
 .botao-pagar {
   background-color: #4caf50;
 }
+
+.input-erro {
+  border: 1px solid #f44336 !important;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.item.aparecendo {
+  animation: fadeInItem 0.5s ease forwards;
+}
+
+@keyframes fadeInItem {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

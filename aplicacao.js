@@ -1,12 +1,14 @@
 // ====== VARIÁVEL GLOBAL ======
 let aplicacoes = [];
+let indiceEdicaoApp = null;
 
 // ====== FUNÇÕES MENU APLICAÇÕES ======
+
 function carregarAplicacoes() {
   db.ref('Aplicacoes').once('value').then(snap => {
     aplicacoes = snap.exists() ? snap.val() : [];
     atualizarAplicacoes();
-    atualizarSugestoesProdutoApp();
+    atualizarSugestoesProduto();
   });
 }
 
@@ -39,11 +41,11 @@ function atualizarAplicacoes() {
     agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
-      item.style.position = 'relative'; // necessário para posicionar botões
+      item.style.position = 'relative';
 
       item.innerHTML = `
         <span>${produto} (${tipo}) – ${dosagem} – ${setor}</span>
-        <div class="botoes-aplicacao">
+        <div class="botoes-aplicacao" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 8px;">
           <button class="botao-circular azul" onclick="editarAplicacao(${i})">
             <i class="fas fa-edit"></i>
           </button>
@@ -95,13 +97,39 @@ function adicionarAplicacao() {
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
   atualizarSugestoesProduto();
+  limparCamposAplicacao();
+}
 
-  // Limpeza final dos campos
-document.getElementById('dataApp').value = '';
-document.getElementById('produtoApp').value = '';
-document.getElementById('dosagemApp').value = '';
-document.getElementById('tipoApp').value = 'Adubo';
-document.getElementById('setorApp').value = 'Setor 01';
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  if (!app) return;
+
+  document.getElementById('dataApp').value = app.data;
+  document.getElementById('produtoApp').value = app.produto;
+  document.getElementById('dosagemApp').value = app.dosagem;
+  document.getElementById('tipoApp').value = app.tipo;
+  document.getElementById('setorApp').value = app.setor;
+
+  indiceEdicaoApp = index;
+  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Edição";
+  document.getElementById('btnCancelarEdicaoApp').style.display = 'inline-block';
+
+  alert("Você está editando uma aplicação. Após ajustar os campos, clique em 'Salvar Edição'.");
+}
+
+function cancelarEdicaoAplicacao() {
+  limparCamposAplicacao();
+  indiceEdicaoApp = null;
+  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Aplicação";
+  document.getElementById('btnCancelarEdicaoApp').style.display = 'none';
+}
+
+function limparCamposAplicacao() {
+  document.getElementById('dataApp').value = '';
+  document.getElementById('produtoApp').value = '';
+  document.getElementById('dosagemApp').value = '';
+  document.getElementById('tipoApp').value = 'Adubo';
+  document.getElementById('setorApp').value = 'Setor 01';
 }
 
 function excluirAplicacao(index) {
@@ -132,43 +160,7 @@ function exportarAplicacoesCSV() {
   link.click();
 }
 
-let indiceEdicaoApp = null;
-
-function editarAplicacao(index) {
-  const app = aplicacoes[index];
-  if (!app) return;
-
-  document.getElementById('dataApp').value = app.data;
-  document.getElementById('produtoApp').value = app.produto;
-  document.getElementById('dosagemApp').value = app.dosagem;
-  document.getElementById('tipoApp').value = app.tipo;
-  document.getElementById('setorApp').value = app.setor;
-
-  indiceEdicaoApp = index;
-  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Edição";
-  document.getElementById('btnCancelarEdicaoApp').style.display = 'inline-block';
-
-  alert("Você está editando uma aplicação. Após ajustar os campos, clique em 'Salvar Edição'.");
-}
-
-function cancelarEdicaoAplicacao() {
-  indiceEdicaoApp = null;
-
-  // Limpa os campos
-  document.getElementById('dataApp').value = '';
-  document.getElementById('produtoApp').value = '';
-  document.getElementById('dosagemApp').value = '';
-  document.getElementById('tipoApp').value = 'Adubo';
-  document.getElementById('setorApp').value = 'Setor 01';
-
-  // Restaura o botão principal
-  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Aplicação";
-
-  // Esconde o botão cancelar
-  document.getElementById('btnCancelarEdicaoApp').style.display = 'none';
-}
-
-function atualizarSugestoesProdutoApp() {
+function atualizarSugestoesProduto() {
   const datalist = document.getElementById('sugestoesProdutoApp');
   const produtosUnicos = [...new Set(aplicacoes.map(app => app.produto.trim()).filter(Boolean))];
 

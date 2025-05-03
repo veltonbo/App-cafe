@@ -145,6 +145,24 @@ function editarAplicacao(index) {
 
   indiceEdicaoApp = index;
   document.getElementById('btnSalvarAplicacao').innerText = "Salvar Edição";
+  document.getElementById('btnCancelarEdicaoApp').style.display = 'inline-block';
 
   alert("Você está editando uma aplicação. Após ajustar os campos, clique em 'Salvar Edição'.");
+}
+
+function cancelarEdicaoAplicacao() {
+  indiceEdicaoApp = null;
+
+  // Limpa os campos
+  document.getElementById('dataApp').value = '';
+  document.getElementById('produtoApp').value = '';
+  document.getElementById('dosagemApp').value = '';
+  document.getElementById('tipoApp').value = 'Adubo';
+  document.getElementById('setorApp').value = 'Setor 01';
+
+  // Restaura o botão principal
+  document.getElementById('btnSalvarAplicacao').innerText = "Salvar Aplicação";
+
+  // Esconde o botão cancelar
+  document.getElementById('btnCancelarEdicaoApp').style.display = 'none';
 }

@@ -96,3 +96,23 @@ function excluirAplicacao(index) {
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
 }
+
+function exportarAplicacoesCSV() {
+  if (!aplicacoes.length) {
+    alert("Nenhuma aplicação para exportar.");
+    return;
+  }
+
+  let csv = 'Data,Produto,Dosagem,Tipo,Setor\n';
+
+  aplicacoes.forEach(app => {
+    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'aplicacoes.csv');
+  link.click();
+}

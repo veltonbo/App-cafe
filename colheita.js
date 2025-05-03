@@ -120,8 +120,9 @@ function montarGrupoColheita(grupo, container, pago) {
         <span>${data} - ${quantidade.toFixed(2)} latas (R$${(quantidade * valorLata).toFixed(2)})</span>
         <div class="botoes-colheita">
           ${pago
-            ? `<button class="botao-excluir-pagamento" onclick="excluirPagamento(${i})">Excluir Pagamento</button>
-               <button class="botao-excluir" onclick="excluirColheita(${i})">Excluir Lançamento</button>`
+            ? `<button class="botao-financeiro" onclick="excluirPagamento(${i})">
+                 <i class="fas fa-trash"></i> Excluir Pagamento
+               </button>`
             : `<button class="botao-excluir" onclick="excluirColheita(${i})">Excluir</button>`
           }
         </div>
@@ -133,8 +134,12 @@ function montarGrupoColheita(grupo, container, pago) {
       const botoes = document.createElement('div');
       botoes.className = 'botoes-colheita';
       botoes.innerHTML = `
-        <button class="botao-pagar" onclick="pagarTudoColhedor('${nome}')">Pagar Tudo</button>
-        <button class="botao-pagar" onclick="pagarParcialColhedor('${nome}')">Pagar Parcial</button>
+        <button class="botao-financeiro" onclick="pagarTudoColhedor('${nome}')">
+          <i class="fas fa-check"></i> Pagar Tudo
+        </button>
+        <button class="botao-financeiro" onclick="pagarParcialColhedor('${nome}')">
+          <i class="fas fa-coins"></i> Pagar Parcial
+        </button>
       `;
       bloco.appendChild(botoes);
     }

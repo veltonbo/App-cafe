@@ -6,6 +6,7 @@ function carregarAplicacoes() {
   db.ref('Aplicacoes').once('value').then(snap => {
     aplicacoes = snap.exists() ? snap.val() : [];
     atualizarAplicacoes();
+    atualizarSugestoesProduto();
   });
 }
 
@@ -115,4 +116,13 @@ function exportarAplicacoesCSV() {
   link.setAttribute('href', url);
   link.setAttribute('download', 'aplicacoes.csv');
   link.click();
+}
+
+function atualizarSugestoesProduto() {
+  const datalist = document.getElementById('sugestoesProdutoApp');
+  const produtosUnicos = [...new Set(aplicacoes.map(app => app.produto.trim()).filter(Boolean))];
+
+  datalist.innerHTML = produtosUnicos
+    .map(prod => `<option value="${prod}">`)
+    .join('');
 }

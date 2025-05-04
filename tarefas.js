@@ -2,8 +2,7 @@
 let tarefas = [];
 let indiceEdicaoTarefa = null;
 
-// ====== FUNÇÕES MENU TAREFAS ======
-
+// ====== CARREGAR TAREFAS ======
 function carregarTarefas() {
   db.ref('Tarefas').once('value').then(snap => {
     tarefas = snap.exists() ? snap.val() : [];
@@ -11,6 +10,7 @@ function carregarTarefas() {
   });
 }
 
+// ====== ATUALIZAR LISTA ======
 function atualizarTarefas() {
   const listaAFazer = document.getElementById('listaTarefas');
   const listaFeitas = document.getElementById('listaTarefasFeitas');
@@ -54,14 +54,11 @@ function atualizarTarefas() {
         </div>
       `;
 
-      if (t.feita) {
-        listaFeitas.appendChild(item);
-      } else {
-        listaAFazer.appendChild(item);
-      }
+      (t.feita ? listaFeitas : listaAFazer).appendChild(item);
     });
 }
 
+// ====== ADICIONAR OU SALVAR EDIÇÃO ======
 function adicionarTarefa() {
   const nova = {
     data: document.getElementById('dataTarefa').value,
@@ -98,6 +95,7 @@ function adicionarTarefa() {
   limparCamposTarefa();
 }
 
+// ====== EDITAR ======
 function editarTarefa(index) {
   const t = tarefas[index];
   if (!t) return;
@@ -107,18 +105,9 @@ function editarTarefa(index) {
   document.getElementById('prioridadeTarefa').value = t.prioridade;
   document.getElementById('setorTarefa').value = t.setor;
   document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
-  document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
-mostrarCamposAplicacao(); // <- ESSENCIAL!
-
-  if (t.eAplicacao) {
-    document.getElementById('camposAplicacao').style.display = 'block';
-    document.getElementById('dosagemAplicacao').value = t.dosagem;
-    document.getElementById('tipoAplicacao').value = t.tipo;
-  } else {
-    document.getElementById('camposAplicacao').style.display = 'none';
-    document.getElementById('dosagemAplicacao').value = '';
-    document.getElementById('tipoAplicacao').value = 'Adubo';
-  }
+  document.getElementById('dosagemAplicacao').value = t.dosagem || '';
+  document.getElementById('tipoAplicacao').value = t.tipo || 'Adubo';
+  mostrarCamposAplicacao();
 
   indiceEdicaoTarefa = index;
   document.querySelector('#tarefas button[onclick="adicionarTarefa()"]').innerText = "Salvar Edição";
@@ -138,29 +127,26 @@ function limparCamposTarefa() {
   document.getElementById('prioridadeTarefa').value = 'Alta';
   document.getElementById('setorTarefa').value = 'Setor 01';
   document.getElementById('eAplicacaoCheckbox').checked = false;
-  document.getElementById('camposAplicacao').style.display = 'none';
   document.getElementById('dosagemAplicacao').value = '';
   document.getElementById('tipoAplicacao').value = 'Adubo';
+  mostrarCamposAplicacao();
 }
 
+// ====== MARCAR COMO FEITA ======
 function marcarTarefaComoFeita(index) {
   const tarefa = tarefas[index];
   tarefa.feita = true;
 
-  // Se for uma tarefa de aplicação, salvar também em Aplicações
   if (tarefa.eAplicacao) {
     db.ref('Aplicacoes').once('value').then(snap => {
       const aplicacoes = snap.exists() ? snap.val() : [];
-
-      const novaAplicacao = {
+      aplicacoes.push({
         data: tarefa.data,
         produto: tarefa.descricao,
         dosagem: tarefa.dosagem,
         tipo: tarefa.tipo,
         setor: tarefa.setor
-      };
-
-      aplicacoes.push(novaAplicacao);
+      });
       db.ref('Aplicacoes').set(aplicacoes);
     });
   }
@@ -169,17 +155,14 @@ function marcarTarefaComoFeita(index) {
   atualizarTarefas();
 }
 
+// ====== DESFAZER ======
 function desfazerTarefa(index) {
   const tarefa = tarefas[index];
 
-  // Remove do banco de Aplicações se for uma aplicação
   if (tarefa.eAplicacao) {
     db.ref('Aplicacoes').once('value').then(snap => {
       let aplicacoes = snap.exists() ? snap.val() : [];
-
-      // Remove pelo campo correspondente à tarefa (produto + data)
       aplicacoes = aplicacoes.filter(app => !(app.produto === tarefa.descricao && app.data === tarefa.data));
-
       db.ref('Aplicacoes').set(aplicacoes);
     });
   }
@@ -189,12 +172,12 @@ function desfazerTarefa(index) {
   atualizarTarefas();
 }
 
+// ====== EXCLUIR ======
 function excluirTarefa(index) {
   const tarefa = tarefas[index];
 
   if (!confirm("Deseja excluir esta tarefa?")) return;
 
-  // Remove do banco de Aplicações se for aplicação e já estiver marcada como feita
   if (tarefa.feita && tarefa.eAplicacao) {
     db.ref('Aplicacoes').once('value').then(snap => {
       let aplicacoes = snap.exists() ? snap.val() : [];
@@ -208,6 +191,7 @@ function excluirTarefa(index) {
   atualizarTarefas();
 }
 
+// ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
 function mostrarCamposAplicacao() {
   const checkbox = document.getElementById('eAplicacaoCheckbox');
   const campos = document.getElementById('camposAplicacao');

@@ -415,19 +415,21 @@ input[type="file"] {
 }
 
 /* ===== AJUSTES DE CHECKBOX ===== */
-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+/* ===== CORREÇÃO CHECKBOX "É Aplicação" ===== */
+#eAplicacaoCheckbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
   vertical-align: middle;
-  accent-color: #4caf50;
 }
 
-label {
-  display: flex;
+#eAplicacaoCheckbox + label,
+#eAplicacaoCheckbox + span,
+label[for="eAplicacaoCheckbox"] {
+  display: inline-flex;
   align-items: center;
-  margin-top: 10px;
-  font-size: 16px;
   gap: 8px;
-  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
 }

@@ -170,13 +170,39 @@ function marcarTarefaComoFeita(index) {
 }
 
 function desfazerTarefa(index) {
-  tarefas[index].feita = false;
+  const tarefa = tarefas[index];
+
+  // Remove do banco de Aplicações se for uma aplicação
+  if (tarefa.eAplicacao) {
+    db.ref('Aplicacoes').once('value').then(snap => {
+      let aplicacoes = snap.exists() ? snap.val() : [];
+
+      // Remove pelo campo correspondente à tarefa (produto + data)
+      aplicacoes = aplicacoes.filter(app => !(app.produto === tarefa.descricao && app.data === tarefa.data));
+
+      db.ref('Aplicacoes').set(aplicacoes);
+    });
+  }
+
+  tarefa.feita = false;
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();
 }
 
 function excluirTarefa(index) {
+  const tarefa = tarefas[index];
+
   if (!confirm("Deseja excluir esta tarefa?")) return;
+
+  // Remove do banco de Aplicações se for aplicação e já estiver marcada como feita
+  if (tarefa.feita && tarefa.eAplicacao) {
+    db.ref('Aplicacoes').once('value').then(snap => {
+      let aplicacoes = snap.exists() ? snap.val() : [];
+      aplicacoes = aplicacoes.filter(app => !(app.produto === tarefa.descricao && app.data === tarefa.data));
+      db.ref('Aplicacoes').set(aplicacoes);
+    });
+  }
+
   tarefas.splice(index, 1);
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();

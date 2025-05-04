@@ -108,6 +108,12 @@
   </div>
 
   <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
+    Cancelar Edição
+  </button>
+</div>
 
   <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
     <option value="">Todos os Setores</option>

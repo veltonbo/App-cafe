@@ -93,26 +93,24 @@
     <option>Setor 01</option>
     <option>Setor 02</option>
   </select>
-  <label style="margin-top:10px;">
-  <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()"> É Aplicação
-</label>
+
+  <!-- Checkbox com label corretamente alinhado -->
+  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
+  </div>
 
   <div id="camposAplicacao" style="display:none; margin-top:10px;">
-  <input id="dosagemAplicacao" placeholder="Dosagem">
-  <select id="tipoAplicacao">
-    <option>Adubo</option>
-    <option>Fungicida</option>
-    <option>Inseticida</option>
-    <option>Herbicida</option>
-  </select>
-</div>
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
 
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
   <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
-    Cancelar Edição
-  </button>
-</div>
 
   <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
     <option value="">Todos os Setores</option>

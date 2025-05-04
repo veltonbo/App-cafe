@@ -108,28 +108,23 @@ button:hover {
   color: #aaa;
 }
 
-/* ===== ITENS COM BOTÕES LATERAIS ===== */
 .item {
   position: relative;
-  padding: 12px;
+  display: block;
+  background: #1e1e1e;
+  padding: 12px 90px 12px 12px; /* padding direito maior para os botões */
   margin: 10px 0;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #1e1e1e;
   border-left: 4px solid #66bb6a;
-  padding-right: 90px; /* garante espaço para os botões */
+  overflow: hidden;
 }
 
 .item span {
-  flex-grow: 1;
+  display: block;
   word-break: break-word;
 }
 
-/* ===== BOTÕES FIXOS NA DIREITA ===== */
-.botoes-aplicacao,
-.botoes-tarefa {
+.botoes-aplicacao {
   position: absolute;
   top: 50%;
   right: 10px;

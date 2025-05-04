@@ -460,3 +460,54 @@ input[type="file"] {
   display: flex;
   gap: 5px;
 }
+
+/* ===== BOTÕES CIRCULARES PADRÃO ===== */
+.botao-circular {
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.botao-circular i {
+  pointer-events: none;
+}
+
+.botao-circular.vermelho {
+  background-color: #f44336;
+  color: white;
+}
+
+.botao-circular.azul {
+  background-color: #2196f3;
+  color: white;
+}
+
+.botao-circular.verde {
+  background-color: #4caf50;
+  color: white;
+}
+
+.botao-circular.laranja {
+  background-color: #ff9800;
+  color: white;
+}
+
+.botao-circular:hover {
+  transform: scale(1.1);
+}
+
+/* ===== POSICIONAMENTO DE BOTÕES NA LISTA ===== */
+.botoes-aplicacao {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}

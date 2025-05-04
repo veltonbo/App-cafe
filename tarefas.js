@@ -144,7 +144,27 @@ function limparCamposTarefa() {
 }
 
 function marcarTarefaComoFeita(index) {
-  tarefas[index].feita = true;
+  const tarefa = tarefas[index];
+  tarefa.feita = true;
+
+  // Se for uma tarefa de aplicação, salvar também em Aplicações
+  if (tarefa.eAplicacao) {
+    db.ref('Aplicacoes').once('value').then(snap => {
+      const aplicacoes = snap.exists() ? snap.val() : [];
+
+      const novaAplicacao = {
+        data: tarefa.data,
+        produto: tarefa.descricao,
+        dosagem: tarefa.dosagem,
+        tipo: tarefa.tipo,
+        setor: tarefa.setor
+      };
+
+      aplicacoes.push(novaAplicacao);
+      db.ref('Aplicacoes').set(aplicacoes);
+    });
+  }
+
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();
 }

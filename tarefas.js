@@ -107,6 +107,8 @@ function editarTarefa(index) {
   document.getElementById('prioridadeTarefa').value = t.prioridade;
   document.getElementById('setorTarefa').value = t.setor;
   document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
+  document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
+mostrarCamposAplicacao(); // <- ESSENCIAL!
 
   if (t.eAplicacao) {
     document.getElementById('camposAplicacao').style.display = 'block';

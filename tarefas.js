@@ -35,7 +35,7 @@ function atualizarTarefas() {
 
       item.innerHTML = `
         <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}</span>
-        <div class="botoes-aplicacao">
+        <div class="botoes-tarefa">
           ${!t.feita ? `
             <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
               <i class="fas fa-check"></i>

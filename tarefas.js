@@ -159,3 +159,9 @@ function excluirTarefa(index) {
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();
 }
+
+function mostrarCamposAplicacao() {
+  const checkbox = document.getElementById('eAplicacaoCheckbox');
+  const campos = document.getElementById('camposAplicacao');
+  campos.style.display = checkbox.checked ? 'block' : 'none';
+}

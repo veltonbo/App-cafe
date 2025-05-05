@@ -122,7 +122,7 @@ button:hover {
 
 .item span {
   display: block;
-  padding-right: 90px; /* garante espaço para os botões */
+  padding-right: 70px; /* garante espaço para os botões */
   word-break: break-word;
   color: #fff;
   flex: 1;

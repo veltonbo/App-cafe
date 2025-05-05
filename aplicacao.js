@@ -30,7 +30,7 @@ function atualizarAplicacoes() {
       item.className = "item fade-in";
 
       // Define a quantidade de botões visíveis
-      const numBotoes = 3; // Altere para 2 se estiver usando só dois botões
+      const numBotoes = 2; // Altere para 2 se estiver usando só dois botões
       item.setAttribute("data-botoes", numBotoes);
 
       const span = document.createElement("span");
@@ -43,7 +43,6 @@ function atualizarAplicacoes() {
       botoes.innerHTML = `
         <button class="botao-circular azul" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
         <button class="botao-circular vermelho" onclick="excluirAplicacao(${index})"><i class="fas fa-trash-alt"></i></button>
-        <button class="botao-circular verde" onclick="visualizarAplicacao(${index})"><i class="fas fa-eye"></i></button>
       `;
 
       item.appendChild(botoes);

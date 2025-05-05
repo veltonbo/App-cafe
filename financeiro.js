@@ -391,3 +391,17 @@ function excluirTodasParcelas() {
 function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }
+
+function alternarFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  const btn = document.getElementById("btnToggleFiltrosFin");
+  if (filtros.style.display === "none") {
+    filtros.style.display = "block";
+    btn.classList.add("verde");
+    btn.classList.remove("azul");
+  } else {
+    filtros.style.display = "none";
+    btn.classList.remove("verde");
+    btn.classList.add("azul");
+  }
+}

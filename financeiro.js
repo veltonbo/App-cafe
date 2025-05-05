@@ -8,6 +8,7 @@ function carregarFinanceiro() {
     if (snap.exists()) {
       gastos = snap.val();
       atualizarFinanceiro();
+      mostrarParcelas();
     }
   });
 }

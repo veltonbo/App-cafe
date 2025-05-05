@@ -17,68 +17,94 @@ function carregarFinanceiro() {
 
 // ===== ADICIONAR OU EDITAR GASTO =====
 function adicionarFinanceiro() {
-  const gasto = {
-    data: dataFin.value,
-    produto: produtoFin.value.trim(),
-    descricao: descricaoFin.value.trim(),
-    valor: parseFloat(valorFin.value),
-    tipo: tipoFin.value,
-    pago: false,
-    parcelas: parceladoFin.checked ? parseInt(parcelasFin.value) || 1 : 1
-  };
+  const data = dataFin.value;
+  const produto = produtoFin.value.trim();
+  const descricao = descricaoFin.value.trim();
+  const valor = parseFloat(valorFin.value);
+  const tipo = tipoFin.value;
+  const parcelado = parceladoFin.checked;
+  const numParcelas = parcelado ? parseInt(parcelasFin.value) || 1 : 1;
 
-  if (!gasto.data || !gasto.produto || isNaN(gasto.valor)) {
+  if (!data || !produto || isNaN(valor)) {
     alert("Preencha todos os campos corretamente!");
     return;
   }
 
-  // Gera parcelas se for parcelado
-  if (gasto.parcelas > 1) {
-    const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
-    const parcelas = [];
-    const dataBase = new Date(gasto.data);
-    for (let i = 0; i < gasto.parcelas; i++) {
-      const vencimento = new Date(dataBase);
-      vencimento.setMonth(vencimento.getMonth() + i);
-      parcelas.push({
+  // ===== EDIÇÃO DE LANÇAMENTO EXISTENTE =====
+  if (indiceEdicaoFinanceiro !== null) {
+    const gasto = gastos[indiceEdicaoFinanceiro];
+    gasto.produto = produto;
+    gasto.descricao = descricao;
+    gasto.tipo = tipo;
+
+    if (gasto.parcelasDetalhes && editarParcelaIndex !== null && !editarTodasParcelas) {
+      // Editar apenas a parcela selecionada
+      gasto.parcelasDetalhes[editarParcelaIndex].valor = valor;
+      gasto.parcelasDetalhes[editarParcelaIndex].vencimento = data;
+    } else if (gasto.parcelasDetalhes && editarTodasParcelas) {
+      // Editar todas as parcelas
+      const valorParcela = parseFloat((valor / gasto.parcelasDetalhes.length).toFixed(2));
+      const base = new Date(data);
+      gasto.parcelasDetalhes.forEach((p, i) => {
+        const venc = new Date(base);
+        venc.setMonth(base.getMonth() + i);
+        p.valor = valorParcela;
+        p.vencimento = venc.toISOString().split("T")[0];
+      });
+    } else {
+      // Lançamento único (sem parcelas)
+      gasto.data = data;
+      gasto.valor = valor;
+    }
+
+    gastos[indiceEdicaoFinanceiro] = gasto;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+    cancelarEdicaoFinanceiro();
+    return;
+  }
+
+  // ===== NOVO LANÇAMENTO =====
+  const novo = {
+    data,
+    produto,
+    descricao,
+    valor,
+    tipo,
+    pago: false,
+    parcelas: numParcelas
+  };
+
+  if (numParcelas > 1) {
+    const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
+    const base = new Date(data);
+    novo.parcelasDetalhes = [];
+
+    for (let i = 0; i < numParcelas; i++) {
+      const venc = new Date(base);
+      venc.setMonth(venc.getMonth() + i);
+      novo.parcelasDetalhes.push({
         numero: i + 1,
         valor: valorParcela,
-        vencimento: vencimento.toISOString().split("T")[0],
+        vencimento: venc.toISOString().split("T")[0],
         pago: false
       });
     }
-    gasto.parcelasDetalhes = parcelas;
   }
 
-  if (indiceEdicaoFinanceiro !== null) {
-    if (parcelaEditando !== null) {
-      gastos[indiceEdicaoFinanceiro].parcelasDetalhes[parcelaEditando].valor = gasto.valor;
-      gastos[indiceEdicaoFinanceiro].parcelasDetalhes[parcelaEditando].vencimento = gasto.data;
-      gastos[indiceEdicaoFinanceiro].produto = gasto.produto;
-      gastos[indiceEdicaoFinanceiro].descricao = gasto.descricao;
-      gastos[indiceEdicaoFinanceiro].tipo = gasto.tipo;
-    } else {
-      gastos[indiceEdicaoFinanceiro] = gasto;
-    }
-    indiceEdicaoFinanceiro = null;
-    parcelaEditando = null;
-    btnSalvarFinanceiro.innerHTML = `<i class="fas fa-save"></i> Salvar Gasto`;
-    btnCancelarEdicaoFin.style.display = "none";
-  } else {
-    gastos.push(gasto);
-  }
-
+  gastos.push(novo);
   db.ref("Financeiro").set(gastos);
-  limparCamposFinanceiro();
   atualizarFinanceiro();
+  limparCamposFinanceiro();
 }
 
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoFinanceiro() {
   indiceEdicaoFinanceiro = null;
-  parcelaEditando = null;
-  btnSalvarFinanceiro.innerHTML = `<i class="fas fa-save"></i> Salvar Gasto`;
-  btnCancelarEdicaoFin.style.display = "none";
+  editarTodasParcelas = false;
+  editarParcelaIndex = null;
+  document.getElementById("btnCancelarEdicaoFinanceiro").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Gasto";
   limparCamposFinanceiro();
 }
 
@@ -355,39 +381,17 @@ function salvarEdicaoFinanceiro(index) {
 }
 
 function editarParcela(index, parcelaIndex) {
-  const g = gastos[index];
-  if (!g || !g.parcelasDetalhes) return;
+  const gasto = gastos[index];
+  if (!gasto || !gasto.parcelasDetalhes || parcelaIndex == null) return;
 
-  if (confirm("Deseja editar todas as parcelas ou apenas essa?\nOk = Todas / Cancelar = Somente esta")) {
-    editarFinanceiro(index);
-  } else {
-    const parcela = g.parcelasDetalhes[parcelaIndex];
-    dataFin.value = parcela.vencimento;
-    produtoFin.value = g.produto;
-    descricaoFin.value = g.descricao || "";
-    valorFin.value = parcela.valor;
-    tipoFin.value = g.tipo;
-    parceladoFin.checked = false;
-    parcelasFin.style.display = "none";
+  // Armazena os índices para uso posterior
+  indiceEdicaoFinanceiro = index;
+  editarParcelaIndex = parcelaIndex;
 
-    document.getElementById("btnSalvarAplicacao").onclick = () => {
-  const novaParcela = {
-    ...g.parcelasDetalhes[parcelaIndex],
-    valor: parseFloat(valorFin.value),
-    vencimento: dataFin.value
-  };
-
-  g.parcelasDetalhes[parcelaIndex] = novaParcela;
-
-  // Atualiza também os dados gerais se necessário
-  g.produto = produtoFin.value.trim();
-  g.descricao = descricaoFin.value.trim();
-  g.tipo = tipoFin.value;
-
-  db.ref("Financeiro").set(gastos);
-  atualizarFinanceiro();
-  limparCamposFinanceiro();
-};
+  // Exibe o modal para escolher o tipo de edição
+  const modal = document.getElementById("modalEditarParcela");
+  if (modal) {
+    modal.style.display = "flex";
   }
 }
 
@@ -507,4 +511,20 @@ function limparCamposFinanceiro() {
   mostrarParcelas();
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   document.getElementById("btnSalvarAplicacao").onclick = adicionarFinanceiro;
+}
+
+function confirmarEdicaoParcelaUnica() {
+  editarTodasParcelas = false;
+  iniciarEdicaoFinanceiro();
+  fecharModalEdicaoParcelas();
+}
+
+function confirmarEdicaoTodasParcelas() {
+  editarTodasParcelas = true;
+  iniciarEdicaoFinanceiro();
+  fecharModalEdicaoParcelas();
+}
+
+function fecharModalEdicaoParcelas() {
+  document.getElementById("modalEscolherEdicaoParcelas").style.display = "none";
 }

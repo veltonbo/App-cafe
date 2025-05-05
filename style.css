@@ -507,3 +507,11 @@ label[for="eAplicacaoCheckbox"] {
 .botao-circular.azul:hover {
   background-color: #1976d2;
 }
+
+.item.botoes-3 span {
+  padding-right: 100px;
+}
+
+.item.botoes-2 span {
+  padding-right: 70px;
+}

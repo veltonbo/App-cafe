@@ -7,8 +7,10 @@ function carregarFinanceiro() {
   db.ref("Financeiro").on("value", snap => {
     if (snap.exists()) {
       gastos = snap.val();
-      atualizarFinanceiro();
+    } else {
+      gastos = [];
     }
+    atualizarFinanceiro();
   });
 }
 

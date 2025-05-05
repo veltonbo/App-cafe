@@ -74,13 +74,33 @@ function atualizarAplicacoes() {
     .forEach((app, i) => {
       const item = document.createElement("div");
       item.className = "item fade-in";
-      item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <div class="botoes-aplicacao">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
+
+      // Cria os botões
+      const botoes = document.createElement("div");
+      botoes.className = "botoes-aplicacao";
+
+      const botaoEditar = document.createElement("button");
+      botaoEditar.className = "botao-circular azul";
+      botaoEditar.innerHTML = `<i class="fas fa-edit"></i>`;
+      botaoEditar.onclick = () => editarAplicacao(i);
+      botoes.appendChild(botaoEditar);
+
+      const botaoExcluir = document.createElement("button");
+      botaoExcluir.className = "botao-circular vermelho";
+      botaoExcluir.innerHTML = `<i class="fas fa-trash"></i>`;
+      botaoExcluir.onclick = () => excluirAplicacao(i);
+      botoes.appendChild(botaoExcluir);
+
+      // Ajusta dinamicamente o padding do texto
+      const qtdBotoes = botoes.childElementCount;
+      const paddingDireito = 12 + (qtdBotoes * 48); // 48px por botão (38 largura + 10px gap)
+      item.style.paddingRight = `${paddingDireito}px`;
+
+      const texto = document.createElement("span");
+      texto.innerText = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
+
+      item.appendChild(texto);
+      item.appendChild(botoes);
       lista.appendChild(item);
     });
 }

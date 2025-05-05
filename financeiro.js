@@ -121,7 +121,7 @@ function atualizarFinanceiro() {
   renderizarFinanceiro(dadosPago, pagos, true);
   gerarResumoFinanceiro();
   gerarGraficoFinanceiro();
-
+}
   // ===== AJUSTE DINÂMICO DE PADDING CONFORME QUANTIDADE DE BOTÕES =====
 document.querySelectorAll('#financeiroVencer .item, #financeiroPago .item').forEach(div => {
   const botoes = div.querySelectorAll('.botoes-financeiro button').length;

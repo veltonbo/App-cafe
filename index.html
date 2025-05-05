@@ -158,6 +158,13 @@
 
   <hr>
 
+  <!-- Botão para mostrar/ocultar filtros -->
+<button class="botao-circular azul" onclick="alternarFiltrosFinanceiro()" style="margin-bottom: 10px;">
+  <i class="fas fa-filter"></i>
+</button>
+
+<!-- Bloco de filtros com ID para ocultar/exibir -->
+<div id="filtrosFinanceiro" style="display: none;">
   <h3>Filtrar Gastos</h3>
   <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
   <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
@@ -175,8 +182,8 @@
     <option value="vencer">A Vencer</option>
   </select>
   <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
-
   <hr>
+</div>
 
   <h4 style="color: #ff9800;">A Vencer</h4>
   <div id="financeiroVencer"></div>

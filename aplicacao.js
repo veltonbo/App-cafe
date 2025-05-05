@@ -19,45 +19,36 @@ function atualizarAplicacoes() {
   const filtroSetor = document.getElementById('filtroSetorAplicacoes').value;
   const termoBusca = document.getElementById('pesquisaAplicacoes').value.toLowerCase();
 
-  const agrupado = {};
-
   aplicacoes
-    .filter(app =>
-      (!filtroSetor || app.setor === filtroSetor) &&
-      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
+    .filter(a =>
+      (!filtroSetor || a.setor === filtroSetor) &&
+      (`${a.produto} ${a.tipo} ${a.setor}`.toLowerCase().includes(termoBusca))
     )
     .sort((a, b) => (a.data > b.data ? -1 : 1))
-    .forEach((app, i) => {
-      if (!agrupado[app.data]) agrupado[app.data] = [];
-      agrupado[app.data].push({ ...app, i });
-    });
+    .forEach((aplicacao, index) => {
+      const item = document.createElement("div");
+      item.className = "item fade-in";
 
-  for (const data in agrupado) {
-    const grupo = document.createElement('div');
-    grupo.className = 'grupo-data';
-    grupo.textContent = data;
-    lista.appendChild(grupo);
+      // Define a quantidade de botões visíveis
+      const numBotoes = 3; // Altere para 2 se estiver usando só dois botões
+      item.setAttribute("data-botoes", numBotoes);
 
-    agrupado[data].forEach(({ produto, tipo, dosagem, setor, i }) => {
-      const item = document.createElement('div');
-      item.className = 'item fade-in';
-      item.style.position = 'relative';
+      const span = document.createElement("span");
+      span.textContent = `${aplicacao.data} - ${aplicacao.produto} - ${aplicacao.tipo} (${aplicacao.dosagem}) - ${aplicacao.setor}`;
+      item.appendChild(span);
 
-      item.innerHTML = `
-        <span>${produto} (${tipo}) – ${dosagem} – ${setor}</span>
-        <div class="botoes-aplicacao" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 8px;">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </div>
+      const botoes = document.createElement("div");
+      botoes.className = "botoes-aplicacao";
+
+      botoes.innerHTML = `
+        <button class="botao-circular azul" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+        <button class="botao-circular vermelho" onclick="excluirAplicacao(${index})"><i class="fas fa-trash-alt"></i></button>
+        <button class="botao-circular verde" onclick="visualizarAplicacao(${index})"><i class="fas fa-eye"></i></button>
       `;
 
+      item.appendChild(botoes);
       lista.appendChild(item);
     });
-  }
 }
 
 function adicionarAplicacao() {

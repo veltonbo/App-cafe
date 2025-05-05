@@ -405,3 +405,9 @@ function alternarFiltrosFinanceiro() {
     btn.classList.add("azul");
   }
 }
+
+function mostrarParcelas() {
+  const checkbox = document.getElementById("parceladoFin");
+  const campoParcelas = document.getElementById("parcelasFin");
+  campoParcelas.style.display = checkbox.checked ? "block" : "none";
+}

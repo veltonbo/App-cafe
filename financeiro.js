@@ -179,7 +179,7 @@ div.innerHTML = `
            <i class="fas fa-trash"></i>
          </button>`
   }
-</div>
+  </div>
       container.appendChild(div);
     });
 
@@ -389,4 +389,34 @@ function toggleFiltrosFinanceiro() {
     btnIcone.classList.remove("fa-times");
     btnIcone.classList.add("fa-filter");
   }
+}
+
+function editarFinanceiro(index, parcelaIndex = null) {
+  const g = gastos[index];
+  if (!g) return;
+
+  // Preenche os campos com os dados
+  document.getElementById("dataFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].vencimento : g.data;
+  document.getElementById("produtoFin").value = g.produto;
+  document.getElementById("descricaoFin").value = g.descricao || "";
+  document.getElementById("valorFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].valor : g.valor;
+  document.getElementById("tipoFin").value = g.tipo;
+  document.getElementById("parceladoFin").checked = !!g.parcelasDetalhes;
+  document.getElementById("parcelasFin").style.display = !!g.parcelasDetalhes ? "block" : "none";
+  document.getElementById("parcelasFin").value = g.parcelas || "";
+  document.getElementById("parcelasFin").dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
+
+  // Salva o índice do item que está sendo editado
+  indiceEdicaoGasto = index;
+
+  // Se for parcela, pergunta se quer editar só uma ou todas
+  if (g.parcelasDetalhes && parcelaIndex !== null) {
+    mostrarModalEditarParcela();
+  } else {
+    editarTodasParcelas = true;
+  }
+
+  // Atualiza botão para modo edição
+  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
+  document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
 }

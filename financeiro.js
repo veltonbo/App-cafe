@@ -425,21 +425,72 @@ function mostrarParcelas() {
 }
 
 function editarGasto(index) {
-  const g = gastos[index];
-  if (!g) return;
+  const gasto = gastos[index];
+  if (!gasto) return;
 
-  dataFin.value = g.data;
-  produtoFin.value = g.produto;
-  descricaoFin.value = g.descricao || '';
-  valorFin.value = g.valor;
-  tipoFin.value = g.tipo;
-  parceladoFin.checked = g.parcelas > 1;
-  parcelasFin.value = g.parcelas > 1 ? g.parcelas : '';
-  mostrarParcelas();
+  dataFin.value = gasto.data;
+  produtoFin.value = gasto.produto;
+  descricaoFin.value = gasto.descricao;
+  valorFin.value = gasto.valor;
+  tipoFin.value = gasto.tipo;
 
-  indiceEdicaoFinanceiro = index;
-  document.getElementById("btnSalvarGasto").innerHTML = `<i class="fas fa-edit"></i> Salvar Edição`;
-  document.getElementById("btnCancelarEdicaoFin").style.display = "inline-block";
+  if (gasto.parcelas > 1 && gasto.parcelasDetalhes) {
+    parceladoFin.checked = true;
+    parcelasFin.value = gasto.parcelas;
+    mostrarParcelas();
+  } else {
+    parceladoFin.checked = false;
+    parcelasFin.value = "";
+    mostrarParcelas();
+  }
+
+  btnSalvarGasto.innerText = "Salvar Edição";
+  btnCancelarEdicaoFin.style.display = "inline-block";
+
+  // Substitui a função padrão ao clicar em salvar
+  btnSalvarGasto.onclick = function () {
+    const novo = {
+      data: dataFin.value,
+      produto: produtoFin.value.trim(),
+      descricao: descricaoFin.value.trim(),
+      valor: parseFloat(valorFin.value),
+      tipo: tipoFin.value,
+      pago: gasto.pago,
+      parcelas: parceladoFin.checked ? parseInt(parcelasFin.value) || 1 : 1
+    };
+
+    if (!novo.data || !novo.produto || isNaN(novo.valor)) {
+      alert("Preencha todos os campos corretamente!");
+      return;
+    }
+
+    // Recria parcelas, se necessário
+    if (novo.parcelas > 1) {
+      const valorParcela = parseFloat((novo.valor / novo.parcelas).toFixed(2));
+      const parcelas = [];
+      const dataBase = new Date(novo.data);
+      for (let i = 0; i < novo.parcelas; i++) {
+        const vencimento = new Date(dataBase);
+        vencimento.setMonth(vencimento.getMonth() + i);
+        parcelas.push({
+          numero: i + 1,
+          valor: valorParcela,
+          vencimento: vencimento.toISOString().split("T")[0],
+          pago: gasto.parcelasDetalhes?.[i]?.pago || false
+        });
+      }
+      novo.parcelasDetalhes = parcelas;
+    }
+
+    gastos[index] = novo;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+    limparFormularioFinanceiro();
+
+    btnSalvarGasto.innerText = "Salvar Gasto";
+    btnCancelarEdicaoFin.style.display = "none";
+    btnSalvarGasto.onclick = adicionarFinanceiro; // Restaura função padrão
+  };
 }
 
 function cancelarEdicaoFinanceiro() {

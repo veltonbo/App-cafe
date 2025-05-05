@@ -123,7 +123,9 @@ function adicionarFinanceiro() {
     gastos.push(novo);
   }
 
-  db.ref("Financeiro").set(gastos);
+  const ano = localStorage.getItem("anoAtual");
+if (!ano) return;
+db.ref(`safras/${ano}/financeiro`).set(gastos);
   limparCamposFinanceiro();
   atualizarFinanceiro();
 }

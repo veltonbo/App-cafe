@@ -368,5 +368,15 @@ function fecharModalExcluirParcela() {
 
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
-  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+  const btnIcone = document.querySelector("#btnToggleFiltrosFin i");
+
+  if (filtros.style.display === "none" || filtros.style.display === "") {
+    filtros.style.display = "block";
+    btnIcone.classList.remove("fa-filter");
+    btnIcone.classList.add("fa-times");
+  } else {
+    filtros.style.display = "none";
+    btnIcone.classList.remove("fa-times");
+    btnIcone.classList.add("fa-filter");
+  }
 }

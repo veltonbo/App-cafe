@@ -3,6 +3,9 @@ let gastos = [];
 let graficoGastosChart = null;
 let indiceEdicaoFinanceiro = null;
 let parcelaEditando = null;
+let indiceEdicaoFinanceiro = null;
+let editarTodasParcelas = false;
+let editarParcelaIndex = null;
 
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {

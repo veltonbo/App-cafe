@@ -155,47 +155,45 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
+
       const icone = tipo === "Adubo" ? "leaf"
         : tipo === "Fungicida" ? "bug"
         : tipo === "Inseticida" ? "spray-can"
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
-      const div = document.createElement("div");
-      div.className = "item";
+      // === BOTÕES DINÂMICOS ===
+      const botoes = [];
 
-      // Cria span do texto
-      const span = document.createElement("span");
-      span.innerHTML = `
-        <i class="fas fa-${icone}"></i>
-        <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo})
-        ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-        ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-      `;
-      div.appendChild(span);
-
-      // Cria container dos botões
-      const botoes = document.createElement("div");
-      botoes.className = "botoes-financeiro";
-
-      // Editar (somente se não for pago)
-      if (!pago) {
-        botoes.innerHTML += isParcela
-          ? `<button class="botao-circular azul" onclick="mostrarEdicaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-edit"></i></button>`
-          : `<button class="botao-circular azul" onclick="editarGasto(${i})"><i class="fas fa-edit"></i></button>`;
-      }
-
-      // Marcar como pago ou desfazer
       if (isParcela) {
-        botoes.innerHTML += `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
+        botoes.push(`<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`);
+      } else if (pago) {
+        botoes.push(`<button class="botao-circular verde" onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`);
       } else {
-        botoes.innerHTML += `<button class="botao-circular verde" onclick="${pago ? `desfazerPagamento(${i})` : `marcarPago(${i})`}"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
+        botoes.push(`<button class="botao-circular verde" onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`);
       }
 
-      // Botão excluir
-      botoes.innerHTML += `<button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>`;
+      if (!pago) {
+        botoes.push(`<button class="botao-circular azul" onclick="editarGasto(${i}, ${parcelaIndex})"><i class="fas fa-edit"></i></button>`);
+      }
 
-      div.appendChild(botoes);
+      botoes.push(`<button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>`);
+
+      // Define a classe com base na quantidade de botões
+      const classeItem = botoes.length === 2 ? "item dois-botoes" : "item tres-botoes";
+
+      const div = document.createElement("div");
+      div.className = classeItem;
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+        </span>
+        <div class="botoes-financeiro">${botoes.join("")}</div>
+      `;
+
       container.appendChild(div);
     });
 

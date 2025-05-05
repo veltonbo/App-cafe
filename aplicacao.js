@@ -70,10 +70,13 @@ function atualizarAplicacoes() {
       (!filtroSetor || app.setor === filtroSetor) &&
       (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
     )
-    .sort((a, b) => (a.data > b.data ? -1 : 1))
+    .sort((a, b) => b.data.localeCompare(a.data))
     .forEach((app, i) => {
       const item = document.createElement('div');
-      const numBotoes = t.feita ? 2 : 3;
+      
+      // Define a quantidade de botões: sempre 2 por padrão (Editar + Excluir)
+      const numBotoes = 2;
+
       item.className = `item fade-in botoes-${numBotoes}`;
       item.style.position = 'relative';
       item.style.display = 'flex';
@@ -88,16 +91,16 @@ function atualizarAplicacoes() {
       item.appendChild(span);
 
       const botoes = document.createElement('div');
-      botoes.className = 'botoes-tarefa'; // mesma classe usada no menu tarefas
+      botoes.className = 'botoes-tarefa';
 
-      // Botão editar
+      // Botão Editar
       const botaoEditar = document.createElement('button');
       botaoEditar.className = 'botao-circular azul';
       botaoEditar.innerHTML = '<i class="fas fa-edit"></i>';
       botaoEditar.onclick = () => editarAplicacao(i);
       botoes.appendChild(botaoEditar);
 
-      // Botão excluir
+      // Botão Excluir
       const botaoExcluir = document.createElement('button');
       botaoExcluir.className = 'botao-circular vermelho';
       botaoExcluir.innerHTML = '<i class="fas fa-trash"></i>';

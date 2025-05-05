@@ -9,14 +9,6 @@ function mostrarAba(id) {
   document.getElementById(id).classList.add('active');
   document.getElementById(`btn-${id}`).classList.add('active');
 
-  if (id === 'aplicacoes') atualizarAplicacoes();
-  if (id === 'tarefas') atualizarTarefas();
-  if (id === 'financeiro') atualizarFinanceiro();
-  if (id === 'colheita') atualizarColheita();
-  if (id === 'relatorio') gerarRelatorioCompleto();
-  if (id === 'configuracoes') carregarConfiguracoes();
-}
-
 // ===== INICIALIZAÇÃO PRINCIPAL =====
 function inicializarApp() {
   carregarAplicacoes?.();

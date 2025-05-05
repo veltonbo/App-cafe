@@ -110,18 +110,30 @@ button:hover {
 
 .item {
   position: relative;
-  display: block;
-  background: #1e1e1e;
-  padding: 12px 90px 12px 12px; /* padding direito maior para os botões */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 90px 12px 12px; /* espaço direito para os botões */
   margin: 10px 0;
   border-radius: 8px;
+  background: #1e1e1e;
   border-left: 4px solid #66bb6a;
   overflow: hidden;
 }
 
 .item span {
-  display: block;
+  flex-grow: 1;
   word-break: break-word;
+  color: #fff;
+}
+
+.botoes-tarefa {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
 }
 
 .botoes-aplicacao {

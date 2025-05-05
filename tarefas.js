@@ -29,7 +29,9 @@ function atualizarTarefas() {
     .forEach((t, i) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
-      item.style.position = 'relative';
+item.style.display = 'flex';
+item.style.alignItems = 'center';
+item.style.justifyContent = 'space-between';
 
       const aplicacaoExtra = t.eAplicacao ? ` - ${t.tipo} (${t.dosagem})` : '';
 

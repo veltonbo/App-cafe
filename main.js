@@ -1,53 +1,52 @@
-// ===== INICIALIZAÇÃO DO SISTEMA =====
-function inicializarApp() {
-  carregarAplicacoes();
-  carregarTarefas();
-  carregarFinanceiro(); // chamada correta para carregar financeiro
-  carregarColheita();
-  carregarConfiguracoes();
-  aplicarTemaSalvo();
-}
-
-// ===== TROCAR ENTRE ABAS =====
+// ===== MOSTRAR ABA =====
 function mostrarAba(id) {
-  document.querySelectorAll(".aba").forEach(aba => aba.classList.remove("active"));
-  const abaSelecionada = document.getElementById(id);
-  if (abaSelecionada) {
-    abaSelecionada.classList.add("active");
-  }
+  const abas = document.querySelectorAll('.aba');
+  abas.forEach(aba => aba.classList.remove('active'));
 
-  // Atualiza botões do menu superior
-  document.querySelectorAll(".menu-superior button").forEach(btn => btn.classList.remove("active"));
-  const btnSelecionado = document.getElementById("btn-" + id);
-  if (btnSelecionado) {
-    btnSelecionado.classList.add("active");
-  }
+  const botoes = document.querySelectorAll('.menu-superior button');
+  botoes.forEach(btn => btn.classList.remove('active'));
+
+  document.getElementById(id).classList.add('active');
+  document.getElementById(`btn-${id}`).classList.add('active');
+
+  if (id === 'aplicacoes') atualizarAplicacoes();
+  if (id === 'tarefas') atualizarTarefas();
+  if (id === 'financeiro') atualizarFinanceiro();
+  if (id === 'colheita') atualizarColheita();
+  if (id === 'relatorio') gerarRelatorioCompleto();
+  if (id === 'configuracoes') carregarConfiguracoes();
 }
 
-// ===== ALTERNAR TEMA CLARO/ESCURO =====
-function alternarTema() {
-  document.documentElement.classList.toggle("claro");
-  const modoAtual = document.documentElement.classList.contains("claro") ? "claro" : "escuro";
-  localStorage.setItem("tema", modoAtual);
+// ===== INICIALIZAÇÃO PRINCIPAL =====
+function inicializarApp() {
+  carregarAplicacoes?.();
+  carregarTarefas?.();
+  carregarFinanceiro?.();
+  carregarColheita?.();
+  carregarConfiguracoes?.();
+  mostrarAba('aplicacoes'); // inicia no menu aplicações
 }
 
-// ===== APLICAR TEMA SALVO NO INÍCIO =====
-function aplicarTemaSalvo() {
-  const temaSalvo = localStorage.getItem("tema");
-  if (temaSalvo === "claro") {
-    document.documentElement.classList.add("claro");
-  }
+// ===== AJUDA NO PARCELAMENTO =====
+function mostrarParcelas() {
+  const checkbox = document.getElementById("parceladoFin");
+  const campoParcelas = document.getElementById("parcelasFin");
+  campoParcelas.style.display = checkbox.checked ? "inline-block" : "none";
 }
 
-// ===== MOSTRAR/OCULTAR CAMPOS DE APLICAÇÃO NAS TAREFAS =====
-function mostrarCamposAplicacao() {
-  const checkbox = document.getElementById("eAplicacaoCheckbox");
-  const campos = document.getElementById("camposAplicacao");
-  campos.style.display = checkbox.checked ? "block" : "none";
-}
-
-// ===== TOGGLE DE FILTROS NO MENU FINANCEIRO =====
+// ===== TOGGLE DE FILTROS DO FINANCEIRO =====
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}
+
+// ===== AJUSTAR CLASSE VISUAL DE BOTÕES =====
+function ajustarEspacoTextoItemFinanceiro() {
+  const itens = document.querySelectorAll("#financeiro .item");
+  itens.forEach(item => {
+    const botoes = item.querySelectorAll("button");
+    const classe = botoes.length > 2 ? "botoes-3" : "botoes-2";
+    item.classList.remove("botoes-2", "botoes-3");
+    item.classList.add(classe);
+  });
 }

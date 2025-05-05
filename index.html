@@ -137,15 +137,15 @@
   <div id="listaTarefasFeitas"></div>
 </div>
 
-    <!-- ========== MENU FINANCEIRO ========== -->
-    <div id="financeiro" class="aba">
+  <!-- ========== MENU FINANCEIRO ========== -->
+<div id="financeiro" class="aba">
   <h2>Financeiro</h2>
 
-  <!-- Formulário -->
-  <input id="dataFin" type="date">
-  <input id="produtoFin" placeholder="Produto">
-  <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
-  <input id="valorFin" type="number" placeholder="Valor (R$)">
+  <!-- FORMULÁRIO DE CADASTRO -->
+  <input id="dataFin" type="date" placeholder="Data" />
+  <input id="produtoFin" placeholder="Produto" />
+  <input id="descricaoFin" placeholder="Descrição (opcional)" />
+  <input id="valorFin" type="number" step="0.01" placeholder="Valor (R$)" />
 
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
@@ -155,17 +155,19 @@
     <option value="Outro">Outro</option>
   </select>
 
+  <!-- Parcelamento -->
   <div style="display: flex; align-items: center; gap: 10px;">
     <label><input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado</label>
     <input id="parcelasFin" type="number" placeholder="Parcelas" style="display: none; width: 100px;" />
   </div>
 
+  <!-- Botões ação -->
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
-    <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro" class="botao-primario">
+    <button id="btnSalvarFinanceiro" onclick="adicionarFinanceiro()">
       <i class="fas fa-save"></i> Salvar Gasto
     </button>
-    <button onclick="cancelarEdicaoFinanceiro()" id="btnCancelarFinanceiro" class="botao-secundario" style="display: none;">
-      <i class="fas fa-times"></i> Cancelar Edição
+    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none; background-color: #888;">
+      Cancelar Edição
     </button>
   </div>
 
@@ -176,8 +178,8 @@
 
   <!-- Filtros -->
   <div id="filtrosFinanceiro" style="display: none; margin-bottom: 15px;">
-    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()" />
+    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()" />
 
     <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
       <option value="">Todos os Tipos</option>
@@ -194,25 +196,25 @@
       <option value="vencer">A Vencer</option>
     </select>
 
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()" />
   </div>
 
-  <!-- Listagem -->
+  <!-- LISTAGENS -->
   <h4 style="color: #ff9800;">A Vencer</h4>
   <div id="financeiroVencer"></div>
 
   <h4 style="color: #4caf50;">Pagos</h4>
   <div id="financeiroPago"></div>
 
-  <!-- Resumo -->
+  <!-- RESUMO -->
   <h4>Resumo do Mês</h4>
   <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
 
-  <!-- Gráfico -->
+  <!-- GRÁFICO -->
   <h4>Gráfico de Gastos Pagos</h4>
   <canvas id="graficoGastos"></canvas>
 
-  <!-- Exportações -->
+  <!-- EXPORTAÇÃO -->
   <div style="margin-top: 20px;">
     <button onclick="exportarFinanceiroCSV()" class="botao-secundario">
       <i class="fas fa-file-csv"></i> Exportar CSV
@@ -223,46 +225,15 @@
   </div>
 </div>
 
-    <!-- ========== MODAL DE PARCELAS ========= -->
-    <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
-        <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
-        <table style="width:100%; border-collapse:collapse; color:white;">
-          <thead>
-            <tr style="border-bottom:1px solid #555;">
-              <th style="text-align:left; padding:8px;">#</th>
-              <th style="text-align:left; padding:8px;">Vencimento</th>
-              <th style="text-align:right; padding:8px;">Valor (R$)</th>
-              <th style="text-align:center; padding:8px;">Pago</th>
-            </tr>
-          </thead>
-          <tbody id="parcelasLista"></tbody>
-        </table>
-        <div style="margin-top:20px; text-align:right;">
-          <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========== MODAL CONFIRMAR EXCLUSÃO PARCELA ========= -->
-    <div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-        <p style="color:white; font-size:16px;">Deseja excluir:</p>
-        <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
-        <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
-        <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
-      </div>
-    </div>
-
-    <!-- ========== MODAL ESCOLHA DE EDIÇÃO DE PARCELA ========= -->
-    <div id="modalEscolherEdicao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-        <p style="color:white; font-size:16px;">Editar:</p>
-        <button onclick="editarSomenteParcela()" style="margin:10px 0; background:#29b6f6;">Somente esta parcela</button><br>
-        <button onclick="editarTodasParcelas()" style="margin-bottom:10px; background:#4caf50;">Todas as parcelas</button><br>
-        <button onclick="fecharModalEscolherEdicao()" style="background:#555;">Cancelar</button>
-      </div>
-    </div>
+<!-- ========== MODAL CONFIRMAR EXCLUSÃO PARCELA ========== -->
+<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+    <p style="color:white; font-size:16px;">Deseja excluir:</p>
+    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
+    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
+    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
+  </div>
+</div>
 
     <!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
 <div id="relatorio" class="aba">

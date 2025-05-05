@@ -161,9 +161,11 @@
     <i class="fas fa-save"></i> Salvar Gasto
   </button>
   
+  <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
   <button onclick="toggleFiltrosFinanceiro()" class="botao-circular azul" title="Mostrar/Esconder Filtros">
-  <i class="fas fa-filter"></i>
-</button>
+    <i class="fas fa-filter"></i>
+  </button>
+</div>
 
 <div id="filtrosFinanceiro" style="display: none;">
   <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">

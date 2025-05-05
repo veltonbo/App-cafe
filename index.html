@@ -84,58 +84,11 @@
   </button>
 </div>
 
-<!-- ========== MENU TAREFAS ========== -->
-<div id="tarefas" class="aba">
-  <h2>Tarefas</h2>
-  <input id="dataTarefa" type="date">
-  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-  <select id="prioridadeTarefa">
-    <option>Alta</option>
-    <option>Média</option>
-    <option>Baixa</option>
-  </select>
-  <select id="setorTarefa">
-    <option>Setor 01</option>
-    <option>Setor 02</option>
-  </select>
-
-  <!-- Checkbox com label corretamente alinhado -->
-  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
-    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
-  </div>
-
-  <div id="camposAplicacao" style="display:none; margin-top:10px;">
-    <input id="dosagemAplicacao" placeholder="Dosagem">
-    <select id="tipoAplicacao">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-  </div>
-
-  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-
-  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
-    <option value="">Todos os Setores</option>
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-  </select>
-
-  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-
-  <h4>A Fazer</h4>
-  <div id="listaTarefas"></div>
-
-  <h4>Executadas</h4>
-  <div id="listaTarefasFeitas"></div>
-</div>
-
 <!-- ========== MENU FINANCEIRO ========== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
 
+  <!-- FORMULÁRIO DE NOVO GASTO -->
   <input id="dataFin" type="date">
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
@@ -149,32 +102,25 @@
     <option value="Outro">Outro</option>
   </select>
 
-  <label style="margin-top: 5px;">
-    <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
-  </label>
-
-  <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
-
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-    <button id="btnSalvarGasto" onclick="adicionarFinanceiro()">
-      <i class="fas fa-save"></i> Salvar Gasto
-    </button>
-    <button id="btnCancelarEdicaoFin" onclick="cancelarEdicaoFinanceiro()" style="display: none; background-color: #888;">
-      Cancelar Edição
-    </button>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <label><input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado</label>
+    <input id="parcelasFin" type="number" placeholder="Parcelas" style="display: none; width: 100px;" />
   </div>
 
-  <hr>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
+    <button onclick="adicionarFinanceiro()" class="botao-primario"><i class="fas fa-save"></i> Salvar Gasto</button>
+  </div>
 
-  <button onclick="alternarFiltrosFinanceiro()" class="botao-padrao" style="margin-bottom: 10px;">
+  <!-- BOTÃO DE MOSTRAR/ESCONDER FILTROS -->
+  <button onclick="toggleFiltrosFinanceiro()" class="botao-secundario" style="margin-bottom: 10px;">
     <i class="fas fa-filter"></i> Filtros
   </button>
 
-  <div id="filtrosFinanceiro" style="display: none; margin-bottom: 10px;">
-    <h3>Filtrar Gastos</h3>
+  <!-- FILTROS DE BUSCA -->
+  <div id="filtrosFinanceiro" style="display: none; margin-bottom: 15px;">
     <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
     <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
-    
+
     <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
       <option value="">Todos os Tipos</option>
       <option value="Adubo">Adubo</option>
@@ -190,30 +136,27 @@
       <option value="vencer">A Vencer</option>
     </select>
 
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
   </div>
 
-  <hr>
-
+  <!-- LISTAGEM DE GASTOS -->
   <h4 style="color: #ff9800;">A Vencer</h4>
   <div id="financeiroVencer"></div>
 
   <h4 style="color: #4caf50;">Pagos</h4>
   <div id="financeiroPago"></div>
 
+  <!-- RESUMO E GRÁFICO -->
   <h4>Resumo do Mês</h4>
   <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
 
   <h4>Gráfico de Gastos Pagos</h4>
   <canvas id="graficoGastos"></canvas>
 
+  <!-- EXPORTAÇÃO -->
   <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()" class="botao-padrao">
-      <i class="fas fa-file-csv"></i> Exportar CSV
-    </button>
-    <button onclick="exportarFinanceiroPDF()" class="botao-padrao">
-      <i class="fas fa-file-pdf"></i> Exportar PDF
-    </button>
+    <button onclick="exportarFinanceiroCSV()" class="botao-secundario"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <button onclick="exportarFinanceiroPDF()" class="botao-secundario"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
   </div>
 </div>
 

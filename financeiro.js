@@ -14,16 +14,16 @@ function carregarFinanceiro() {
 
 // ===== ADICIONAR GASTO =====
 function adicionarFinanceiro() {
-  const data = document.getElementById("dataFin").value;
-  const produto = document.getElementById("produtoFin").value.trim();
-  const descricao = document.getElementById("descricaoFin").value.trim();
-  const valor = parseFloat(document.getElementById("valorFin").value);
-  const tipo = document.getElementById("tipoFin").value;
-  const parcelado = document.getElementById("parceladoFin").checked;
-  const numParcelas = parcelado ? parseInt(document.getElementById("parcelasFin").value) || 1 : 1;
+  const data = dataFin.value;
+  const produto = produtoFin.value.trim();
+  const descricao = descricaoFin.value.trim();
+  const valor = parseFloat(valorFin.value);
+  const tipo = tipoFin.value;
+  const parcelado = parceladoFin.checked;
+  const numParcelas = parcelado ? parseInt(parcelasFin.value) || 1 : 1;
 
   if (!data || !produto || isNaN(valor)) {
-    alert("Preencha todos os campos obrigatórios!");
+    alert("Preencha todos os campos corretamente!");
     return;
   }
 
@@ -37,7 +37,6 @@ function adicionarFinanceiro() {
     const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
     const parcelas = [];
     const dataBase = new Date(data);
-
     for (let i = 0; i < numParcelas; i++) {
       const venc = new Date(dataBase);
       venc.setMonth(venc.getMonth() + i);
@@ -48,18 +47,15 @@ function adicionarFinanceiro() {
         pago: false
       });
     }
-
     novoGasto.parcelasDetalhes = parcelas;
   }
 
-  if (indiceEdicaoGasto !== null) {
-    // Atualiza item existente
+  if (typeof indiceEdicaoGasto === 'number') {
     gastos[indiceEdicaoGasto] = novoGasto;
     indiceEdicaoGasto = null;
     document.getElementById("btnSalvarGasto").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
     document.getElementById("btnCancelarEdicaoGasto").style.display = "none";
   } else {
-    // Adiciona novo gasto
     gastos.push(novoGasto);
   }
 

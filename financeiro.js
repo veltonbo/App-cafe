@@ -162,38 +162,32 @@ function renderizarFinanceiro(grupo, container, pago) {
         : "tag";
 
       const div = document.createElement("div");
-      div.className = "item fade-in";
+      div.className = "item";
 
-      // monta botões
-      let botoes = '';
-      let botoesCount = 1;
-
-      if (isParcela) {
-        botoes += `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-                    <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
-      } else if (!pago) {
-        botoes += `<button class="botao-circular verde" onclick="marcarPago(${i})">
-                    <i class="fas fa-check"></i></button>`;
-      } else {
-        botoes += `<button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
-                    <i class="fas fa-undo"></i></button>`;
-      }
-
-      botoesCount++;
-      botoes += `<button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-                  <i class="fas fa-trash"></i></button>`;
-
-      const paddingDireito = botoesCount === 3 ? '90px' : '70px';
+      // Verifica se terá 2 ou 3 botões
+      const temEditar = true;
+      const temAcao = true;
+      const temExcluir = true;
+      const totalBotoes = [temEditar, temAcao, temExcluir].filter(Boolean).length;
+      const paddingDireito = totalBotoes === 3 ? "90px" : "70px";
       div.style.paddingRight = paddingDireito;
 
       div.innerHTML = `
         <span>
-          <i class="fas fa-${icone}"></i>
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo})
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
-        <div class="botoes-tarefa">${botoes}</div>
+        <div class="botoes-financeiro" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); display:flex; gap:10px;">
+          <button class="botao-circular azul" onclick="editarGasto(${i})"><i class="fas fa-edit"></i></button>
+          ${isParcela
+            ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
+            : pago
+              ? `<button class="botao-circular laranja" onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
+              : `<button class="botao-circular verde" onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
+          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
+        </div>
       `;
       container.appendChild(div);
     });

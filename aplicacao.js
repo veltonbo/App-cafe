@@ -70,36 +70,39 @@ function atualizarAplicacoes() {
       (!filtroSetor || app.setor === filtroSetor) &&
       (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
     )
-    .sort((a, b) => b.data.localeCompare(a.data))
+    .sort((a, b) => (a.data > b.data ? -1 : 1))
     .forEach((app, i) => {
-      const item = document.createElement("div");
-      item.className = "item fade-in";
+      const item = document.createElement('div');
+      item.className = 'item fade-in botoes-2'; // sempre dois botões no menu aplicações
+      item.style.position = 'relative';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.justifyContent = 'space-between';
+      item.style.paddingRight = '90px';
 
-      // Cria os botões
-      const botoes = document.createElement("div");
-      botoes.className = "botoes-aplicacao";
+      const span = document.createElement('span');
+      span.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
+      span.style.flexGrow = '1';
+      span.style.wordBreak = 'break-word';
+      item.appendChild(span);
 
-      const botaoEditar = document.createElement("button");
-      botaoEditar.className = "botao-circular azul";
-      botaoEditar.innerHTML = `<i class="fas fa-edit"></i>`;
+      const botoes = document.createElement('div');
+      botoes.className = 'botoes-tarefa'; // mesma classe usada no menu tarefas
+
+      // Botão editar
+      const botaoEditar = document.createElement('button');
+      botaoEditar.className = 'botao-circular azul';
+      botaoEditar.innerHTML = '<i class="fas fa-edit"></i>';
       botaoEditar.onclick = () => editarAplicacao(i);
       botoes.appendChild(botaoEditar);
 
-      const botaoExcluir = document.createElement("button");
-      botaoExcluir.className = "botao-circular vermelho";
-      botaoExcluir.innerHTML = `<i class="fas fa-trash"></i>`;
+      // Botão excluir
+      const botaoExcluir = document.createElement('button');
+      botaoExcluir.className = 'botao-circular vermelho';
+      botaoExcluir.innerHTML = '<i class="fas fa-trash"></i>';
       botaoExcluir.onclick = () => excluirAplicacao(i);
       botoes.appendChild(botaoExcluir);
 
-      // Ajusta dinamicamente o padding do texto
-      const qtdBotoes = botoes.childElementCount;
-      const paddingDireito = 12 + (qtdBotoes * 48); // 48px por botão (38 largura + 10px gap)
-      item.style.paddingRight = `${paddingDireito}px`;
-
-      const texto = document.createElement("span");
-      texto.innerText = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
-
-      item.appendChild(texto);
       item.appendChild(botoes);
       lista.appendChild(item);
     });

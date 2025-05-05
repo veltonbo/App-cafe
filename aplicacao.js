@@ -1,6 +1,7 @@
 // ===== VARIÁVEIS =====
 let aplicacoes = [];
 let sugestoesProdutos = [];
+let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
@@ -40,7 +41,13 @@ function atualizarAplicacoes() {
     lista.appendChild(header);
 
     agrupado[grupo].forEach(a => {
-      const index = aplicacoes.findIndex(ap => ap.data === a.data && ap.produto === a.produto && ap.setor === a.setor && ap.dosagem === a.dosagem && ap.tipo === a.tipo);
+      const index = aplicacoes.findIndex(ap =>
+        ap.data === a.data &&
+        ap.produto === a.produto &&
+        ap.setor === a.setor &&
+        ap.dosagem === a.dosagem &&
+        ap.tipo === a.tipo
+      );
       const item = document.createElement("div");
       item.className = "item fade-in";
       item.innerHTML = `
@@ -49,6 +56,9 @@ function atualizarAplicacoes() {
           <small>Dosagem: ${a.dosagem}</small>
         </span>
         <div class="botoes-aplicacao">
+          <button class="botao-circular azul" onclick="editarAplicacao(${index})">
+            <i class="fas fa-edit"></i>
+          </button>
           <button class="botao-circular vermelho" onclick="excluirAplicacao(${index})">
             <i class="fas fa-trash-alt"></i>
           </button>
@@ -59,7 +69,7 @@ function atualizarAplicacoes() {
   }
 }
 
-// ===== ADICIONAR APLICAÇÃO =====
+// ===== ADICIONAR OU SALVAR EDIÇÃO =====
 function adicionarAplicacao() {
   const nova = {
     data: document.getElementById("dataAplicacao").value,
@@ -74,11 +84,43 @@ function adicionarAplicacao() {
     return;
   }
 
-  aplicacoes.push(nova);
+  if (indiceEdicaoAplicacao !== null) {
+    aplicacoes[indiceEdicaoAplicacao] = nova;
+    indiceEdicaoAplicacao = null;
+    document.getElementById("btnCancelarEdicaoAplicacao").style.display = "none";
+    document.querySelector('#aplicacoes button[onclick="adicionarAplicacao()"]').innerText = "Adicionar Aplicação";
+  } else {
+    aplicacoes.push(nova);
+  }
+
   db.ref("Aplicacoes").set(aplicacoes);
   limparCamposAplicacao();
   atualizarAplicacoes();
   carregarSugestoesProdutos();
+}
+
+// ===== EDITAR APLICAÇÃO =====
+function editarAplicacao(index) {
+  const a = aplicacoes[index];
+  if (!a) return;
+
+  document.getElementById("dataAplicacao").value = a.data;
+  document.getElementById("produtoAplicacao").value = a.produto;
+  document.getElementById("tipoAplicacao").value = a.tipo;
+  document.getElementById("dosagemAplicacao").value = a.dosagem;
+  document.getElementById("setorAplicacao").value = a.setor;
+
+  indiceEdicaoAplicacao = index;
+  document.querySelector('#aplicacoes button[onclick="adicionarAplicacao()"]').innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoAplicacao").style.display = "inline-block";
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  limparCamposAplicacao();
+  indiceEdicaoAplicacao = null;
+  document.querySelector('#aplicacoes button[onclick="adicionarAplicacao()"]').innerText = "Adicionar Aplicação";
+  document.getElementById("btnCancelarEdicaoAplicacao").style.display = "none";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====

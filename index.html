@@ -161,11 +161,14 @@
     <i class="fas fa-save"></i> Salvar Gasto
   </button>
   
-  <button onclick="toggleFiltrosFinanceiro()" class="botao-circular azul" style="margin-bottom: 10px;">
+  <button onclick="toggleFiltrosFinanceiro()" class="botao-circular azul" title="Mostrar/Esconder Filtros">
   <i class="fas fa-filter"></i>
 </button>
+
+<div id="filtrosFinanceiro" style="display: none;">
   <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
   <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+
   <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
     <option value="">Todos os Tipos</option>
     <option value="Adubo">Adubo</option>
@@ -174,12 +177,15 @@
     <option value="Herbicida">Herbicida</option>
     <option value="Outro">Outro</option>
   </select>
+
   <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
     <option value="">Todos</option>
     <option value="pago">Pagos</option>
     <option value="vencer">A Vencer</option>
   </select>
+
   <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+</div>
 
   <hr>
 

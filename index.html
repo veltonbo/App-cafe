@@ -158,7 +158,7 @@
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
   <input id="valorFin" type="number" placeholder="Valor (R$)">
-
+  
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
     <option value="Fungicida">Fungicida</option>
@@ -173,10 +173,10 @@
   </div>
 
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
-    <button onclick="adicionarFinanceiro()" class="botao-primario">
+    <button id="btnSalvarFinanceiro" onclick="adicionarFinanceiro()" class="botao-primario">
       <i class="fas fa-save"></i> Salvar Gasto
     </button>
-    <button onclick="cancelarEdicaoFinanceiro()" id="btnCancelarEdicaoFinanceiro" style="display:none; background-color:#888;">
+    <button id="btnCancelarEdicaoFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none; background: #888;">
       Cancelar Edição
     </button>
   </div>
@@ -206,7 +206,7 @@
       <option value="vencer">A Vencer</option>
     </select>
 
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
   </div>
 
   <!-- LISTAGEM DE GASTOS -->

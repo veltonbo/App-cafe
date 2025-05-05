@@ -23,11 +23,23 @@
 
   <!-- Script JavaScript externo -->
   <script defer src="firebase-config.js"></script>
-<script defer src="main.js"></script>
-<script defer src="colheita.js"></script>
-<script defer src="configuracoes.js"></script>
-<script defer src="relatorio.js"></script>
+  <script defer src="main.js"></script>
+  <script defer src="aplicacao.js"></script>
+  <script defer src="tarefas.js"></script>
+  <script defer src="financeiro.js"></script>
+  <script defer src="colheita.js"></script>
+  <script defer src="relatorio.js"></script>
+  <script defer src="configuracoes.js"></script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof inicializarApp === 'function') {
+        inicializarApp();
+      } else {
+        alert("Erro: função inicializarApp não encontrada.");
+      }
+    });
+  </script>
 </head>
 <body>
   <div class="menu-superior">
@@ -41,7 +53,7 @@
 
   <div class="conteudo">
 
-<!-- ========== MENU APLICACOES ========== -->
+    <!-- ========== MENU APLICACOES ========== -->
 <div id="aplicacoes" class="aba">
   <h2>Aplicações</h2>
 
@@ -84,7 +96,60 @@
   </button>
 </div>
 
-<!-- ========== MENU FINANCEIRO ========== -->
+    <!-- ========== MENU TAREFAS ========== -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+
+  <input id="dataTarefa" type="date">
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+  <select id="prioridadeTarefa">
+    <option>Alta</option>
+    <option>Média</option>
+    <option>Baixa</option>
+  </select>
+  <select id="setorTarefa">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
+
+  <!-- Checkbox com label corretamente alinhado -->
+  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
+  </div>
+
+  <!-- Campos extras para Aplicação -->
+  <div id="camposAplicacao" style="display:none; margin-top:10px;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
+
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+    <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
+    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display:none; background-color:#888;">Cancelar Edição</button>
+  </div>
+
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>
+
+    <!-- ========== MENU FINANCEIRO ========== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
 
@@ -93,7 +158,7 @@
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
   <input id="valorFin" type="number" placeholder="Valor (R$)">
-  
+
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
     <option value="Fungicida">Fungicida</option>
@@ -108,7 +173,12 @@
   </div>
 
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
-    <button onclick="adicionarFinanceiro()" class="botao-primario"><i class="fas fa-save"></i> Salvar Gasto</button>
+    <button onclick="adicionarFinanceiro()" class="botao-primario">
+      <i class="fas fa-save"></i> Salvar Gasto
+    </button>
+    <button onclick="cancelarEdicaoFinanceiro()" id="btnCancelarEdicaoFinanceiro" style="display:none; background-color:#888;">
+      Cancelar Edição
+    </button>
   </div>
 
   <!-- BOTÃO DE MOSTRAR/ESCONDER FILTROS -->
@@ -136,7 +206,7 @@
       <option value="vencer">A Vencer</option>
     </select>
 
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
   </div>
 
   <!-- LISTAGEM DE GASTOS -->
@@ -155,12 +225,16 @@
 
   <!-- EXPORTAÇÃO -->
   <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()" class="botao-secundario"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-    <button onclick="exportarFinanceiroPDF()" class="botao-secundario"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+    <button onclick="exportarFinanceiroCSV()" class="botao-secundario">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+    <button onclick="exportarFinanceiroPDF()" class="botao-secundario">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
   </div>
 </div>
 
-  <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
+    <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
 <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
     <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
@@ -181,7 +255,8 @@
   </div>
 </div>
 
-  <div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+<!-- ========== MODAL EXCLUSÃO PARCELA ========= -->
+<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
     <p style="color:white; font-size:16px;">Deseja excluir:</p>
     <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
@@ -190,7 +265,7 @@
   </div>
 </div>
 
-<!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
+<!-- ========== MENU RELATÓRIO ========== -->
 <div id="relatorio" class="aba">
   <h2>Relatório Geral</h2>
 
@@ -212,28 +287,25 @@
     <button id="btn-rel-colheita" onclick="mostrarRelatorioCompleto('rel-colheita')"><i class="fas fa-tractor"></i></button>
   </div>
 
-  <!-- APLICAÇÕES -->
+  <!-- Subabas do relatório -->
   <div id="rel-aplicacoes" class="relatorio-subaba">
     <h3>Aplicações</h3>
     <div id="resumoRelAplicacoes"></div>
     <canvas id="graficoRelAplicacoes"></canvas>
   </div>
 
-  <!-- TAREFAS -->
   <div id="rel-tarefas" class="relatorio-subaba" style="display:none;">
     <h3>Tarefas</h3>
     <div id="resumoRelTarefas"></div>
     <canvas id="graficoRelTarefas"></canvas>
   </div>
 
-  <!-- FINANCEIRO -->
   <div id="rel-financeiro" class="relatorio-subaba" style="display:none;">
     <h3>Financeiro</h3>
     <div id="resumoRelFinanceiro"></div>
     <canvas id="graficoRelFinanceiro"></canvas>
   </div>
 
-  <!-- COLHEITA -->
   <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
     <h3>Colheita</h3>
     <div id="resumoRelColheita"></div>
@@ -243,70 +315,6 @@
   <div style="margin-top:20px;">
     <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
     <button onclick="exportarRelatorioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-  </div>
-</div>
-
-<!-- ========== MENU COLHEITA ========== -->
-<div id="colheita" class="aba">
-  <h2>Colheita</h2>
-
-  <h4>Valor da Lata (R$)</h4>
-  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
-
-  <h4>Registrar Nova Colheita</h4>
-  <input id="dataColheita" type="date" />
-  <input id="colhedor" placeholder="Nome do Colhedor" />
-  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas" />
-  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
-
-  <h4>Filtrar Colheitas</h4>
-  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
-  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
-
-  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
-
-  <div class="coluna-pendente">
-    <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
-    <div id="colheitaPendentes"></div>
-  </div>
-
-  <div class="coluna-pago">
-    <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
-    <div id="colheitaPagos"></div>
-  </div>
-
-  <h4>Gráfico Latas por Dia</h4>
-  <canvas id="graficoColheita"></canvas>
-
-  <h4>Gráfico Latas por Colhedor</h4>
-  <canvas id="graficoColhedor"></canvas>
-
-  <div style="margin-top: 20px; margin-bottom: 20px;">
-    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-  </div>
-
-  <h4>Consultar Safras Anteriores</h4>
-  <select id="safraConsulta" onchange="consultarSafraAnterior()">
-    <option value="">Selecione o ano</option>
-    <option value="2023">2023</option>
-    <option value="2024">2024</option>
-    <option value="2025">2025</option>
-  </select>
-  <div id="resultadoSafraAnterior" style="margin-top: 10px;"></div>
-</div>
-
-<!-- ========== MODAL PAGAMENTO PARCIAL ========== -->
-<div id="modalParcial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:300px; text-align:center;">
-    <h3 style="color:#66bb6a;">Pagamento Parcial</h3>
-    <p id="modalParcialTexto" style="margin-bottom:10px;"></p>
-    <input type="number" id="inputParcial" placeholder="Valor a pagar (R$)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #555; background:#1e1e1e; color:white;">
-    <div style="margin-top:15px; display:flex; justify-content:space-between;">
-      <button onclick="confirmarParcial()" style="flex:1; margin-right:5px;">Confirmar</button>
-      <button onclick="fecharModalParcial()" style="flex:1; background:#f44336;">Cancelar</button>
-    </div>
   </div>
 </div>
 
@@ -338,30 +346,9 @@
   </div>
 
   <hr style="margin: 20px 0;">
-  <hr style="margin: 20px 0;">
-<h3>Backup Manual</h3>
-<button onclick="fazerBackup()"><i class="fas fa-download"></i> Fazer Backup</button>
+  <h3>Backup Manual</h3>
+  <button onclick="fazerBackup()"><i class="fas fa-download"></i> Fazer Backup</button>
 
-<input type="file" id="arquivoBackup" accept=".json">
-<button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
-
+  <input type="file" id="arquivoBackup" accept=".json">
+  <button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
 </div>
-  <script defer src="firebase-config.js"></script>
-<script defer src="aplicacao.js"></script>
-<script defer src="tarefas.js"></script>
-<script defer src="financeiro.js"></script>
-<script defer src="colheita.js"></script>
-<script defer src="relatorio.js"></script>
-<script defer src="configuracoes.js"></script>
-<script defer src="main.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    if (typeof inicializarApp === 'function') {
-      inicializarApp();
-    } else {
-      alert("Erro: função inicializarApp não encontrada.");
-    }
-  });
-</script>
-</body>
-</html>

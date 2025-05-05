@@ -1,6 +1,7 @@
 // ===== VARIÁVEIS =====
 let gastos = [];
 let graficoGastosChart = null;
+let indiceEdicaoFinanceiro = null;
 
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
@@ -30,7 +31,7 @@ function adicionarFinanceiro() {
     return;
   }
 
-  // Gera parcelas
+  // Parcelas
   if (gasto.parcelas > 1) {
     const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
     const parcelas = [];
@@ -50,7 +51,16 @@ function adicionarFinanceiro() {
     gasto.parcelasDetalhes = parcelas;
   }
 
-  gastos.push(gasto);
+  if (indiceEdicaoFinanceiro !== null) {
+    gasto.pago = gastos[indiceEdicaoFinanceiro].pago || false;
+    gastos[indiceEdicaoFinanceiro] = gasto;
+    indiceEdicaoFinanceiro = null;
+    document.getElementById("btnSalvarGasto").innerHTML = `<i class="fas fa-save"></i> Salvar Gasto`;
+    document.getElementById("btnCancelarEdicaoFin").style.display = "none";
+  } else {
+    gastos.push(gasto);
+  }
+
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
   limparCamposFinanceiro();
@@ -412,3 +422,40 @@ function mostrarParcelas() {
   const campoParcelas = document.getElementById("parcelasFin");
   campoParcelas.style.display = checkbox.checked ? "block" : "none";
 }
+
+function editarGasto(index) {
+  const g = gastos[index];
+  if (!g) return;
+
+  dataFin.value = g.data;
+  produtoFin.value = g.produto;
+  descricaoFin.value = g.descricao || '';
+  valorFin.value = g.valor;
+  tipoFin.value = g.tipo;
+  parceladoFin.checked = g.parcelas > 1;
+  parcelasFin.value = g.parcelas > 1 ? g.parcelas : '';
+  mostrarParcelas();
+
+  indiceEdicaoFinanceiro = index;
+  document.getElementById("btnSalvarGasto").innerHTML = `<i class="fas fa-edit"></i> Salvar Edição`;
+  document.getElementById("btnCancelarEdicaoFin").style.display = "inline-block";
+}
+
+function cancelarEdicaoFinanceiro() {
+  indiceEdicaoFinanceiro = null;
+  limparCamposFinanceiro();
+  document.getElementById("btnSalvarGasto").innerHTML = `<i class="fas fa-save"></i> Salvar Gasto`;
+  document.getElementById("btnCancelarEdicaoFin").style.display = "none";
+}
+
+function limparCamposFinanceiro() {
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+}
+
+

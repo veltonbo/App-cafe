@@ -30,7 +30,7 @@ function atualizarAplicacoes() {
       item.className = "item fade-in";
 
       // Define a quantidade de botões visíveis
-      const numBotoes = 2; // Altere para 2 se estiver usando só dois botões
+      const numBotoes = 3; // Altere para 2 se estiver usando só dois botões
       item.setAttribute("data-botoes", numBotoes);
 
       const span = document.createElement("span");

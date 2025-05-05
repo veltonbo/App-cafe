@@ -367,18 +367,24 @@ function editarParcela(index, parcelaIndex) {
     parceladoFin.checked = false;
     parcelasFin.style.display = "none";
 
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
     document.getElementById("btnSalvarAplicacao").onclick = () => {
-      g.parcelasDetalhes[parcelaIndex].valor = parseFloat(valorFin.value);
-      g.parcelasDetalhes[parcelaIndex].vencimento = dataFin.value;
-      g.produto = produtoFin.value.trim();
-      g.descricao = descricaoFin.value.trim();
-      g.tipo = tipoFin.value;
+  const novaParcela = {
+    ...g.parcelasDetalhes[parcelaIndex],
+    valor: parseFloat(valorFin.value),
+    vencimento: dataFin.value
+  };
 
-      db.ref("Financeiro").set(gastos);
-      atualizarFinanceiro();
-      limparCamposFinanceiro();
-    };
+  g.parcelasDetalhes[parcelaIndex] = novaParcela;
+
+  // Atualiza também os dados gerais se necessário
+  g.produto = produtoFin.value.trim();
+  g.descricao = descricaoFin.value.trim();
+  g.tipo = tipoFin.value;
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+  limparCamposFinanceiro();
+};
   }
 }
 

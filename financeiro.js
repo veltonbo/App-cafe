@@ -152,14 +152,34 @@ div.innerHTML = `
     ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
   </span>
   <div class="botoes-tarefa">
-    ${isParcela
-      ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
-      : pago
-        ? `<button class="botao-circular azul" onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
-        : `<button class="botao-circular verde" onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
-    <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
-  </div>
-`;
+  ${isParcela
+    ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+         <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+       </button>
+       <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+         <i class="fas fa-edit"></i>
+       </button>
+       <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+         <i class="fas fa-trash"></i>
+       </button>`
+    : pago
+      ? `<button class="botao-circular verde" onclick="desfazerPagamento(${i})">
+           <i class="fas fa-undo"></i>
+         </button>
+         <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i})">
+           <i class="fas fa-trash"></i>
+         </button>`
+      : `<button class="botao-circular verde" onclick="marcarPago(${i})">
+           <i class="fas fa-check"></i>
+         </button>
+         <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
+           <i class="fas fa-edit"></i>
+         </button>
+         <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i})">
+           <i class="fas fa-trash"></i>
+         </button>`
+  }
+</div>
       container.appendChild(div);
     });
 

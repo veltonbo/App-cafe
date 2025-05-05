@@ -462,3 +462,7 @@ function editarFinanceiro(index, parcelaIndex = null) {
   atualizarFinanceiro();
 }
 
+function toggleFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}

@@ -206,27 +206,25 @@ function editarFinanceiro(index, parcelaIndex = null) {
   const g = gastos[index];
   if (!g) return;
 
-  dataFin.value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].vencimento : g.data;
-  produtoFin.value = g.produto;
-  descricaoFin.value = g.descricao || "";
-  valorFin.value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].valor : g.valor;
-  tipoFin.value = g.tipo;
-  parceladoFin.checked = !!g.parcelasDetalhes;
-  parcelasFin.style.display = g.parcelasDetalhes ? "block" : "none";
-  parcelasFin.value = g.parcelas || "";
-  parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
+  document.getElementById("dataFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].vencimento : g.data;
+  document.getElementById("produtoFin").value = g.produto;
+  document.getElementById("descricaoFin").value = g.descricao || "";
+  document.getElementById("valorFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].valor : g.valor;
+  document.getElementById("tipoFin").value = g.tipo;
+  document.getElementById("parceladoFin").checked = !!g.parcelasDetalhes;
+  document.getElementById("parcelasFin").style.display = !!g.parcelasDetalhes ? "block" : "none";
+  document.getElementById("parcelasFin").value = g.parcelas || "";
+  document.getElementById("parcelasFin").dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
-  // Define o índice global e exibe os botões de edição
   indiceEdicaoGasto = index;
 
-  // Apresenta modal para escolher entre editar tudo ou só uma
   if (g.parcelasDetalhes && parcelaIndex !== null) {
     mostrarModalEditarParcela();
   } else {
     editarTodasParcelas = true;
   }
 
-  document.getElementById("btnSalvarGasto").innerHTML = `<i class="fas fa-edit"></i> Salvar Edição`;
+  document.getElementById("btnSalvarGasto").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarEdicaoGasto").style.display = "inline-block";
 }
 

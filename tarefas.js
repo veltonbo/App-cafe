@@ -29,32 +29,47 @@ function atualizarTarefas() {
     .forEach((t, i) => {
       const item = document.createElement('div');
       item.className = 'item fade-in';
-item.style.display = 'flex';
-item.style.alignItems = 'center';
-item.style.justifyContent = 'space-between';
+      item.style.position = 'relative';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.justifyContent = 'space-between';
+      item.style.paddingRight = '90px';
 
       const aplicacaoExtra = t.eAplicacao ? ` - ${t.tipo} (${t.dosagem})` : '';
 
-      item.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}</span>
-      <div class="botoes-tarefa">
-          ${!t.feita ? `
-            <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
-              <i class="fas fa-check"></i>
-            </button>
-            <button class="botao-circular azul" onclick="editarTarefa(${i})">
-              <i class="fas fa-edit"></i>
-            </button>
-          ` : `
-            <button class="botao-circular laranja" onclick="desfazerTarefa(${i})">
-              <i class="fas fa-undo-alt"></i>
-            </button>
-          `}
-          <button class="botao-circular vermelho" onclick="excluirTarefa(${i})">
-            <i class="fas fa-trash-alt"></i>
+      const span = document.createElement('span');
+      span.textContent = `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}`;
+      span.style.flexGrow = '1';
+      span.style.wordBreak = 'break-word';
+
+      const botoes = document.createElement('div');
+      botoes.className = 'botoes-tarefa';
+
+      if (!t.feita) {
+        botoes.innerHTML = `
+          <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
+            <i class="fas fa-check"></i>
           </button>
-        </div>
+          <button class="botao-circular azul" onclick="editarTarefa(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+        `;
+      } else {
+        botoes.innerHTML = `
+          <button class="botao-circular laranja" onclick="desfazerTarefa(${i})">
+            <i class="fas fa-undo-alt"></i>
+          </button>
+        `;
+      }
+
+      botoes.innerHTML += `
+        <button class="botao-circular vermelho" onclick="excluirTarefa(${i})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
       `;
+
+      item.appendChild(span);
+      item.appendChild(botoes);
 
       (t.feita ? listaFeitas : listaAFazer).appendChild(item);
     });

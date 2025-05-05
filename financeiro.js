@@ -121,7 +121,16 @@ function atualizarFinanceiro() {
   renderizarFinanceiro(dadosPago, pagos, true);
   gerarResumoFinanceiro();
   gerarGraficoFinanceiro();
-}
+
+  // ===== AJUSTE DINÂMICO DE PADDING CONFORME QUANTIDADE DE BOTÕES =====
+document.querySelectorAll('#financeiroVencer .item, #financeiroPago .item').forEach(div => {
+  const botoes = div.querySelectorAll('.botoes-financeiro button').length;
+  if (botoes === 2) {
+    div.style.paddingRight = '70px';
+  } else {
+    div.style.paddingRight = '90px';
+  }
+});
 
 function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {

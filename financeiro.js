@@ -328,6 +328,11 @@ function excluirTodasParcelas() {
   fecharModalExcluirParcela();
 }
 
+function alternarFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}
+
 function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }

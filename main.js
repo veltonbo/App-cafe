@@ -1,39 +1,53 @@
-function mostrarAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => {
-    aba.style.display = 'none';
-  });
-
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) abaSelecionada.style.display = 'block';
-
-  document.querySelectorAll('.menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
-  if (btn) btn.classList.add('active');
-
-  localStorage.setItem('aba', abaId);
+// ===== INICIALIZAÇÃO DO SISTEMA =====
+function inicializarApp() {
+  carregarAplicacoes();
+  carregarTarefas();
+  carregarFinanceiro(); // chamada correta para carregar financeiro
+  carregarColheita();
+  carregarConfiguracoes();
+  aplicarTemaSalvo();
 }
 
-function inicializarApp() {
-  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
-  mostrarAba(abaInicial);
-
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
+// ===== TROCAR ENTRE ABAS =====
+function mostrarAba(id) {
+  document.querySelectorAll(".aba").forEach(aba => aba.classList.remove("active"));
+  const abaSelecionada = document.getElementById(id);
+  if (abaSelecionada) {
+    abaSelecionada.classList.add("active");
   }
 
-  // Chama as funções de carregamento se estiverem disponíveis
-  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-  if (typeof carregarTarefas === "function") carregarTarefas();
-  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
-  if (typeof carregarColheita === "function") carregarColheita();
-  if (typeof carregarValorLata === "function") carregarValorLata();
-  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
-  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+  // Atualiza botões do menu superior
+  document.querySelectorAll(".menu-superior button").forEach(btn => btn.classList.remove("active"));
+  const btnSelecionado = document.getElementById("btn-" + id);
+  if (btnSelecionado) {
+    btnSelecionado.classList.add("active");
+  }
 }
 
-// Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);
+// ===== ALTERNAR TEMA CLARO/ESCURO =====
+function alternarTema() {
+  document.documentElement.classList.toggle("claro");
+  const modoAtual = document.documentElement.classList.contains("claro") ? "claro" : "escuro";
+  localStorage.setItem("tema", modoAtual);
+}
+
+// ===== APLICAR TEMA SALVO NO INÍCIO =====
+function aplicarTemaSalvo() {
+  const temaSalvo = localStorage.getItem("tema");
+  if (temaSalvo === "claro") {
+    document.documentElement.classList.add("claro");
+  }
+}
+
+// ===== MOSTRAR/OCULTAR CAMPOS DE APLICAÇÃO NAS TAREFAS =====
+function mostrarCamposAplicacao() {
+  const checkbox = document.getElementById("eAplicacaoCheckbox");
+  const campos = document.getElementById("camposAplicacao");
+  campos.style.display = checkbox.checked ? "block" : "none";
+}
+
+// ===== TOGGLE DE FILTROS NO MENU FINANCEIRO =====
+function toggleFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}

@@ -29,10 +29,12 @@ function adicionarFinanceiro() {
     return;
   }
 
+  // Gera parcelas
   if (gasto.parcelas > 1) {
     const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
     const parcelas = [];
     const dataBase = new Date(gasto.data);
+
     for (let i = 0; i < gasto.parcelas; i++) {
       const vencimento = new Date(dataBase);
       vencimento.setMonth(vencimento.getMonth() + i);
@@ -43,6 +45,7 @@ function adicionarFinanceiro() {
         pago: false
       });
     }
+
     gasto.parcelasDetalhes = parcelas;
   }
 
@@ -50,7 +53,7 @@ function adicionarFinanceiro() {
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpar campos
+  // Limpa o formulário
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";
@@ -120,7 +123,6 @@ function atualizarFinanceiro() {
   gerarGraficoFinanceiro();
 }
 
-// ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {
     const titulo = document.createElement("div");
@@ -132,14 +134,26 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
+
       const icone = tipo === "Adubo" ? "leaf"
         : tipo === "Fungicida" ? "bug"
         : tipo === "Inseticida" ? "spray-can"
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
+      const botoes = isParcela
+        ? [`<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`,
+           `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>`]
+        : pago
+          ? [`<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`,
+             `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i})"><i class="fas fa-trash"></i></button>`]
+          : [`<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`,
+             `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i})"><i class="fas fa-trash"></i></button>`];
+
       const div = document.createElement("div");
       div.className = "item";
+      div.style.paddingRight = botoes.length === 3 ? "90px" : "70px";
+
       div.innerHTML = `
         <span>
           <i class="fas fa-${icone}"></i> 
@@ -147,13 +161,8 @@ function renderizarFinanceiro(grupo, container, pago) {
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
-        <div class="botoes-financeiro">
-          ${isParcela
-            ? `<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
-            : pago
-              ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
-              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
-          <button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
+        <div class="botoes-financeiro" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); display:flex; gap:10px;">
+          ${botoes.join('')}
         </div>
       `;
       container.appendChild(div);
@@ -166,48 +175,13 @@ function renderizarFinanceiro(grupo, container, pago) {
   }
 }
 
-// ===== PAGAMENTO E EXCLUSÃO =====
-function marcarPago(index) {
-  if (gastos[index]) {
-    gastos[index].pago = true;
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-}
-
-function desfazerPagamento(index) {
-  if (gastos[index]) {
-    gastos[index].pago = false;
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-}
-
-function alternarParcela(gastoIndex, parcelaIndex) {
-  const gasto = gastos[gastoIndex];
-  if (!gasto || !gasto.parcelasDetalhes) return;
-  const parcela = gasto.parcelasDetalhes[parcelaIndex];
-  parcela.pago = !parcela.pago;
-  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
-  db.ref("Financeiro").set(gastos);
-  atualizarFinanceiro();
-}
-
 // ===== GRÁFICO E RESUMO =====
 function gerarResumoFinanceiro() {
   let totalPago = 0;
   let totalVencer = 0;
-
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
-      g.parcelasDetalhes.forEach(p => {
-        if (p.pago) totalPago += p.valor;
-        else totalVencer += p.valor;
-      });
-    } else {
-      if (g.pago) totalPago += g.valor;
-      else totalVencer += g.valor;
-    }
+    if (g.pago) totalPago += g.valor;
+    else totalVencer += g.valor;
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
@@ -222,23 +196,14 @@ function gerarGraficoFinanceiro() {
   if (graficoGastosChart) graficoGastosChart.destroy();
 
   const categorias = {};
-
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
-      g.parcelasDetalhes.forEach(p => {
-        if (p.pago) {
-          categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
-        }
-      });
-    } else if (g.pago) {
-      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
-    }
+    if (!g.pago) return;
+    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
   });
 
   const labels = Object.keys(categorias);
   const valores = Object.values(categorias);
   const total = valores.reduce((soma, v) => soma + v, 0);
-
   const labelsComPercentual = labels.map((label, i) => {
     const percent = ((valores[i] / total) * 100).toFixed(1);
     return `${label} (${percent}%)`;
@@ -258,8 +223,8 @@ function gerarGraficoFinanceiro() {
 
 function formatarMes(mes) {
   const [ano, mesNum] = mes.split("-");
-  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
 }
 
@@ -324,14 +289,12 @@ function exportarFinanceiroPDF() {
 }
 
 // ===== EXCLUSÃO DE PARCELA =====
-function confirmarExclusaoParcela(index, parcelaIndex) {
-  if (gastos[index]?.parcelasDetalhes) {
-    // Excluir uma parcela específica
+function confirmarExclusaoParcela(index, parcelaIndex = null) {
+  if (gastos[index]?.parcelasDetalhes && parcelaIndex !== null) {
     document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
     modalConfirmarExclusaoParcela.dataset.index = index;
     modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
   } else {
-    // Excluir lançamento simples
     if (confirm("Deseja excluir esse lançamento financeiro?")) {
       gastos.splice(index, 1);
       db.ref("Financeiro").set(gastos);
@@ -368,4 +331,3 @@ function excluirTodasParcelas() {
 function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }
-

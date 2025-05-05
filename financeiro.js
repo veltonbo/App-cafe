@@ -141,21 +141,33 @@ function renderizarFinanceiro(grupo, container, pago) {
         : "tag";
 
       const div = document.createElement("div");
-      div.className = "item";
+      const qtdBotoes = isParcela ? 2 : 2; // Se for parcela: marcar/desfazer + excluir. Se for simples: marcar/desfazer + excluir.
+
+      div.className = `item fade-in ${qtdBotoes === 3 ? "botoes-3" : "botoes-2"}`;
       div.innerHTML = `
         <span>
-          <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          <i class="fas fa-${icone}"></i>
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo})
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
-        <div class="botoes-financeiro">
-          ${isParcela
-            ? `<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
-            : pago
-              ? `<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
-              : `<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
-          <button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
+        <div class="botoes-tarefa">
+          ${
+            isParcela
+              ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+                    <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+                 </button>`
+              : pago
+                ? `<button class="botao-circular azul" onclick="desfazerPagamento(${i})">
+                      <i class="fas fa-undo"></i>
+                   </button>`
+                : `<button class="botao-circular verde" onclick="marcarPago(${i})">
+                      <i class="fas fa-check"></i>
+                   </button>`
+          }
+          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
       `;
       container.appendChild(div);

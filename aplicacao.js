@@ -73,8 +73,7 @@ function atualizarAplicacoes() {
     .sort((a, b) => (a.data > b.data ? -1 : 1))
     .forEach((app, i) => {
       const item = document.createElement('div');
-      const numBotoes = t.feita ? 2 : 3;
-      item.className = `item fade-in botoes-${numBotoes}`;
+      item.className = 'item fade-in botoes-2'; // sempre dois botões no menu aplicações
       item.style.position = 'relative';
       item.style.display = 'flex';
       item.style.alignItems = 'center';

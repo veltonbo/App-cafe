@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
 
-  <!-- Firebase Compat -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -18,10 +18,10 @@
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- CSS externo -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- Script JavaScript externo -->
+  <!-- Scripts -->
   <script defer src="firebase-config.js"></script>
   <script defer src="main.js"></script>
   <script defer src="aplicacao.js"></script>
@@ -30,16 +30,6 @@
   <script defer src="colheita.js"></script>
   <script defer src="relatorio.js"></script>
   <script defer src="configuracoes.js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (typeof inicializarApp === 'function') {
-        inicializarApp();
-      } else {
-        alert("Erro: função inicializarApp não encontrada.");
-      }
-    });
-  </script>
 </head>
 <body>
   <div class="menu-superior">
@@ -52,49 +42,40 @@
   </div>
 
   <div class="conteudo">
-
-    <!-- ========== MENU APLICACOES ========== -->
-<div id="aplicacoes" class="aba">
-  <h2>Aplicações</h2>
-
-  <input id="dataApp" type="date">
-  <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
-  <datalist id="sugestoesProdutoApp"></datalist>
-  <input id="dosagemApp" placeholder="Dosagem">
-
-  <select id="tipoApp">
-    <option>Adubo</option>
-    <option>Fungicida</option>
-    <option>Inseticida</option>
-    <option>Herbicida</option>
-  </select>
-
-  <select id="setorApp">
-    <option>Setor 01</option>
-    <option>Setor 02</option>
-  </select>
-
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
-      Cancelar Edição
-    </button>
-  </div>
-
-  <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
-    <option value="">Todos os Setores</option>
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-  </select>
-
-  <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-
-  <div id="listaAplicacoes"></div>
-
-  <button onclick="exportarAplicacoesCSV()" style="margin-top: 10px;">
-    <i class="fas fa-file-csv"></i> Exportar CSV
-  </button>
-</div>
+    <!-- ========== MENU APLICAÇÕES ========== -->
+    <div id="aplicacoes" class="aba">
+      <h2>Aplicações</h2>
+      <input id="dataApp" type="date">
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+      <datalist id="sugestoesProdutoApp"></datalist>
+      <input id="dosagemApp" placeholder="Dosagem">
+      <select id="tipoApp">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <select id="setorApp">
+        <option>Setor 01</option>
+        <option>Setor 02</option>
+      </select>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+        <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
+          Cancelar Edição
+        </button>
+      </div>
+      <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+        <option value="">Todos os Setores</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+      </select>
+      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+      <div id="listaAplicacoes"></div>
+      <button onclick="exportarAplicacoesCSV()" style="margin-top: 10px;">
+        <i class="fas fa-file-csv"></i> Exportar CSV
+      </button>
+    </div>
 
     <!-- ========== MENU TAREFAS ========== -->
 <div id="tarefas" class="aba">
@@ -102,23 +83,24 @@
 
   <input id="dataTarefa" type="date">
   <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+  
   <select id="prioridadeTarefa">
     <option>Alta</option>
     <option>Média</option>
     <option>Baixa</option>
   </select>
+
   <select id="setorTarefa">
     <option>Setor 01</option>
     <option>Setor 02</option>
   </select>
 
-  <!-- Checkbox com label corretamente alinhado -->
+  <!-- Checkbox e campos de aplicação -->
   <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
     <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
     <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
   </div>
 
-  <!-- Campos extras para Aplicação -->
   <div id="camposAplicacao" style="display:none; margin-top:10px;">
     <input id="dosagemAplicacao" placeholder="Dosagem">
     <select id="tipoAplicacao">
@@ -129,11 +111,15 @@
     </select>
   </div>
 
+  <!-- Botões de ação -->
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
     <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
-    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display:none; background-color:#888;">Cancelar Edição</button>
+    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
+      Cancelar Edição
+    </button>
   </div>
 
+  <!-- Filtros -->
   <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
     <option value="">Todos os Setores</option>
     <option value="Setor 01">Setor 01</option>
@@ -142,136 +128,134 @@
 
   <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
 
+  <!-- Tarefas a fazer -->
   <h4>A Fazer</h4>
   <div id="listaTarefas"></div>
 
+  <!-- Tarefas feitas -->
   <h4>Executadas</h4>
   <div id="listaTarefasFeitas"></div>
 </div>
 
- <!-- ========== MENU FINANCEIRO ========== -->
-<div id="financeiro" class="aba">
-  <h2>Financeiro</h2>
+    <!-- ========== MENU FINANCEIRO ========== -->
+    <div id="financeiro" class="aba">
+      <h2>Financeiro</h2>
+      <input id="dataFin" type="date">
+      <input id="produtoFin" placeholder="Produto">
+      <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
+      <input id="valorFin" type="number" placeholder="Valor (R$)">
+      <select id="tipoFin">
+        <option value="Adubo">Adubo</option>
+        <option value="Fungicida">Fungicida</option>
+        <option value="Inseticida">Inseticida</option>
+        <option value="Herbicida">Herbicida</option>
+        <option value="Outro">Outro</option>
+      </select>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label><input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado</label>
+        <input id="parcelasFin" type="number" placeholder="Parcelas" style="display: none; width: 100px;" />
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
+        <button onclick="adicionarFinanceiro()" id="btnSalvarGasto" class="botao-primario">
+          <i class="fas fa-save"></i> Salvar Gasto
+        </button>
+        <button onclick="cancelarEdicaoGasto()" id="btnCancelarEdicaoGasto" class="botao-secundario" style="display: none;">
+          Cancelar Edição
+        </button>
+      </div>
 
-  <!-- FORMULÁRIO DE NOVO GASTO -->
-  <input id="dataFin" type="date">
-  <input id="produtoFin" placeholder="Produto">
-  <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
-  <input id="valorFin" type="number" placeholder="Valor (R$)">
+            <!-- BOTÃO DE MOSTRAR/ESCONDER FILTROS -->
+      <button onclick="toggleFiltrosFinanceiro()" class="botao-secundario" style="margin-bottom: 10px;">
+        <i class="fas fa-filter"></i> Filtros
+      </button>
 
-  <select id="tipoFin">
-    <option value="Adubo">Adubo</option>
-    <option value="Fungicida">Fungicida</option>
-    <option value="Inseticida">Inseticida</option>
-    <option value="Herbicida">Herbicida</option>
-    <option value="Outro">Outro</option>
-  </select>
+      <!-- FILTROS DE BUSCA -->
+      <div id="filtrosFinanceiro" style="display: none; margin-bottom: 15px;">
+        <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
+        <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+        <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
+          <option value="">Todos os Tipos</option>
+          <option value="Adubo">Adubo</option>
+          <option value="Fungicida">Fungicida</option>
+          <option value="Inseticida">Inseticida</option>
+          <option value="Herbicida">Herbicida</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
+          <option value="">Todos</option>
+          <option value="pago">Pagos</option>
+          <option value="vencer">A Vencer</option>
+        </select>
+        <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
+      </div>
 
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <label><input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado</label>
-    <input id="parcelasFin" type="number" placeholder="Parcelas" style="display: none; width: 100px;" />
-  </div>
+      <!-- LISTAGEM DE GASTOS -->
+      <h4 style="color: #ff9800;">A Vencer</h4>
+      <div id="financeiroVencer"></div>
 
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
-    <button onclick="adicionarFinanceiro()" id="btnSalvarGasto" class="botao-primario">
-      <i class="fas fa-save"></i> Salvar Gasto
-    </button>
-    <button onclick="cancelarEdicaoFinanceiro()" id="btnCancelarEdicaoFin" style="display:none; background:#888;">
-      Cancelar Edição
-    </button>
-  </div>
+      <h4 style="color: #4caf50;">Pagos</h4>
+      <div id="financeiroPago"></div>
 
-  <!-- BOTÃO DE MOSTRAR/ESCONDER FILTROS -->
-  <button onclick="toggleFiltrosFinanceiro()" class="botao-secundario" style="margin-bottom: 10px;">
-    <i class="fas fa-filter"></i> Filtros
-  </button>
+      <!-- RESUMO E GRÁFICO -->
+      <h4>Resumo do Mês</h4>
+      <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
 
-  <!-- FILTROS DE BUSCA -->
-  <div id="filtrosFinanceiro" style="display: none; margin-bottom: 15px;">
-    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+      <h4>Gráfico de Gastos Pagos</h4>
+      <canvas id="graficoGastos"></canvas>
 
-    <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
-      <option value="">Todos os Tipos</option>
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-
-    <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
-      <option value="">Todos</option>
-      <option value="pago">Pagos</option>
-      <option value="vencer">A Vencer</option>
-    </select>
-
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
-  </div>
-
-  <!-- LISTAGEM DE GASTOS -->
-  <h4 style="color: #ff9800;">A Vencer</h4>
-  <div id="financeiroVencer"></div>
-
-  <h4 style="color: #4caf50;">Pagos</h4>
-  <div id="financeiroPago"></div>
-
-  <!-- RESUMO E GRÁFICO -->
-  <h4>Resumo do Mês</h4>
-  <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
-
-  <h4>Gráfico de Gastos Pagos</h4>
-  <canvas id="graficoGastos"></canvas>
-
-  <!-- EXPORTAÇÃO -->
-  <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()" class="botao-secundario"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-    <button onclick="exportarFinanceiroPDF()" class="botao-secundario"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-  </div>
-</div>
-
-<!-- ========== MODAL DE EXCLUSÃO DE PARCELA ========= -->
-<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Deseja excluir:</p>
-    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
-    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
-    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
-  </div>
-</div>
-
-<!-- ========== MODAL ESCOLHA DE EDIÇÃO ========= -->
-<div id="modalEditarParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Editar:</p>
-    <button onclick="editarSomenteParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
-    <button onclick="editarTodasAsParcelas()" style="margin-bottom:10px; background:#4caf50;">Todas as parcelas</button><br>
-    <button onclick="fecharModalEditarParcela()" style="background:#555;">Cancelar</button>
-  </div>
-</div>
-
-<!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
-<div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
-    <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
-    <table style="width:100%; border-collapse:collapse; color:white;">
-      <thead>
-        <tr style="border-bottom:1px solid #555;">
-          <th style="text-align:left; padding:8px;">#</th>
-          <th style="text-align:left; padding:8px;">Vencimento</th>
-          <th style="text-align:right; padding:8px;">Valor (R$)</th>
-          <th style="text-align:center; padding:8px;">Pago</th>
-        </tr>
-      </thead>
-      <tbody id="parcelasLista"></tbody>
-    </table>
-    <div style="margin-top:20px; text-align:right;">
-      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+      <!-- EXPORTAÇÃO -->
+      <div style="margin-top: 20px;">
+        <button onclick="exportarFinanceiroCSV()" class="botao-secundario">
+          <i class="fas fa-file-csv"></i> Exportar CSV
+        </button>
+        <button onclick="exportarFinanceiroPDF()" class="botao-secundario">
+          <i class="fas fa-file-pdf"></i> Exportar PDF
+        </button>
+      </div>
     </div>
-  </div>
-</div>
-  
-<!-- ========== MENU RELATÓRIO ========== -->
+
+    <!-- ========== MODAL DE PARCELAS ========= -->
+    <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
+      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
+        <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
+        <table style="width:100%; border-collapse:collapse; color:white;">
+          <thead>
+            <tr style="border-bottom:1px solid #555;">
+              <th style="text-align:left; padding:8px;">#</th>
+              <th style="text-align:left; padding:8px;">Vencimento</th>
+              <th style="text-align:right; padding:8px;">Valor (R$)</th>
+              <th style="text-align:center; padding:8px;">Pago</th>
+            </tr>
+          </thead>
+          <tbody id="parcelasLista"></tbody>
+        </table>
+        <div style="margin-top:20px; text-align:right;">
+          <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL CONFIRMAR EXCLUSÃO PARCELA ========= -->
+    <div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+        <p style="color:white; font-size:16px;">Deseja excluir:</p>
+        <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
+        <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
+        <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- ========== MODAL ESCOLHA DE EDIÇÃO DE PARCELA ========= -->
+    <div id="modalEscolherEdicao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+      <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+        <p style="color:white; font-size:16px;">Editar:</p>
+        <button onclick="editarSomenteParcela()" style="margin:10px 0; background:#29b6f6;">Somente esta parcela</button><br>
+        <button onclick="editarTodasParcelas()" style="margin-bottom:10px; background:#4caf50;">Todas as parcelas</button><br>
+        <button onclick="fecharModalEscolherEdicao()" style="background:#555;">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
 <div id="relatorio" class="aba">
   <h2>Relatório Geral</h2>
 
@@ -293,7 +277,6 @@
     <button id="btn-rel-colheita" onclick="mostrarRelatorioCompleto('rel-colheita')"><i class="fas fa-tractor"></i></button>
   </div>
 
-  <!-- Subabas do relatório -->
   <div id="rel-aplicacoes" class="relatorio-subaba">
     <h3>Aplicações</h3>
     <div id="resumoRelAplicacoes"></div>
@@ -315,13 +298,64 @@
   <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
     <h3>Colheita</h3>
     <div id="resumoRelColheita"></div>
-    <canvas id="graficoRelColheita"></canvas>
+    <canvas id="graficoColheita"></canvas>
   </div>
 
   <div style="margin-top:20px;">
     <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
     <button onclick="exportarRelatorioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
   </div>
+</div>
+
+<!-- ========== MENU COLHEITA ========== -->
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+
+  <h4>Valor da Lata (R$)</h4>
+  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
+
+  <h4>Registrar Nova Colheita</h4>
+  <input id="dataColheita" type="date" />
+  <input id="colhedor" placeholder="Nome do Colhedor" />
+  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas" />
+  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
+
+  <h4>Filtrar Colheitas</h4>
+  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
+  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
+  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
+
+  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
+
+  <div class="coluna-pendente">
+    <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
+    <div id="colheitaPendentes"></div>
+  </div>
+
+  <div class="coluna-pago">
+    <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
+    <div id="colheitaPagos"></div>
+  </div>
+
+  <h4>Gráfico Latas por Dia</h4>
+  <canvas id="graficoColheita"></canvas>
+
+  <h4>Gráfico Latas por Colhedor</h4>
+  <canvas id="graficoColhedor"></canvas>
+
+  <div style="margin-top: 20px; margin-bottom: 20px;">
+    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+  </div>
+
+  <h4>Consultar Safras Anteriores</h4>
+  <select id="safraConsulta" onchange="consultarSafraAnterior()">
+    <option value="">Selecione o ano</option>
+    <option value="2023">2023</option>
+    <option value="2024">2024</option>
+    <option value="2025">2025</option>
+  </select>
+  <div id="resultadoSafraAnterior" style="margin-top: 10px;"></div>
 </div>
 
 <!-- ========== MENU CONFIGURAÇÕES ========== -->
@@ -358,3 +392,27 @@
   <input type="file" id="arquivoBackup" accept=".json">
   <button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
 </div>
+
+<!-- SCRIPTS FINAIS -->
+<script defer src="firebase-config.js"></script>
+<script defer src="aplicacao.js"></script>
+<script defer src="tarefas.js"></script>
+<script defer src="financeiro.js"></script>
+<script defer src="colheita.js"></script>
+<script defer src="relatorio.js"></script>
+<script defer src="configuracoes.js"></script>
+<script defer src="main.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof inicializarApp === 'function') {
+      inicializarApp();
+    } else {
+      alert("Erro: função inicializarApp não encontrada.");
+    }
+  });
+</script>
+
+</body>
+</html>
+      

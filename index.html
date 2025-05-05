@@ -149,7 +149,7 @@
   <div id="listaTarefasFeitas"></div>
 </div>
 
-    <!-- ========== MENU FINANCEIRO ========== -->
+ <!-- ========== MENU FINANCEIRO ========== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
 
@@ -158,7 +158,7 @@
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
   <input id="valorFin" type="number" placeholder="Valor (R$)">
-  
+
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
     <option value="Fungicida">Fungicida</option>
@@ -173,10 +173,10 @@
   </div>
 
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
-    <button id="btnSalvarFinanceiro" onclick="adicionarFinanceiro()" class="botao-primario">
+    <button onclick="adicionarFinanceiro()" id="btnSalvarGasto" class="botao-primario">
       <i class="fas fa-save"></i> Salvar Gasto
     </button>
-    <button id="btnCancelarEdicaoFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none; background: #888;">
+    <button onclick="cancelarEdicaoFinanceiro()" id="btnCancelarEdicaoFin" style="display:none; background:#888;">
       Cancelar Edição
     </button>
   </div>
@@ -225,16 +225,32 @@
 
   <!-- EXPORTAÇÃO -->
   <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()" class="botao-secundario">
-      <i class="fas fa-file-csv"></i> Exportar CSV
-    </button>
-    <button onclick="exportarFinanceiroPDF()" class="botao-secundario">
-      <i class="fas fa-file-pdf"></i> Exportar PDF
-    </button>
+    <button onclick="exportarFinanceiroCSV()" class="botao-secundario"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <button onclick="exportarFinanceiroPDF()" class="botao-secundario"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
   </div>
 </div>
 
-    <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
+<!-- ========== MODAL DE EXCLUSÃO DE PARCELA ========= -->
+<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+    <p style="color:white; font-size:16px;">Deseja excluir:</p>
+    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
+    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
+    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ========== MODAL ESCOLHA DE EDIÇÃO ========= -->
+<div id="modalEditarParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
+    <p style="color:white; font-size:16px;">Editar:</p>
+    <button onclick="editarSomenteParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
+    <button onclick="editarTodasAsParcelas()" style="margin-bottom:10px; background:#4caf50;">Todas as parcelas</button><br>
+    <button onclick="fecharModalEditarParcela()" style="background:#555;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
 <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
     <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
@@ -252,25 +268,6 @@
     <div style="margin-top:20px; text-align:right;">
       <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
     </div>
-  </div>
-</div>
-
-<!-- ========== MODAL EXCLUSÃO PARCELA ========= -->
-<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Deseja excluir:</p>
-    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
-    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
-    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
-  </div>
-</div>
-
-<div id="modalEscolherEdicaoParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Deseja editar:</p>
-    <button onclick="confirmarEdicaoParcelaUnica()" style="margin:10px 0; background:#2196f3;">Somente esta parcela</button><br>
-    <button onclick="confirmarEdicaoTodasParcelas()" style="margin-bottom:10px; background:#4caf50;">Todas as parcelas</button><br>
-    <button onclick="fecharModalEdicaoParcelas()" style="background:#555;">Cancelar</button>
   </div>
 </div>
   

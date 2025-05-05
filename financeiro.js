@@ -164,31 +164,38 @@ function renderizarFinanceiro(grupo, container, pago) {
       const div = document.createElement("div");
       div.className = "item";
 
-      // Verifica se terá 2 ou 3 botões
-      const temEditar = true;
-      const temAcao = true;
-      const temExcluir = true;
-      const totalBotoes = [temEditar, temAcao, temExcluir].filter(Boolean).length;
-      const paddingDireito = totalBotoes === 3 ? "90px" : "70px";
-      div.style.paddingRight = paddingDireito;
-
-      div.innerHTML = `
-        <span>
-          <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-        </span>
-        <div class="botoes-financeiro" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); display:flex; gap:10px;">
-          <button class="botao-circular azul" onclick="editarGasto(${i})"><i class="fas fa-edit"></i></button>
-          ${isParcela
-            ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`
-            : pago
-              ? `<button class="botao-circular laranja" onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`
-              : `<button class="botao-circular verde" onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`}
-          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>
-        </div>
+      // Cria span do texto
+      const span = document.createElement("span");
+      span.innerHTML = `
+        <i class="fas fa-${icone}"></i>
+        <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo})
+        ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+        ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
       `;
+      div.appendChild(span);
+
+      // Cria container dos botões
+      const botoes = document.createElement("div");
+      botoes.className = "botoes-financeiro";
+
+      // Editar (somente se não for pago)
+      if (!pago) {
+        botoes.innerHTML += isParcela
+          ? `<button class="botao-circular azul" onclick="mostrarEdicaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-edit"></i></button>`
+          : `<button class="botao-circular azul" onclick="editarGasto(${i})"><i class="fas fa-edit"></i></button>`;
+      }
+
+      // Marcar como pago ou desfazer
+      if (isParcela) {
+        botoes.innerHTML += `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
+      } else {
+        botoes.innerHTML += `<button class="botao-circular verde" onclick="${pago ? `desfazerPagamento(${i})` : `marcarPago(${i})`}"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
+      }
+
+      // Botão excluir
+      botoes.innerHTML += `<button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>`;
+
+      div.appendChild(botoes);
       container.appendChild(div);
     });
 

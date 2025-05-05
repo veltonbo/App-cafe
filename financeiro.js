@@ -6,7 +6,10 @@ let editarTodasParcelas = false;
 
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
-  db.ref("Financeiro").on("value", snap => {
+  const ano = localStorage.getItem('anoAtual'); // Recupera o ano da safra ativa
+  if (!ano) return; // se não houver safra, não tenta carregar
+
+  db.ref(`safras/${ano}/financeiro`).on("value", snap => {
     gastos = snap.exists() ? snap.val() : [];
     atualizarFinanceiro();
   });

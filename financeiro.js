@@ -4,6 +4,14 @@ let graficoGastosChart = null;
 let editandoGastoIndex = null;
 let editandoParcelaIndex = null;
 
+
+function formatarMes(mes) {
+  const [ano, mesNum] = mes.split("-");
+  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
+}
+
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
   db.ref("Financeiro").on("value", snap => {

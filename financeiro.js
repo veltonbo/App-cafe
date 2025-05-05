@@ -141,45 +141,45 @@ function renderizarFinanceiro(grupo, container, pago) {
         : "tag";
 
       const div = document.createElement("div");
-      const qtdBotoes = isParcela ? 2 : 2; // Se for parcela: marcar/desfazer + excluir. Se for simples: marcar/desfazer + excluir.
-
-      div.className = `item ${isParcela ? 'botoes-3' : 'botoes-2'}`;
-div.innerHTML = `
-  <span>
-    <i class="fas fa-${icone}"></i> 
-    <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-    ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-    ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-  </span>
-  <div class="botoes-tarefa">
-  ${isParcela
-    ? `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-         <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
-       </button>
-       <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-         <i class="fas fa-edit"></i>
-       </button>
-       <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-         <i class="fas fa-trash"></i>
-       </button>`
-    : pago
-      ? `<button class="botao-circular verde" onclick="desfazerPagamento(${i})">
-           <i class="fas fa-undo"></i>
-         </button>
-         <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i})">
-           <i class="fas fa-trash"></i>
-         </button>`
-      : `<button class="botao-circular verde" onclick="marcarPago(${i})">
-           <i class="fas fa-check"></i>
-         </button>
-         <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
-           <i class="fas fa-edit"></i>
-         </button>
-         <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i})">
-           <i class="fas fa-trash"></i>
-         </button>`
-  }
-  </div>
+      div.className = `item ${isParcela || !pago ? 'botoes-3' : 'botoes-2'}`;
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+        </span>
+        <div class="botoes-tarefa">
+          ${isParcela ? `
+            <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+              <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+            </button>
+            <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : pago ? `
+            <button class="botao-circular verde" onclick="desfazerPagamento(${i})">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : `
+            <button class="botao-circular verde" onclick="marcarPago(${i})">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+              <i class="fas fa-trash"></i>
+            </button>
+          `}
+        </div>
+      `;
       container.appendChild(div);
     });
 
@@ -392,31 +392,40 @@ function toggleFiltrosFinanceiro() {
 }
 
 function editarFinanceiro(index, parcelaIndex = null) {
-  const g = gastos[index];
-  if (!g) return;
+  const gasto = gastos[index];
+  if (!gasto) return;
 
-  // Preenche os campos com os dados
-  document.getElementById("dataFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].vencimento : g.data;
-  document.getElementById("produtoFin").value = g.produto;
-  document.getElementById("descricaoFin").value = g.descricao || "";
-  document.getElementById("valorFin").value = parcelaIndex !== null ? g.parcelasDetalhes[parcelaIndex].valor : g.valor;
-  document.getElementById("tipoFin").value = g.tipo;
-  document.getElementById("parceladoFin").checked = !!g.parcelasDetalhes;
-  document.getElementById("parcelasFin").style.display = !!g.parcelasDetalhes ? "block" : "none";
-  document.getElementById("parcelasFin").value = g.parcelas || "";
+  // Preenche os campos com os dados do gasto
+  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes[parcelaIndex] : null;
+
+  document.getElementById("dataFin").value = parcela ? parcela.vencimento : gasto.data;
+  document.getElementById("produtoFin").value = gasto.produto;
+  document.getElementById("descricaoFin").value = gasto.descricao || "";
+  document.getElementById("valorFin").value = parcela ? parcela.valor : gasto.valor;
+  document.getElementById("tipoFin").value = gasto.tipo;
+  document.getElementById("parceladoFin").checked = !!gasto.parcelasDetalhes;
+  document.getElementById("parcelasFin").style.display = !!gasto.parcelasDetalhes ? "block" : "none";
+  document.getElementById("parcelasFin").value = gasto.parcelas || "";
   document.getElementById("parcelasFin").dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
-  // Salva o índice do item que está sendo editado
   indiceEdicaoGasto = index;
 
-  // Se for parcela, pergunta se quer editar só uma ou todas
-  if (g.parcelasDetalhes && parcelaIndex !== null) {
+  if (gasto.parcelasDetalhes && parcelaIndex !== null) {
     mostrarModalEditarParcela();
   } else {
     editarTodasParcelas = true;
   }
 
-  // Atualiza botão para modo edição
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
+}
+
+function confirmarEditarParcela(todas) {
+  editarTodasParcelas = todas;
+  fecharModalEditarParcela();
+}
+
+function fecharModalEditarParcela() {
+  const modal = document.getElementById("modalEditarParcela");
+  if (modal) modal.style.display = "none";
 }

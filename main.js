@@ -1,33 +1,39 @@
-// Inicializa o app e ativa a aba inicial
-function inicializarApp() {
-  mostrarAba('aplicacoes');
-  carregarAplicacoes();
-  carregarTarefas();
-  carregarFinanceiro();
-  carregarColheita();
-  carregarConfiguracoes();
-}
-
-// Exibe a aba escolhida e oculta as outras
-function mostrarAba(id) {
+function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => {
-    aba.classList.remove('active');
+    aba.style.display = 'none';
   });
-  document.getElementById(id).classList.add('active');
 
-  // Salva a aba atual para manter ao recarregar
-  localStorage.setItem('abaAtual', id);
+  const abaSelecionada = document.getElementById(abaId);
+  if (abaSelecionada) abaSelecionada.style.display = 'block';
+
+  document.querySelectorAll('.menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  const btnId = 'btn-' + abaId;
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+
+  localStorage.setItem('aba', abaId);
 }
 
-// Ao carregar a página, restaura a aba anterior
-document.addEventListener('DOMContentLoaded', () => {
-  const abaAnterior = localStorage.getItem('abaAtual') || 'aplicacoes';
-  mostrarAba(abaAnterior);
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
+  mostrarAba(abaInicial);
 
-  // Garante que a função inicializarApp está disponível
-  if (typeof inicializarApp === 'function') {
-    inicializarApp();
-  } else {
-    console.error('Função inicializarApp não encontrada.');
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
   }
-});
+
+  // Chama as funções de carregamento se estiverem disponíveis
+  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+  if (typeof carregarTarefas === "function") carregarTarefas();
+  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+  if (typeof carregarColheita === "function") carregarColheita();
+  if (typeof carregarValorLata === "function") carregarValorLata();
+  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+}
+
+// Executa ao carregar a página
+window.addEventListener('DOMContentLoaded', inicializarApp);

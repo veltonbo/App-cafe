@@ -29,12 +29,10 @@ function adicionarFinanceiro() {
     return;
   }
 
-  // Gera parcelas
   if (gasto.parcelas > 1) {
     const valorParcela = parseFloat((gasto.valor / gasto.parcelas).toFixed(2));
     const parcelas = [];
     const dataBase = new Date(gasto.data);
-
     for (let i = 0; i < gasto.parcelas; i++) {
       const vencimento = new Date(dataBase);
       vencimento.setMonth(vencimento.getMonth() + i);
@@ -45,7 +43,6 @@ function adicionarFinanceiro() {
         pago: false
       });
     }
-
     gasto.parcelasDetalhes = parcelas;
   }
 
@@ -53,7 +50,7 @@ function adicionarFinanceiro() {
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpa o formulário
+  // Limpar campos
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";
@@ -123,6 +120,7 @@ function atualizarFinanceiro() {
   gerarGraficoFinanceiro();
 }
 
+// ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {
     const titulo = document.createElement("div");
@@ -199,9 +197,17 @@ function alternarParcela(gastoIndex, parcelaIndex) {
 function gerarResumoFinanceiro() {
   let totalPago = 0;
   let totalVencer = 0;
+
   gastos.forEach(g => {
-    if (g.pago) totalPago += g.valor;
-    else totalVencer += g.valor;
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) totalPago += p.valor;
+        else totalVencer += p.valor;
+      });
+    } else {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    }
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
@@ -216,14 +222,23 @@ function gerarGraficoFinanceiro() {
   if (graficoGastosChart) graficoGastosChart.destroy();
 
   const categorias = {};
+
   gastos.forEach(g => {
-    if (!g.pago) return;
-    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) {
+          categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
+        }
+      });
+    } else if (g.pago) {
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    }
   });
 
   const labels = Object.keys(categorias);
   const valores = Object.values(categorias);
   const total = valores.reduce((soma, v) => soma + v, 0);
+
   const labelsComPercentual = labels.map((label, i) => {
     const percent = ((valores[i] / total) * 100).toFixed(1);
     return `${label} (${percent}%)`;
@@ -243,8 +258,8 @@ function gerarGraficoFinanceiro() {
 
 function formatarMes(mes) {
   const [ano, mesNum] = mes.split("-");
-  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
 }
 

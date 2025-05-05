@@ -140,6 +140,7 @@
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
   <input id="valorFin" type="number" placeholder="Valor (R$)">
+  
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
     <option value="Fungicida">Fungicida</option>
@@ -147,43 +148,52 @@
     <option value="Herbicida">Herbicida</option>
     <option value="Outro">Outro</option>
   </select>
+
   <label style="margin-top: 5px;">
     <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
   </label>
+
   <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
 
-  <button onclick="adicionarFinanceiro()">
-    <i class="fas fa-save"></i> Salvar Gasto
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+    <button id="btnSalvarGasto" onclick="adicionarFinanceiro()">
+      <i class="fas fa-save"></i> Salvar Gasto
+    </button>
+    <button id="btnCancelarEdicaoFin" onclick="cancelarEdicaoFinanceiro()" style="display: none; background-color: #888;">
+      Cancelar Edição
+    </button>
+  </div>
+
+  <hr>
+
+  <button onclick="alternarFiltrosFinanceiro()" class="botao-padrao" style="margin-bottom: 10px;">
+    <i class="fas fa-filter"></i> Filtros
   </button>
 
-  <hr>
+  <div id="filtrosFinanceiro" style="display: none; margin-bottom: 10px;">
+    <h3>Filtrar Gastos</h3>
+    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
+    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+    
+    <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
+      <option value="">Todos os Tipos</option>
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Outro">Outro</option>
+    </select>
 
-  <!-- Botão para mostrar/ocultar filtros -->
-<button class="botao-circular azul" onclick="alternarFiltrosFinanceiro()" style="margin-bottom: 10px;">
-  <i class="fas fa-filter"></i>
-</button>
+    <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
+      <option value="">Todos</option>
+      <option value="pago">Pagos</option>
+      <option value="vencer">A Vencer</option>
+    </select>
 
-<!-- Bloco de filtros com ID para ocultar/exibir -->
-<div id="filtrosFinanceiro" style="display: none;">
-  <h3>Filtrar Gastos</h3>
-  <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-  <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
-  <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
-    <option value="">Todos os Tipos</option>
-    <option value="Adubo">Adubo</option>
-    <option value="Fungicida">Fungicida</option>
-    <option value="Inseticida">Inseticida</option>
-    <option value="Herbicida">Herbicida</option>
-    <option value="Outro">Outro</option>
-  </select>
-  <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
-    <option value="">Todos</option>
-    <option value="pago">Pagos</option>
-    <option value="vencer">A Vencer</option>
-  </select>
-  <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+  </div>
+
   <hr>
-</div>
 
   <h4 style="color: #ff9800;">A Vencer</h4>
   <div id="financeiroVencer"></div>
@@ -198,10 +208,10 @@
   <canvas id="graficoGastos"></canvas>
 
   <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()">
+    <button onclick="exportarFinanceiroCSV()" class="botao-padrao">
       <i class="fas fa-file-csv"></i> Exportar CSV
     </button>
-    <button onclick="exportarFinanceiroPDF()">
+    <button onclick="exportarFinanceiroPDF()" class="botao-padrao">
       <i class="fas fa-file-pdf"></i> Exportar PDF
     </button>
   </div>

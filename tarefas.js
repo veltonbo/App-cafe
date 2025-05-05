@@ -34,8 +34,8 @@ function atualizarTarefas() {
       const aplicacaoExtra = t.eAplicacao ? ` - ${t.tipo} (${t.dosagem})` : '';
 
       item.innerHTML = `
-        <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}</span>
-        <div class="botoes-tarefa">
+      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}</span>
+      <div class="botoes-tarefa">
           ${!t.feita ? `
             <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
               <i class="fas fa-check"></i>

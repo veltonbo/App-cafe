@@ -459,4 +459,36 @@ function limparCamposFinanceiro() {
   mostrarParcelas();
 }
 
+function mostrarEdicaoParcela(index, parcelaIndex) {
+  const confirmacao = confirm("Deseja editar apenas esta parcela?\nClique em OK para editar só esta ou Cancelar para editar todas.");
+  
+  if (confirmacao) {
+    // Editar somente a parcela
+    const parcela = gastos[index].parcelasDetalhes[parcelaIndex];
+    if (!parcela) return;
 
+    // Preenche o formulário com os dados da parcela
+    dataFin.value = parcela.vencimento;
+    produtoFin.value = gastos[index].produto;
+    descricaoFin.value = gastos[index].descricao;
+    valorFin.value = parcela.valor;
+    tipoFin.value = gastos[index].tipo;
+
+    // Marcar como edição de uma parcela (você pode adicionar controle via variáveis se desejar)
+    btnSalvarGasto.onclick = function () {
+      parcela.vencimento = dataFin.value;
+      parcela.valor = parseFloat(valorFin.value);
+      gastos[index].produto = produtoFin.value.trim();
+      gastos[index].descricao = descricaoFin.value.trim();
+      gastos[index].tipo = tipoFin.value;
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+      btnSalvarGasto.onclick = adicionarFinanceiro; // restaura função padrão
+      limparFormularioFinanceiro();
+    };
+
+  } else {
+    // Editar todas as parcelas
+    editarGasto(index);
+  }
+}

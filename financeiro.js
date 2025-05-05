@@ -52,15 +52,25 @@ function adicionarFinanceiro() {
   gastos.push(gasto);
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
+  limparCamposFinanceiro();
+}
 
-  // Limpa o formulário
+// ===== LIMPAR CAMPOS =====
+function limparCamposFinanceiro() {
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";
   valorFin.value = "";
+  tipoFin.value = "Adubo";
   parcelasFin.value = "";
   parceladoFin.checked = false;
   mostrarParcelas();
+}
+
+// ===== TOGGLE FILTROS =====
+function alternarFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
 }
 
 // ===== ATUALIZAR LISTAGEM =====
@@ -134,36 +144,45 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
-
       const icone = tipo === "Adubo" ? "leaf"
         : tipo === "Fungicida" ? "bug"
         : tipo === "Inseticida" ? "spray-can"
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
-      const botoes = isParcela
-        ? [`<button onclick="alternarParcela(${i}, ${parcelaIndex})"><i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`,
-           `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})"><i class="fas fa-trash"></i></button>`]
-        : pago
-          ? [`<button onclick="desfazerPagamento(${i})"><i class="fas fa-undo"></i></button>`,
-             `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i})"><i class="fas fa-trash"></i></button>`]
-          : [`<button onclick="marcarPago(${i})"><i class="fas fa-check"></i></button>`,
-             `<button class="botao-excluir" onclick="confirmarExclusaoParcela(${i})"><i class="fas fa-trash"></i></button>`];
-
       const div = document.createElement("div");
-      div.className = "item";
-      div.style.paddingRight = botoes.length === 3 ? "90px" : "70px";
+      div.className = "item fade-in";
+
+      // monta botões
+      let botoes = '';
+      let botoesCount = 1;
+
+      if (isParcela) {
+        botoes += `<button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+                    <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i></button>`;
+      } else if (!pago) {
+        botoes += `<button class="botao-circular verde" onclick="marcarPago(${i})">
+                    <i class="fas fa-check"></i></button>`;
+      } else {
+        botoes += `<button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
+                    <i class="fas fa-undo"></i></button>`;
+      }
+
+      botoesCount++;
+      botoes += `<button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+                  <i class="fas fa-trash"></i></button>`;
+
+      const paddingDireito = botoesCount === 3 ? '90px' : '70px';
+      div.style.paddingRight = paddingDireito;
 
       div.innerHTML = `
         <span>
-          <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          <i class="fas fa-${icone}"></i>
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo})
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
-        <div class="botoes-financeiro" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); display:flex; gap:10px;">
-          ${botoes.join('')}
-        </div>
+        <div class="botoes-tarefa">${botoes}</div>
       `;
       container.appendChild(div);
     });
@@ -175,13 +194,47 @@ function renderizarFinanceiro(grupo, container, pago) {
   }
 }
 
+// ===== PAGAMENTO E EXCLUSÃO =====
+function marcarPago(index) {
+  if (gastos[index]) {
+    gastos[index].pago = true;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+}
+
+function desfazerPagamento(index) {
+  if (gastos[index]) {
+    gastos[index].pago = false;
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+}
+
+function alternarParcela(gastoIndex, parcelaIndex) {
+  const gasto = gastos[gastoIndex];
+  if (!gasto || !gasto.parcelasDetalhes) return;
+  const parcela = gasto.parcelasDetalhes[parcelaIndex];
+  parcela.pago = !parcela.pago;
+  gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
 // ===== GRÁFICO E RESUMO =====
 function gerarResumoFinanceiro() {
   let totalPago = 0;
   let totalVencer = 0;
   gastos.forEach(g => {
-    if (g.pago) totalPago += g.valor;
-    else totalVencer += g.valor;
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) totalPago += p.valor;
+        else totalVencer += p.valor;
+      });
+    } else {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    }
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
@@ -197,8 +250,15 @@ function gerarGraficoFinanceiro() {
 
   const categorias = {};
   gastos.forEach(g => {
-    if (!g.pago) return;
-    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (!p.pago) return;
+        categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
+      });
+    } else {
+      if (!g.pago) return;
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    }
   });
 
   const labels = Object.keys(categorias);
@@ -223,12 +283,12 @@ function gerarGraficoFinanceiro() {
 
 function formatarMes(mes) {
   const [ano, mesNum] = mes.split("-");
-  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
 }
 
-// ===== EXPORTAÇÃO PDF E CSV =====
+// ===== EXPORTAÇÃO CSV/PDF =====
 function exportarFinanceiroCSV() {
   if (!gastos.length) {
     alert("Nenhum dado disponível para exportação.");
@@ -289,8 +349,8 @@ function exportarFinanceiroPDF() {
 }
 
 // ===== EXCLUSÃO DE PARCELA =====
-function confirmarExclusaoParcela(index, parcelaIndex = null) {
-  if (gastos[index]?.parcelasDetalhes && parcelaIndex !== null) {
+function confirmarExclusaoParcela(index, parcelaIndex) {
+  if (gastos[index]?.parcelasDetalhes) {
     document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
     modalConfirmarExclusaoParcela.dataset.index = index;
     modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
@@ -326,11 +386,6 @@ function excluirTodasParcelas() {
     atualizarFinanceiro();
   }
   fecharModalExcluirParcela();
-}
-
-function alternarFiltrosFinanceiro() {
-  const filtros = document.getElementById("filtrosFinanceiro");
-  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
 }
 
 function fecharModalExcluirParcela() {

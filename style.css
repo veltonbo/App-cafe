@@ -113,18 +113,19 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 90px 12px 12px; /* espaço direito para os botões */
+  padding: 12px;
   margin: 10px 0;
   border-radius: 8px;
   background: #1e1e1e;
   border-left: 4px solid #66bb6a;
-  overflow: hidden;
 }
 
 .item span {
-  flex-grow: 1;
+  display: block;
+  padding-right: 100px; /* garante espaço para os botões */
   word-break: break-word;
   color: #fff;
+  flex: 1;
 }
 
 .botoes-tarefa {

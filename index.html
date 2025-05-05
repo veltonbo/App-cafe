@@ -45,35 +45,30 @@
 <div id="aplicacoes" class="aba">
   <h2>Aplicações</h2>
 
-  <!-- Campos de cadastro -->
-  <input id="dataApp" type="date" placeholder="Data da aplicação">
-  
+  <input id="dataApp" type="date">
   <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
   <datalist id="sugestoesProdutoApp"></datalist>
-  
-  <input id="dosagemApp" placeholder="Dosagem (ex: 200ml)">
-  
+  <input id="dosagemApp" placeholder="Dosagem">
+
   <select id="tipoApp">
-    <option value="Adubo">Adubo</option>
-    <option value="Fungicida">Fungicida</option>
-    <option value="Inseticida">Inseticida</option>
-    <option value="Herbicida">Herbicida</option>
+    <option>Adubo</option>
+    <option>Fungicida</option>
+    <option>Inseticida</option>
+    <option>Herbicida</option>
   </select>
 
   <select id="setorApp">
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
+    <option>Setor 01</option>
+    <option>Setor 02</option>
   </select>
 
-  <!-- Botões de ação -->
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
     <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888; color: white;">
+    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
       Cancelar Edição
     </button>
   </div>
 
-  <!-- Filtros -->
   <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
     <option value="">Todos os Setores</option>
     <option value="Setor 01">Setor 01</option>
@@ -82,10 +77,8 @@
 
   <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
 
-  <!-- Lista de aplicações -->
   <div id="listaAplicacoes"></div>
 
-  <!-- Exportação -->
   <button onclick="exportarAplicacoesCSV()" style="margin-top: 10px;">
     <i class="fas fa-file-csv"></i> Exportar CSV
   </button>

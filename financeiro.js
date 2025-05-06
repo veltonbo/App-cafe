@@ -81,7 +81,6 @@ function adicionarFinanceiro() {
       original.tipo = tipo;
     }
   }
-}
   } else {
     gastos[indiceEdicaoGasto] = novoGasto;
   }

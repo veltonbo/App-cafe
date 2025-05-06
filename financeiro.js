@@ -328,15 +328,15 @@ function editarFinanceiro(index, parcelaIndex = null) {
 
   const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes[parcelaIndex] : null;
 
-  document.getElementById("dataFin").value = parcela ? parcela.vencimento : gasto.data;
-  document.getElementById("produtoFin").value = gasto.produto;
-  document.getElementById("descricaoFin").value = gasto.descricao || "";
-  document.getElementById("valorFin").value = parcela ? parcela.valor : gasto.valor;
-  document.getElementById("tipoFin").value = gasto.tipo;
-  document.getElementById("parceladoFin").checked = !!gasto.parcelasDetalhes;
-  document.getElementById("parcelasFin").style.display = !!gasto.parcelasDetalhes ? "block" : "none";
-  document.getElementById("parcelasFin").value = gasto.parcelas || "";
-  document.getElementById("parcelasFin").dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
+  dataFin.value = parcela ? parcela.vencimento : gasto.data;
+  produtoFin.value = gasto.produto;
+  descricaoFin.value = gasto.descricao || "";
+  valorFin.value = parcela ? parcela.valor : gasto.valor;
+  tipoFin.value = gasto.tipo;
+  parceladoFin.checked = !!gasto.parcelasDetalhes;
+  parcelasFin.style.display = !!gasto.parcelasDetalhes ? "block" : "none";
+  parcelasFin.value = gasto.parcelas || "";
+  parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
   indiceEdicaoGasto = index;
 
@@ -348,6 +348,16 @@ function editarFinanceiro(index, parcelaIndex = null) {
 
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
+}
+
+function confirmarEditarParcela(todas) {
+  editarTodasParcelas = todas;
+  fecharModalEditarParcela();
+}
+
+function fecharModalEditarParcela() {
+  const modal = document.getElementById("modalEditarParcela");
+  if (modal) modal.style.display = "none";
 }
 
 function confirmarEditarParcela(todas) {
@@ -491,3 +501,49 @@ function exportarFinanceiroPDF() {
 
   doc.save("relatorio_financeiro.pdf");
 }
+
+function confirmarExclusaoParcela(index, parcelaIndex) {
+  if (gastos[index]?.parcelasDetalhes) {
+    // Exibir modal para excluir parcela
+    document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
+    modalConfirmarExclusaoParcela.dataset.index = index;
+    modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
+  } else {
+    // Excluir item único direto
+    if (confirm("Deseja excluir esse lançamento financeiro?")) {
+      gastos.splice(index, 1);
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+    }
+  }
+}
+
+function excluirApenasParcela() {
+  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
+  const parcelaIndex = parseInt(modalConfirmarExclusaoParcela.dataset.parcelaIndex);
+
+  if (!isNaN(index) && !isNaN(parcelaIndex)) {
+    gastos[index].parcelasDetalhes.splice(parcelaIndex, 1);
+    if (gastos[index].parcelasDetalhes.length === 0) {
+      gastos.splice(index, 1);
+    }
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+  fecharModalExcluirParcela();
+}
+
+function excluirTodasParcelas() {
+  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
+  if (!isNaN(index)) {
+    gastos.splice(index, 1);
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+  fecharModalExcluirParcela();
+}
+
+function fecharModalExcluirParcela() {
+  modalConfirmarExclusaoParcela.style.display = "none";
+}
+

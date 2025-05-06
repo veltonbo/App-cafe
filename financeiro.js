@@ -331,12 +331,16 @@ function editarFinanceiro(index, parcelaIndex = null) {
 }
 
 // ===== CONFIRMAR EDIÇÃO DE PARCELA =====
+function mostrarModalEditarParcela() {
+  const modal = document.getElementById("modalEditarParcela");
+  if (modal) modal.style.display = "flex";
+}
+
 function confirmarEditarParcela(todas) {
   editarTodasParcelas = todas;
   fecharModalEditarParcela();
 }
 
-// ===== FECHAR MODAL DE EDIÇÃO DE PARCELA =====
 function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";
@@ -531,11 +535,6 @@ function exportarFinanceiroPDF() {
   });
 
   doc.save("relatorio_financeiro.pdf");
-}
-
-function mostrarModalEditarParcela() {
-  const modal = document.getElementById("modalEditarParcela");
-  if (modal) modal.style.display = "flex";
 }
 
 // ===== INICIALIZAR FINANCEIRO AO CARREGAR =====

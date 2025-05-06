@@ -68,18 +68,19 @@ function adicionarFinanceiro() {
   if (indiceEdicaoGasto !== null) {
     const original = gastos[indiceEdicaoGasto];
     if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-      if (editarTodasParcelas) {
-        gastos[indiceEdicaoGasto] = novoGasto;
-      } else {
-        const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-        if (!isNaN(idx)) {
-          original.parcelasDetalhes[idx].valor = valor;
-          original.parcelasDetalhes[idx].vencimento = data;
-          original.produto = produto;
-          original.descricao = descricao;
-          original.tipo = tipo;
-        }
-      }
+  if (editarTodasParcelas) {
+    gastos[indiceEdicaoGasto] = novoGasto;
+  } else {
+    const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+    if (!isNaN(idx)) {
+      original.parcelasDetalhes[idx].valor = valor;
+      original.parcelasDetalhes[idx].vencimento = data;
+      original.produto = produto;
+      original.descricao = descricao;
+      original.tipo = tipo;
+    }
+  }
+}
     } else {
       gastos[indiceEdicaoGasto] = novoGasto;
     }
@@ -87,6 +88,7 @@ function adicionarFinanceiro() {
     indiceEdicaoGasto = null;
     editarTodasParcelas = false;
     document.getElementById("btnCancelarFinanceiro").style.display = "none";
+    parcelasFin.dataset.parcelaIndex = ""; // <-- Limpa após salvar
   } else {
     gastos.push(novoGasto);
   }
@@ -196,14 +198,15 @@ function renderizarFinanceiro(grupo, container, pago) {
             <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
               <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
             </button>
-            <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-              <i class="fas fa-edit"></i>
-            </button>
+            ${!pago ? `
+              <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+                <i class="fas fa-edit"></i>
+              </button>` : ''}
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
               <i class="fas fa-trash"></i>
             </button>
           ` : pago ? `
-            <button class="botao-circular verde" onclick="desfazerPagamento(${i})">
+            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
               <i class="fas fa-undo"></i>
             </button>
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">

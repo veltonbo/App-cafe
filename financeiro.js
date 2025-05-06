@@ -30,71 +30,48 @@ function adicionarFinanceiro() {
     return;
   }
 
-  const novoGasto = {
-    data,
-    produto,
-    descricao,
-    valor,
-    tipo,
-    pago: false,
-    parcelas: numParcelas
-  };
-
-  // Adiciona detalhes das parcelas se for parcelado
-  if (numParcelas > 1) {
-    const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
-    const dataBase = new Date(data);
-    const parcelas = [];
-    for (let i = 0; i < numParcelas; i++) {
-      const vencimento = new Date(dataBase);
-      vencimento.setMonth(vencimento.getMonth() + i);
-      parcelas.push({
-        numero: i + 1,
-        valor: valorParcela,
-        vencimento: vencimento.toISOString().split("T")[0],
-        pago: false
-      });
-    }
-    novoGasto.parcelasDetalhes = parcelas;
-  }
-
-  // Edição de lançamento existente
+  // ========== EDIÇÃO ==========
   if (indiceEdicaoGasto !== null) {
-    const original = gastos[indiceEdicaoGasto];
+    const gastoOriginal = gastos[indiceEdicaoGasto];
 
-    if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
+    if (editarTodasParcelas && gastoOriginal.parcelasDetalhes?.length) {
+      // Editar todas as parcelas (recria a lista)
+      const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
+      const dataBase = new Date(data);
+      const parcelas = [];
+
+      for (let i = 0; i < numParcelas; i++) {
+        const venc = new Date(dataBase);
+        venc.setMonth(venc.getMonth() + i);
+        parcelas.push({
+          numero: i + 1,
+          valor: valorParcela,
+          vencimento: venc.toISOString().split("T")[0],
+          pago: false
+        });
+      }
+
+      gastos[indiceEdicaoGasto] = {
+        data,
+        produto,
+        descricao,
+        valor,
+        tipo,
+        pago: false,
+        parcelas: numParcelas,
+        parcelasDetalhes: parcelas
+      };
+
+    } else if (!editarTodasParcelas && gastoOriginal.parcelasDetalhes?.length) {
+      // Editar apenas uma parcela
       const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-
-      if (editarTodasParcelas) {
-        const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
-        const dataBase = new Date(data);
-        const novasParcelas = [];
-
-        for (let i = 0; i < numParcelas; i++) {
-          const venc = new Date(dataBase);
-          venc.setMonth(venc.getMonth() + i);
-          novasParcelas.push({
-            numero: i + 1,
-            valor: valorParcela,
-            vencimento: venc.toISOString().split("T")[0],
-            pago: original.parcelasDetalhes[i]?.pago || false
-          });
-        }
-
-        original.data = data;
-        original.produto = produto;
-        original.descricao = descricao;
-        original.valor = valor;
-        original.tipo = tipo;
-        original.parcelas = numParcelas;
-        original.parcelasDetalhes = novasParcelas;
-
-      } else if (!isNaN(idx)) {
-        original.parcelasDetalhes[idx].valor = valor;
-        original.parcelasDetalhes[idx].vencimento = data;
-        original.produto = produto;
-        original.descricao = descricao;
-        original.tipo = tipo;
+      if (!isNaN(idx)) {
+        const parcela = gastoOriginal.parcelasDetalhes[idx];
+        parcela.valor = valor;
+        parcela.vencimento = data;
+        gastoOriginal.produto = produto;
+        gastoOriginal.descricao = descricao;
+        gastoOriginal.tipo = tipo;
       }
 
     } else {
@@ -105,7 +82,7 @@ function adicionarFinanceiro() {
         descricao,
         valor,
         tipo,
-        pago: original.pago,
+        pago: false,
         parcelas: 1
       };
     }
@@ -114,19 +91,45 @@ function adicionarFinanceiro() {
     editarTodasParcelas = false;
     parcelasFin.dataset.parcelaIndex = "";
     document.getElementById("btnCancelarFinanceiro").style.display = "none";
-    document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
-    document.getElementById("formularioFinanceiro").style.display = "none";
 
   } else {
-    // Novo lançamento
+    // ========== NOVO GASTO ==========
+    const novoGasto = {
+      data,
+      produto,
+      descricao,
+      valor,
+      tipo,
+      pago: false,
+      parcelas: numParcelas
+    };
+
+    if (numParcelas > 1) {
+      const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
+      const dataBase = new Date(data);
+      const parcelas = [];
+
+      for (let i = 0; i < numParcelas; i++) {
+        const venc = new Date(dataBase);
+        venc.setMonth(venc.getMonth() + i);
+        parcelas.push({
+          numero: i + 1,
+          valor: valorParcela,
+          vencimento: venc.toISOString().split("T")[0],
+          pago: false
+        });
+      }
+
+      novoGasto.parcelasDetalhes = parcelas;
+    }
+
     gastos.push(novoGasto);
-    document.getElementById("formularioFinanceiro").style.display = "none";
   }
 
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpar campos
+  // Reset do formulário
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";
@@ -136,6 +139,9 @@ function adicionarFinanceiro() {
   parcelasFin.dataset.parcelaIndex = "";
   parceladoFin.checked = false;
   mostrarParcelas();
+  document.getElementById("formularioFinanceiro").style.display = "none";
+  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+  document.getElementById("btnCancelarFinanceiro").style.display = "none";
 }
 
 // ===== ATUALIZAR LISTAGEM =====

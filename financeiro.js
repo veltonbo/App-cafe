@@ -359,3 +359,26 @@ function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";
 }
+
+function gerarResumoFinanceiro() {
+  let totalPago = 0;
+  let totalVencer = 0;
+
+  gastos.forEach(g => {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) totalPago += p.valor;
+        else totalVencer += p.valor;
+      });
+    } else {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    }
+  });
+
+  document.getElementById("resumoFinanceiroMensal").innerHTML = `
+    <div>Total Pago: R$ ${totalPago.toFixed(2)}</div>
+    <div>Total A Vencer: R$ ${totalVencer.toFixed(2)}</div>
+    <div>Total Geral: R$ ${(totalPago + totalVencer).toFixed(2)}</div>
+  `;
+}

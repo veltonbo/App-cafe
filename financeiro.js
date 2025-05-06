@@ -298,30 +298,34 @@ function editarFinanceiro(index, parcelaIndex = null) {
   const gasto = gastos[index];
   if (!gasto) return;
 
-  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes[parcelaIndex] : null;
+  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes?.[parcelaIndex] : null;
 
+  // Preenche os campos do formulário com os dados
   dataFin.value = parcela ? parcela.vencimento : gasto.data;
   produtoFin.value = gasto.produto;
   descricaoFin.value = gasto.descricao || "";
   valorFin.value = parcela ? parcela.valor : gasto.valor;
   tipoFin.value = gasto.tipo;
+
+  // Configura se é parcelado
   parceladoFin.checked = !!gasto.parcelasDetalhes;
-  parcelasFin.style.display = parceladoFin.checked ? "block" : "none";
+  parcelasFin.style.display = gasto.parcelasDetalhes ? "block" : "none";
   parcelasFin.value = gasto.parcelas || "";
   parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
+  // Atualiza controle de edição
   indiceEdicaoGasto = index;
 
-  // Mostrar formulário
+  if (gasto.parcelasDetalhes && parcelaIndex !== null) {
+    mostrarModalEditarParcela(); // Pergunta se quer editar todas ou só essa
+  } else {
+    editarTodasParcelas = true;
+  }
+
+  // Mostra o formulário de edição
   document.getElementById("formularioFinanceiro").style.display = "block";
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
-
-  if (parceladoFin.checked && parcelaIndex !== null) {
-    mostrarModalEditarParcela(); // usuário escolhe entre editar todas ou apenas uma
-  } else {
-    editarTodasParcelas = true; // não há divisão por parcela
-  }
 }
 
 // ===== CONFIRMAR EDIÇÃO DE PARCELA =====

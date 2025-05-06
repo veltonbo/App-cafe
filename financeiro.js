@@ -22,7 +22,8 @@ function mostrarParcelas() {
   inputParcelas.style.display = chk.checked ? "block" : "none";
 }
 
-// ===== ADICIONAR OU EDITAR GASTO =====function adicionarFinanceiro() {
+// ===== ADICIONAR OU EDITAR GASTO =====
+function adicionarFinanceiro() {
   const data = dataFin.value;
   const produto = produtoFin.value.trim();
   const descricao = descricaoFin.value.trim();

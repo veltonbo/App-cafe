@@ -1,6 +1,8 @@
 // ===== VARIÁVEIS =====
 let gastos = [];
 let graficoGastosChart = null;
+let indiceEdicaoGasto = null;
+let editarTodasParcelas = false;
 
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
@@ -12,7 +14,8 @@ function carregarFinanceiro() {
   });
 }
 
-// ===== ADICIONAR GASTO =====function adicionarFinanceiro() {
+// ===== ADICIONAR OU EDITAR GASTO =====
+function adicionarFinanceiro() {
   const data = dataFin.value;
   const produto = produtoFin.value.trim();
   const descricao = descricaoFin.value.trim();
@@ -36,7 +39,6 @@ function carregarFinanceiro() {
     parcelas: numParcelas
   };
 
-  // Se for parcelado, gerar parcelas
   if (numParcelas > 1) {
     const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
     const parcelas = [];
@@ -54,16 +56,13 @@ function carregarFinanceiro() {
     novoGasto.parcelasDetalhes = parcelas;
   }
 
-  // Se for edição
-  if (typeof indiceEdicaoGasto !== "undefined" && indiceEdicaoGasto !== null) {
+  if (typeof indiceEdicaoGasto === "number") {
     const original = gastos[indiceEdicaoGasto];
 
     if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-      // Se for parcelado e editar todas
       if (editarTodasParcelas) {
         gastos[indiceEdicaoGasto] = novoGasto;
       } else {
-        // Editar apenas uma parcela
         const idx = parseInt(parcelasFin.dataset.parcelaIndex);
         if (!isNaN(idx)) {
           original.parcelasDetalhes[idx].valor = valor;
@@ -74,7 +73,6 @@ function carregarFinanceiro() {
         }
       }
     } else {
-      // Gasto simples
       gastos[indiceEdicaoGasto] = novoGasto;
     }
 
@@ -82,148 +80,13 @@ function carregarFinanceiro() {
     editarTodasParcelas = false;
     document.getElementById("btnCancelarFinanceiro").style.display = "none";
   } else {
-    // Novo lançamento
     gastos.push(novoGasto);
   }
 
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
-  dataFin.value = "";
-  produtoFin.value = "";
-  descricaoFin.value = "";
-  valorFin.value = "";
-  tipoFin.value = "Adubo";
-  parcelasFin.value = "";
-  parceladoFin.checked = false;
-  mostrarParcelas();
+  limparFormularioFinanceiro();
   document.getElementById("formularioFinanceiro").style.display = "none";
-}
-
-// ===== ATUALIZAR LISTAGEM =====
-function atualizarFinanceiro() {
-  const filtroTexto = pesquisaFinanceiro.value.toLowerCase();
-  const tipoFiltro = filtroTipoFin.value;
-  const statusFiltro = filtroStatusFin.value;
-  const dataIni = filtroDataInicioFin.value;
-  const dataFim = filtroDataFimFin.value;
-
-  const venc = document.getElementById("financeiroVencer");
-  const pagos = document.getElementById("financeiroPago");
-  venc.innerHTML = "";
-  pagos.innerHTML = "";
-
-  const dadosVencer = {};
-  const dadosPago = {};
-
-  gastos.forEach((g, index) => {
-    const txt = `${g.data} ${g.produto} ${(g.descricao || "")} ${g.tipo}`.toLowerCase();
-    if (!txt.includes(filtroTexto)) return;
-    if (tipoFiltro && g.tipo !== tipoFiltro) return;
-
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
-      g.parcelasDetalhes.forEach((p, parcelaIndex) => {
-        const grupo = p.pago ? dadosPago : dadosVencer;
-        if (statusFiltro === "pago" && !p.pago) return;
-        if (statusFiltro === "vencer" && p.pago) return;
-        if (dataIni && p.vencimento < dataIni) return;
-        if (dataFim && p.vencimento > dataFim) return;
-        const mes = p.vencimento.slice(0, 7);
-        if (!grupo[mes]) grupo[mes] = [];
-        grupo[mes].push({
-          produto: `${g.produto} (Parcela ${p.numero})`,
-          descricao: g.descricao,
-          valor: p.valor,
-          tipo: g.tipo,
-          vencimento: p.vencimento,
-          pago: p.pago,
-          i: index,
-          parcelaIndex,
-          isParcela: true
-        });
-      });
-    } else {
-      if (statusFiltro === "pago" && !g.pago) return;
-      if (statusFiltro === "vencer" && g.pago) return;
-      if (dataIni && g.data < dataIni) return;
-      if (dataFim && g.data > dataFim) return;
-      const grupo = g.pago ? dadosPago : dadosVencer;
-      const mes = g.data.slice(0, 7);
-      if (!grupo[mes]) grupo[mes] = [];
-      grupo[mes].push({ ...g, i: index, isParcela: false });
-    }
-  });
-
-  renderizarFinanceiro(dadosVencer, venc, false);
-  renderizarFinanceiro(dadosPago, pagos, true);
-  gerarResumoFinanceiro();
-  gerarGraficoFinanceiro();
-}
-
-function renderizarFinanceiro(grupo, container, pago) {
-  for (const mes in grupo) {
-    const titulo = document.createElement("div");
-    titulo.className = "grupo-data";
-    titulo.innerText = formatarMes(mes);
-    container.appendChild(titulo);
-
-    let totalMes = 0;
-
-    grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
-      totalMes += valor;
-      const icone = tipo === "Adubo" ? "leaf"
-        : tipo === "Fungicida" ? "bug"
-        : tipo === "Inseticida" ? "spray-can"
-        : tipo === "Herbicida" ? "recycle"
-        : "tag";
-
-      const div = document.createElement("div");
-      div.className = `item ${isParcela || !pago ? 'botoes-3' : 'botoes-2'}`;
-      div.innerHTML = `
-        <span>
-          <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-        </span>
-        <div class="botoes-tarefa">
-          ${isParcela ? `
-            <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-              <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
-            </button>
-            <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : pago ? `
-            <button class="botao-circular verde" onclick="desfazerPagamento(${i})">
-              <i class="fas fa-undo"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : `
-            <button class="botao-circular verde" onclick="marcarPago(${i})">
-              <i class="fas fa-check"></i>
-            </button>
-            <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          `}
-        </div>
-      `;
-      container.appendChild(div);
-    });
-
-    const totalDiv = document.createElement("div");
-    totalDiv.className = "grupo-data";
-    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
-    container.appendChild(totalDiv);
-  }
 }
 
 // ===== PAGAMENTO E EXCLUSÃO =====
@@ -258,8 +121,15 @@ function gerarResumoFinanceiro() {
   let totalPago = 0;
   let totalVencer = 0;
   gastos.forEach(g => {
-    if (g.pago) totalPago += g.valor;
-    else totalVencer += g.valor;
+    if (g.parcelasDetalhes) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) totalPago += p.valor;
+        else totalVencer += p.valor;
+      });
+    } else {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    }
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
@@ -275,8 +145,15 @@ function gerarGraficoFinanceiro() {
 
   const categorias = {};
   gastos.forEach(g => {
-    if (!g.pago) return;
-    categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    if (g.parcelasDetalhes) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) {
+          categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
+        }
+      });
+    } else if (g.pago) {
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+    }
   });
 
   const labels = Object.keys(categorias);
@@ -301,8 +178,8 @@ function gerarGraficoFinanceiro() {
 
 function formatarMes(mes) {
   const [ano, mesNum] = mes.split("-");
-  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
 }
 
@@ -369,12 +246,10 @@ function exportarFinanceiroPDF() {
 // ===== EXCLUSÃO DE PARCELA =====
 function confirmarExclusaoParcela(index, parcelaIndex) {
   if (gastos[index]?.parcelasDetalhes) {
-    // Excluir uma parcela específica
     document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
     modalConfirmarExclusaoParcela.dataset.index = index;
     modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
   } else {
-    // Excluir lançamento simples
     if (confirm("Deseja excluir esse lançamento financeiro?")) {
       gastos.splice(index, 1);
       db.ref("Financeiro").set(gastos);
@@ -412,6 +287,7 @@ function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }
 
+// ===== TOGGLE DE FILTROS =====
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   const btnIcone = document.querySelector("#btnToggleFiltrosFin i");
@@ -427,46 +303,10 @@ function toggleFiltrosFinanceiro() {
   }
 }
 
-function editarFinanceiro(index, parcelaIndex = null) {
-  const gasto = gastos[index];
-  if (!gasto) return;
-
-  // Preenche os campos com os dados do gasto
-  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes[parcelaIndex] : null;
-
-  document.getElementById("dataFin").value = parcela ? parcela.vencimento : gasto.data;
-  document.getElementById("produtoFin").value = gasto.produto;
-  document.getElementById("descricaoFin").value = gasto.descricao || "";
-  document.getElementById("valorFin").value = parcela ? parcela.valor : gasto.valor;
-  document.getElementById("tipoFin").value = gasto.tipo;
-  document.getElementById("parceladoFin").checked = !!gasto.parcelasDetalhes;
-  document.getElementById("parcelasFin").style.display = !!gasto.parcelasDetalhes ? "block" : "none";
-  document.getElementById("parcelasFin").value = gasto.parcelas || "";
-  document.getElementById("parcelasFin").dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
-
-  indiceEdicaoGasto = index;
-
-  if (gasto.parcelasDetalhes && parcelaIndex !== null) {
-    mostrarModalEditarParcela();
-  } else {
-    editarTodasParcelas = true;
-  }
-
-  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
-  document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
-}
-
-function confirmarEditarParcela(todas) {
-  editarTodasParcelas = todas;
-  fecharModalEditarParcela();
-}
-
-function fecharModalEditarParcela() {
-  const modal = document.getElementById("modalEditarParcela");
-  if (modal) modal.style.display = "none";
-}
-
+// ===== TOGGLE DE FORMULÁRIO =====
 function alternarFormularioFinanceiro() {
   const formulario = document.getElementById("formularioFinanceiro");
   formulario.style.display = formulario.style.display === "none" ? "block" : "none";
 }
+
+

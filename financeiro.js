@@ -547,3 +547,15 @@ function fecharModalExcluirParcela() {
   modalConfirmarExclusaoParcela.style.display = "none";
 }
 
+function toggleFiltrosFinanceiro() {
+  const filtros = document.getElementById("filtrosFinanceiro");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}
+
+function carregarFinanceiro() {
+  db.ref("Financeiro").once("value", (snapshot) => {
+    const data = snapshot.val();
+    gastos = data ? data : [];
+    atualizarFinanceiro();
+  });
+}

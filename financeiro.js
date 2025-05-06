@@ -96,6 +96,7 @@ function carregarFinanceiro() {
   parcelasFin.value = "";
   parceladoFin.checked = false;
   mostrarParcelas();
+  document.getElementById("formularioFinanceiro").style.display = "none";
 }
 
 // ===== ATUALIZAR LISTAGEM =====

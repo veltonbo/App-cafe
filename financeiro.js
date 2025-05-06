@@ -225,9 +225,6 @@ function renderizarFinanceiro(grupo, container, pago) {
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
               <i class="fas fa-trash"></i>
             </button>
-            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
-              <i class="fas fa-undo"></i>
-            </button>
           `}
         </div>
       `;

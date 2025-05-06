@@ -294,23 +294,22 @@ function editarFinanceiro(index, parcelaIndex = null) {
   valorFin.value = parcela ? parcela.valor : gasto.valor;
   tipoFin.value = gasto.tipo;
   parceladoFin.checked = !!gasto.parcelasDetalhes;
-  parcelasFin.style.display = !!gasto.parcelasDetalhes ? "block" : "none";
+  parcelasFin.style.display = parceladoFin.checked ? "block" : "none";
   parcelasFin.value = gasto.parcelas || "";
   parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
   indiceEdicaoGasto = index;
 
-  // Exibir o formulário para edição
+  // Mostrar formulário
   document.getElementById("formularioFinanceiro").style.display = "block";
-
-  if (gasto.parcelasDetalhes && parcelaIndex !== null) {
-    mostrarModalEditarParcela();
-  } else {
-    editarTodasParcelas = true;
-  }
-
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
+
+  if (parceladoFin.checked && parcelaIndex !== null) {
+    mostrarModalEditarParcela(); // usuário escolhe entre editar todas ou apenas uma
+  } else {
+    editarTodasParcelas = true; // não há divisão por parcela
+  }
 }
 
 // ===== CONFIRMAR EDIÇÃO DE PARCELA =====

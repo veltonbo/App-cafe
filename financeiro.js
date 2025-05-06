@@ -359,3 +359,135 @@ function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";
 }
+
+function gerarResumoFinanceiro() {
+  let totalPago = 0;
+  let totalVencer = 0;
+
+  gastos.forEach(g => {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) totalPago += p.valor;
+        else totalVencer += p.valor;
+      });
+    } else {
+      if (g.pago) totalPago += g.valor;
+      else totalVencer += g.valor;
+    }
+  });
+
+  document.getElementById("resumoFinanceiroMensal").innerHTML = `
+    <div>Total Pago: R$ ${totalPago.toFixed(2)}</div>
+    <div>Total A Vencer: R$ ${totalVencer.toFixed(2)}</div>
+    <div>Total Geral: R$ ${(totalPago + totalVencer).toFixed(2)}</div>
+  `;
+}
+
+function gerarGraficoFinanceiro() {
+  const ctx = document.getElementById("graficoGastos").getContext("2d");
+  if (graficoGastosChart) graficoGastosChart.destroy();
+
+  const categorias = {};
+
+  gastos.forEach(g => {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        if (p.pago) {
+          categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
+        }
+      });
+    } else {
+      if (g.pago) {
+        categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
+      }
+    }
+  });
+
+  const labels = Object.keys(categorias);
+  const valores = Object.values(categorias);
+  const total = valores.reduce((soma, v) => soma + v, 0);
+
+  const labelsComPercentual = labels.map((label, i) => {
+    const percent = ((valores[i] / total) * 100).toFixed(1);
+    return `${label} (${percent}%)`;
+  });
+
+  graficoGastosChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labelsComPercentual,
+      datasets: [{
+        data: valores,
+        backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc']
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          labels: {
+            color: "#ddd"
+          }
+        }
+      }
+    }
+  });
+}
+
+function exportarFinanceiroCSV() {
+  if (!gastos.length) {
+    alert("Nenhum dado disponível para exportação.");
+    return;
+  }
+
+  let csv = 'Data,Produto,Descrição,Tipo,Valor (R$),Pago\n';
+
+  gastos.forEach(g => {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        csv += `${p.vencimento},${g.produto} (Parcela ${p.numero}),${g.descricao || ''},${g.tipo},${p.valor.toFixed(2)},${p.pago ? 'Sim' : 'Não'}\n`;
+      });
+    } else {
+      csv += `${g.data},${g.produto},${g.descricao || ''},${g.tipo},${g.valor.toFixed(2)},${g.pago ? 'Sim' : 'Não'}\n`;
+    }
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `financeiro_${new Date().toISOString().split("T")[0]}.csv`;
+  link.click();
+}
+
+function exportarFinanceiroPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Relatório Financeiro", 20, 20);
+  let y = 40;
+
+  gastos.forEach(g => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.text(`${g.data || '-'} - ${g.produto} (${g.tipo}) - R$ ${g.valor.toFixed(2)} - ${g.pago ? "Pago" : "A Vencer"}`, 20, y);
+    y += 8;
+
+    if (g.descricao) {
+      doc.text(`Descrição: ${g.descricao}`, 25, y);
+      y += 6;
+    }
+
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+      g.parcelasDetalhes.forEach(p => {
+        doc.text(`Parcela ${p.numero}: Venc ${p.vencimento} - R$ ${p.valor.toFixed(2)} - ${p.pago ? "Pago" : "A Vencer"}`, 25, y);
+        y += 6;
+      });
+    }
+
+    y += 4;
+  });
+
+  doc.save("relatorio_financeiro.pdf");
+}

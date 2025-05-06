@@ -378,7 +378,7 @@ function gerarResumoFinanceiro() {
   let totalVencer = 0;
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) totalPago += p.valor;
         else totalVencer += p.valor;
@@ -390,9 +390,17 @@ function gerarResumoFinanceiro() {
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
-    <div>Total Pago: R$ ${totalPago.toFixed(2)}</div>
-    <div>Total A Vencer: R$ ${totalVencer.toFixed(2)}</div>
-    <div>Total Geral: R$ ${(totalPago + totalVencer).toFixed(2)}</div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center; font-size:15px;">
+      <div style="background:#4caf50; color:#fff; padding:8px 16px; border-radius:8px;">
+        <i class="fas fa-check-circle"></i> Pago: R$ ${totalPago.toFixed(2)}
+      </div>
+      <div style="background:#ff9800; color:#fff; padding:8px 16px; border-radius:8px;">
+        <i class="fas fa-hourglass-half"></i> A Vencer: R$ ${totalVencer.toFixed(2)}
+      </div>
+      <div style="background:#607d8b; color:#fff; padding:8px 16px; border-radius:8px;">
+        <i class="fas fa-coins"></i> Total: R$ ${(totalPago + totalVencer).toFixed(2)}
+      </div>
+    </div>
   `;
 }
 

@@ -66,51 +66,56 @@ function adicionarFinanceiro() {
   }
 
   if (indiceEdicaoGasto !== null) {
-  const original = gastos[indiceEdicaoGasto];
-
-  if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-  if (editarTodasParcelas) {
-    gastos[indiceEdicaoGasto] = novoGasto;
-  } else {
-    const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-    if (!isNaN(idx)) {
-      original.parcelasDetalhes[idx].valor = valor;
-      original.parcelasDetalhes[idx].vencimento = data;
-      original.produto = produto;
-      original.descricao = descricao;
-      original.tipo = tipo;
+    const original = gastos[indiceEdicaoGasto];
+    if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
+      if (editarTodasParcelas) {
+        novoGasto.parcelasDetalhes = original.parcelasDetalhes.map((p, idx) => {
+          const vencimento = new Date(data);
+          vencimento.setMonth(vencimento.getMonth() + idx);
+          return {
+            ...p,
+            valor: parseFloat((valor / numParcelas).toFixed(2)),
+            vencimento: vencimento.toISOString().split("T")[0]
+          };
+        });
+        gastos[indiceEdicaoGasto] = novoGasto;
+      } else {
+        const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+        if (!isNaN(idx)) {
+          original.parcelasDetalhes[idx].valor = valor;
+          original.parcelasDetalhes[idx].vencimento = data;
+          original.produto = produto;
+          original.descricao = descricao;
+          original.tipo = tipo;
+        }
+      }
+    } else {
+      gastos[indiceEdicaoGasto] = novoGasto;
     }
-  }
-  } else {
-    gastos[indiceEdicaoGasto] = novoGasto;
-  }
 
-  indiceEdicaoGasto = null;
-  editarTodasParcelas = false;
-  parcelasFin.dataset.parcelaIndex = "";
-  document.getElementById("btnCancelarFinanceiro").style.display = "none";
-  document.getElementById("formularioFinanceiro").style.display = "none";
-} else {
-  gastos.push(novoGasto);
-}
+    indiceEdicaoGasto = null;
+    editarTodasParcelas = false;
+    parcelasFin.dataset.parcelaIndex = "";
+    document.getElementById("btnCancelarFinanceiro").style.display = "none";
+    document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+  } else {
+    gastos.push(novoGasto);
+  }
 
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpa e oculta o formulário
-document.getElementById("formularioFinanceiro").style.display = "none";
-dataFin.value = "";
-produtoFin.value = "";
-descricaoFin.value = "";
-valorFin.value = "";
-tipoFin.value = "Adubo";
-parcelasFin.value = "";
-parcelasFin.dataset.parcelaIndex = "";
-parceladoFin.checked = false;
-mostrarParcelas();
-
-document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
-document.getElementById("btnCancelarFinanceiro").style.display = "none";
+  // Limpa formulário
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  tipoFin.value = "Adubo";
+  parcelasFin.value = "";
+  parcelasFin.dataset.parcelaIndex = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+}
 
 // ===== ATUALIZAR LISTAGEM =====
 function atualizarFinanceiro() {
@@ -174,8 +179,7 @@ function atualizarFinanceiro() {
 
 // ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
-  const mesesOrdenados = Object.keys(grupo).sort((a, b) => b.localeCompare(a)); // Ordem decrescente
-  for (const mes of mesesOrdenados) {
+  for (const mes in grupo) {
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
     titulo.innerText = formatarMes(mes);
@@ -192,12 +196,11 @@ function renderizarFinanceiro(grupo, container, pago) {
         : "tag";
 
       const div = document.createElement("div");
-      const tem3botoes = isParcela || !pago;
-      div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
+      div.className = `item ${isParcela || !pago ? 'botoes-3' : 'botoes-2'}`;
       div.innerHTML = `
         <span>
           <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - ${formatarReal(valor)} (${tipo}) 
+          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
@@ -209,8 +212,7 @@ function renderizarFinanceiro(grupo, container, pago) {
             ${!pago ? `
               <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
                 <i class="fas fa-edit"></i>
-              </button>
-            ` : ''}
+              </button>` : ''}
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
               <i class="fas fa-trash"></i>
             </button>
@@ -239,7 +241,7 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     const totalDiv = document.createElement("div");
     totalDiv.className = "grupo-data";
-    totalDiv.innerHTML = `<span style="font-size:14px;">Total: ${formatarReal(totalMes)}</span>`;
+    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
     container.appendChild(totalDiv);
   }
 }
@@ -382,7 +384,7 @@ function gerarResumoFinanceiro() {
   let totalVencer = 0;
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes?.length) {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) totalPago += p.valor;
         else totalVencer += p.valor;
@@ -393,13 +395,11 @@ function gerarResumoFinanceiro() {
     }
   });
 
-  const formatar = valor => `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
-    <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:15px;">
-      <div style="background:#4caf50; padding:10px 15px; border-radius:8px; color:white;">Pago: ${formatar(totalPago)}</div>
-      <div style="background:#ff9800; padding:10px 15px; border-radius:8px; color:white;">A Vencer: ${formatar(totalVencer)}</div>
-      <div style="background:#2196f3; padding:10px 15px; border-radius:8px; color:white;">Total: ${formatar(totalPago + totalVencer)}</div>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <span style="color: #4caf50;">Total Pago: <strong>R$ ${totalPago.toFixed(2)}</strong></span>
+      <span style="color: #ff9800;">A Vencer: <strong>R$ ${totalVencer.toFixed(2)}</strong></span>
+      <span style="color: #29b6f6;">Geral: <strong>R$ ${(totalPago + totalVencer).toFixed(2)}</strong></span>
     </div>
   `;
 }
@@ -526,31 +526,7 @@ function carregarFinanceiro() {
   });
 }
 
-function cancelarEdicaoFinanceiro() {
-  indiceEdicaoGasto = null;
-  editarTodasParcelas = false;
-  parcelasFin.dataset.parcelaIndex = "";
-  document.getElementById("formularioFinanceiro").style.display = "none";
-
-  // Limpar campos
-  dataFin.value = "";
-  produtoFin.value = "";
-  descricaoFin.value = "";
-  valorFin.value = "";
-  tipoFin.value = "Adubo";
-  parcelasFin.value = "";
-  parceladoFin.checked = false;
-  mostrarParcelas();
-
-  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
-  document.getElementById("btnCancelarFinanceiro").style.display = "none";
-}
-
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   filtros.style.display = filtros.style.display === "none" ? "block" : "none";
-}
-
-  function formatarReal(valor) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

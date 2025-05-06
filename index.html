@@ -137,84 +137,87 @@
   <div id="listaTarefasFeitas"></div>
 </div>
 
-  <!-- ========== MENU FINANCEIRO ========== -->
+  <!-- ========== MENU FINANCEIRO COMPLETO ========== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
-  
+
+  <!-- Botão Flutuante -->
   <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()" class="botao-flutuante">
-  <i class="fas fa-plus"></i>
-</button>
+    <i class="fas fa-plus"></i>
+  </button>
 
-  <!-- === FORMULÁRIO OCULTO === -->
-<div id="formularioFinanceiro" style="display: none;">
-  <input id="dataFin" type="date">
-  <input id="produtoFin" placeholder="Produto">
-  <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
-  <input id="valorFin" type="number" placeholder="Valor (R$)">
+  <!-- Formulário Financeiro Oculto -->
+  <div id="formularioFinanceiro" style="display: none;">
+    <input id="dataFin" type="date">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
+    <input id="valorFin" type="number" placeholder="Valor (R$)">
+    
+    <select id="tipoFin">
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Outro">Outro</option>
+    </select>
 
-  <select id="tipoFin">
-    <option value="Adubo">Adubo</option>
-    <option value="Fungicida">Fungicida</option>
-    <option value="Inseticida">Inseticida</option>
-    <option value="Herbicida">Herbicida</option>
-    <option value="Outro">Outro</option>
-  </select>
+    <label style="margin-top: 5px;">
+      <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
+    </label>
+    <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
 
-  <label style="margin-top: 5px;">
-    <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
-  </label>
-  <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
+    <div style="display: flex; gap: 10px;">
+      <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro">
+        <i class="fas fa-save"></i> Salvar Gasto
+      </button>
+      <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">
+        Cancelar Edição
+      </button>
+    </div>
+  </div>
 
-  <div style="display: flex; gap: 10px;">
-    <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro">
-      <i class="fas fa-save"></i> Salvar Gasto
-    </button>
-    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">
-      Cancelar Edição
+  <!-- Botão Toggle Filtros -->
+  <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+    <button onclick="toggleFiltrosFinanceiro()" id="btnToggleFiltrosFin" class="botao-circular azul" title="Mostrar/Esconder Filtros">
+      <i class="fas fa-filter"></i>
     </button>
   </div>
-</div>
-  
-  <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-  <button onclick="toggleFiltrosFinanceiro()" class="botao-circular azul" title="Mostrar/Esconder Filtros">
-    <i class="fas fa-filter"></i>
-  </button>
-</div>
 
-<div id="filtrosFinanceiro" style="display: none;">
-  <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-  <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+  <!-- Filtros -->
+  <div id="filtrosFinanceiro" style="display: none;">
+    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
+    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+    <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
+      <option value="">Todos os Tipos</option>
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Outro">Outro</option>
+    </select>
+    <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
+      <option value="">Todos</option>
+      <option value="pago">Pagos</option>
+      <option value="vencer">A Vencer</option>
+    </select>
+    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
+  </div>
 
-  <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
-    <option value="">Todos os Tipos</option>
-    <option value="Adubo">Adubo</option>
-    <option value="Fungicida">Fungicida</option>
-    <option value="Inseticida">Inseticida</option>
-    <option value="Herbicida">Herbicida</option>
-    <option value="Outro">Outro</option>
-  </select>
-
-  <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
-    <option value="">Todos</option>
-    <option value="pago">Pagos</option>
-    <option value="vencer">A Vencer</option>
-  </select>
-
-  <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
-</div>
-
+  <!-- Listagens -->
   <h4 style="color: #ff9800;">A Vencer</h4>
   <div id="financeiroVencer"></div>
 
   <h4 style="color: #4caf50;">Pagos</h4>
   <div id="financeiroPago"></div>
 
+  <!-- Resumo e Gráfico -->
   <h4>Resumo do Mês</h4>
   <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
 
   <h4>Gráfico de Gastos Pagos</h4>
   <canvas id="graficoGastos"></canvas>
 
+  <!-- Exportações -->
   <div style="margin-top: 20px;">
     <button onclick="exportarFinanceiroCSV()">
       <i class="fas fa-file-csv"></i> Exportar CSV
@@ -225,7 +228,7 @@
   </div>
 </div>
 
-  <!-- ========== MODAL DE PARCELAS MELHORADO ========= -->
+<!-- ========== MODAL: CONTROLE DE PARCELAS ========== -->
 <div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
     <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
@@ -246,7 +249,8 @@
   </div>
 </div>
 
-  <div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+<!-- ========== MODAL: CONFIRMAR EXCLUSÃO PARCELA ========== -->
+<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
     <p style="color:white; font-size:16px;">Deseja excluir:</p>
     <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
@@ -255,7 +259,8 @@
   </div>
 </div>
 
-  <div id="modalEditarParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
+<!-- ========== MODAL: EDITAR PARCELA ========== -->
+<div id="modalEditarParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
   <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
     <p style="color:white; font-size:16px;">Deseja editar:</p>
     <button onclick="confirmarEditarParcela(true)" style="margin:10px 0; background:#4caf50;">Todas as parcelas</button><br>

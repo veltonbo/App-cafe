@@ -530,3 +530,7 @@ function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   filtros.style.display = filtros.style.display === "none" ? "block" : "none";
 }
+
+function formatarReal(valor) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}

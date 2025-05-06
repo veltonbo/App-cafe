@@ -68,27 +68,36 @@ function adicionarFinanceiro() {
   if (indiceEdicaoGasto !== null) {
     const original = gastos[indiceEdicaoGasto];
     if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-  if (editarTodasParcelas) {
-    gastos[indiceEdicaoGasto] = novoGasto;
-  } else {
-    const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-    if (!isNaN(idx)) {
-      original.parcelasDetalhes[idx].valor = valor;
-      original.parcelasDetalhes[idx].vencimento = data;
-      original.produto = produto;
-      original.descricao = descricao;
-      original.tipo = tipo;
-    }
-  }
-}
+      if (editarTodasParcelas) {
+        novoGasto.parcelasDetalhes = original.parcelasDetalhes.map((p, idx) => {
+          const vencimento = new Date(data);
+          vencimento.setMonth(vencimento.getMonth() + idx);
+          return {
+            ...p,
+            valor: parseFloat((valor / numParcelas).toFixed(2)),
+            vencimento: vencimento.toISOString().split("T")[0]
+          };
+        });
+        gastos[indiceEdicaoGasto] = novoGasto;
+      } else {
+        const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+        if (!isNaN(idx)) {
+          original.parcelasDetalhes[idx].valor = valor;
+          original.parcelasDetalhes[idx].vencimento = data;
+          original.produto = produto;
+          original.descricao = descricao;
+          original.tipo = tipo;
+        }
+      }
     } else {
       gastos[indiceEdicaoGasto] = novoGasto;
     }
 
     indiceEdicaoGasto = null;
     editarTodasParcelas = false;
+    parcelasFin.dataset.parcelaIndex = "";
     document.getElementById("btnCancelarFinanceiro").style.display = "none";
-    parcelasFin.dataset.parcelaIndex = ""; // <-- Limpa após salvar
+    document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
   } else {
     gastos.push(novoGasto);
   }
@@ -103,6 +112,7 @@ function adicionarFinanceiro() {
   valorFin.value = "";
   tipoFin.value = "Adubo";
   parcelasFin.value = "";
+  parcelasFin.dataset.parcelaIndex = "";
   parceladoFin.checked = false;
   mostrarParcelas();
 }
@@ -167,6 +177,7 @@ function atualizarFinanceiro() {
   gerarGraficoFinanceiro();
 }
 
+// ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
   for (const mes in grupo) {
     const titulo = document.createElement("div");
@@ -260,71 +271,13 @@ function alternarParcela(gastoIndex, parcelaIndex) {
   const parcela = gasto.parcelasDetalhes[parcelaIndex];
   parcela.pago = !parcela.pago;
 
-  // Atualiza o status geral do gasto conforme o pagamento de todas as parcelas
   gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
 
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 }
 
-// ===== FORMATAR MÊS PARA EXIBIÇÃO =====
-function formatarMes(mes) {
-  const [ano, mesNum] = mes.split("-");
-  const meses = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-  return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
-}
-
-function confirmarExclusaoParcela(index, parcelaIndex) {
-  if (gastos[index]?.parcelasDetalhes) {
-    // Exibir modal para excluir uma parcela ou todas
-    document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
-    modalConfirmarExclusaoParcela.dataset.index = index;
-    modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
-  } else {
-    // Exclusão simples
-    if (confirm("Deseja excluir esse lançamento financeiro?")) {
-      gastos.splice(index, 1);
-      db.ref("Financeiro").set(gastos);
-      atualizarFinanceiro();
-    }
-  }
-}
-
-function excluirApenasParcela() {
-  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
-  const parcelaIndex = parseInt(modalConfirmarExclusaoParcela.dataset.parcelaIndex);
-
-  if (!isNaN(index) && !isNaN(parcelaIndex)) {
-    gastos[index].parcelasDetalhes.splice(parcelaIndex, 1);
-
-    // Se não restar nenhuma parcela, remove o gasto completo
-    if (gastos[index].parcelasDetalhes.length === 0) {
-      gastos.splice(index, 1);
-    }
-
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-  fecharModalExcluirParcela();
-}
-
-function excluirTodasParcelas() {
-  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
-  if (!isNaN(index)) {
-    gastos.splice(index, 1);
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-  fecharModalExcluirParcela();
-}
-
-function fecharModalExcluirParcela() {
-  document.getElementById("modalConfirmarExclusaoParcela").style.display = "none";
-}
-
+// ===== EDITAR LANÇAMENTO OU PARCELA =====
 function editarFinanceiro(index, parcelaIndex = null) {
   const gasto = gastos[index];
   if (!gasto) return;
@@ -353,32 +306,82 @@ function editarFinanceiro(index, parcelaIndex = null) {
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
 }
 
+// ===== CONFIRMAR EDIÇÃO DE PARCELA =====
 function confirmarEditarParcela(todas) {
   editarTodasParcelas = todas;
   fecharModalEditarParcela();
 }
 
+// ===== FECHAR MODAL DE EDIÇÃO DE PARCELA =====
 function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";
 }
 
-function confirmarEditarParcela(todas) {
-  editarTodasParcelas = todas;
-  fecharModalEditarParcela();
+// ===== MODAL CONFIRMAR EXCLUSÃO =====
+function confirmarExclusaoParcela(index, parcelaIndex) {
+  if (gastos[index]?.parcelasDetalhes) {
+    document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
+    modalConfirmarExclusaoParcela.dataset.index = index;
+    modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
+  } else {
+    if (confirm("Deseja excluir esse lançamento financeiro?")) {
+      gastos.splice(index, 1);
+      db.ref("Financeiro").set(gastos);
+      atualizarFinanceiro();
+    }
+  }
 }
 
-function fecharModalEditarParcela() {
-  const modal = document.getElementById("modalEditarParcela");
-  if (modal) modal.style.display = "none";
+// ===== EXCLUIR APENAS UMA PARCELA =====
+function excluirApenasParcela() {
+  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
+  const parcelaIndex = parseInt(modalConfirmarExclusaoParcela.dataset.parcelaIndex);
+
+  if (!isNaN(index) && !isNaN(parcelaIndex)) {
+    gastos[index].parcelasDetalhes.splice(parcelaIndex, 1);
+    if (gastos[index].parcelasDetalhes.length === 0) {
+      gastos.splice(index, 1);
+    }
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+  fecharModalExcluirParcela();
 }
 
+// ===== EXCLUIR TODAS AS PARCELAS =====
+function excluirTodasParcelas() {
+  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
+  if (!isNaN(index)) {
+    gastos.splice(index, 1);
+    db.ref("Financeiro").set(gastos);
+    atualizarFinanceiro();
+  }
+  fecharModalExcluirParcela();
+}
+
+// ===== FECHAR MODAL DE EXCLUSÃO =====
+function fecharModalExcluirParcela() {
+  document.getElementById("modalConfirmarExclusaoParcela").style.display = "none";
+}
+
+// ===== FORMATAR MÊS PARA EXIBIÇÃO =====
+function formatarMes(mes) {
+  const [ano, mesNum] = mes.split("-");
+  const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  return `${meses[parseInt(mesNum) - 1]} de ${ano}`;
+}
+
+// ===== GERAR RESUMO FINANCEIRO (Topo) =====
 function gerarResumoFinanceiro() {
   let totalPago = 0;
   let totalVencer = 0;
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes?.length) {
+    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) totalPago += p.valor;
         else totalVencer += p.valor;
@@ -390,20 +393,15 @@ function gerarResumoFinanceiro() {
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
-    <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center; font-size:15px;">
-      <div style="background:#4caf50; color:#fff; padding:8px 16px; border-radius:8px;">
-        <i class="fas fa-check-circle"></i> Pago: R$ ${totalPago.toFixed(2)}
-      </div>
-      <div style="background:#ff9800; color:#fff; padding:8px 16px; border-radius:8px;">
-        <i class="fas fa-hourglass-half"></i> A Vencer: R$ ${totalVencer.toFixed(2)}
-      </div>
-      <div style="background:#607d8b; color:#fff; padding:8px 16px; border-radius:8px;">
-        <i class="fas fa-coins"></i> Total: R$ ${(totalPago + totalVencer).toFixed(2)}
-      </div>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <span style="color: #4caf50;">Total Pago: <strong>R$ ${totalPago.toFixed(2)}</strong></span>
+      <span style="color: #ff9800;">A Vencer: <strong>R$ ${totalVencer.toFixed(2)}</strong></span>
+      <span style="color: #29b6f6;">Geral: <strong>R$ ${(totalPago + totalVencer).toFixed(2)}</strong></span>
     </div>
   `;
 }
 
+// ===== GERAR GRÁFICO DE GASTOS PAGOS =====
 function gerarGraficoFinanceiro() {
   const ctx = document.getElementById("graficoGastos").getContext("2d");
   if (graficoGastosChart) graficoGastosChart.destroy();
@@ -411,32 +409,30 @@ function gerarGraficoFinanceiro() {
   const categorias = {};
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) {
           categorias[g.tipo] = (categorias[g.tipo] || 0) + p.valor;
         }
       });
-    } else {
-      if (g.pago) {
-        categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
-      }
+    } else if (g.pago) {
+      categorias[g.tipo] = (categorias[g.tipo] || 0) + g.valor;
     }
   });
 
   const labels = Object.keys(categorias);
   const valores = Object.values(categorias);
-  const total = valores.reduce((soma, v) => soma + v, 0);
+  const total = valores.reduce((sum, v) => sum + v, 0);
 
-  const labelsComPercentual = labels.map((label, i) => {
-    const percent = ((valores[i] / total) * 100).toFixed(1);
-    return `${label} (${percent}%)`;
+  const labelsComPorcentagem = labels.map((l, i) => {
+    const pct = ((valores[i] / total) * 100).toFixed(1);
+    return `${l} (${pct}%)`;
   });
 
   graficoGastosChart = new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: labelsComPercentual,
+      labels: labelsComPorcentagem,
       datasets: [{
         data: valores,
         backgroundColor: ['#66bb6a', '#29b6f6', '#ffa726', '#ef5350', '#ab47bc']
@@ -445,15 +441,14 @@ function gerarGraficoFinanceiro() {
     options: {
       plugins: {
         legend: {
-          labels: {
-            color: "#ddd"
-          }
+          labels: { color: "#ddd" }
         }
       }
     }
   });
 }
 
+// ===== EXPORTAR FINANCEIRO COMO CSV =====
 function exportarFinanceiroCSV() {
   if (!gastos.length) {
     alert("Nenhum dado disponível para exportação.");
@@ -463,7 +458,7 @@ function exportarFinanceiroCSV() {
   let csv = 'Data,Produto,Descrição,Tipo,Valor (R$),Pago\n';
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         csv += `${p.vencimento},${g.produto} (Parcela ${p.numero}),${g.descricao || ''},${g.tipo},${p.valor.toFixed(2)},${p.pago ? 'Sim' : 'Não'}\n`;
       });
@@ -480,6 +475,7 @@ function exportarFinanceiroCSV() {
   link.click();
 }
 
+// ===== EXPORTAR FINANCEIRO COMO PDF =====
 function exportarFinanceiroPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -500,7 +496,7 @@ function exportarFinanceiroPDF() {
       y += 6;
     }
 
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         doc.text(`Parcela ${p.numero}: Venc ${p.vencimento} - R$ ${p.valor.toFixed(2)} - ${p.pago ? "Pago" : "A Vencer"}`, 25, y);
         y += 6;
@@ -513,60 +509,16 @@ function exportarFinanceiroPDF() {
   doc.save("relatorio_financeiro.pdf");
 }
 
-function confirmarExclusaoParcela(index, parcelaIndex) {
-  if (gastos[index]?.parcelasDetalhes) {
-    // Exibir modal para excluir parcela
-    document.getElementById("modalConfirmarExclusaoParcela").style.display = "flex";
-    modalConfirmarExclusaoParcela.dataset.index = index;
-    modalConfirmarExclusaoParcela.dataset.parcelaIndex = parcelaIndex;
-  } else {
-    // Excluir item único direto
-    if (confirm("Deseja excluir esse lançamento financeiro?")) {
-      gastos.splice(index, 1);
-      db.ref("Financeiro").set(gastos);
-      atualizarFinanceiro();
-    }
-  }
-}
-
-function excluirApenasParcela() {
-  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
-  const parcelaIndex = parseInt(modalConfirmarExclusaoParcela.dataset.parcelaIndex);
-
-  if (!isNaN(index) && !isNaN(parcelaIndex)) {
-    gastos[index].parcelasDetalhes.splice(parcelaIndex, 1);
-    if (gastos[index].parcelasDetalhes.length === 0) {
-      gastos.splice(index, 1);
-    }
-    db.ref("Financeiro").set(gastos);
+// ===== INICIALIZAR FINANCEIRO AO CARREGAR =====
+function carregarFinanceiro() {
+  db.ref("Financeiro").on("value", (snapshot) => {
+    const data = snapshot.val();
+    gastos = Array.isArray(data) ? data : [];
     atualizarFinanceiro();
-  }
-  fecharModalExcluirParcela();
-}
-
-function excluirTodasParcelas() {
-  const index = parseInt(modalConfirmarExclusaoParcela.dataset.index);
-  if (!isNaN(index)) {
-    gastos.splice(index, 1);
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-  fecharModalExcluirParcela();
-}
-
-function fecharModalExcluirParcela() {
-  modalConfirmarExclusaoParcela.style.display = "none";
+  });
 }
 
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   filtros.style.display = filtros.style.display === "none" ? "block" : "none";
-}
-
-function carregarFinanceiro() {
-  db.ref("Financeiro").once("value", (snapshot) => {
-    const data = snapshot.val();
-    gastos = data ? data : [];
-    atualizarFinanceiro();
-  });
 }

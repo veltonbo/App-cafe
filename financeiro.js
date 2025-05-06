@@ -47,6 +47,7 @@ function adicionarFinanceiro() {
     parcelas: numParcelas
   };
 
+  // Criar parcelas se for novo
   if (numParcelas > 1) {
     const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
     const parcelas = [];
@@ -66,23 +67,26 @@ function adicionarFinanceiro() {
 
   if (indiceEdicaoGasto !== null) {
     const original = gastos[indiceEdicaoGasto];
+
     if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
       if (editarTodasParcelas) {
-        novoGasto.parcelasDetalhes = original.parcelasDetalhes.map((p, idx) => {
-          const vencimento = new Date(data);
-          vencimento.setMonth(vencimento.getMonth() + idx);
-          return {
-            ...p,
-            valor: parseFloat((valor / numParcelas).toFixed(2)),
-            vencimento: vencimento.toISOString().split("T")[0]
-          };
+        const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
+        const dataBase = new Date(data);
+        original.parcelasDetalhes.forEach((p, idx) => {
+          const venc = new Date(dataBase);
+          venc.setMonth(venc.getMonth() + idx);
+          p.valor = valorParcela;
+          p.vencimento = venc.toISOString().split("T")[0];
         });
-        gastos[indiceEdicaoGasto] = novoGasto;
+        original.produto = produto;
+        original.descricao = descricao;
+        original.tipo = tipo;
       } else {
         const idx = parseInt(parcelasFin.dataset.parcelaIndex);
         if (!isNaN(idx)) {
-          original.parcelasDetalhes[idx].valor = valor;
-          original.parcelasDetalhes[idx].vencimento = data;
+          const p = original.parcelasDetalhes[idx];
+          p.valor = valor;
+          p.vencimento = data;
           original.produto = produto;
           original.descricao = descricao;
           original.tipo = tipo;
@@ -104,7 +108,7 @@ function adicionarFinanceiro() {
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Oculta formulário e limpa campos
+  // Limpar e esconder formulário
   document.getElementById("formularioFinanceiro").style.display = "none";
   dataFin.value = "";
   produtoFin.value = "";

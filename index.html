@@ -140,11 +140,18 @@
   <!-- ========== MENU FINANCEIRO ========== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
+  
+  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()" class="botao-flutuante">
+  <i class="fas fa-plus"></i>
+</button>
 
+  <!-- === FORMULÁRIO OCULTO === -->
+<div id="formularioFinanceiro" style="display: none;">
   <input id="dataFin" type="date">
   <input id="produtoFin" placeholder="Produto">
   <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
   <input id="valorFin" type="number" placeholder="Valor (R$)">
+
   <select id="tipoFin">
     <option value="Adubo">Adubo</option>
     <option value="Fungicida">Fungicida</option>
@@ -152,18 +159,21 @@
     <option value="Herbicida">Herbicida</option>
     <option value="Outro">Outro</option>
   </select>
+
   <label style="margin-top: 5px;">
     <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
   </label>
   <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
 
-  <button onclick="adicionarFinanceiro()">
-    <i class="fas fa-save"></i> Salvar Gasto
-  </button>
-
-  <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display:none;">
-  Cancelar Edição
-  </button>
+  <div style="display: flex; gap: 10px;">
+    <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro">
+      <i class="fas fa-save"></i> Salvar Gasto
+    </button>
+    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">
+      Cancelar Edição
+    </button>
+  </div>
+</div>
   
   <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
   <button onclick="toggleFiltrosFinanceiro()" class="botao-circular azul" title="Mostrar/Esconder Filtros">

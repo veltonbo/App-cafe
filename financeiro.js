@@ -509,6 +509,11 @@ function exportarFinanceiroPDF() {
   doc.save("relatorio_financeiro.pdf");
 }
 
+function mostrarModalEditarParcela() {
+  const modal = document.getElementById("modalEditarParcela");
+  if (modal) modal.style.display = "flex";
+}
+
 // ===== INICIALIZAR FINANCEIRO AO CARREGAR =====
 function carregarFinanceiro() {
   db.ref("Financeiro").on("value", (snapshot) => {

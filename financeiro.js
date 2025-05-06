@@ -464,3 +464,8 @@ function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";
 }
+
+function alternarFormularioFinanceiro() {
+  const formulario = document.getElementById("formularioFinanceiro");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}

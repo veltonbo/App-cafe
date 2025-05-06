@@ -179,8 +179,8 @@ function atualizarFinanceiro() {
 
 // ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
-  const mesesOrdenados = Object.keys(grupo).sort((a, b) => b.localeCompare(a));
-for (const mes of mesesOrdenados) {
+  const mesesOrdenados = Object.keys(grupo).sort((a, b) => b.localeCompare(a)); // Ordem decrescente
+  for (const mes of mesesOrdenados) {
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
     titulo.innerText = formatarMes(mes);
@@ -190,78 +190,62 @@ for (const mes of mesesOrdenados) {
 
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
+
       const icone = tipo === "Adubo" ? "leaf"
         : tipo === "Fungicida" ? "bug"
         : tipo === "Inseticida" ? "spray-can"
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
+      const div = document.createElement("div"); // <-- agora corretamente declarado aqui
       const tem3botoes = isParcela || !pago;
-div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
-div.innerHTML = `
-  <span>
-    <i class="fas fa-${icone}"></i> 
-    <strong>${produto}</strong> - ${formatarReal(valor)} (${tipo}) 
-    ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-    ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-  </span>
-  <div class="botoes-tarefa">
-    ${isParcela ? `
-      <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-        <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
-      </button>
-      ${!pago ? `
-        <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-          <i class="fas fa-edit"></i>
-        </button>` : ''}
-      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-        <i class="fas fa-trash"></i>
-      </button>
-    ` : pago ? `
-      <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
-        <i class="fas fa-undo"></i>
-      </button>
-      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-        <i class="fas fa-trash"></i>
-      </button>
-    ` : `
-      <button class="botao-circular verde" onclick="marcarPago(${i})">
-        <i class="fas fa-check"></i>
-      </button>
-      <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
-        <i class="fas fa-edit"></i>
-      </button>
-      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-        <i class="fas fa-trash"></i>
-      </button>
-    `}
-  </div>
-`;
-      container.appendChild(div);
+      div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
+      div.innerHTML = `
+        <span>
+          <i class="fas fa-${icone}"></i> 
+          <strong>${produto}</strong> - ${formatarReal(valor)} (${tipo}) 
+          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+        </span>
+        <div class="botoes-tarefa">
+          ${isParcela ? `
+            <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+              <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+            </button>
+            ${!pago ? `
+              <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+                <i class="fas fa-edit"></i>
+              </button>` : ''}
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : pago ? `
+            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : `
+            <button class="botao-circular verde" onclick="marcarPago(${i})">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+              <i class="fas fa-trash"></i>
+            </button>
+          `}
+        </div>
+      `;
+      container.appendChild(div); // <-- aqui usa o div corretamente declarado
     });
 
     const totalDiv = document.createElement("div");
     totalDiv.className = "grupo-data";
-    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
+    totalDiv.innerHTML = `<span style="font-size:14px;">Total: ${formatarReal(totalMes)}</span>`;
     container.appendChild(totalDiv);
-  }
-}
-
-// ===== MARCAR COMO PAGO (Gasto simples) =====
-function marcarPago(index) {
-  if (gastos[index]) {
-    gastos[index].pago = true;
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
-  }
-}
-
-// ===== DESFAZER PAGAMENTO (Gasto simples) =====
-function desfazerPagamento(index) {
-  if (gastos[index]) {
-    gastos[index].pago = false;
-    db.ref("Financeiro").set(gastos);
-    atualizarFinanceiro();
   }
 }
 

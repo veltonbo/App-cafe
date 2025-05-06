@@ -47,7 +47,6 @@ function adicionarFinanceiro() {
     parcelas: numParcelas
   };
 
-  // Parcelas
   if (numParcelas > 1) {
     const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
     const parcelas = [];
@@ -105,7 +104,8 @@ function adicionarFinanceiro() {
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpa formulário
+  // Oculta formulário e limpa campos
+  document.getElementById("formularioFinanceiro").style.display = "none";
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";

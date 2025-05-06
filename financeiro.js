@@ -190,16 +190,59 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     grupo[mes].forEach(({ produto, descricao, valor, tipo, vencimento, i, parcelaIndex, isParcela, pago }) => {
       totalMes += valor;
-
       const icone = tipo === "Adubo" ? "leaf"
         : tipo === "Fungicida" ? "bug"
         : tipo === "Inseticida" ? "spray-can"
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
-      const div = document.createElement("div"); // <-- agora corretamente declarado aqui
+      const div = document.createElement("div");
       const tem3botoes = isParcela || !pago;
       div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
+
+      let botoes = "";
+
+      if (isParcela) {
+        botoes += `
+          <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+            <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+          </button>
+        `;
+        if (!pago) {
+          botoes += `
+            <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+              <i class="fas fa-edit"></i>
+            </button>
+          `;
+        }
+        botoes += `
+          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+      } else if (pago) {
+        botoes += `
+          <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
+            <i class="fas fa-undo"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+      } else {
+        botoes += `
+          <button class="botao-circular verde" onclick="marcarPago(${i})">
+            <i class="fas fa-check"></i>
+          </button>
+          <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+      }
+
       div.innerHTML = `
         <span>
           <i class="fas fa-${icone}"></i> 
@@ -208,38 +251,10 @@ function renderizarFinanceiro(grupo, container, pago) {
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
         <div class="botoes-tarefa">
-          ${isParcela ? `
-            <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-              <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
-            </button>
-            ${!pago ? `
-              <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-                <i class="fas fa-edit"></i>
-              </button>` : ''}
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : pago ? `
-            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
-              <i class="fas fa-undo"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : `
-            <button class="botao-circular verde" onclick="marcarPago(${i})">
-              <i class="fas fa-check"></i>
-            </button>
-            <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          `}
+          ${botoes}
         </div>
       `;
-      container.appendChild(div); // <-- aqui usa o div corretamente declarado
+      container.appendChild(div);
     });
 
     const totalDiv = document.createElement("div");

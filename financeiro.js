@@ -69,18 +69,19 @@ function adicionarFinanceiro() {
   const original = gastos[indiceEdicaoGasto];
 
   if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-    if (editarTodasParcelas) {
-      gastos[indiceEdicaoGasto] = novoGasto;
-    } else {
-      const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-      if (!isNaN(idx)) {
-        original.parcelasDetalhes[idx].valor = valor;
-        original.parcelasDetalhes[idx].vencimento = data;
-        original.produto = produto;
-        original.descricao = descricao;
-        original.tipo = tipo;
-      }
+  if (editarTodasParcelas) {
+    gastos[indiceEdicaoGasto] = novoGasto;
+  } else {
+    const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+    if (!isNaN(idx)) {
+      original.parcelasDetalhes[idx].valor = valor;
+      original.parcelasDetalhes[idx].vencimento = data;
+      original.produto = produto;
+      original.descricao = descricao;
+      original.tipo = tipo;
     }
+  }
+}
   } else {
     gastos[indiceEdicaoGasto] = novoGasto;
   }
@@ -97,17 +98,20 @@ function adicionarFinanceiro() {
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Limpa formulário
-  dataFin.value = "";
-  produtoFin.value = "";
-  descricaoFin.value = "";
-  valorFin.value = "";
-  tipoFin.value = "Adubo";
-  parcelasFin.value = "";
-  parcelasFin.dataset.parcelaIndex = "";
-  parceladoFin.checked = false;
-  mostrarParcelas();
-}
+  // Limpa e oculta o formulário
+document.getElementById("formularioFinanceiro").style.display = "none";
+dataFin.value = "";
+produtoFin.value = "";
+descricaoFin.value = "";
+valorFin.value = "";
+tipoFin.value = "Adubo";
+parcelasFin.value = "";
+parcelasFin.dataset.parcelaIndex = "";
+parceladoFin.checked = false;
+mostrarParcelas();
+
+document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+document.getElementById("btnCancelarFinanceiro").style.display = "none";
 
 // ===== ATUALIZAR LISTAGEM =====
 function atualizarFinanceiro() {
@@ -171,7 +175,9 @@ function atualizarFinanceiro() {
 
 // ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
-  for (const mes in grupo) {
+  Object.keys(grupo).sort().reverse().forEach(mes => {
+  // ...código existente para renderizar os lançamentos
+});
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
     titulo.innerText = formatarMes(mes);
@@ -376,7 +382,7 @@ function gerarResumoFinanceiro() {
   let totalVencer = 0;
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) totalPago += p.valor;
         else totalVencer += p.valor;
@@ -387,11 +393,13 @@ function gerarResumoFinanceiro() {
     }
   });
 
+  const formatar = valor => `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
-    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-      <span style="color: #4caf50;">Total Pago: <strong>R$ ${totalPago.toFixed(2)}</strong></span>
-      <span style="color: #ff9800;">A Vencer: <strong>R$ ${totalVencer.toFixed(2)}</strong></span>
-      <span style="color: #29b6f6;">Geral: <strong>R$ ${(totalPago + totalVencer).toFixed(2)}</strong></span>
+    <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:15px;">
+      <div style="background:#4caf50; padding:10px 15px; border-radius:8px; color:white;">Pago: ${formatar(totalPago)}</div>
+      <div style="background:#ff9800; padding:10px 15px; border-radius:8px; color:white;">A Vencer: ${formatar(totalVencer)}</div>
+      <div style="background:#2196f3; padding:10px 15px; border-radius:8px; color:white;">Total: ${formatar(totalPago + totalVencer)}</div>
     </div>
   `;
 }

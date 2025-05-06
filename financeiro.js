@@ -296,6 +296,9 @@ function editarFinanceiro(index, parcelaIndex = null) {
 
   indiceEdicaoGasto = index;
 
+  // Exibir o formulário para edição
+  document.getElementById("formularioFinanceiro").style.display = "block";
+
   if (gasto.parcelasDetalhes && parcelaIndex !== null) {
     mostrarModalEditarParcela();
   } else {

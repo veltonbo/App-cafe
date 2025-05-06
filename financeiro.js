@@ -174,9 +174,8 @@ function atualizarFinanceiro() {
 
 // ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
-  Object.keys(grupo).sort().reverse().forEach(mes => {
-  // ...código existente para renderizar os lançamentos
-});
+  const mesesOrdenados = Object.keys(grupo).sort((a, b) => b.localeCompare(a)); // Ordem decrescente
+  for (const mes of mesesOrdenados) {
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
     titulo.innerText = formatarMes(mes);
@@ -193,11 +192,12 @@ function renderizarFinanceiro(grupo, container, pago) {
         : "tag";
 
       const div = document.createElement("div");
-      div.className = `item ${isParcela || !pago ? 'botoes-3' : 'botoes-2'}`;
+      const tem3botoes = isParcela || !pago;
+      div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
       div.innerHTML = `
         <span>
           <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
+          <strong>${produto}</strong> - ${formatarReal(valor)} (${tipo}) 
           ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
           ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
         </span>
@@ -209,7 +209,8 @@ function renderizarFinanceiro(grupo, container, pago) {
             ${!pago ? `
               <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
                 <i class="fas fa-edit"></i>
-              </button>` : ''}
+              </button>
+            ` : ''}
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
               <i class="fas fa-trash"></i>
             </button>
@@ -238,7 +239,7 @@ function renderizarFinanceiro(grupo, container, pago) {
 
     const totalDiv = document.createElement("div");
     totalDiv.className = "grupo-data";
-    totalDiv.innerHTML = `<span style="font-size:14px;">Total: R$ ${totalMes.toFixed(2)}</span>`;
+    totalDiv.innerHTML = `<span style="font-size:14px;">Total: ${formatarReal(totalMes)}</span>`;
     container.appendChild(totalDiv);
   }
 }
@@ -548,4 +549,8 @@ function cancelarEdicaoFinanceiro() {
 function toggleFiltrosFinanceiro() {
   const filtros = document.getElementById("filtrosFinanceiro");
   filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}
+
+  function formatarReal(valor) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

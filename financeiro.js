@@ -16,13 +16,6 @@ function alternarFormularioFinanceiro() {
 }
 
 // ===== MOSTRAR/ESCONDER PARCELAS =====
-function mostrarParcelas() {
-  const chk = document.getElementById("parceladoFin");
-  const inputParcelas = document.getElementById("parcelasFin");
-  inputParcelas.style.display = chk.checked ? "block" : "none";
-}
-
-// ===== ADICIONAR OU EDITAR GASTO =====
 function adicionarFinanceiro() {
   const data = dataFin.value;
   const produto = produtoFin.value.trim();
@@ -47,64 +40,74 @@ function adicionarFinanceiro() {
     parcelas: numParcelas
   };
 
+  // Adiciona detalhes das parcelas se for parcelado
   if (numParcelas > 1) {
     const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
     const dataBase = new Date(data);
     const parcelas = [];
-
     for (let i = 0; i < numParcelas; i++) {
-      const venc = new Date(dataBase);
-      venc.setMonth(venc.getMonth() + i);
+      const vencimento = new Date(dataBase);
+      vencimento.setMonth(vencimento.getMonth() + i);
       parcelas.push({
         numero: i + 1,
         valor: valorParcela,
-        vencimento: venc.toISOString().split("T")[0],
+        vencimento: vencimento.toISOString().split("T")[0],
         pago: false
       });
     }
-
     novoGasto.parcelasDetalhes = parcelas;
   }
 
+  // Edição de lançamento existente
   if (indiceEdicaoGasto !== null) {
     const original = gastos[indiceEdicaoGasto];
 
-    if (original.parcelasDetalhes?.length > 0) {
+    if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
+      const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+
       if (editarTodasParcelas) {
-        // Atualiza todas as parcelas
+        const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
+        const dataBase = new Date(data);
+        const novasParcelas = [];
+
+        for (let i = 0; i < numParcelas; i++) {
+          const venc = new Date(dataBase);
+          venc.setMonth(venc.getMonth() + i);
+          novasParcelas.push({
+            numero: i + 1,
+            valor: valorParcela,
+            vencimento: venc.toISOString().split("T")[0],
+            pago: original.parcelasDetalhes[i]?.pago || false
+          });
+        }
+
+        original.data = data;
+        original.produto = produto;
+        original.descricao = descricao;
+        original.valor = valor;
+        original.tipo = tipo;
+        original.parcelas = numParcelas;
+        original.parcelasDetalhes = novasParcelas;
+
+      } else if (!isNaN(idx)) {
+        original.parcelasDetalhes[idx].valor = valor;
+        original.parcelasDetalhes[idx].vencimento = data;
         original.produto = produto;
         original.descricao = descricao;
         original.tipo = tipo;
-        original.valor = valor;
-
-        const novoValorParcela = parseFloat((valor / original.parcelas).toFixed(2));
-        const novaData = new Date(data);
-
-        original.parcelasDetalhes = original.parcelasDetalhes.map((p, idx) => {
-          const vencimento = new Date(novaData);
-          vencimento.setMonth(vencimento.getMonth() + idx);
-          return {
-            ...p,
-            valor: novoValorParcela,
-            vencimento: vencimento.toISOString().split("T")[0]
-          };
-        });
-
-      } else {
-        // Atualiza somente a parcela selecionada
-        const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-        if (!isNaN(idx)) {
-          original.parcelasDetalhes[idx].valor = valor;
-          original.parcelasDetalhes[idx].vencimento = data;
-          original.produto = produto;
-          original.descricao = descricao;
-          original.tipo = tipo;
-        }
       }
 
     } else {
-      // Gasto simples sem parcelas
-      gastos[indiceEdicaoGasto] = novoGasto;
+      // Gasto simples
+      gastos[indiceEdicaoGasto] = {
+        data,
+        produto,
+        descricao,
+        valor,
+        tipo,
+        pago: original.pago,
+        parcelas: 1
+      };
     }
 
     indiceEdicaoGasto = null;
@@ -112,17 +115,18 @@ function adicionarFinanceiro() {
     parcelasFin.dataset.parcelaIndex = "";
     document.getElementById("btnCancelarFinanceiro").style.display = "none";
     document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+    document.getElementById("formularioFinanceiro").style.display = "none";
 
   } else {
+    // Novo lançamento
     gastos.push(novoGasto);
+    document.getElementById("formularioFinanceiro").style.display = "none";
   }
 
-  // Salvar e atualizar interface
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
 
-  // Resetar formulário e esconder
-  document.getElementById("formularioFinanceiro").style.display = "none";
+  // Limpar campos
   dataFin.value = "";
   produtoFin.value = "";
   descricaoFin.value = "";
@@ -301,30 +305,27 @@ function editarFinanceiro(index, parcelaIndex = null) {
 
   const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes?.[parcelaIndex] : null;
 
-  // Preenche os campos do formulário com os dados
   dataFin.value = parcela ? parcela.vencimento : gasto.data;
   produtoFin.value = gasto.produto;
   descricaoFin.value = gasto.descricao || "";
   valorFin.value = parcela ? parcela.valor : gasto.valor;
   tipoFin.value = gasto.tipo;
-
-  // Configura se é parcelado
   parceladoFin.checked = !!gasto.parcelasDetalhes;
-  parcelasFin.style.display = gasto.parcelasDetalhes ? "block" : "none";
+  parcelasFin.style.display = parceladoFin.checked ? "block" : "none";
   parcelasFin.value = gasto.parcelas || "";
   parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
-  // Atualiza controle de edição
   indiceEdicaoGasto = index;
 
+  // Exibir o formulário
+  document.getElementById("formularioFinanceiro").style.display = "block";
+
   if (gasto.parcelasDetalhes && parcelaIndex !== null) {
-    mostrarModalEditarParcela(); // Pergunta se quer editar todas ou só essa
+    mostrarModalEditarParcela(); // Exibe modal para escolher "todas" ou "apenas essa"
   } else {
     editarTodasParcelas = true;
   }
 
-  // Mostra o formulário de edição
-  document.getElementById("formularioFinanceiro").style.display = "block";
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
 }

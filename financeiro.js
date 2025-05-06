@@ -66,41 +66,33 @@ function adicionarFinanceiro() {
   }
 
   if (indiceEdicaoGasto !== null) {
-    const original = gastos[indiceEdicaoGasto];
-    if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
-      if (editarTodasParcelas) {
-        novoGasto.parcelasDetalhes = original.parcelasDetalhes.map((p, idx) => {
-          const vencimento = new Date(data);
-          vencimento.setMonth(vencimento.getMonth() + idx);
-          return {
-            ...p,
-            valor: parseFloat((valor / numParcelas).toFixed(2)),
-            vencimento: vencimento.toISOString().split("T")[0]
-          };
-        });
-        gastos[indiceEdicaoGasto] = novoGasto;
-      } else {
-        const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-        if (!isNaN(idx)) {
-          original.parcelasDetalhes[idx].valor = valor;
-          original.parcelasDetalhes[idx].vencimento = data;
-          original.produto = produto;
-          original.descricao = descricao;
-          original.tipo = tipo;
-        }
-      }
-    } else {
-      gastos[indiceEdicaoGasto] = novoGasto;
-    }
+  const original = gastos[indiceEdicaoGasto];
 
-    indiceEdicaoGasto = null;
-    editarTodasParcelas = false;
-    parcelasFin.dataset.parcelaIndex = "";
-    document.getElementById("btnCancelarFinanceiro").style.display = "none";
-    document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+  if (original.parcelasDetalhes && original.parcelasDetalhes.length > 0) {
+    if (editarTodasParcelas) {
+      gastos[indiceEdicaoGasto] = novoGasto;
+    } else {
+      const idx = parseInt(parcelasFin.dataset.parcelaIndex);
+      if (!isNaN(idx)) {
+        original.parcelasDetalhes[idx].valor = valor;
+        original.parcelasDetalhes[idx].vencimento = data;
+        original.produto = produto;
+        original.descricao = descricao;
+        original.tipo = tipo;
+      }
+    }
   } else {
-    gastos.push(novoGasto);
+    gastos[indiceEdicaoGasto] = novoGasto;
   }
+
+  indiceEdicaoGasto = null;
+  editarTodasParcelas = false;
+  parcelasFin.dataset.parcelaIndex = "";
+  document.getElementById("btnCancelarFinanceiro").style.display = "none";
+  document.getElementById("formularioFinanceiro").style.display = "none";
+} else {
+  gastos.push(novoGasto);
+}
 
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
@@ -232,6 +224,9 @@ function renderizarFinanceiro(grupo, container, pago) {
             </button>
             <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
               <i class="fas fa-trash"></i>
+            </button>
+            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
+              <i class="fas fa-undo"></i>
             </button>
           `}
         </div>
@@ -524,6 +519,26 @@ function carregarFinanceiro() {
     gastos = Array.isArray(data) ? data : [];
     atualizarFinanceiro();
   });
+}
+
+function cancelarEdicaoFinanceiro() {
+  indiceEdicaoGasto = null;
+  editarTodasParcelas = false;
+  parcelasFin.dataset.parcelaIndex = "";
+  document.getElementById("formularioFinanceiro").style.display = "none";
+
+  // Limpar campos
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  tipoFin.value = "Adubo";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+
+  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+  document.getElementById("btnCancelarFinanceiro").style.display = "none";
 }
 
 function toggleFiltrosFinanceiro() {

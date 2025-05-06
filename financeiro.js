@@ -179,7 +179,8 @@ function atualizarFinanceiro() {
 
 // ===== RENDERIZAR FINANCEIRO =====
 function renderizarFinanceiro(grupo, container, pago) {
-  for (const mes in grupo) {
+  const mesesOrdenados = Object.keys(grupo).sort((a, b) => b.localeCompare(a));
+for (const mes of mesesOrdenados) {
     const titulo = document.createElement("div");
     titulo.className = "grupo-data";
     titulo.innerText = formatarMes(mes);
@@ -195,47 +196,47 @@ function renderizarFinanceiro(grupo, container, pago) {
         : tipo === "Herbicida" ? "recycle"
         : "tag";
 
-      const div = document.createElement("div");
-      div.className = `item ${isParcela || !pago ? 'botoes-3' : 'botoes-2'}`;
-      div.innerHTML = `
-        <span>
-          <i class="fas fa-${icone}"></i> 
-          <strong>${produto}</strong> - R$ ${valor.toFixed(2)} (${tipo}) 
-          ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
-          ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
-        </span>
-        <div class="botoes-tarefa">
-          ${isParcela ? `
-            <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
-              <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
-            </button>
-            ${!pago ? `
-              <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
-                <i class="fas fa-edit"></i>
-              </button>` : ''}
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : pago ? `
-            <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
-              <i class="fas fa-undo"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : `
-            <button class="botao-circular verde" onclick="marcarPago(${i})">
-              <i class="fas fa-check"></i>
-            </button>
-            <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
-              <i class="fas fa-trash"></i>
-            </button>
-          `}
-        </div>
-      `;
+      const tem3botoes = isParcela || !pago;
+div.className = `item ${tem3botoes ? 'botoes-3' : 'botoes-2'}`;
+div.innerHTML = `
+  <span>
+    <i class="fas fa-${icone}"></i> 
+    <strong>${produto}</strong> - ${formatarReal(valor)} (${tipo}) 
+    ${descricao ? `<br><small style="color:#ccc;">${descricao}</small>` : ''}
+    ${isParcela ? `<br><small>Venc: ${vencimento}</small>` : ''}
+  </span>
+  <div class="botoes-tarefa">
+    ${isParcela ? `
+      <button class="botao-circular verde" onclick="alternarParcela(${i}, ${parcelaIndex})">
+        <i class="fas ${pago ? 'fa-undo' : 'fa-check'}"></i>
+      </button>
+      ${!pago ? `
+        <button class="botao-circular azul" onclick="editarFinanceiro(${i}, ${parcelaIndex})">
+          <i class="fas fa-edit"></i>
+        </button>` : ''}
+      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, ${parcelaIndex})">
+        <i class="fas fa-trash"></i>
+      </button>
+    ` : pago ? `
+      <button class="botao-circular laranja" onclick="desfazerPagamento(${i})">
+        <i class="fas fa-undo"></i>
+      </button>
+      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+        <i class="fas fa-trash"></i>
+      </button>
+    ` : `
+      <button class="botao-circular verde" onclick="marcarPago(${i})">
+        <i class="fas fa-check"></i>
+      </button>
+      <button class="botao-circular azul" onclick="editarFinanceiro(${i})">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="botao-circular vermelho" onclick="confirmarExclusaoParcela(${i}, null)">
+        <i class="fas fa-trash"></i>
+      </button>
+    `}
+  </div>
+`;
       container.appendChild(div);
     });
 
@@ -384,7 +385,7 @@ function gerarResumoFinanceiro() {
   let totalVencer = 0;
 
   gastos.forEach(g => {
-    if (g.parcelasDetalhes && g.parcelasDetalhes.length > 0) {
+    if (g.parcelasDetalhes?.length) {
       g.parcelasDetalhes.forEach(p => {
         if (p.pago) totalPago += p.valor;
         else totalVencer += p.valor;
@@ -396,10 +397,10 @@ function gerarResumoFinanceiro() {
   });
 
   document.getElementById("resumoFinanceiroMensal").innerHTML = `
-    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-      <span style="color: #4caf50;">Total Pago: <strong>R$ ${totalPago.toFixed(2)}</strong></span>
-      <span style="color: #ff9800;">A Vencer: <strong>R$ ${totalVencer.toFixed(2)}</strong></span>
-      <span style="color: #29b6f6;">Geral: <strong>R$ ${(totalPago + totalVencer).toFixed(2)}</strong></span>
+    <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:15px;">
+      <div style="background:#4caf50; padding:10px 15px; border-radius:8px; color:white;">Pago: ${formatarReal(totalPago)}</div>
+      <div style="background:#ff9800; padding:10px 15px; border-radius:8px; color:white;">A Vencer: ${formatarReal(totalVencer)}</div>
+      <div style="background:#2196f3; padding:10px 15px; border-radius:8px; color:white;">Total: ${formatarReal(totalPago + totalVencer)}</div>
     </div>
   `;
 }
@@ -533,4 +534,23 @@ function toggleFiltrosFinanceiro() {
 
 function formatarReal(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function cancelarEdicaoFinanceiro() {
+  indiceEdicaoGasto = null;
+  editarTodasParcelas = false;
+  parcelasFin.dataset.parcelaIndex = "";
+
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  tipoFin.value = "Adubo";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarParcelas();
+  document.getElementById("formularioFinanceiro").style.display = "none";
+
+  document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
+  document.getElementById("btnCancelarFinanceiro").style.display = "none";
 }

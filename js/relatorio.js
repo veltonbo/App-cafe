@@ -1,91 +1,64 @@
-// ===== INICIALIZAR RELATÓRIO =====
-function inicializarRelatorio() {
-  document.getElementById("relatorioGerado").innerHTML = "<p>Nenhum relatório gerado.</p>";
-}
-
 // ===== GERAR RELATÓRIO =====
 function gerarRelatorio() {
-  const dataInicio = dataInicioRelatorio.value;
-  const dataFim = dataFimRelatorio.value;
+  const dataInicio = document.getElementById("dataInicioRel").value;
+  const dataFim = document.getElementById("dataFimRel").value;
+  const resultado = document.getElementById("resultadoRelatorio");
+  resultado.innerHTML = "";
 
   if (!dataInicio || !dataFim) {
-    alert("Selecione o intervalo de datas.");
+    alert("Selecione o período para o relatório.");
     return;
   }
 
-  const relatorio = [
-    { data: "2025-05-01", descricao: "Aplicação de Fertilizante", valor: 150.00 },
-    { data: "2025-05-03", descricao: "Colheita - Café 1", valor: 1200.00 },
-    { data: "2025-05-05", descricao: "Venda de Café", valor: 3000.00 }
-  ];
+  // Exemplo de dados combinados (Aplicações, Tarefas, Financeiro, Colheita)
+  const relatorio = [...aplicacoes, ...tarefas, ...movimentos, ...colheitas]
+    .filter(item => item.data >= dataInicio && item.data <= dataFim);
 
-  const filtrado = relatorio.filter(item => item.data >= dataInicio && item.data <= dataFim);
-  exibirRelatorio(filtrado);
-}
-
-// ===== EXIBIR RELATÓRIO GERADO =====
-function exibirRelatorio(dados) {
-  const container = document.getElementById("relatorioGerado");
-  container.innerHTML = "";
-
-  if (dados.length === 0) {
-    container.innerHTML = "<p>Nenhum dado encontrado.</p>";
+  if (relatorio.length === 0) {
+    resultado.innerHTML = "<p>Nenhum dado encontrado para o período selecionado.</p>";
     return;
   }
 
-  dados.forEach(item => {
+  relatorio.forEach(item => {
     const div = document.createElement("div");
-    div.className = "item-relatorio";
-    div.innerHTML = `
-      <strong>${item.data}</strong> - ${item.descricao} - R$ ${item.valor.toFixed(2)}
-    `;
-    container.appendChild(div);
+    div.className = "item";
+    div.innerText = `${item.data} - ${item.produto || item.descricao || item.quantidade || ''}`;
+    resultado.appendChild(div);
   });
-}
-
-// ===== EXPORTAR RELATÓRIO COMO CSV =====
-function exportarRelatorioCSV() {
-  const dados = document.querySelectorAll(".item-relatorio");
-  if (!dados.length) {
-    alert("Nenhum dado para exportar.");
-    return;
-  }
-
-  let csv = "Data,Descrição,Valor\n";
-  dados.forEach(item => {
-    const texto = item.textContent.split(" - ");
-    csv += `${texto[0]},${texto[1]},${texto[2].replace("R$ ", "")}\n`;
-  });
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "relatorio_financeiro.csv";
-  link.click();
 }
 
 // ===== EXPORTAR RELATÓRIO COMO PDF =====
 function exportarRelatorioPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.text("Relatório Financeiro", 20, 20);
+  doc.text("Relatório Manejo Café", 20, 20);
+
   let y = 40;
-
-  const dados = document.querySelectorAll(".item-relatorio");
-  if (!dados.length) {
-    alert("Nenhum dado para exportar.");
-    return;
-  }
-
-  dados.forEach(item => {
-    doc.text(item.textContent, 20, y);
-    y += 10;
+  document.querySelectorAll("#resultadoRelatorio .item").forEach((item) => {
     if (y > 270) {
       doc.addPage();
       y = 20;
     }
+    doc.text(item.textContent, 20, y);
+    y += 10;
   });
 
-  doc.save("relatorio_financeiro.pdf");
+  doc.save("relatorio_manejo_cafe.pdf");
+}
+
+// ===== EXPORTAR RELATÓRIO COMO CSV =====
+function exportarRelatorioCSV() {
+  const linhas = ["Data,Descrição"];
+  document.querySelectorAll("#resultadoRelatorio .item").forEach((item) => {
+    linhas.push(item.textContent);
+  });
+
+  const csvContent = "data:text/csv;charset=utf-8," + linhas.join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "relatorio_manejo_cafe.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

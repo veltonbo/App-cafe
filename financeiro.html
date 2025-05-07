@@ -4,15 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Financeiro</title>
-  <link rel="stylesheet" href="/App-cafe/css/financeiro.css">
-  <script defer src="/App-cafe/js/financeiro.js"></script>
+  <link rel="stylesheet" href="css/financeiro.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Manejo Café</h1>
+      <nav>
+        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+      </nav>
+    </header>
 
-<div id="menuFinanceiro" class="menu-secao">
-  <h2>Gestão Financeira</h2>
-  <div class="listagem-financeiro" id="listaFinanceiro"></div>
-</div>
+    <section id="financeiro" class="aba">
+      <h2>Gestão Financeira</h2>
+      <div class="form">
+        <input type="date" id="dataFin" placeholder="Data">
+        <input type="text" id="produtoFin" placeholder="Descrição">
+        <input type="number" id="valorFin" placeholder="Valor (R$)">
+        <select id="tipoFin">
+          <option>Receita</option>
+          <option>Despesa</option>
+        </select>
+        <div class="buttons">
+          <button class="btn save" onclick="adicionarFinanceiro()">
+            <i class="fas fa-save"></i> Salvar
+          </button>
+          <button class="btn cancel" id="btnCancelarEdicaoFin" onclick="cancelarEdicaoFinanceiro()" style="display:none;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
 
+      <div class="list">
+        <h3>Movimentações Financeiras</h3>
+        <input type="text" id="pesquisaFinanceiro" placeholder="Pesquisar...">
+        <div id="listaFinanceiro"></div>
+      </div>
+    </section>
+  </div>
 </body>
 </html>

@@ -15,3 +15,4 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 console.log("Firebase inicializado com sucesso.");
+

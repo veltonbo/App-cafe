@@ -2,13 +2,15 @@
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
-// ===== INICIALIZAR MENU APLICAÇÃO =====
-function inicializarAplicacao() {
+// ===== INICIALIZAR APLICAÇÕES =====
+document.addEventListener("DOMContentLoaded", () => {
   carregarAplicacoes();
-}
+});
 
-// ===== CARREGAR APLICAÇÕES (Simulação) =====
+// ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
+  const lista = JSON.parse(localStorage.getItem("aplicacoes")) || [];
+  aplicacoes = lista;
   atualizarAplicacoes();
 }
 
@@ -18,7 +20,6 @@ function adicionarAplicacao() {
   const produto = produtoAplicacao.value.trim();
   const descricao = descricaoAplicacao.value.trim();
   const dosagem = parseFloat(dosagemAplicacao.value);
-  const setor = setorAplicacao.value;
 
   if (!data || !produto || isNaN(dosagem)) {
     alert("Preencha todos os campos corretamente!");
@@ -26,16 +27,17 @@ function adicionarAplicacao() {
   }
 
   if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = { data, produto, descricao, dosagem, setor };
+    aplicacoes[indiceEdicaoAplicacao] = { data, produto, descricao, dosagem };
   } else {
-    aplicacoes.push({ data, produto, descricao, dosagem, setor });
+    aplicacoes.push({ data, produto, descricao, dosagem });
   }
 
+  salvarAplicacoes();
   atualizarAplicacoes();
   resetarFormularioAplicacao();
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== ATUALIZAR LISTA DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = "";
@@ -44,28 +46,22 @@ function atualizarAplicacoes() {
     const item = document.createElement("div");
     item.className = "item-aplicacao";
     item.innerHTML = `
-      <span>${aplic.data} - ${aplic.produto} (${aplic.setor})</span>
-      <button onclick="editarAplicacao(${index})">Editar</button>
+      <span>${aplic.data} - ${aplic.produto} (${aplic.dosagem} L/ha)</span>
       <button onclick="excluirAplicacao(${index})">Excluir</button>
     `;
     lista.appendChild(item);
   });
 }
 
-// ===== EDITAR APLICAÇÃO =====
-function editarAplicacao(index) {
-  const aplic = aplicacoes[index];
-  dataAplicacao.value = aplic.data;
-  produtoAplicacao.value = aplic.produto;
-  descricaoAplicacao.value = aplic.descricao;
-  dosagemAplicacao.value = aplic.dosagem;
-  setorAplicacao.value = aplic.setor;
-  indiceEdicaoAplicacao = index;
+// ===== SALVAR APLICAÇÕES NO LOCALSTORAGE =====
+function salvarAplicacoes() {
+  localStorage.setItem("aplicacoes", JSON.stringify(aplicacoes));
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   aplicacoes.splice(index, 1);
+  salvarAplicacoes();
   atualizarAplicacoes();
 }
 
@@ -75,6 +71,10 @@ function resetarFormularioAplicacao() {
   produtoAplicacao.value = "";
   descricaoAplicacao.value = "";
   dosagemAplicacao.value = "";
-  setorAplicacao.value = "Café 1";
   indiceEdicaoAplicacao = null;
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  resetarFormularioAplicacao();
 }

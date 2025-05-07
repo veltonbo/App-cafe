@@ -1,0 +1,71 @@
+/* ===== LAYOUT GERAL DO MENU FINANCEIRO ===== */
+.menu-secao {
+  padding: 20px;
+  background: #f4f4f9;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ===== RESUMO FINANCEIRO ===== */
+.resumo-financeiro {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.resumo-item {
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+}
+
+.verde { background: #4caf50; }
+.laranja { background: #ff9800; }
+.azul { background: #2196f3; }
+
+/* ===== FORMULÁRIO DE FINANCEIRO ===== */
+#formularioFinanceiro {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+#formularioFinanceiro label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+#formularioFinanceiro input,
+#formularioFinanceiro select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* ===== LISTAGEM DE GASTOS ===== */
+.listagem-financeiro {
+  margin-top: 15px;
+}
+
+.item-financeiro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.item-financeiro span {
+  flex: 1;
+  text-align: left;
+}

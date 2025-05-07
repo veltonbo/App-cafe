@@ -4,15 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Colheita</title>
-  <link rel="stylesheet" href="/App-cafe/css/colheita.css">
-  <script defer src="/App-cafe/js/colheita.js"></script>
+  <link rel="stylesheet" href="css/colheita.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Manejo Café</h1>
+      <nav>
+        <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
+        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+      </nav>
+    </header>
 
-<div id="menuColheita" class="menu-secao">
-  <h2>Gestão de Colheita</h2>
-  <div class="listagem-colheita" id="listaColheita"></div>
-</div>
+    <section id="colheita" class="aba">
+      <h2>Gestão de Colheita</h2>
+      <div class="form">
+        <input type="date" id="dataColheita" placeholder="Data">
+        <input type="text" id="produtoColheita" placeholder="Produto Colhido">
+        <input type="number" id="quantidadeColheita" placeholder="Quantidade (kg)">
+        <select id="setorColheita">
+          <option>Setor 01</option>
+          <option>Setor 02</option>
+        </select>
+        <div class="buttons">
+          <button class="btn save" onclick="adicionarColheita()">
+            <i class="fas fa-save"></i> Salvar
+          </button>
+          <button class="btn cancel" id="btnCancelarEdicaoColheita" onclick="cancelarEdicaoColheita()" style="display:none;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
 
+      <div class="list">
+        <h3>Registros de Colheita</h3>
+        <input type="text" id="pesquisaColheita" placeholder="Pesquisar...">
+        <div id="listaColheita"></div>
+      </div>
+    </section>
+  </div>
 </body>
 </html>

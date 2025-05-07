@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café</title>
-
-  <!-- Firebase -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café - Aplicações</title>
+  
+  <!-- Firebase Configuration -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+  <script src="/App-cafe/js/firebase-config.js"></script>
+  <script defer src="/App-cafe/js/aplicacao.js"></script>
+  <link rel="stylesheet" href="/App-cafe/css/aplicacao.css">
+</head>
+<body onload="carregarAplicacoes()">
   <div class="conteudo">
-    <!-- ========== MENU APLICAÇÕES ========== -->
-    <div id="aplicacoes" class="aba">
-      <h2>Aplicações</h2>
-      <input id="dataApp" type="date">
-      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+    <h2>Gestão de Aplicações</h2>
+    <div id="formularioAplicacao">
+      <input type="date" id="dataApp" placeholder="Data">
+      <input type="text" id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
       <datalist id="sugestoesProdutoApp"></datalist>
-      <input id="dosagemApp" placeholder="Dosagem">
+      <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
       <select id="tipoApp">
         <option>Adubo</option>
         <option>Fungicida</option>
@@ -27,80 +30,25 @@
         <option>Setor 01</option>
         <option>Setor 02</option>
       </select>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+      <div class="botoes">
         <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
-          Cancelar Edição
-        </button>
+        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">Cancelar</button>
       </div>
+    </div>
+
+    <div class="filtros">
       <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
         <option value="">Todos os Setores</option>
         <option value="Setor 01">Setor 01</option>
         <option value="Setor 02">Setor 02</option>
       </select>
-      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-      <div id="listaAplicacoes"></div>
-      <button onclick="exportarAplicacoesCSV()" style="margin-top: 10px;">
-        <i class="fas fa-file-csv"></i> Exportar CSV
-      </button>
+      <input id="pesquisaAplicacoes" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
     </div>
 
-    <!-- ========== MENU TAREFAS ========== -->
-<div id="tarefas" class="aba">
-  <h2>Tarefas</h2>
-
-  <input id="dataTarefa" type="date">
-  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-  
-  <select id="prioridadeTarefa">
-    <option>Alta</option>
-    <option>Média</option>
-    <option>Baixa</option>
-  </select>
-
-  <select id="setorTarefa">
-    <option>Setor 01</option>
-    <option>Setor 02</option>
-  </select>
-
-  <!-- Checkbox e campos de aplicação -->
-  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
-    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
-  </div>
-
-  <div id="camposAplicacao" style="display:none; margin-top:10px;">
-    <input id="dosagemAplicacao" placeholder="Dosagem">
-    <select id="tipoAplicacao">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-  </div>
-
-  <!-- Botões de ação -->
-  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-    <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
-    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
-      Cancelar Edição
+    <div id="listaAplicacoes"></div>
+    <button onclick="exportarAplicacoesCSV()" class="botao-exportar">
+      <i class="fas fa-file-csv"></i> Exportar CSV
     </button>
   </div>
-
-  <!-- Filtros -->
-  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
-    <option value="">Todos os Setores</option>
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-  </select>
-
-  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-
-  <!-- Tarefas a fazer -->
-  <h4>A Fazer</h4>
-  <div id="listaTarefas"></div>
-
-  <!-- Tarefas feitas -->
-  <h4>Executadas</h4>
-  <div id="listaTarefasFeitas"></div>
-</div>
+</body>
+</html>

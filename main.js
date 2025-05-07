@@ -14,7 +14,7 @@ function verificarTema() {
 // ===== LEMBRAR ÚLTIMO MENU ACESSADO =====
 function lembrarUltimoMenu() {
   const ultimoMenu = localStorage.getItem("ultimoMenu");
-  if (ultimoMenu) {
+  if (ultimoMenu && window.location.pathname === "/App-cafe/") {
     window.location.href = ultimoMenu;
   }
 }
@@ -25,6 +25,20 @@ document.querySelectorAll(".navegacao a").forEach(link => {
     const menuDestino = event.target.href;
     localStorage.setItem("ultimoMenu", menuDestino);
   });
+});
+
+// ===== VERIFICAR SE CSS E JS CARREGARAM =====
+window.addEventListener('load', () => {
+  const cssLink = document.querySelector('link[href="./css/style.css"]');
+  const jsScript = document.querySelector('script[src="./js/main.js"]');
+  
+  if (!cssLink) {
+    alert("O CSS (style.css) não foi carregado corretamente.");
+  }
+
+  if (!jsScript) {
+    alert("O JavaScript (main.js) não foi carregado corretamente.");
+  }
 });
 
 // ===== MENSAGEM DE BOAS-VINDAS =====

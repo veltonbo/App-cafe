@@ -42,10 +42,10 @@ function adicionarFinanceiro() {
 
   if (indiceEdicaoGasto !== null) {
     // Editando Gasto Existente
-    const gastoOriginal = gastos[indiceEdicaoGasto];
+    const gasto = gastos[indiceEdicaoGasto];
 
-    if (editarTodasParcelas && gastoOriginal.parcelasDetalhes?.length) {
-      // Editar todas as parcelas
+    if (parcelado) {
+      // Editar todas as parcelas ou uma única parcela
       const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
       const dataBase = new Date(data);
       const parcelas = Array.from({ length: numParcelas }, (_, i) => {
@@ -59,35 +59,22 @@ function adicionarFinanceiro() {
         };
       });
 
-      gastoOriginal.data = data;
-      gastoOriginal.produto = produto;
-      gastoOriginal.descricao = descricao;
-      gastoOriginal.valor = valor;
-      gastoOriginal.tipo = tipo;
-      gastoOriginal.parcelas = numParcelas;
-      gastoOriginal.parcelasDetalhes = parcelas;
-
-    } else if (!editarTodasParcelas && gastoOriginal.parcelasDetalhes?.length) {
-      // Editar apenas uma parcela
-      const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-      if (!isNaN(idx)) {
-        const parcela = gastoOriginal.parcelasDetalhes[idx];
-        parcela.valor = valor;
-        parcela.vencimento = data;
-      }
-
-      gastoOriginal.produto = produto;
-      gastoOriginal.descricao = descricao;
-      gastoOriginal.tipo = tipo;
-
+      gasto.data = data;
+      gasto.produto = produto;
+      gasto.descricao = descricao;
+      gasto.valor = valor;
+      gasto.tipo = tipo;
+      gasto.parcelasDetalhes = parcelas;
+      gasto.parcelas = numParcelas;
     } else {
       // Editar Gasto Simples
-      gastoOriginal.data = data;
-      gastoOriginal.produto = produto;
-      gastoOriginal.descricao = descricao;
-      gastoOriginal.valor = valor;
-      gastoOriginal.tipo = tipo;
-      delete gastoOriginal.parcelasDetalhes;
+      gasto.data = data;
+      gasto.produto = produto;
+      gasto.descricao = descricao;
+      gasto.valor = valor;
+      gasto.tipo = tipo;
+      delete gasto.parcelasDetalhes;
+      gasto.parcelas = 1;
     }
 
   } else {
@@ -102,7 +89,7 @@ function adicionarFinanceiro() {
       parcelas: numParcelas
     };
 
-    if (numParcelas > 1) {
+    if (parcelado) {
       const valorParcela = parseFloat((valor / numParcelas).toFixed(2));
       const dataBase = new Date(data);
       novoGasto.parcelasDetalhes = Array.from({ length: numParcelas }, (_, i) => {
@@ -120,7 +107,6 @@ function adicionarFinanceiro() {
     gastos.push(novoGasto);
   }
 
-  // Salvar no Firebase e atualizar
   db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
   resetarFormularioFinanceiro();
@@ -135,9 +121,9 @@ function resetarFormularioFinanceiro() {
   tipoFin.value = "Adubo";
   parcelasFin.value = "";
   parceladoFin.checked = false;
-  editarTodasParcelas = false;
+  parcelasFin.style.display = "none";
   indiceEdicaoGasto = null;
-  parcelasFin.dataset.parcelaIndex = "";
+  editarTodasParcelas = false;
   document.getElementById("formularioFinanceiro").style.display = "none";
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-save"></i> Salvar Gasto';
   document.getElementById("btnCancelarFinanceiro").style.display = "none";
@@ -146,6 +132,27 @@ function resetarFormularioFinanceiro() {
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoFinanceiro() {
   resetarFormularioFinanceiro();
+}
+
+// ===== MARCAR COMO PAGO =====
+function marcarPago(index, parcelaIndex = null) {
+  const gasto = gastos[index];
+  if (!gasto) return;
+
+  if (parcelaIndex !== null && gasto.parcelasDetalhes) {
+    // Marcar parcela específica como paga
+    gasto.parcelasDetalhes[parcelaIndex].pago = true;
+    gasto.pago = gasto.parcelasDetalhes.every(p => p.pago);
+  } else {
+    // Marcar gasto completo como pago
+    gasto.pago = true;
+    if (gasto.parcelasDetalhes) {
+      gasto.parcelasDetalhes.forEach(p => p.pago = true);
+    }
+  }
+
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
 }
 
 // ===== ATUALIZAR LISTAGEM DE GASTOS =====

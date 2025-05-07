@@ -1,100 +1,83 @@
-/* ===== LAYOUT DO MENU APLICAÇÃO ===== */
-.menu-secao {
-  max-width: 800px;
+/* ===== LAYOUT GERAL ===== */
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.conteudo {
+  max-width: 600px;
   margin: 40px auto;
+  background: #1f1f1f;
   padding: 20px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
 }
 
 h2 {
-  color: #4caf50;
   text-align: center;
-}
-
-#formularioAplicacao {
-  background: #f4f4f9;
-  padding: 15px;
-  border-radius: 8px;
   margin-bottom: 20px;
 }
 
-#formularioAplicacao label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-#formularioAplicacao input {
+input, select, button {
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.botoes-formulario {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.botoes-formulario button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-  color: white;
-  transition: background 0.3s;
-}
-
-#btnSalvarAplicacao {
-  background: #4caf50;
-}
-
-#btnSalvarAplicacao:hover {
-  background: #45a049;
-}
-
-#btnCancelarAplicacao {
-  background: #f44336;
-}
-
-#btnCancelarAplicacao:hover {
-  background: #e53935;
-}
-
-/* ===== LISTA DE APLICAÇÕES ===== */
-.listagem-aplicacao {
-  background: #ffffff;
-  padding: 15px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #555;
+  background: #2c2c2c;
+  color: #fff;
   border-radius: 8px;
 }
 
-.item-aplicacao {
+.botoes {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  gap: 10px;
 }
 
-.item-aplicacao span {
-  flex: 1;
-}
-
-.item-aplicacao button {
-  background: #f44336;
+.botoes button {
+  background-color: #4caf50;
   border: none;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.item-aplicacao button:hover {
-  background: #e53935;
+.botoes button:hover {
+  background-color: #45a049;
+}
+
+/* ===== LISTA DE APLICAÇÕES ===== */
+.listagem {
+  margin-top: 20px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2c2c2c;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.item span {
+  flex-grow: 1;
+  color: #e0e0e0;
+}
+
+.botoes-aplicacao {
+  display: flex;
+  gap: 10px;
+}
+
+.botao-circular {
+  background: #4caf50;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: white;
+}
+
+.botao-circular.vermelho {
+  background: #f44336;
 }

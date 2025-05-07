@@ -7,7 +7,6 @@ function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
     aplicacoes = snap.exists() ? snap.val() : [];
     atualizarAplicacoes();
-    atualizarSugestoesProdutoApp();
   });
 }
 
@@ -21,7 +20,7 @@ function adicionarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
-  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
+  if (!nova.data || !nova.produto || !nova.dosagem) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
@@ -42,7 +41,6 @@ function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -59,30 +57,21 @@ function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
-  const filtroSetor = document.getElementById("filtroSetorAplicacoes").value;
-  const termoBusca = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-
-  aplicacoes
-    .filter(app =>
-      (!filtroSetor || app.setor === filtroSetor) &&
-      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
-    )
-    .sort((a, b) => b.data.localeCompare(a.data))
-    .forEach((app, i) => {
-      const item = document.createElement('div');
-      item.className = 'item fade-in';
-      item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} L/ha - ${app.setor}</span>
-        <div class="botoes-tarefa">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+  aplicacoes.forEach((app, i) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <div class="buttons">
+        <button class="btn azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
+        <button class="btn vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
+    lista.appendChild(item);
+  });
 }
 
-// ===== EDITAR =====
+// ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
@@ -94,41 +83,13 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
-// ===== EXCLUIR =====
+// ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
-}
-
-// ===== SUGESTÕES DE PRODUTO =====
-function atualizarSugestoesProdutoApp() {
-  const lista = document.getElementById("sugestoesProdutoApp");
-  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
-  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
-}
-
-// ===== EXPORTAÇÃO CSV =====
-function exportarAplicacoesCSV() {
-  if (!aplicacoes.length) {
-    alert("Nenhum dado disponível para exportação.");
-    return;
-  }
-
-  let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
-  aplicacoes.forEach(a => {
-    csv += `${a.data},${a.produto},${a.dosagem},${a.tipo},${a.setor}\n`;
-  });
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `aplicacoes_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
 }

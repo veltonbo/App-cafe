@@ -1,72 +1,105 @@
 /* ===== LAYOUT GERAL ===== */
 body {
-  background-color: #121212;
-  color: #e0e0e0;
+  background-color: #f4f5f7;
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
   padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-.conteudo {
-  max-width: 600px;
-  margin: 40px auto;
-  background: #1f1f1f;
+.container {
+  max-width: 500px;
+  background-color: #ffffff;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
+header h1 {
   text-align: center;
+  font-size: 1.8rem;
   margin-bottom: 20px;
 }
 
-/* ===== FORMULÁRIO ===== */
-#formularioAplicacao {
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-#formularioAplicacao input,
-#formularioAplicacao select,
-.botoes button {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #444;
-  background: #2c2c2c;
-  color: #e0e0e0;
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
   border-radius: 8px;
+  background: #f9f9f9;
+  font-size: 1rem;
 }
 
-.botoes {
+.buttons {
   display: flex;
   gap: 10px;
-  justify-content: space-between;
 }
 
-.botoes button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+.buttons button {
+  flex: 1;
   padding: 12px;
-  background: #4caf50;
   border: none;
   border-radius: 8px;
-  color: white;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.botoes button#btnCancelarEdicaoApp {
-  background: #f44336;
+.buttons button:first-child {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.buttons button:last-child {
+  background-color: #f44336;
+  color: #ffffff;
+  display: none;
+}
+
+.buttons button:hover {
+  filter: brightness(0.95);
 }
 
 /* ===== LISTA DE APLICAÇÕES ===== */
-#listaAplicacoes {
+.list-section {
   margin-top: 20px;
+}
+
+.list-section h2 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.filtros {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filtros input,
+.filtros select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+#listaAplicacoes {
+  margin-top: 10px;
 }
 
 .item {
@@ -75,7 +108,8 @@ h2 {
   align-items: center;
   padding: 12px;
   margin-bottom: 10px;
-  background: #2c2c2c;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
   border-radius: 8px;
 }
 
@@ -84,38 +118,25 @@ h2 {
   word-break: break-word;
 }
 
-.botoes-tarefa {
+.item .buttons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* ===== BOTÕES CIRCULARES ===== */
-.botao-circular {
-  background: #2196f3;
-  width: 40px;
-  height: 40px;
+.item .buttons button {
+  background: #007bff;
+  color: #ffffff;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 8px;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.botao-circular.vermelho {
+.item .buttons button.vermelho {
   background: #f44336;
-  border-radius: 8px; /* Ícone de Exclusão quadrado */
 }
 
-.botao-circular.azul {
-  background: #2196f3;
-}
-
-.botao-circular.preto {
-  background: #333;
-}
-
-.botao-circular:hover {
-  filter: brightness(1.1);
+.item .buttons button:hover {
+  filter: brightness(0.9);
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café - Relatório</title>
+  <link rel="stylesheet" href="css/relatorio.css">
+  <script defer src="js/relatorio.js"></script>
+</head>
+<body>
+
+<div id="menuRelatorio" class="menu-secao">
+  <h2>Gestão de Relatórios</h2>
+
+  <!-- Filtros de Relatório -->
+  <div class="filtros-relatorio">
+    <label>Data Início: <input type="date" id="dataInicioRelatorio"></label>
+    <label>Data Fim: <input type="date" id="dataFimRelatorio"></label>
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
+  </div>
+
+  <!-- Relatório Gerado -->
+  <div class="listagem-relatorio">
+    <h3>Relatório Gerado</h3>
+    <div id="relatorioGerado"></div>
+  </div>
+
+  <!-- Botões de Exportação -->
+  <div class="botoes-exportacao">
+    <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+    <button onclick="exportarRelatorioPDF()">Exportar PDF</button>
+  </div>
+</div>
+
+</body>
+</html>

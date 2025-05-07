@@ -10,6 +10,8 @@ const firebaseConfig = {
 };
 
 // ===== INICIALIZAR FIREBASE =====
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 console.log("Firebase inicializado com sucesso.");

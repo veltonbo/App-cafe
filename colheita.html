@@ -11,26 +11,7 @@
 
 <div id="menuColheita" class="menu-secao">
   <h2>Gestão de Colheita</h2>
-
-  <!-- Formulário de Adição/Edição -->
-  <div id="formularioColheita" style="display:none;">
-    <h3><i class="fas fa-edit"></i> Adicionar/Editar Colheita</h3>
-    <label>Data: <input type="date" id="dataColheita"></label>
-    <label>Quantidade (Kg): <input type="number" id="quantidadeColheita" placeholder="0.00" step="0.01"></label>
-    <label>Local:
-      <input type="text" id="localColheita" placeholder="Local da Colheita">
-    </label>
-    <div class="botoes-formulario">
-      <button id="btnSalvarColheita" onclick="adicionarColheita()">Salvar Colheita</button>
-      <button id="btnCancelarColheita" style="display:none;" onclick="cancelarEdicaoColheita()">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- Listagem de Colheitas -->
-  <div class="listagem-colheita">
-    <h3>Lista de Colheitas</h3>
-    <div id="listaColheitas"></div>
-  </div>
+  <div class="listagem-colheita" id="listaColheita"></div>
 </div>
 
 </body>

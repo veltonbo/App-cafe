@@ -1,0 +1,88 @@
+/* ===== LAYOUT GERAL DO MENU TAREFAS ===== */
+.menu-secao {
+  padding: 20px;
+  background: #f4f4f9;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ===== FORMULÁRIO DE TAREFAS ===== */
+#formularioTarefa {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+#formularioTarefa label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+#formularioTarefa input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.botoes-formulario {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.botoes-formulario button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+}
+
+#btnSalvarTarefa {
+  background: #4caf50;
+}
+
+#btnCancelarTarefa {
+  background: #f44336;
+}
+
+/* ===== LISTAGEM DE TAREFAS ===== */
+.listagem-tarefas {
+  margin-top: 15px;
+}
+
+.listagem-tarefas .item-tarefa {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.item-tarefa span {
+  flex: 1;
+  text-align: left;
+}
+
+.item-tarefa button {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+}
+
+.item-tarefa button.editar { background: #2196f3; }
+.item-tarefa button.excluir { background: #f44336; }
+.item-tarefa button.concluir { background: #4caf50; }

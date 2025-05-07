@@ -282,49 +282,52 @@ function alternarParcela(gastoIndex, parcelaIndex) {
   atualizarFinanceiro();
 }
 
-// ===== EDITAR LANÇAMENTO OU PARCELA =====
+// ===== EDITAR FINANCEIRO (Gasto ou Parcela) =====
 function editarFinanceiro(index, parcelaIndex = null) {
   const gasto = gastos[index];
   if (!gasto) return;
 
-  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes?.[parcelaIndex] : null;
+  const parcela = parcelaIndex !== null ? gasto.parcelasDetalhes[parcelaIndex] : null;
 
+  // Preencher os campos do formulário
   dataFin.value = parcela ? parcela.vencimento : gasto.data;
   produtoFin.value = gasto.produto;
   descricaoFin.value = gasto.descricao || "";
   valorFin.value = parcela ? parcela.valor : gasto.valor;
   tipoFin.value = gasto.tipo;
   parceladoFin.checked = !!gasto.parcelasDetalhes;
-  parcelasFin.style.display = parceladoFin.checked ? "block" : "none";
+  parcelasFin.style.display = !!gasto.parcelasDetalhes ? "block" : "none";
   parcelasFin.value = gasto.parcelas || "";
   parcelasFin.dataset.parcelaIndex = parcelaIndex !== null ? parcelaIndex : "";
 
+  // Identificar se é uma edição de parcela ou não
   indiceEdicaoGasto = index;
 
-  // Exibir o formulário
-  document.getElementById("formularioFinanceiro").style.display = "block";
-
   if (gasto.parcelasDetalhes && parcelaIndex !== null) {
-    mostrarModalEditarParcela(); // Exibe modal para escolher "todas" ou "apenas essa"
+    mostrarModalEditarParcela();
   } else {
     editarTodasParcelas = true;
+    document.getElementById("formularioFinanceiro").style.display = "block";
   }
 
   document.getElementById("btnSalvarFinanceiro").innerHTML = '<i class="fas fa-edit"></i> Salvar Edição';
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
 }
 
-// ===== CONFIRMAR EDIÇÃO DE PARCELA =====
+// ===== MODAL CONFIRMAR EDIÇÃO DE PARCELA =====
 function mostrarModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "flex";
 }
 
+// ===== CONFIRMAR EDIÇÃO DE PARCELA =====
 function confirmarEditarParcela(todas) {
   editarTodasParcelas = todas;
   fecharModalEditarParcela();
+  document.getElementById("formularioFinanceiro").style.display = "block";
 }
 
+// ===== FECHAR MODAL DE EDIÇÃO DE PARCELA =====
 function fecharModalEditarParcela() {
   const modal = document.getElementById("modalEditarParcela");
   if (modal) modal.style.display = "none";

@@ -1,73 +1,124 @@
-/* ===== LAYOUT GERAL DO MENU RELATÓRIO ===== */
-.menu-secao {
-  padding: 20px;
-  background: #f4f4f9;
-  max-width: 800px;
-  margin: 0 auto;
+/* ===== LAYOUT GERAL ===== */
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-/* ===== FILTROS DE RELATÓRIO ===== */
-.filtros-relatorio {
-  background: #ffffff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.container {
+  max-width: 500px;
+  background-color: #1f1f1f;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+}
+
+header h1 {
+  font-size: 1.8rem;
+}
+
+nav {
   display: flex;
   gap: 10px;
 }
 
-.filtros-relatorio label {
+.tab-button {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.tab-button:hover {
+  color: #4caf50;
+}
+
+/* ===== FORMULÁRIO ===== */
+.form {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.filtros-relatorio button {
-  padding: 8px 12px;
-  background: #4caf50;
+.form input {
+  padding: 12px;
+  background: #2c2c2c;
   border: none;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* ===== LISTAGEM DE RELATÓRIO ===== */
-.listagem-relatorio {
-  margin-top: 15px;
-  background: #ffffff;
-  padding: 15px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: #e0e0e0;
+  font-size: 1rem;
 }
 
-.listagem-relatorio .item-relatorio {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-.listagem-relatorio .item-relatorio:last-child {
-  border-bottom: none;
-}
-
-/* ===== BOTÕES DE EXPORTAÇÃO ===== */
-.botoes-exportacao {
+.buttons {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
-  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-.botoes-exportacao button {
-  padding: 10px 15px;
-  background: #4caf50;
+.buttons .btn {
+  flex: 1;
+  padding: 12px;
   border: none;
-  color: white;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 1rem;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.botoes-exportacao button:hover {
-  background: #45a049;
+.buttons .btn.generate {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.buttons .btn.export {
+  background-color: #2196f3;
+  color: #ffffff;
+}
+
+.buttons .btn:hover {
+  filter: brightness(0.9);
+}
+
+/* ===== LISTA DE RESULTADOS ===== */
+.list {
+  background: #1f1f1f;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.list h3 {
+  margin-bottom: 10px;
+}
+
+#resultadoRelatorio {
+  margin-top: 10px;
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#resultadoRelatorio .item {
+  padding: 8px;
+  border-bottom: 1px solid #444;
+}
+
+#resultadoRelatorio .item:last-child {
+  border-bottom: none;
 }

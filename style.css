@@ -5,6 +5,7 @@ body {
   color: #333;
   margin: 0;
   padding: 0;
+  transition: background 0.3s, color 0.3s;
 }
 
 .menu-secao {
@@ -15,12 +16,13 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   text-align: center;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
 }
 
-.menu-secao h1 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #4caf50;
+.menu-secao.show {
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
 }
 
 /* ===== MENU DE NAVEGAÇÃO ===== */

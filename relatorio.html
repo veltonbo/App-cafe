@@ -4,15 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Relatório</title>
-  <link rel="stylesheet" href="/App-cafe/css/relatorio.css">
-  <script defer src="/App-cafe/js/relatorio.js"></script>
+  <link rel="stylesheet" href="css/relatorio.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Manejo Café</h1>
+      <nav>
+        <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
+        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+        <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
+      </nav>
+    </header>
 
-<div id="menuRelatorio" class="menu-secao">
-  <h2>Relatório de Gestão</h2>
-  <div class="listagem-relatorio" id="listaRelatorio"></div>
-</div>
+    <section id="relatorio" class="aba">
+      <h2>Relatórios Gerais</h2>
+      <div class="form">
+        <input type="date" id="dataInicioRel" placeholder="Data Início">
+        <input type="date" id="dataFimRel" placeholder="Data Fim">
+        <div class="buttons">
+          <button class="btn generate" onclick="gerarRelatorio()">
+            <i class="fas fa-file-alt"></i> Gerar Relatório
+          </button>
+          <button class="btn export" onclick="exportarRelatorioPDF()">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
+          </button>
+          <button class="btn export" onclick="exportarRelatorioCSV()">
+            <i class="fas fa-file-csv"></i> Exportar CSV
+          </button>
+        </div>
+      </div>
 
+      <div class="list">
+        <h3>Resultados do Relatório</h3>
+        <div id="resultadoRelatorio"></div>
+      </div>
+    </section>
+  </div>
 </body>
 </html>

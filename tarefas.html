@@ -11,25 +11,7 @@
 
 <div id="menuTarefas" class="menu-secao">
   <h2>Gestão de Tarefas</h2>
-
-  <!-- Formulário de Adição/Edição -->
-  <div id="formularioTarefa" style="display:none;">
-    <h3><i class="fas fa-edit"></i> Adicionar/Editar Tarefa</h3>
-    <label>Data: <input type="date" id="dataTarefa"></label>
-    <label>Título: <input type="text" id="tituloTarefa" placeholder="Título da Tarefa"></label>
-    <label>Descrição: <input type="text" id="descricaoTarefa" placeholder="Descrição opcional"></label>
-
-    <div class="botoes-formulario">
-      <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
-      <button id="btnCancelarTarefa" style="display:none;" onclick="cancelarEdicaoTarefa()">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- Listagem de Tarefas -->
-  <div class="listagem-tarefas">
-    <h3>Lista de Tarefas</h3>
-    <div id="listaTarefas"></div>
-  </div>
+  <div class="listagem-tarefas" id="listaTarefas"></div>
 </div>
 
 </body>

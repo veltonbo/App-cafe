@@ -5,16 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Aplicações</title>
   <link rel="stylesheet" href="css/aplicacao.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Manejo Café - Aplicações</h1>
+      <h1>Manejo Café</h1>
+      <nav>
+        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+      </nav>
     </header>
 
-    <div class="form-section">
-      <h2>Nova Aplicação</h2>
-      <div class="form-group">
+    <section id="aplicacoes" class="aba">
+      <h2>Gestão de Aplicações</h2>
+      <div class="form">
         <input type="date" id="dataApp" placeholder="Data">
         <input type="text" id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
         <datalist id="sugestoesProdutoApp"></datalist>
@@ -30,28 +36,21 @@
           <option>Setor 02</option>
         </select>
         <div class="buttons">
-          <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
-            <i class="fas fa-save"></i> Salvar Aplicação
+          <button class="btn save" onclick="adicionarAplicacao()">
+            <i class="fas fa-save"></i> Salvar
           </button>
-          <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
+          <button class="btn cancel" id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display:none;">
             <i class="fas fa-times"></i> Cancelar
           </button>
         </div>
       </div>
-    </div>
 
-    <div class="list-section">
-      <h2>Lista de Aplicações</h2>
-      <div class="filtros">
+      <div class="list">
+        <h3>Lista de Aplicações</h3>
         <input type="text" id="pesquisaAplicacoes" placeholder="Pesquisar...">
-        <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
-          <option value="">Todos os Setores</option>
-          <option value="Setor 01">Setor 01</option>
-          <option value="Setor 02">Setor 02</option>
-        </select>
+        <div id="listaAplicacoes"></div>
       </div>
-      <div id="listaAplicacoes"></div>
-    </div>
+    </section>
   </div>
 </body>
 </html>

@@ -1,0 +1,59 @@
+/* ===== LAYOUT GERAL DO MENU CONFIGURAÇÃO ===== */
+.menu-secao {
+  padding: 20px;
+  background: #f4f4f9;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ===== CONFIGURAÇÕES GERAIS ===== */
+.configuracoes-gerais {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.configuracoes-gerais h3 {
+  margin-bottom: 10px;
+}
+
+.configuracoes-gerais label {
+  display: block;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.configuracoes-gerais button {
+  padding: 10px 15px;
+  background: #4caf50;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.configuracoes-gerais button:hover {
+  background: #45a049;
+}
+
+/* ===== TEMA ESCURO (DINÂMICO) ===== */
+body.tema-escuro {
+  background: #2c2c2c;
+  color: #e0e0e0;
+}
+
+body.tema-escuro .menu-secao {
+  background: #3c3c3c;
+}
+
+body.tema-escuro .configuracoes-gerais {
+  background: #444;
+  color: #e0e0e0;
+}
+
+body.tema-escuro button {
+  background: #1f8f40;
+}

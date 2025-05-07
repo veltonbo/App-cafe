@@ -91,7 +91,7 @@ nav {
   display: none;
 }
 
-/* ===== LISTA FINANCEIRO ===== */
+/* ===== LISTA DE COLHEITA ===== */
 .list {
   background: #1f1f1f;
   padding: 10px;
@@ -111,7 +111,7 @@ nav {
   margin-bottom: 12px;
 }
 
-#listaFinanceiro .item {
+#listaColheita .item {
   background: #2c2c2c;
   margin-bottom: 10px;
   padding: 10px;
@@ -121,16 +121,16 @@ nav {
   border-radius: 8px;
 }
 
-#listaFinanceiro .item span {
+#listaColheita .item span {
   flex-grow: 1;
 }
 
-#listaFinanceiro .item .buttons {
+#listaColheita .item .buttons {
   display: flex;
   gap: 8px;
 }
 
-#listaFinanceiro .item .btn {
+#listaColheita .item .btn {
   background: #4caf50;
   color: #ffffff;
   border: none;
@@ -140,10 +140,10 @@ nav {
   transition: background 0.3s;
 }
 
-#listaFinanceiro .item .btn.red {
+#listaColheita .item .btn.red {
   background: #f44336;
 }
 
-#listaFinanceiro .item .btn:hover {
+#listaColheita .item .btn:hover {
   filter: brightness(0.9);
 }

@@ -1,17 +1,22 @@
-/* ===== LAYOUT GERAL DO MENU APLICAÇÃO ===== */
+/* ===== LAYOUT DO MENU APLICAÇÃO ===== */
 .menu-secao {
-  padding: 20px;
-  background: #f4f4f9;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* ===== FORMULÁRIO DE APLICAÇÃO ===== */
+h2 {
+  color: #4caf50;
+  text-align: center;
+}
+
 #formularioAplicacao {
-  background: #ffffff;
+  background: #f4f4f9;
   padding: 15px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   margin-bottom: 20px;
 }
 
@@ -21,8 +26,7 @@
   font-weight: bold;
 }
 
-#formularioAplicacao input,
-#formularioAplicacao select {
+#formularioAplicacao input {
   width: 100%;
   padding: 8px;
   margin-top: 5px;
@@ -40,31 +44,57 @@
   padding: 8px 12px;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
   font-weight: bold;
+  cursor: pointer;
   color: white;
+  transition: background 0.3s;
 }
 
 #btnSalvarAplicacao {
   background: #4caf50;
 }
 
+#btnSalvarAplicacao:hover {
+  background: #45a049;
+}
+
 #btnCancelarAplicacao {
   background: #f44336;
 }
 
-/* ===== LISTAGEM DE APLICAÇÕES ===== */
-.listagem-aplicacao {
-  margin-top: 15px;
+#btnCancelarAplicacao:hover {
+  background: #e53935;
 }
 
-.listagem-aplicacao .item-aplicacao {
+/* ===== LISTA DE APLICAÇÕES ===== */
+.listagem-aplicacao {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.item-aplicacao {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
   padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-bottom: 1px solid #ddd;
+}
+
+.item-aplicacao span {
+  flex: 1;
+}
+
+.item-aplicacao button {
+  background: #f44336;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.item-aplicacao button:hover {
+  background: #e53935;
 }

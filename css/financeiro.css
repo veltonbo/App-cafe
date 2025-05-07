@@ -1,71 +1,149 @@
-/* ===== LAYOUT GERAL DO MENU FINANCEIRO ===== */
-.menu-secao {
-  padding: 20px;
-  background: #f4f4f9;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* ===== RESUMO FINANCEIRO ===== */
-.resumo-financeiro {
+/* ===== LAYOUT GERAL ===== */
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-.resumo-item {
-  flex: 1;
-  padding: 10px 15px;
-  border-radius: 8px;
-  color: white;
-  text-align: center;
+.container {
+  max-width: 500px;
+  background-color: #1f1f1f;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.verde { background: #4caf50; }
-.laranja { background: #ff9800; }
-.azul { background: #2196f3; }
-
-/* ===== FORMULÁRIO DE FINANCEIRO ===== */
-#formularioFinanceiro {
-  background: #ffffff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-}
-
-#formularioFinanceiro label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-#formularioFinanceiro input,
-#formularioFinanceiro select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-/* ===== LISTAGEM DE GASTOS ===== */
-.listagem-financeiro {
-  margin-top: 15px;
-}
-
-.item-financeiro {
+header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
 }
 
-.item-financeiro span {
+header h1 {
+  font-size: 1.8rem;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.tab-button:hover {
+  color: #4caf50;
+}
+
+/* ===== FORMULÁRIO ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.form input,
+.form select {
+  padding: 12px;
+  background: #2c2c2c;
+  border: none;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.buttons .btn {
   flex: 1;
-  text-align: left;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.buttons .btn.save {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.buttons .btn.cancel {
+  background-color: #f44336;
+  color: #ffffff;
+  display: none;
+}
+
+/* ===== LISTA FINANCEIRO ===== */
+.list {
+  background: #1f1f1f;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.list h3 {
+  margin-bottom: 10px;
+}
+
+.list input {
+  width: 100%;
+  padding: 10px;
+  background: #2c2c2c;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+#listaFinanceiro .item {
+  background: #2c2c2c;
+  margin-bottom: 10px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px;
+}
+
+#listaFinanceiro .item span {
+  flex-grow: 1;
+}
+
+#listaFinanceiro .item .buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#listaFinanceiro .item .btn {
+  background: #4caf50;
+  color: #ffffff;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#listaFinanceiro .item .btn.red {
+  background: #f44336;
+}
+
+#listaFinanceiro .item .btn:hover {
+  filter: brightness(0.9);
 }

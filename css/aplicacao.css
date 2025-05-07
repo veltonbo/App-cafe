@@ -29,8 +29,10 @@ h2 {
 }
 
 #formularioAplicacao input,
-#formularioAplicacao select {
+#formularioAplicacao select,
+.botoes button {
   width: 100%;
+  max-width: 600px;
   padding: 12px;
   border: 1px solid #444;
   background: #2c2c2c;
@@ -52,11 +54,14 @@ h2 {
 }
 
 .botoes button {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   padding: 12px;
+  background: #4caf50;
   border: none;
   border-radius: 8px;
-  background: #4caf50;
   color: white;
   font-weight: bold;
   cursor: pointer;
@@ -75,28 +80,6 @@ h2 {
   background: #e53935;
 }
 
-/* ===== FILTROS ===== */
-.filtros {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.filtros input,
-.filtros select {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #444;
-  background: #2c2c2c;
-  color: #e0e0e0;
-  border-radius: 8px;
-}
-
-.filtros input:focus,
-.filtros select:focus {
-  border-color: #4caf50;
-}
-
 /* ===== LISTA DE APLICAÇÕES ===== */
 #listaAplicacoes {
   margin-top: 20px;
@@ -112,13 +95,7 @@ h2 {
   padding: 12px;
   margin-bottom: 10px;
   background: #2c2c2c;
-  border: 1px solid #333;
   border-radius: 8px;
-  transition: background 0.3s;
-}
-
-.item:hover {
-  background: #333;
 }
 
 .item span {
@@ -128,7 +105,7 @@ h2 {
 
 .botoes-tarefa {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .botao-circular {

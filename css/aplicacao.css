@@ -3,20 +3,25 @@ body {
   background-color: #121212;
   color: #e0e0e0;
   font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .conteudo {
-  max-width: 500px;
+  max-width: 600px;
   margin: 40px auto;
   background: #1f1f1f;
   padding: 20px;
   border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 h2 {
   text-align: center;
+  margin-bottom: 20px;
 }
 
+/* ===== FORMULÁRIO ===== */
 #formularioAplicacao {
   display: flex;
   flex-direction: column;
@@ -24,63 +29,148 @@ h2 {
 }
 
 #formularioAplicacao input,
-#formularioAplicacao select,
-.botoes button {
+#formularioAplicacao select {
   width: 100%;
   padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid #555;
+  border: 1px solid #444;
   background: #2c2c2c;
-  color: #fff;
+  color: #e0e0e0;
   border-radius: 8px;
+  transition: border 0.3s;
+}
+
+#formularioAplicacao input:focus,
+#formularioAplicacao select:focus {
+  border-color: #4caf50;
+  outline: none;
 }
 
 .botoes {
   display: flex;
   gap: 10px;
+  justify-content: space-between;
 }
 
 .botoes button {
-  background-color: #4caf50;
+  flex: 1;
+  padding: 12px;
   border: none;
+  border-radius: 8px;
+  background: #4caf50;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
 }
 
 .botoes button:hover {
-  background-color: #45a049;
+  background: #45a049;
+}
+
+.botoes button#btnCancelarEdicaoApp {
+  background: #f44336;
+}
+
+.botoes button#btnCancelarEdicaoApp:hover {
+  background: #e53935;
+}
+
+/* ===== FILTROS ===== */
+.filtros {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filtros input,
+.filtros select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #444;
+  background: #2c2c2c;
+  color: #e0e0e0;
+  border-radius: 8px;
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  border-color: #4caf50;
 }
 
 /* ===== LISTA DE APLICAÇÕES ===== */
-.listagem {
+#listaAplicacoes {
   margin-top: 20px;
+  background: #1f1f1f;
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2c2c2c;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px;
   margin-bottom: 10px;
+  background: #2c2c2c;
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.item:hover {
+  background: #333;
 }
 
 .item span {
   flex-grow: 1;
-  color: #e0e0e0;
+  word-break: break-word;
+}
+
+.botoes-tarefa {
+  display: flex;
+  gap: 8px;
 }
 
 .botao-circular {
-  background: #f44336;
+  background: #4caf50;
   border: none;
-  padding: 8px;
+  color: white;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: 50%;
   cursor: pointer;
-  color: white;
   transition: background 0.3s;
 }
 
+.botao-circular.vermelho {
+  background: #f44336;
+}
+
+.botao-circular.azul {
+  background: #2196f3;
+}
+
 .botao-circular:hover {
-  background: #e53935;
+  filter: brightness(1.1);
+}
+
+/* ===== BOTÃO EXPORTAR CSV ===== */
+.botao-exportar {
+  display: inline-block;
+  margin-top: 10px;
+  background: #4caf50;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-exportar:hover {
+  background: #45a049;
 }

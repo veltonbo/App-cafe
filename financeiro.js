@@ -30,6 +30,8 @@ function adicionarFinanceiro() {
     return;
   }
 
+  console.log("Editar todas:", editarTodasParcelas, "Parcela index:", parcelasFin.dataset.parcelaIndex);
+  
   // ========== EDIÇÃO ==========
   if (indiceEdicaoGasto !== null) {
     const gastoOriginal = gastos[indiceEdicaoGasto];

@@ -5,28 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Configurações</title>
   <link rel="stylesheet" href="/App-cafe/css/configuracao.css">
-  <script defer src="/App-cafe/js/configuracao.js"></script>
+  <script defer src="/App-cafe/js/configuracoes.js"></script>
 </head>
 <body>
 
 <div id="menuConfiguracao" class="menu-secao">
   <h2>Configurações do Sistema</h2>
-
-  <!-- Configurações Gerais -->
-  <div class="configuracoes-gerais">
-    <h3>Preferências Gerais</h3>
-    <label>
-      Tema:
-      <select id="temaConfiguracao" onchange="alterarTema()">
-        <option value="claro">Claro</option>
-        <option value="escuro">Escuro</option>
-      </select>
-    </label>
-
-    <h3>Backup e Restauração</h3>
-    <button onclick="realizarBackup()">Realizar Backup</button>
-    <button onclick="restaurarBackup()">Restaurar Backup</button>
-  </div>
+  <div class="configuracoes" id="opcoesConfiguracoes"></div>
 </div>
 
 </body>

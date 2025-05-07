@@ -137,56 +137,67 @@
   <div id="listaTarefasFeitas"></div>
 </div>
 
-  <!-- ========== MENU FINANCEIRO COMPLETO ========== -->
-<div id="financeiro" class="aba">
+  <!-- ===== MENU FINANCEIRO ===== -->
+<div id="menuFinanceiro" class="menu">
   <h2>Financeiro</h2>
 
-  <!-- Botão Flutuante -->
-  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()" class="botao-flutuante">
+  <!-- Botão Flutuante para Adicionar Lançamento -->
+  <button class="botao-flutuante" onclick="alternarFormularioFinanceiro()">
     <i class="fas fa-plus"></i>
   </button>
 
-  <!-- Formulário Financeiro Oculto -->
-  <div id="formularioFinanceiro" style="display: none;">
-    <input id="dataFin" type="date">
-    <input id="produtoFin" placeholder="Produto">
-    <input id="descricaoFin" placeholder="Descrição detalhada (opcional)">
-    <input id="valorFin" type="number" placeholder="Valor (R$)">
-    
-    <select id="tipoFin">
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-
-    <label style="margin-top: 5px;">
-      <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
-    </label>
-    <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
-
-    <div style="display: flex; gap: 10px;">
-      <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro">
-        <i class="fas fa-save"></i> Salvar Gasto
+  <!-- Formulário de Lançamento Financeiro -->
+  <div id="formularioFinanceiro" class="formulario-financeiro" style="display: none;">
+    <h3>Novo Lançamento</h3>
+    <div class="campo-formulario">
+      <label>Data:</label>
+      <input type="date" id="dataFin">
+    </div>
+    <div class="campo-formulario">
+      <label>Produto:</label>
+      <input type="text" id="produtoFin" placeholder="Nome do Produto">
+    </div>
+    <div class="campo-formulario">
+      <label>Descrição:</label>
+      <input type="text" id="descricaoFin" placeholder="Descrição (Opcional)">
+    </div>
+    <div class="campo-formulario">
+      <label>Valor:</label>
+      <input type="number" step="0.01" id="valorFin" placeholder="0,00">
+    </div>
+    <div class="campo-formulario">
+      <label>Tipo:</label>
+      <select id="tipoFin">
+        <option value="Adubo">Adubo</option>
+        <option value="Fungicida">Fungicida</option>
+        <option value="Inseticida">Inseticida</option>
+        <option value="Herbicida">Herbicida</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="campo-formulario">
+      <label><input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado</label>
+    </div>
+    <div id="parcelasDiv" class="campo-formulario" style="display: none;">
+      <label>Número de Parcelas:</label>
+      <input type="number" id="parcelasFin" min="1" placeholder="1">
+    </div>
+    <div class="botoes-formulario">
+      <button id="btnSalvarFinanceiro" onclick="adicionarFinanceiro()" class="botao-salvar">
+        <i class="fas fa-save"></i> Salvar
       </button>
-      <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">
-        Cancelar Edição
+      <button id="btnCancelarFinanceiro" style="display: none;" class="botao-cancelar" onclick="cancelarEdicaoFinanceiro()">
+        <i class="fas fa-times"></i> Cancelar
       </button>
     </div>
   </div>
 
-  <!-- Botão Toggle Filtros -->
-  <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-    <button onclick="toggleFiltrosFinanceiro()" id="btnToggleFiltrosFin" class="botao-circular azul" title="Mostrar/Esconder Filtros">
-      <i class="fas fa-filter"></i>
-    </button>
-  </div>
+  <!-- Resumo Financeiro -->
+  <div id="resumoFinanceiroMensal" class="resumo-financeiro"></div>
 
-  <!-- Filtros -->
-  <div id="filtrosFinanceiro" style="display: none;">
-    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
+  <!-- Filtros Financeiros -->
+  <div id="filtrosFinanceiro" class="filtros-financeiro">
+    <input type="text" id="pesquisaFinanceiro" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
     <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
       <option value="">Todos os Tipos</option>
       <option value="Adubo">Adubo</option>
@@ -197,75 +208,45 @@
     </select>
     <select id="filtroStatusFin" onchange="atualizarFinanceiro()">
       <option value="">Todos</option>
-      <option value="pago">Pagos</option>
       <option value="vencer">A Vencer</option>
+      <option value="pago">Pago</option>
     </select>
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
-  </div>
-
-  <!-- Listagens -->
-  <h4 style="color: #ff9800;">A Vencer</h4>
-  <div id="financeiroVencer"></div>
-
-  <h4 style="color: #4caf50;">Pagos</h4>
-  <div id="financeiroPago"></div>
-
-  <!-- Resumo e Gráfico -->
-  <h4>Resumo do Mês</h4>
-  <div id="resumoFinanceiroMensal" style="font-weight: bold; margin-bottom: 20px;"></div>
-
-  <h4>Gráfico de Gastos Pagos</h4>
-  <canvas id="graficoGastos"></canvas>
-
-  <!-- Exportações -->
-  <div style="margin-top: 20px;">
-    <button onclick="exportarFinanceiroCSV()">
-      <i class="fas fa-file-csv"></i> Exportar CSV
-    </button>
-    <button onclick="exportarFinanceiroPDF()">
-      <i class="fas fa-file-pdf"></i> Exportar PDF
+    <input type="date" id="filtroDataInicioFin" onchange="atualizarFinanceiro()">
+    <input type="date" id="filtroDataFimFin" onchange="atualizarFinanceiro()">
+    <button onclick="toggleFiltrosFinanceiro()" class="botao-filtro">
+      <i class="fas fa-filter"></i> Filtros
     </button>
   </div>
-</div>
 
-<!-- ========== MODAL: CONTROLE DE PARCELAS ========== -->
-<div id="modalParcelas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:95%; max-width:500px; max-height:90vh; overflow:auto;">
-    <h3 style="color:#66bb6a; margin-bottom:15px;">Controle de Parcelas</h3>
-    <table style="width:100%; border-collapse:collapse; color:white;">
-      <thead>
-        <tr style="border-bottom:1px solid #555;">
-          <th style="text-align:left; padding:8px;">#</th>
-          <th style="text-align:left; padding:8px;">Vencimento</th>
-          <th style="text-align:right; padding:8px;">Valor (R$)</th>
-          <th style="text-align:center; padding:8px;">Pago</th>
-        </tr>
-      </thead>
-      <tbody id="parcelasLista"></tbody>
-    </table>
-    <div style="margin-top:20px; text-align:right;">
-      <button onclick="fecharModalParcelas()" style="background:#f44336;">Fechar</button>
+  <!-- Listagem de Lançamentos -->
+  <div class="lista-financeiro">
+    <h3>A Vencer</h3>
+    <div id="financeiroVencer" class="listagem"></div>
+
+    <h3>Pagos</h3>
+    <div id="financeiroPago" class="listagem"></div>
+  </div>
+
+  <!-- Modal Confirmar Exclusão de Parcela -->
+  <div id="modalConfirmarExclusaoParcela" class="modal" style="display: none;">
+    <div class="modal-conteudo">
+      <h3>Confirmar Exclusão</h3>
+      <p>Deseja excluir esta parcela ou todas?</p>
+      <button onclick="excluirApenasParcela()" class="botao-confirmar">Apenas Esta</button>
+      <button onclick="excluirTodasParcelas()" class="botao-confirmar">Todas as Parcelas</button>
+      <button onclick="fecharModalExcluirParcela()" class="botao-cancelar">Cancelar</button>
     </div>
   </div>
-</div>
 
-<!-- ========== MODAL: CONFIRMAR EXCLUSÃO PARCELA ========== -->
-<div id="modalConfirmarExclusaoParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Deseja excluir:</p>
-    <button onclick="excluirApenasParcela()" style="margin:10px 0; background:#ff9800;">Somente esta parcela</button><br>
-    <button onclick="excluirTodasParcelas()" style="margin-bottom:10px; background:#f44336;">Todas as parcelas</button><br>
-    <button onclick="fecharModalExcluirParcela()" style="background:#555;">Cancelar</button>
-  </div>
-</div>
-
-<!-- ========== MODAL: EDITAR PARCELA ========== -->
-<div id="modalEditarParcela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#2c2c2c; padding:20px; border-radius:10px; width:90%; max-width:320px; text-align:center;">
-    <p style="color:white; font-size:16px;">Deseja editar:</p>
-    <button onclick="confirmarEditarParcela(true)" style="margin:10px 0; background:#4caf50;">Todas as parcelas</button><br>
-    <button onclick="confirmarEditarParcela(false)" style="margin-bottom:10px; background:#2196f3;">Somente esta parcela</button><br>
-    <button onclick="fecharModalEditarParcela()" style="background:#f44336;">Cancelar</button>
+  <!-- Modal Editar Parcela -->
+  <div id="modalEditarParcela" class="modal" style="display: none;">
+    <div class="modal-conteudo">
+      <h3>Editar Parcela</h3>
+      <p>Deseja editar apenas esta parcela ou todas?</p>
+      <button onclick="confirmarEditarParcela(true)" class="botao-confirmar">Todas</button>
+      <button onclick="confirmarEditarParcela(false)" class="botao-confirmar">Apenas Esta</button>
+      <button onclick="fecharModalEditarParcela()" class="botao-cancelar">Cancelar</button>
+    </div>
   </div>
 </div>
 

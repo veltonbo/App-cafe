@@ -4,15 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Configurações</title>
-  <link rel="stylesheet" href="/App-cafe/css/configuracao.css">
-  <script defer src="/App-cafe/js/configuracoes.js"></script>
+  <link rel="stylesheet" href="css/configuracoes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Manejo Café</h1>
+      <nav>
+        <button class="tab-button" onclick="mudarAba('configuracoes')">Configurações</button>
+        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+        <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
+        <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
+      </nav>
+    </header>
 
-<div id="menuConfiguracao" class="menu-secao">
-  <h2>Configurações do Sistema</h2>
-  <div class="configuracoes" id="opcoesConfiguracoes"></div>
-</div>
+    <section id="configuracoes" class="aba">
+      <h2>Configurações do Sistema</h2>
+      <div class="form">
+        <label for="safraAtual">Safra Atual:</label>
+        <input type="text" id="safraAtual" placeholder="Digite o ano da safra (ex: 2025)">
+        
+        <label for="emailNotificacoes">Email para Notificações:</label>
+        <input type="email" id="emailNotificacoes" placeholder="Digite seu email">
+        
+        <label for="tema">Tema do Sistema:</label>
+        <select id="tema">
+          <option>Claro</option>
+          <option>Escuro</option>
+          <option>Automático</option>
+        </select>
 
+        <div class="buttons">
+          <button class="btn save" onclick="salvarConfiguracoes()">
+            <i class="fas fa-save"></i> Salvar Configurações
+          </button>
+          <button class="btn reset" onclick="restaurarPadroes()">
+            <i class="fas fa-redo"></i> Restaurar Padrões
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
 </body>
 </html>

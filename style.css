@@ -604,3 +604,77 @@ label[for="eAplicacaoCheckbox"] {
   justify-content: center;
   align-items: center;
 }
+
+<!-- ===== ESTILOS CSS PARA LAYOUT ===== -->
+<style>
+  .menu-secao {
+    padding: 20px;
+    background: #f4f4f9;
+  }
+
+  .resumo-financeiro {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .resumo-item {
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+  }
+
+  .verde { background: #4caf50; }
+  .laranja { background: #ff9800; }
+  .azul { background: #2196f3; }
+
+  .item-financeiro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .item-texto {
+    flex: 1;
+    text-align: left;
+  }
+
+  .botoes-tarefa {
+    display: flex;
+    gap: 10px;
+  }
+
+  .botao-circular {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .verde { background: #4caf50; color: white; }
+  .azul { background: #2196f3; color: white; }
+  .vermelho { background: #f44336; color: white; }
+
+  .botao-flutuante {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #4caf50;
+    border: none;
+    padding: 15px;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+  }
+</style>

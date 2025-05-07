@@ -1,0 +1,214 @@
+/* ===== LAYOUT GERAL ===== */
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #1f1f1f;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+/* ===== CONTEÚDO ===== */
+.conteudo {
+  padding: 20px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.aba {
+  display: none;
+}
+
+.aba.active {
+  display: block;
+}
+
+/* ===== FORMULÁRIOS ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.form input,
+.form select {
+  padding: 12px;
+  background: #2c2c2c;
+  border: none;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.form button {
+  padding: 12px;
+  background: #4caf50;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.form button:hover {
+  background: #45a049;
+}
+
+/* ===== LISTAS ===== */
+.list {
+  background: #1f1f1f;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.list .item {
+  background: #2c2c2c;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list .item span {
+  flex-grow: 1;
+}
+
+.list .item .buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.list .item .btn {
+  background: #4caf50;
+  color: #ffffff;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.list .item .btn.red {
+  background: #f44336;
+}
+
+.list .item .btn.blue {
+  background: #2196f3;
+}
+
+.list .item .btn:hover {
+  filter: brightness(0.9);
+}
+
+/* ===== RELATÓRIO ===== */
+#resultadoRelatorio {
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#resultadoRelatorio .item {
+  padding: 8px;
+  border-bottom: 1px solid #444;
+}
+
+#resultadoRelatorio .item:last-child {
+  border-bottom: none;
+}
+
+/* ===== CONFIGURAÇÕES ===== */
+#configuracoes .form {
+  max-width: 400px;
+  margin: auto;
+}
+
+#configuracoes .form label {
+  font-weight: bold;
+}
+
+#configuracoes .form input,
+#configuracoes .form select {
+  width: 100%;
+}
+
+/* ===== TEMA ESCURO / CLARO ===== */
+body.tema-escuro {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.tema-claro {
+  background-color: #f4f4f9;
+  color: #333;
+}
+
+body.tema-claro header {
+  background-color: #ffffff;
+  color: #333;
+}
+
+body.tema-claro .form input,
+body.tema-claro .form select,
+body.tema-claro .list .item {
+  background: #ffffff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+body.tema-claro .tab-button {
+  color: #333;
+}
+
+body.tema-claro .tab-button:hover {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+body.tema-claro .btn {
+  background: #007bff;
+  color: #ffffff;
+}

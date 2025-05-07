@@ -11,59 +11,7 @@
 
 <div id="menuFinanceiro" class="menu-secao">
   <h2>Gestão Financeira</h2>
-
-  <!-- Resumo Financeiro -->
-  <div id="resumoFinanceiroMensal" class="resumo-financeiro"></div>
-
-  <!-- Formulário de Adição/Edição -->
-  <div id="formularioFinanceiro" style="display:none;">
-    <h3><i class="fas fa-edit"></i> Adicionar/Editar Gasto</h3>
-    <label>Data: <input type="date" id="dataFin"></label>
-    <label>Produto: <input type="text" id="produtoFin" placeholder="Descrição do Produto"></label>
-    <label>Descrição: <input type="text" id="descricaoFin" placeholder="Descrição opcional"></label>
-    <label>Valor: <input type="number" id="valorFin" placeholder="0.00" step="0.01"></label>
-    <label>Tipo:
-      <select id="tipoFin">
-        <option value="Adubo">Adubo</option>
-        <option value="Fungicida">Fungicida</option>
-        <option value="Inseticida">Inseticida</option>
-        <option value="Herbicida">Herbicida</option>
-        <option value="Outro">Outro</option>
-      </select>
-    </label>
-    <label>
-      <input type="checkbox" id="parceladoFin" onchange="alternarParcelas()"> Parcelado
-    </label>
-    <label id="labelParcelas" style="display:none;">Parcelas:
-      <input type="number" id="parcelasFin" placeholder="1">
-    </label>
-
-    <div class="botoes-formulario">
-      <button id="btnSalvarFinanceiro" onclick="adicionarFinanceiro()">Salvar Gasto</button>
-      <button id="btnCancelarFinanceiro" style="display:none;" onclick="cancelarEdicaoFinanceiro()">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- Listagem de Gastos -->
-  <div class="listagem-financeiro">
-    <h3>A Vencer</h3>
-    <div id="financeiroVencer"></div>
-
-    <h3>Pagos</h3>
-    <div id="financeiroPago"></div>
-  </div>
-
-  <!-- Gráfico de Gastos -->
-  <div class="grafico-financeiro">
-    <h3>Gráfico de Gastos Pagos</h3>
-    <canvas id="graficoGastos" width="400" height="200"></canvas>
-  </div>
-
-  <!-- Botões de Exportação -->
-  <div class="botoes-exportacao">
-    <button onclick="exportarFinanceiroCSV()">Exportar CSV</button>
-    <button onclick="exportarFinanceiroPDF()">Exportar PDF</button>
-  </div>
+  <div class="listagem-financeiro" id="listaFinanceiro"></div>
 </div>
 
 </body>

@@ -36,7 +36,6 @@ body {
   gap: 15px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 15px;
 }
 
 .navegacao ul li a {
@@ -129,35 +128,6 @@ body {
   background: #f9f9f9;
 }
 
-.listagem .item span {
-  font-size: 16px;
-  color: #333;
-}
-
-.listagem .item .botoes-item button {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.listagem .item .botoes-item button.verde {
-  color: #4caf50;
-}
-
-.listagem .item .botoes-item button.vermelho {
-  color: #f44336;
-}
-
-.listagem .item .botoes-item button.azul {
-  color: #2196f3;
-}
-
-.listagem .item .botoes-item button:hover {
-  transform: scale(1.1);
-}
-
 /* ===== TEMA ESCURO ===== */
 body.tema-escuro {
   background: #2c2c2c;
@@ -166,11 +136,6 @@ body.tema-escuro {
 
 body.tema-escuro .menu-secao {
   background: #3c3c3c;
-}
-
-body.tema-escuro .listagem {
-  background: #444;
-  color: #e0e0e0;
 }
 
 body.tema-escuro input,

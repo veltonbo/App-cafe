@@ -195,8 +195,13 @@
   <!-- Resumo Financeiro -->
   <div id="resumoFinanceiroMensal" class="resumo-financeiro"></div>
 
-  <!-- Filtros Financeiros -->
-  <div id="filtrosFinanceiro" class="filtros-financeiro">
+  <!-- Botão para Mostrar/Ocultar Filtros -->
+  <button class="botao-filtro-flutuante" onclick="toggleFiltrosFinanceiro()">
+    <i class="fas fa-filter"></i> Filtros
+  </button>
+
+  <!-- Filtros Financeiros (Inicialmente Ocultos) -->
+  <div id="filtrosFinanceiro" class="filtros-financeiro" style="display: none;">
     <input type="text" id="pesquisaFinanceiro" placeholder="Pesquisar..." oninput="atualizarFinanceiro()">
     <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
       <option value="">Todos os Tipos</option>
@@ -213,9 +218,6 @@
     </select>
     <input type="date" id="filtroDataInicioFin" onchange="atualizarFinanceiro()">
     <input type="date" id="filtroDataFimFin" onchange="atualizarFinanceiro()">
-    <button onclick="toggleFiltrosFinanceiro()" class="botao-filtro">
-      <i class="fas fa-filter"></i> Filtros
-    </button>
   </div>
 
   <!-- Listagem de Lançamentos -->

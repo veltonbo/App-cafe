@@ -1,39 +1,14 @@
-function mostrarAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => {
-    aba.style.display = 'none';
-  });
+// ===== INICIALIZAR MENU PRINCIPAL =====
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Manejo Café - Sistema de Gestão Carregado.");
+  verificarTema();
+});
 
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) abaSelecionada.style.display = 'block';
-
-  document.querySelectorAll('.menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
-  if (btn) btn.classList.add('active');
-
-  localStorage.setItem('aba', abaId);
+// ===== VERIFICAR TEMA SALVO (CLARO/ESCURO) =====
+function verificarTema() {
+  const temaAtual = localStorage.getItem("tema") || "claro";
+  document.body.classList.toggle("tema-escuro", temaAtual === "escuro");
 }
 
-function inicializarApp() {
-  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
-  mostrarAba(abaInicial);
-
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
-  }
-
-  // Chama as funções de carregamento se estiverem disponíveis
-  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-  if (typeof carregarTarefas === "function") carregarTarefas();
-  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
-  if (typeof carregarColheita === "function") carregarColheita();
-  if (typeof carregarValorLata === "function") carregarValorLata();
-  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
-  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
-}
-
-// Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);
+// ===== MENSAGEM DE BOAS-VINDAS =====
+console.log("%cManejo Café - Sistema de Gestão Iniciado", "color: #4caf50; font-size: 16px; font-weight: bold;");

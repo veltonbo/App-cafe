@@ -3,26 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Menu Principal</title>
-  <link rel="stylesheet" href="/App-cafe/css/style.css">
-  <script defer src="/App-cafe/js/main.js"></script>
+  <title>Manejo Café</title>
+  
+  <!-- Firebase Configuration -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  
+  <!-- Main JavaScript -->
+  <script src="js/main.js" defer></script>
+  
+  <!-- Estilos Gerais -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-<div id="menuPrincipal" class="menu-secao">
-  <h1>Manejo Café - Sistema de Gestão</h1>
+  <header>
+    <h1>Manejo Café</h1>
+    <nav>
+      <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
+      <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
+      <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
+      <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
+      <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
+      <button class="tab-button" onclick="mudarAba('configuracoes')">Configurações</button>
+    </nav>
+  </header>
 
-  <nav class="navegacao">
-    <ul>
-      <li><a href="/App-cafe/aplicacao.html">Aplicações</a></li>
-      <li><a href="/App-cafe/tarefas.html">Tarefas</a></li>
-      <li><a href="/App-cafe/financeiro.html">Financeiro</a></li>
-      <li><a href="/App-cafe/colheita.html">Colheita</a></li>
-      <li><a href="/App-cafe/relatorio.html">Relatório</a></li>
-      <li><a href="/App-cafe/configuracao.html">Configurações</a></li>
-    </ul>
-  </nav>
-</div>
+  <div class="conteudo">
+    <!-- ========== MENU APLICAÇÕES ========== -->
+    <section id="aplicacoes" class="aba" style="display: none;">
+      <h2>Aplicações</h2>
+      <div class="form">
+        <input type="date" id="dataApp">
+        <input type="text" id="produtoApp" placeholder="Produto">
+        <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
+        <select id="tipoApp">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
+        </select>
+        <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      </div>
+      <div id="listaAplicacoes"></div>
+    </section>
 
+    <!-- ========== MENU TAREFAS ========== -->
+    <section id="tarefas" class="aba" style="display: none;">
+      <h2>Tarefas</h2>
+      <div class="form">
+        <input type="date" id="dataTarefa">
+        <input type="text" id="descricaoTarefa" placeholder="Descrição">
+        <select id="prioridadeTarefa">
+          <option>Alta</option>
+          <option>Média</option>
+          <option>Baixa</option>
+        </select>
+        <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+      </div>
+      <div id="listaTarefas"></div>
+    </section>
+
+    <!-- ========== MENU FINANCEIRO ========== -->
+    <section id="financeiro" class="aba" style="display: none;">
+      <h2>Financeiro</h2>
+      <div class="form">
+        <input type="date" id="dataFin">
+        <input type="text" id="produtoFin" placeholder="Descrição">
+        <input type="number" id="valorFin" placeholder="Valor (R$)">
+        <select id="tipoFin">
+          <option>Receita</option>
+          <option>Despesa</option>
+        </select>
+        <button onclick="adicionarFinanceiro()">Salvar</button>
+      </div>
+      <div id="listaFinanceiro"></div>
+    </section>
+
+    <!-- ========== MENU COLHEITA ========== -->
+    <section id="colheita" class="aba" style="display: none;">
+      <h2>Colheita</h2>
+      <div class="form">
+        <input type="date" id="dataColheita">
+        <input type="text" id="produtoColheita" placeholder="Produto Colhido">
+        <input type="number" id="quantidadeColheita" placeholder="Quantidade (kg)">
+        <button onclick="adicionarColheita()">Salvar</button>
+      </div>
+      <div id="listaColheita"></div>
+    </section>
+
+    <!-- ========== MENU RELATÓRIO ========== -->
+    <section id="relatorio" class="aba" style="display: none;">
+      <h2>Relatório</h2>
+      <input type="date" id="dataInicioRel">
+      <input type="date" id="dataFimRel">
+      <button onclick="gerarRelatorio()">Gerar Relatório</button>
+      <div id="resultadoRelatorio"></div>
+    </section>
+
+    <!-- ========== MENU CONFIGURAÇÕES ========== -->
+    <section id="configuracoes" class="aba" style="display: none;">
+      <h2>Configurações</h2>
+      <input type="text" id="safraAtual" placeholder="Ano da Safra">
+      <input type="email" id="emailNotificacoes" placeholder="Email para Notificações">
+      <select id="tema">
+        <option>Claro</option>
+        <option>Escuro</option>
+        <option>Automático</option>
+      </select>
+      <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+    </section>
+  </div>
 </body>
 </html>

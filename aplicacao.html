@@ -11,7 +11,23 @@
 
 <div id="menuAplicacao" class="menu-secao">
   <h2>Gestão de Aplicações</h2>
-  <div class="listagem-aplicacao" id="listaAplicacoes"></div>
+
+  <div id="formularioAplicacao">
+    <h3>Adicionar Aplicação</h3>
+    <label>Data: <input type="date" id="dataAplicacao"></label>
+    <label>Produto: <input type="text" id="produtoAplicacao" placeholder="Descrição do Produto"></label>
+    <label>Descrição: <input type="text" id="descricaoAplicacao"></label>
+    <label>Dosagem (L/ha): <input type="number" id="dosagemAplicacao" placeholder="0.00" step="0.01"></label>
+    <div class="botoes-formulario">
+      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar</button>
+      <button id="btnCancelarAplicacao" onclick="cancelarEdicaoAplicacao()" style="display:none;">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="listagem-aplicacao">
+    <h3>Lista de Aplicações</h3>
+    <div id="listaAplicacoes"></div>
+  </div>
 </div>
 
 </body>

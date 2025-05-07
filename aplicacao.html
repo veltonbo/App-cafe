@@ -5,45 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Aplicações</title>
   <link rel="stylesheet" href="/App-cafe/css/aplicacao.css">
-  <!-- Carregar Firebase ANTES do script do menu -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+  <!-- Firebase Configuration -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
   <script src="/App-cafe/js/firebase-config.js"></script>
   <script defer src="/App-cafe/js/aplicacao.js"></script>
 </head>
 <body onload="carregarAplicacoes()">
-  <div class="menu-superior">
-    <button onclick="location.href='index.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
-  </div>
-
   <div class="conteudo">
     <h2>Gestão de Aplicações</h2>
-
     <div id="formularioAplicacao">
-      <h3>Adicionar Aplicação</h3>
-      <input id="dataApp" type="date">
-      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
-      <datalist id="sugestoesProdutoApp"></datalist>
-      <input id="dosagemApp" placeholder="Dosagem (L/ha)">
+      <input type="date" id="dataApp" placeholder="Data">
+      <input type="text" id="produtoApp" placeholder="Produto">
+      <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
       <select id="tipoApp">
         <option>Adubo</option>
         <option>Fungicida</option>
         <option>Inseticida</option>
         <option>Herbicida</option>
       </select>
-      <select id="setorApp">
-        <option>Setor 01</option>
-        <option>Setor 02</option>
-      </select>
       <div class="botoes">
         <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar</button>
-        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display:none;">Cancelar</button>
+        <button id="btnCancelarAplicacao" onclick="cancelarEdicaoAplicacao()" style="display:none;">Cancelar</button>
       </div>
     </div>
 
     <div class="listagem">
       <h3>Lista de Aplicações</h3>
-      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
       <div id="listaAplicacoes"></div>
     </div>
   </div>

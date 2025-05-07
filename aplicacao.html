@@ -7,28 +7,41 @@
   <link rel="stylesheet" href="/App-cafe/css/aplicacao.css">
   <script defer src="/App-cafe/js/aplicacao.js"></script>
 </head>
-<body>
+<body onload="carregarAplicacoes()">
+  <div class="menu-superior">
+    <button onclick="location.href='index.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
+  </div>
 
-<div id="menuAplicacao" class="menu-secao">
-  <h2>Gestão de Aplicações</h2>
+  <div class="conteudo">
+    <h2>Gestão de Aplicações</h2>
 
-  <div id="formularioAplicacao">
-    <h3>Adicionar Aplicação</h3>
-    <label>Data: <input type="date" id="dataAplicacao"></label>
-    <label>Produto: <input type="text" id="produtoAplicacao" placeholder="Descrição do Produto"></label>
-    <label>Descrição: <input type="text" id="descricaoAplicacao"></label>
-    <label>Dosagem (L/ha): <input type="number" id="dosagemAplicacao" placeholder="0.00" step="0.01"></label>
-    <div class="botoes-formulario">
-      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar</button>
-      <button id="btnCancelarAplicacao" onclick="cancelarEdicaoAplicacao()" style="display:none;">Cancelar</button>
+    <div id="formularioAplicacao">
+      <h3>Adicionar Aplicação</h3>
+      <input id="dataApp" type="date">
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+      <datalist id="sugestoesProdutoApp"></datalist>
+      <input id="dosagemApp" placeholder="Dosagem (L/ha)">
+      <select id="tipoApp">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <select id="setorApp">
+        <option>Setor 01</option>
+        <option>Setor 02</option>
+      </select>
+      <div class="botoes">
+        <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar</button>
+        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display:none;">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="listagem">
+      <h3>Lista de Aplicações</h3>
+      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+      <div id="listaAplicacoes"></div>
     </div>
   </div>
-
-  <div class="listagem-aplicacao">
-    <h3>Lista de Aplicações</h3>
-    <div id="listaAplicacoes"></div>
-  </div>
-</div>
-
 </body>
 </html>

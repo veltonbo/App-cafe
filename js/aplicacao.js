@@ -28,9 +28,6 @@ function adicionarAplicacao() {
 
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
-    indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
     aplicacoes.push(nova);
   }
@@ -73,41 +70,14 @@ function atualizarAplicacoes() {
     .sort((a, b) => b.data.localeCompare(a.data))
     .forEach((app, i) => {
       const item = document.createElement('div');
-      
-      // Define a quantidade de botões: sempre 2 por padrão (Editar + Excluir)
-      const numBotoes = 2;
-
-      item.className = `item fade-in botoes-${numBotoes}`;
-      item.style.position = 'relative';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.paddingRight = '90px';
-
-      const span = document.createElement('span');
-      span.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
-      span.style.flexGrow = '1';
-      span.style.wordBreak = 'break-word';
-      item.appendChild(span);
-
-      const botoes = document.createElement('div');
-      botoes.className = 'botoes-tarefa';
-
-      // Botão Editar
-      const botaoEditar = document.createElement('button');
-      botaoEditar.className = 'botao-circular azul';
-      botaoEditar.innerHTML = '<i class="fas fa-edit"></i>';
-      botaoEditar.onclick = () => editarAplicacao(i);
-      botoes.appendChild(botaoEditar);
-
-      // Botão Excluir
-      const botaoExcluir = document.createElement('button');
-      botaoExcluir.className = 'botao-circular vermelho';
-      botaoExcluir.innerHTML = '<i class="fas fa-trash"></i>';
-      botaoExcluir.onclick = () => excluirAplicacao(i);
-      botoes.appendChild(botaoExcluir);
-
-      item.appendChild(botoes);
+      item.className = 'item fade-in';
+      item.innerHTML = `
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} L/ha - ${app.setor}</span>
+        <div class="botoes-tarefa">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
       lista.appendChild(item);
     });
 }

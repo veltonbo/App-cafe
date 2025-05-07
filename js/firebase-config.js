@@ -1,17 +1,15 @@
-// ===== Firebase Config =====
+// ===== CONFIGURAÇÃO DO FIREBASE =====
 const firebaseConfig = {
-  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-  authDomain: "manej-cafe.firebaseapp.com",
-  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
-  projectId: "manej-cafe",
-  storageBucket: "manej-cafe.appspot.com",
-  messagingSenderId: "808931200634",
-  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
 };
 
+// ===== INICIALIZAR FIREBASE =====
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+console.log("Firebase inicializado com sucesso.");

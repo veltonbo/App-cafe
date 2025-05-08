@@ -59,4 +59,3 @@ document.addEventListener("DOMContentLoaded", () => {
       script.defer = true;
       document.body.appendChild(script);
     });
-}

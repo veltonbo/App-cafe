@@ -1,12 +1,14 @@
 <!-- colheita.html -->
-<h2>Colheita</h2>
-<div class="formulario">
-  <input type="date" id="dataColheita" placeholder="Data">
-  <input type="number" id="quantidadeColheita" placeholder="Quantidade (Kg)">
-  <input type="text" id="descricaoColheita" placeholder="Descrição (Opcional)">
-  <button onclick="adicionarColheita()">Salvar Colheita</button>
-</div>
+<div class="conteudo">
+    <h2>Colheita</h2>
+    <input id="quantidadeColheita" type="number" placeholder="Quantidade (Kg)">
+    <input id="descricaoColheita" placeholder="Descrição (Opcional)">
+    
+    <div class="botoes-acoes">
+        <button id="btnSalvarColheita" onclick="salvarColheita()">Salvar Colheita</button>
+    </div>
 
-<h3>Lista de Colheitas</h3>
-<input type="text" id="pesquisaColheita" placeholder="Pesquisar..." oninput="atualizarColheita()">
-<div id="listaColheita"></div>
+    <h3>Lista de Colheitas</h3>
+    <input id="pesquisaColheitas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarColheitas()">
+    <div id="listaColheitas"></div>
+</div>

@@ -48,3 +48,147 @@ button {
 button:hover {
   background-color: #45a049;
 }
+
+
+/* ===== LAYOUT GERAL ===== */
+body {
+  background-color: #121212;
+  color: #f1f1f1;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h2, h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #f1f1f1;
+}
+
+/* ===== CONTAINER APLICAÇÃO ===== */
+.conteudo-aplicacao {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.conteudo-aplicacao input,
+.conteudo-aplicacao select,
+.conteudo-aplicacao button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  font-size: 16px;
+}
+
+.conteudo-aplicacao input {
+  background-color: #2a2a2a;
+  color: #f1f1f1;
+}
+
+.conteudo-aplicacao select {
+  background-color: #2a2a2a;
+  color: #f1f1f1;
+}
+
+.conteudo-aplicacao button {
+  background-color: #28a745;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.conteudo-aplicacao button:hover {
+  background-color: #218838;
+}
+
+.conteudo-aplicacao .btn-editar {
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px;
+  border-radius: 50%;
+  font-size: 16px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.conteudo-aplicacao .btn-excluir {
+  background-color: #dc3545;
+  color: #fff;
+  padding: 8px;
+  border-radius: 50%;
+  font-size: 16px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+/* ===== LISTA DE APLICAÇÕES ===== */
+#listaAplicacoes {
+  margin-top: 20px;
+}
+
+.item-aplicacao {
+  background-color: #2a2a2a;
+  margin-bottom: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.item-aplicacao:hover {
+  background-color: #333;
+}
+
+.item-aplicacao span {
+  flex-grow: 1;
+  font-size: 14px;
+  color: #f1f1f1;
+  word-break: break-word;
+}
+
+.item-aplicacao button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  font-size: 16px;
+  color: #f1f1f1;
+  transition: transform 0.2s;
+}
+
+.item-aplicacao button:hover {
+  transform: scale(1.1);
+}
+
+/* ===== BOTÃO CANCELAR EDIÇÃO ===== */
+#btnCancelarEdicaoApp {
+  background-color: #6c757d;
+  display: none;
+}
+
+/* ===== MODO RESPONSIVO ===== */
+@media (max-width: 768px) {
+  .conteudo-aplicacao {
+    width: 90%;
+    padding: 15px;
+  }
+  
+  .item-aplicacao {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

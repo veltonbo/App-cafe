@@ -1,106 +1,39 @@
-// ===== MAIN.JS - Controle de Navegação e Carregamento de Abas =====
+function mostrarAba(abaId) {
+  document.querySelectorAll('.aba').forEach(aba => {
+    aba.style.display = 'none';
+  });
 
-// ===== Verificar Conexão com o Firebase =====
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Main.js carregado e pronto.");
-    inicializarFirebase();
-    carregarScriptsAba();
-});
+  const abaSelecionada = document.getElementById(abaId);
+  if (abaSelecionada) abaSelecionada.style.display = 'block';
 
-// ===== Inicializar Firebase (Garantir que o Firebase está configurado) =====
-function inicializarFirebase() {
-    if (!firebase.apps.length) {
-        console.error("Firebase não está configurado corretamente. Verifique o arquivo firebase-config.js");
-        return;
-    }
-    console.log("Firebase inicializado corretamente.");
+  document.querySelectorAll('.menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  const btnId = 'btn-' + abaId;
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+
+  localStorage.setItem('aba', abaId);
 }
 
-// ===== Controlar Navegação entre Abas =====
-const abas = document.querySelectorAll(".aba");
-const botoesMenu = document.querySelectorAll(".botao-menu");
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
+  mostrarAba(abaInicial);
 
-botoesMenu.forEach(botao => {
-    botao.addEventListener("click", () => {
-        mudarAba(botao.dataset.target);
-    });
-});
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
+  }
 
-// ===== Mudar Aba =====
-function mudarAba(abaId) {
-    // Esconder todas as abas
-    abas.forEach(aba => {
-        aba.style.display = "none";
-    });
-
-    // Mostrar apenas a aba selecionada
-    const abaSelecionada = document.getElementById(abaId);
-    if (abaSelecionada) {
-        abaSelecionada.style.display = "block";
-        carregarScriptsAba(abaId);
-    } else {
-        console.error("Aba não encontrada:", abaId);
-    }
+  // Chama as funções de carregamento se estiverem disponíveis
+  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+  if (typeof carregarTarefas === "function") carregarTarefas();
+  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+  if (typeof carregarColheita === "function") carregarColheita();
+  if (typeof carregarValorLata === "function") carregarValorLata();
+  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
 }
 
-// ===== Carregar Scripts da Aba Selecionada =====
-function carregarScriptsAba(abaId) {
-    switch (abaId) {
-        case "aplicacoes":
-            if (typeof carregarAplicacoes === "function") {
-                carregarAplicacoes();
-            } else {
-                console.error("Função carregarAplicacoes não está definida.");
-            }
-            break;
-
-        case "tarefas":
-            if (typeof carregarTarefas === "function") {
-                carregarTarefas();
-            } else {
-                console.error("Função carregarTarefas não está definida.");
-            }
-            break;
-
-        case "financeiro":
-            if (typeof carregarFinanceiro === "function") {
-                carregarFinanceiro();
-            } else {
-                console.error("Função carregarFinanceiro não está definida.");
-            }
-            break;
-
-        case "colheita":
-            if (typeof carregarColheita === "function") {
-                carregarColheita();
-            } else {
-                console.error("Função carregarColheita não está definida.");
-            }
-            break;
-
-        case "relatorio":
-            if (typeof carregarRelatorio === "function") {
-                carregarRelatorio();
-            } else {
-                console.error("Função carregarRelatorio não está definida.");
-            }
-            break;
-
-        case "configuracoes":
-            if (typeof carregarConfiguracoes === "function") {
-                carregarConfiguracoes();
-            } else {
-                console.error("Função carregarConfiguracoes não está definida.");
-            }
-            break;
-
-        default:
-            console.error("Aba desconhecida:", abaId);
-            break;
-    }
-}
-
-// ===== Inicializar a Primeira Aba (Aplicações) =====
-document.addEventListener("DOMContentLoaded", () => {
-    mudarAba("aplicacoes");
-});
+// Executa ao carregar a página
+window.addEventListener('DOMContentLoaded', inicializarApp);

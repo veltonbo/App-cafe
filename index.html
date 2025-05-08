@@ -19,11 +19,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="style.css" />
 
   <!-- Scripts -->
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/main.js"></script>
+  <script defer src="firebase-config.js"></script>
+  <script defer src="main.js"></script>
 </head>
 <body>
   <div class="menu-superior">
@@ -51,42 +51,11 @@
         .then(response => response.text())
         .then(html => {
           document.getElementById('conteudoPrincipal').innerHTML = html;
-          carregarScripts(arquivo);
+          inicializarAba(arquivo);
         })
         .catch(error => console.error("Erro ao carregar a aba:", error));
       
       localStorage.setItem('aba', arquivo);
-    }
-
-    function carregarScripts(arquivo) {
-      // Remover scripts antigos
-      document.querySelectorAll('script[data-aba]').forEach(script => script.remove());
-
-      let script = document.createElement('script');
-      script.setAttribute('data-aba', 'true');
-
-      switch (arquivo) {
-        case 'aplicacao.html':
-          script.src = "js/aplicacao.js";
-          break;
-        case 'tarefas.html':
-          script.src = "js/tarefas.js";
-          break;
-        case 'financeiro.html':
-          script.src = "js/financeiro.js";
-          break;
-        case 'colheita.html':
-          script.src = "js/colheita.js";
-          break;
-        case 'relatorio.html':
-          script.src = "js/relatorio.js";
-          break;
-        case 'configuracoes.html':
-          script.src = "js/configuracoes.js";
-          break;
-      }
-
-      document.body.appendChild(script);
     }
   </script>
 </body>

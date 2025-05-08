@@ -1,39 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
-  <!-- FontAwesome CDN (Versão mais recente) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-o/8z1ZC/evFnR5Jg9QyOb2ap/8bBO3jK+8m4Q1hj7ZyPup6e7b1gY5h/uL2Rh6BcQZj65F5cFZIz0St3tA8RrA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-papfCe1fW0W9VQ88CVUylFevp25n4e4QOXnQHzgjQjplhzAcxZsXxB0NG0k/4XGpK2EXLQu/G0OKR4rNB8hj3A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <!-- ===== MENU SUPERIOR COM ÍCONES ===== -->
-<nav class="menu-superior">
-  <button onclick="mudarAba('aplicacao')" class="menu-item" id="menu-aplicacao">
-    <i class="fas fa-flask"></i>
-  </button>
-  <button onclick="mudarAba('tarefas')" class="menu-item" id="menu-tarefas">
-    <i class="fas fa-tasks"></i>
-  </button>
-  <button onclick="mudarAba('financeiro')" class="menu-item" id="menu-financeiro">
-    <i class="fas fa-dollar-sign"></i>
-  </button>
-  <button onclick="mudarAba('colheita')" class="menu-item" id="menu-colheita">
-    <i class="fas fa-tractor"></i>
-  </button>
-  <button onclick="mudarAba('relatorio')" class="menu-item" id="menu-relatorio">
-    <i class="fas fa-chart-line"></i>
-  </button>
-  <button onclick="mudarAba('configuracao')" class="menu-item" id="menu-configuracao">
-    <i class="fas fa-cog"></i>
-  </button>
-</nav>
+  <nav class="menu-superior">
+    <button onclick="mudarAba('aplicacao')" class="menu-item" id="menu-aplicacao" title="Aplicações">
+      <i class="fas fa-flask"></i>
+    </button>
+    <button onclick="mudarAba('tarefas')" class="menu-item" id="menu-tarefas" title="Tarefas">
+      <i class="fas fa-list-check"></i>
+    </button>
+    <button onclick="mudarAba('financeiro')" class="menu-item" id="menu-financeiro" title="Financeiro">
+      <i class="fas fa-dollar-sign"></i>
+    </button>
+    <button onclick="mudarAba('colheita')" class="menu-item" id="menu-colheita" title="Colheita">
+      <i class="fas fa-tractor"></i>
+    </button>
+    <button onclick="mudarAba('relatorio')" class="menu-item" id="menu-relatorio" title="Relatórios">
+      <i class="fas fa-chart-line"></i>
+    </button>
+    <button onclick="mudarAba('configuracao')" class="menu-item" id="menu-configuracao" title="Configurações">
+      <i class="fas fa-cog"></i>
+    </button>
+  </nav>
 
+  <!-- Conteúdo dinâmico -->
   <div id="conteudo" class="conteudo"></div>
 
-  <!-- Script de Controle -->
-  <script src="js/main.js" defer></script>
+  <!-- Scripts -->
+  <script src="main.js" defer></script>
 </body>
 </html>

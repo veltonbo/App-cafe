@@ -1,76 +1,60 @@
+// ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
-let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snap => {
-    aplicacoes = snap.exists() ? snap.val() : [];
-    atualizarAplicacoes();
-  });
+  // Exemplo de lista (simulação)
+  aplicacoes = [
+    { data: "2025-05-07", produto: "Adubo", dosagem: "200", tipo: "Adubo", setor: "Setor 01" },
+    { data: "2025-05-08", produto: "Fungicida", dosagem: "150", tipo: "Fungicida", setor: "Setor 02" }
+  ];
+  atualizarAplicacoes();
 }
 
-// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
+// ===== ADICIONAR APLICAÇÃO =====
 function adicionarAplicacao() {
-  const data = document.getElementById("dataApp").value;
-  const produto = document.getElementById("produtoApp").value.trim();
-  const dosagem = document.getElementById("dosagemApp").value.trim();
-  const tipo = document.getElementById("tipoApp").value;
-  const setor = document.getElementById("setorApp").value;
+  const nova = {
+    data: document.getElementById("dataApp").value,
+    produto: document.getElementById("produtoApp").value.trim(),
+    dosagem: document.getElementById("dosagemApp").value.trim(),
+    tipo: document.getElementById("tipoApp").value,
+    setor: document.getElementById("setorApp").value
+  };
 
-  if (!data || !produto || !dosagem || isNaN(parseFloat(dosagem))) {
-    alert("Preencha todos os campos corretamente.");
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos.");
     return;
   }
 
-  const novaAplicacao = { data, produto, dosagem, tipo, setor };
-
-  if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
-    indiceEdicaoAplicacao = null;
-  } else {
-    aplicacoes.push(novaAplicacao);
-  }
-
-  db.ref('Aplicacoes').set(aplicacoes);
+  aplicacoes.push(nova);
   atualizarAplicacoes();
-  limparCamposAplicacao();
+  limparCampos();
 }
 
 // ===== LIMPAR CAMPOS =====
-function limparCamposAplicacao() {
+function limparCampos() {
   document.getElementById("dataApp").value = '';
   document.getElementById("produtoApp").value = '';
   document.getElementById("dosagemApp").value = '';
-  document.getElementById("tipoApp").value = 'Adubo';
-  document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== ATUALIZAR LISTA =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
-  const termoBusca = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-  aplicacoes
-    .filter(app => `${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
-    .forEach((app, index) => {
-      const item = document.createElement('div');
-      item.className = "item";
-      item.innerHTML = `
-        <div>
-          ${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} L/ha - ${app.setor}
-        </div>
-        <div>
-          <button class="botao-circular azul" onclick="editarAplicacao(${index})">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${index})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+  aplicacoes.forEach((app, index) => {
+    const item = document.createElement('div');
+    item.className = "item";
+    item.innerHTML = `
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem}L - ${app.setor}</span>
+      <div class="botoes">
+        <button class="botao-icone" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+        <button class="botao-icone" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
+    lista.appendChild(item);
+  });
 }
 
 // ===== EDITAR APLICAÇÃO =====
@@ -79,19 +63,13 @@ function editarAplicacao(index) {
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
-  document.getElementById("tipoApp").value = app.tipo;
-  document.getElementById("setorApp").value = app.setor;
-  indiceEdicaoAplicacao = index;
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
-  if (confirm("Deseja excluir esta aplicação?")) {
-    aplicacoes.splice(index, 1);
-    db.ref('Aplicacoes').set(aplicacoes);
-    atualizarAplicacoes();
-  }
+  aplicacoes.splice(index, 1);
+  atualizarAplicacoes();
 }
 
-// ===== INICIALIZAR =====
+// ===== INICIALIZAR AO CARREGAR =====
 document.addEventListener("DOMContentLoaded", carregarAplicacoes);

@@ -1,22 +1,43 @@
 <!-- tarefas.html -->
-<h2>Tarefas</h2>
-<div class="formulario">
-  <input type="date" id="dataTarefa" placeholder="Data">
-  <input type="text" id="descricaoTarefa" placeholder="Descrição da Tarefa">
+<div class="aba">
+  <h2>Tarefas</h2>
+
+  <!-- Formulário de Tarefas -->
+  <input id="dataTarefa" type="date">
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+  
   <select id="prioridadeTarefa">
     <option>Alta</option>
     <option>Média</option>
     <option>Baixa</option>
   </select>
+
   <select id="setorTarefa">
     <option>Setor 01</option>
     <option>Setor 02</option>
   </select>
-  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-</div>
 
-<h3>Lista de Tarefas</h3>
-<input type="text" id="pesquisaTarefas" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-<div id="listaTarefas"></div>
-<h3>Executadas</h3>
-<div id="listaTarefasFeitas"></div>
+  <!-- Botões de Ação -->
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+    <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
+    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
+      Cancelar Edição
+    </button>
+  </div>
+
+  <!-- Filtros e Pesquisa -->
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+
+  <!-- Listagem de Tarefas -->
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>

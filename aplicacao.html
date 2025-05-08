@@ -1,27 +1,32 @@
-<div class="conteudo-aplicacao">
-  <h2>Aplicações</h2>
-  
-  <div class="formulario-aplicacao">
-    <input id="dataApp" type="date" class="campo" placeholder="Data">
-    <input id="produtoApp" list="sugestoesProdutoApp" class="campo" placeholder="Produto">
-    <datalist id="sugestoesProdutoApp"></datalist>
-    <input id="dosagemApp" class="campo" placeholder="Dosagem (L/ha)">
-    <select id="tipoApp" class="campo">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplicações - Manejo Café</title>
+</head>
+<body>
+  <div class="conteudo-aplicacao">
+    <h2>Aplicações</h2>
+    <input type="date" id="dataApp" placeholder="Data">
+    <input type="text" id="produtoApp" placeholder="Produto">
+    <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
+    <select id="tipoApp">
+      <option value="Adubo">Adubo</option>
+      <option value="Defensivo">Defensivo</option>
+      <option value="Fungicida">Fungicida</option>
     </select>
-    <select id="setorApp" class="campo">
-      <option>Setor 01</option>
-      <option>Setor 02</option>
+    <select id="setorApp">
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
     </select>
+    <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
     
-    <button id="btnSalvarAplicacao" class="botao-salvar" onclick="adicionarAplicacao()">
-      <i class="fas fa-save"></i> Salvar
-    </button>
+    <h3>Lista de Aplicações</h3>
+    <div id="listaAplicacoes"></div>
   </div>
 
-  <h3>Lista de Aplicações</h3>
-  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-</div>
+  <!-- Script da Aplicação -->
+  <script src="js/aplicacao.js"></script>
+</body>
+</html>

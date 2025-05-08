@@ -1,47 +1,64 @@
-// ===== CARREGAR MENU SELECIONADO =====
-function mudarAba(menu) {
-  const abas = ['aplicacoes', 'tarefas', 'financeiro', 'colheita', 'relatorio', 'configuracoes'];
-  
-  abas.forEach(aba => {
-    document.getElementById(aba).style.display = (aba === menu) ? 'block' : 'none';
-  });
-
-  localStorage.setItem('menuAtivo', menu);
-  carregarScriptsAba(menu);
-
-  // Atualizar menu inferior
-  document.querySelectorAll('footer .menu-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  document.querySelector(`#menu-${menu}`).classList.add('active');
-}
-
-// ===== INICIALIZAR MENU ATIVO AO CARREGAR =====
+// ===== MENU DE NAVEGAÇÃO DINÂMICA =====
 document.addEventListener("DOMContentLoaded", () => {
-  const menuAtivo = localStorage.getItem('menuAtivo') || 'aplicacoes';
-  mudarAba(menuAtivo);
+  carregarAbaInicial();
+  configurarNavegacao();
 });
 
-// ===== CARREGAR SCRIPTS DE CADA ABA =====
-function carregarScriptsAba(menu) {
-  switch (menu) {
-    case 'aplicacoes':
-      carregarAplicacoes();
-      break;
-    case 'tarefas':
-      carregarTarefas();
-      break;
-    case 'financeiro':
-      carregarFinanceiro();
-      break;
-    case 'colheita':
-      carregarColheita();
-      break;
-    case 'relatorio':
-      carregarRelatorio();
-      break;
-    case 'configuracoes':
-      carregarConfiguracoes();
-      break;
-  }
+// ===== CARREGAR ABA INICIAL =====
+function carregarAbaInicial() {
+  const abaSalva = localStorage.getItem("abaAtiva") || "aplicacao.html";
+  mudarAba(abaSalva);
 }
+
+// ===== CONFIGURAR NAVEGAÇÃO =====
+function configurarNavegacao() {
+  document.querySelectorAll(".navbar a").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const destino = e.target.getAttribute("href");
+      mudarAba(destino);
+    });
+  });
+}
+
+// ===== MUDAR DE ABA =====
+function mudarAba(destino) {
+  document.querySelectorAll(".navbar a").forEach(link => link.classList.remove("active"));
+  document.querySelector(`.navbar a[href="${destino}"]`).classList.add("active");
+  
+  document.querySelector("main").innerHTML = '<div class="loading">Carregando...</div>';
+  localStorage.setItem("abaAtiva", destino);
+
+  fetch(destino)
+    .then(response => response.text())
+    .then(html => {
+      document.querySelector("main").innerHTML = html;
+      carregarScriptsAba(destino);
+    })
+    .catch(() => {
+      document.querySelector("main").innerHTML = '<div class="erro">Erro ao carregar o menu.</div>';
+    });
+}
+
+// ===== CARREGAR SCRIPTS DA ABA =====
+function carregarScriptsAba(destino) {
+  const scriptPath = destino.replace(".html", ".js").replace("html", "js");
+  const script = document.createElement("script");
+  script.src = scriptPath;
+  script.defer = true;
+  document.body.appendChild(script);
+}
+
+// ===== TEMA ESCURO/CLARO =====
+document.querySelector("#toggleTheme").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("temaEscuro", document.body.classList.contains("dark-mode"));
+});
+
+// ===== APLICAR TEMA SALVO =====
+document.addEventListener("DOMContentLoaded", () => {
+  const temaEscuro = localStorage.getItem("temaEscuro") === "true";
+  if (temaEscuro) {
+    document.body.classList.add("dark-mode");
+  }
+});

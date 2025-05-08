@@ -1,50 +1,12 @@
-<!-- ========== MENU COLHEITA ========== -->
-<div id="colheita" class="aba">
-  <h2>Colheita</h2>
-
-  <h4>Valor da Lata (R$)</h4>
-  <input id="valorLata" type="number" placeholder="Digite o valor da lata" onchange="salvarValorLata()" />
-
-  <h4>Registrar Nova Colheita</h4>
-  <input id="dataColheita" type="date" />
-  <input id="colhedor" placeholder="Nome do Colhedor" />
-  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas" />
-  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
-
-  <h4>Filtrar Colheitas</h4>
-  <input id="filtroDataInicio" type="date" onchange="atualizarColheita()" />
-  <input id="filtroDataFim" type="date" onchange="atualizarColheita()" />
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()" />
-
-  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
-
-  <div class="coluna-pendente">
-    <h4 style="color: #ff9800; margin-top: 0;">Pendentes</h4>
-    <div id="colheitaPendentes"></div>
-  </div>
-
-  <div class="coluna-pago">
-    <h4 style="color: #4caf50; margin-top: 0;">Pagos</h4>
-    <div id="colheitaPagos"></div>
-  </div>
-
-  <h4>Gráfico Latas por Dia</h4>
-  <canvas id="graficoColheita"></canvas>
-
-  <h4>Gráfico Latas por Colhedor</h4>
-  <canvas id="graficoColhedor"></canvas>
-
-  <div style="margin-top: 20px; margin-bottom: 20px;">
-    <button onclick="exportarRelatorioColheita()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-    <button onclick="exportarCSVColheita()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-  </div>
-
-  <h4>Consultar Safras Anteriores</h4>
-  <select id="safraConsulta" onchange="consultarSafraAnterior()">
-    <option value="">Selecione o ano</option>
-    <option value="2023">2023</option>
-    <option value="2024">2024</option>
-    <option value="2025">2025</option>
-  </select>
-  <div id="resultadoSafraAnterior" style="margin-top: 10px;"></div>
+<!-- colheita.html -->
+<h2>Colheita</h2>
+<div class="formulario">
+  <input type="date" id="dataColheita" placeholder="Data">
+  <input type="number" id="quantidadeColheita" placeholder="Quantidade (Kg)">
+  <input type="text" id="descricaoColheita" placeholder="Descrição (Opcional)">
+  <button onclick="adicionarColheita()">Salvar Colheita</button>
 </div>
+
+<h3>Lista de Colheitas</h3>
+<input type="text" id="pesquisaColheita" placeholder="Pesquisar..." oninput="atualizarColheita()">
+<div id="listaColheita"></div>

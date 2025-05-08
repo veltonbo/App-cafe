@@ -1,99 +1,54 @@
-// ===== INICIALIZAÇÃO DO APP =====
+// ===== MAIN.JS - Controle de Navegação e Carregamento Dinâmico =====
+
+// ===== Inicialização da Aplicação =====
 document.addEventListener("DOMContentLoaded", () => {
-  inicializarApp();
-  configurarNavegacao();
+    carregarAbaInicial();
 });
 
-// ===== INICIALIZAR APP =====
-function inicializarApp() {
-  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacoes";
-  mostrarAba(abaAtiva);
-}
+// ===== Função para Mudar de Aba =====
+function mudarAba(aba) {
+    const abas = document.querySelectorAll(".aba");
+    abas.forEach(section => section.style.display = "none");
 
-// ===== CONFIGURAR NAVEGAÇÃO =====
-function configurarNavegacao() {
-  document.querySelectorAll(".menu-superior button").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const aba = e.target.getAttribute("data-aba");
-      mostrarAba(aba);
-    });
-  });
-}
-
-// ===== MOSTRAR ABA =====
-function mostrarAba(aba) {
-  document.querySelectorAll(".aba").forEach(div => {
-    div.style.display = "none";
-  });
-
-  const abaAtiva = document.getElementById(aba);
-  if (abaAtiva) {
-    abaAtiva.style.display = "block";
-    localStorage.setItem("abaAtiva", aba);
-
-    // Carregar a função de cada aba automaticamente
-    switch (aba) {
-      case "aplicacoes":
-        carregarAplicacoes();
-        break;
-      case "tarefas":
-        carregarTarefas();
-        break;
-      case "financeiro":
-        carregarFinanceiro();
-        break;
-      case "colheita":
-        carregarColheita();
-        break;
-      case "relatorio":
-        carregarRelatorio();
-        break;
-      case "configuracoes":
-        carregarConfiguracoes();
-        break;
+    const abaSelecionada = document.getElementById(aba);
+    if (abaSelecionada) {
+        abaSelecionada.style.display = "block";
+        localStorage.setItem("ultimaAba", aba);
+        carregarScriptsAba(aba);
     }
-  }
 }
 
-// ===== TEMA ESCURO/CLARO =====
-function alternarTema() {
-  document.body.classList.toggle("dark-mode");
-  localStorage.setItem("temaEscuro", document.body.classList.contains("dark-mode"));
+// ===== Carregar Aba Inicial (Última Acessada) =====
+function carregarAbaInicial() {
+    const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacoes";
+    mudarAba(ultimaAba);
 }
 
-// ===== APLICAR TEMA SALVO =====
-document.addEventListener("DOMContentLoaded", () => {
-  const temaEscuro = localStorage.getItem("temaEscuro") === "true";
-  if (temaEscuro) {
-    document.body.classList.add("dark-mode");
-  }
-});
-
-// ===== RECARREGAR ABA ATIVA =====
-function recarregarAba() {
-  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacoes";
-  mostrarAba(abaAtiva);
+// ===== Carregar Scripts Específicos da Aba =====
+function carregarScriptsAba(aba) {
+    switch (aba) {
+        case "aplicacoes":
+            if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+            break;
+        case "tarefas":
+            if (typeof carregarTarefas === "function") carregarTarefas();
+            break;
+        case "financeiro":
+            if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+            break;
+        case "colheita":
+            if (typeof carregarColheita === "function") carregarColheita();
+            break;
+        case "relatorio":
+            if (typeof carregarRelatorio === "function") carregarRelatorio();
+            break;
+        case "configuracoes":
+            if (typeof carregarConfiguracoes === "function") carregarConfiguracoes();
+            break;
+        default:
+            console.warn("Aba desconhecida:", aba);
+    }
 }
 
-// ===== GERAR RELATÓRIO COMPLETO (PDF e CSV) =====
-function gerarRelatorioCompleto() {
-  const abaAtual = localStorage.getItem("abaAtiva");
-
-  switch (abaAtual) {
-    case "relatorio":
-      gerarRelatorioPDF();
-      gerarRelatorioCSV();
-      break;
-    default:
-      alert("Acesse o menu Relatório para gerar o relatório completo.");
-  }
-}
-
-// ===== LIMPAR DADOS (USADO NAS CONFIGURAÇÕES) =====
-function limparDados() {
-  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")) {
-    db.ref('/').set(null);
-    alert("Todos os dados foram apagados.");
-    recarregarAba();
-  }
-}
+// ===== Mensagem de Debug (Console) =====
+console.log("🚀 Main.js carregado e pronto.");

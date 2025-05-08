@@ -1,3 +1,6 @@
+// ===== CONFIGURAÇÃO DO FIREBASE (Firebase inicializado em firebase-config.js) =====
+const db = firebase.database();
+
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
@@ -18,38 +21,25 @@ function adicionarAplicacao() {
   }
 
   if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
+    db.ref('Aplicacoes').child(aplicacoes[indiceEdicaoAplicacao].id).set(nova);
     indiceEdicaoAplicacao = null;
   } else {
-    aplicacoes.push(nova);
+    db.ref('Aplicacoes').push(nova);
   }
 
-  db.ref('Aplicacoes').set(aplicacoes)
-    .then(() => {
-      console.log("✅ Aplicação salva com sucesso no Firebase.");
-      atualizarAplicacoes();
-      limparCamposAplicacao();
-    })
-    .catch((error) => {
-      console.error("❌ Erro ao salvar aplicação no Firebase:", error);
-    });
+  limparCamposAplicacao();
+  carregarAplicacoes();
 }
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', (snapshot) => {
-    aplicacoes = snapshot.exists() ? Object.values(snapshot.val()) : [];
+    aplicacoes = [];
+    snapshot.forEach((childSnapshot) => {
+      aplicacoes.push({ ...childSnapshot.val(), id: childSnapshot.key });
+    });
     atualizarAplicacoes();
   });
-}
-
-// ===== LIMPAR CAMPOS =====
-function limparCamposAplicacao() {
-  document.getElementById("dataApp").value = '';
-  document.getElementById("produtoApp").value = '';
-  document.getElementById("dosagemApp").value = '';
-  document.getElementById("tipoApp").value = 'Adubo';
-  document.getElementById("setorApp").value = 'Setor 01';
 }
 
 // ===== ATUALIZAR LISTA DE APLICAÇÕES =====
@@ -63,17 +53,37 @@ function atualizarAplicacoes() {
     item.innerHTML = `
       <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
       <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
-      <button onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+      <button onclick="excluirAplicacao('${app.id}')"><i class="fas fa-trash"></i></button>
     `;
     lista.appendChild(item);
   });
 }
 
+// ===== EDITAR APLICAÇÃO =====
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  document.getElementById("dataApp").value = app.data;
+  document.getElementById("produtoApp").value = app.produto;
+  document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
+  document.getElementById("setorApp").value = app.setor;
+  indiceEdicaoAplicacao = index;
+}
+
 // ===== EXCLUIR APLICAÇÃO =====
-function excluirAplicacao(index) {
-  aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
+function excluirAplicacao(id) {
+  db.ref('Aplicacoes').child(id).remove();
+  carregarAplicacoes();
+}
+
+// ===== LIMPAR CAMPOS =====
+function limparCamposAplicacao() {
+  document.getElementById("dataApp").value = '';
+  document.getElementById("produtoApp").value = '';
+  document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
+  document.getElementById("setorApp").value = 'Setor 01';
+  indiceEdicaoAplicacao = null;
 }
 
 // ===== INICIAR AO CARREGAR =====

@@ -1,130 +1,61 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
-  
-  <!-- Firebase Configuration -->
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase-config.js" defer></script>
+  <script src="firebase-config.js" defer></script>
 
-  <!-- Main JavaScript -->
-  <script src="js/main.js" defer></script>
-  
-  <!-- Estilos Gerais -->
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF (para Relatórios) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Scripts de cada menu -->
+  <script src="main.js" defer></script>
+  <script src="aplicacao.js" defer></script>
+  <script src="tarefas.js" defer></script>
+  <script src="financeiro.js" defer></script>
+  <script src="colheita.js" defer></script>
+  <script src="relatorio.js" defer></script>
+  <script src="configuracoes.js" defer></script>
 </head>
-<body>
+<body onload="inicializarApp()">
 
-  <header>
-    <h1>Manejo Café</h1>
-    <nav>
-      <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
-      <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
-      <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
-      <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
-      <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
-      <button class="tab-button" onclick="mudarAba('configuracoes')">Configurações</button>
-    </nav>
-  </header>
-
-  <div class="conteudo">
-    <!-- ========== MENU APLICAÇÕES ========== -->
-    <section id="aplicacoes" class="aba" style="display: none;">
-      <h2>Aplicações</h2>
-      <div class="form">
-        <input type="date" id="dataApp">
-        <input type="text" id="produtoApp" placeholder="Produto">
-        <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
-        <select id="tipoApp">
-          <option>Adubo</option>
-          <option>Fungicida</option>
-          <option>Inseticida</option>
-          <option>Herbicida</option>
-        </select>
-        <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
-      </div>
-      <div id="listaAplicacoes"></div>
-    </section>
-
-    <!-- ========== MENU TAREFAS ========== -->
-    <section id="tarefas" class="aba" style="display: none;">
-      <h2>Tarefas</h2>
-      <div class="form">
-        <input type="date" id="dataTarefa">
-        <input type="text" id="descricaoTarefa" placeholder="Descrição">
-        <select id="prioridadeTarefa">
-          <option>Alta</option>
-          <option>Média</option>
-          <option>Baixa</option>
-        </select>
-        <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-      </div>
-      <div id="listaTarefas"></div>
-    </section>
-
-    <!-- ========== MENU FINANCEIRO ========== -->
-    <section id="financeiro" class="aba" style="display: none;">
-      <h2>Financeiro</h2>
-      <div class="form">
-        <input type="date" id="dataFin">
-        <input type="text" id="produtoFin" placeholder="Descrição">
-        <input type="number" id="valorFin" placeholder="Valor (R$)">
-        <select id="tipoFin">
-          <option>Receita</option>
-          <option>Despesa</option>
-        </select>
-        <button onclick="adicionarFinanceiro()">Salvar</button>
-      </div>
-      <div id="listaFinanceiro"></div>
-    </section>
-
-    <!-- ========== MENU COLHEITA ========== -->
-    <section id="colheita" class="aba" style="display: none;">
-      <h2>Colheita</h2>
-      <div class="form">
-        <input type="date" id="dataColheita">
-        <input type="text" id="produtoColheita" placeholder="Produto Colhido">
-        <input type="number" id="quantidadeColheita" placeholder="Quantidade (kg)">
-        <button onclick="adicionarColheita()">Salvar</button>
-      </div>
-      <div id="listaColheita"></div>
-    </section>
-
-    <!-- ========== MENU RELATÓRIO ========== -->
-    <section id="relatorio" class="aba" style="display: none;">
-      <h2>Relatório</h2>
-      <input type="date" id="dataInicioRel">
-      <input type="date" id="dataFimRel">
-      <button onclick="gerarRelatorio()">Gerar Relatório</button>
-      <div id="resultadoRelatorio"></div>
-    </section>
-
-    <!-- ========== MENU CONFIGURAÇÕES ========== -->
-    <section id="configuracoes" class="aba" style="display: none;">
-      <h2>Configurações</h2>
-      <input type="text" id="safraAtual" placeholder="Ano da Safra">
-      <input type="email" id="emailNotificacoes" placeholder="Email para Notificações">
-      <select id="tema">
-        <option>Claro</option>
-        <option>Escuro</option>
-        <option>Automático</option>
-      </select>
-      <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
-    </section>
+  <!-- Menu Superior (Navegação) -->
+  <div class="menu-superior">
+    <button data-aba="aplicacoes"><i class="fas fa-flask"></i> Aplicações</button>
+    <button data-aba="tarefas"><i class="fas fa-tasks"></i> Tarefas</button>
+    <button data-aba="financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</button>
+    <button data-aba="colheita"><i class="fas fa-tractor"></i> Colheita</button>
+    <button data-aba="relatorio"><i class="fas fa-chart-line"></i> Relatório</button>
+    <button data-aba="configuracoes"><i class="fas fa-cog"></i> Configurações</button>
   </div>
-    <!-- ===== SCRIPTS DE CADA MENU ===== -->
-  <script src="js/aplicacao.js" defer></script>
-  <script src="js/tarefas.js" defer></script>
-  <script src="js/financeiro.js" defer></script>
-  <script src="js/colheita.js" defer></script>
-  <script src="js/relatorio.js" defer></script>
-  <script src="js/configuracoes.js" defer></script>
-  <script src="js/main.js" defer></script>
-</body>
-</html>
+
+  <!-- Conteúdo das Abas -->
+  <main class="conteudo">
+    <div id="aplicacoes" class="aba"></div>
+    <div id="tarefas" class="aba"></div>
+    <div id="financeiro" class="aba"></div>
+    <div id="colheita" class="aba"></div>
+    <div id="relatorio" class="aba"></div>
+    <div id="configuracoes" class="aba"></div>
+  </main>
+
+  <!-- Botão Flutuante (Ação Rápida) -->
+  <div class="float-button" onclick="mostrarFormularioRapido()">
+    <i class="fas fa-plus"></i>
+  </div>
 </body>
 </html>

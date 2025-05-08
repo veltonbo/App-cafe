@@ -104,3 +104,16 @@ nav button:hover {
 .lista-aplicacoes .item .botao-icone:hover {
   color: #f44336;
 }
+
+/* ===== MENU SUPERIOR - ÍCONES ATIVOS ===== */
+.menu-superior button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 24px;
+  transition: color 0.3s;
+}
+
+.menu-superior button.ativo {
+  color: #4CAF50; /* Verde para o menu ativo */
+}

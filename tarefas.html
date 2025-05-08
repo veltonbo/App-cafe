@@ -1,94 +1,59 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Tarefas</title>
-  <link rel="stylesheet" href="css/main.css">
-  <script src="js/main.js" defer></script>
-  <script src="js/tarefas.js" defer></script>
-</head>
-<body>
-  <header>
-    <h1>Tarefas</h1>
-    <div class="icon" onclick="toggleNotificacoes()">
-      <i class="fas fa-bell"></i>
-    </div>
-  </header>
+<!-- ========== MENU TAREFAS ========== -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
 
-  <main class="conteudo">
-    <div class="formulario">
-      <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
-      <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
-      
-      <select id="prioridadeTarefa">
-        <option value="Alta">Alta</option>
-        <option value="Média">Média</option>
-        <option value="Baixa">Baixa</option>
-      </select>
+  <input id="dataTarefa" type="date">
+  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+  
+  <select id="prioridadeTarefa">
+    <option>Alta</option>
+    <option>Média</option>
+    <option>Baixa</option>
+  </select>
 
-      <select id="setorTarefa">
-        <option value="Setor 01">Setor 01</option>
-        <option value="Setor 02">Setor 02</option>
-      </select>
+  <select id="setorTarefa">
+    <option>Setor 01</option>
+    <option>Setor 02</option>
+  </select>
 
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-        <label for="eAplicacaoCheckbox">É Aplicação</label>
-      </div>
-
-      <div id="camposAplicacao" style="display:none;">
-        <input id="dosagemAplicacao" placeholder="Dosagem (L/ha)">
-        <select id="tipoAplicacao">
-          <option>Adubo</option>
-          <option>Fungicida</option>
-          <option>Inseticida</option>
-          <option>Herbicida</option>
-        </select>
-      </div>
-
-      <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
-    </div>
-
-    <div class="lista" id="listaTarefas">
-      <h3>A Fazer</h3>
-      <div id="tarefasAFazer"></div>
-
-      <h3>Executadas</h3>
-      <div id="tarefasExecutadas"></div>
-    </div>
-  </main>
-
-  <footer>
-    <div class="menu-item" id="menu-aplicacoes" onclick="mudarAba('aplicacoes')">
-      <i class="fas fa-flask icon"></i>
-      <span>Aplicações</span>
-    </div>
-    <div class="menu-item active" id="menu-tarefas" onclick="mudarAba('tarefas')">
-      <i class="fas fa-tasks icon"></i>
-      <span>Tarefas</span>
-    </div>
-    <div class="menu-item" id="menu-financeiro" onclick="mudarAba('financeiro')">
-      <i class="fas fa-dollar-sign icon"></i>
-      <span>Financeiro</span>
-    </div>
-    <div class="menu-item" id="menu-colheita" onclick="mudarAba('colheita')">
-      <i class="fas fa-tractor icon"></i>
-      <span>Colheita</span>
-    </div>
-    <div class="menu-item" id="menu-relatorio" onclick="mudarAba('relatorio')">
-      <i class="fas fa-chart-line icon"></i>
-      <span>Relatório</span>
-    </div>
-    <div class="menu-item" id="menu-configuracoes" onclick="mudarAba('configuracoes')">
-      <i class="fas fa-cog icon"></i>
-      <span>Configurações</span>
-    </div>
-  </footer>
-
-  <!-- Botão Flutuante para Adicionar Tarefa -->
-  <div class="float-button" onclick="mostrarFormularioTarefa()">
-    <i class="fas fa-plus"></i>
+  <!-- Checkbox e campos de aplicação -->
+  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
   </div>
-</body>
-</html>
+
+  <div id="camposAplicacao" style="display:none; margin-top:10px;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+    </select>
+  </div>
+
+  <!-- Botões de ação -->
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+    <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
+    <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none; background-color: #888;">
+      Cancelar Edição
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+
+  <!-- Tarefas a fazer -->
+  <h4>A Fazer</h4>
+  <div id="listaTarefas"></div>
+
+  <!-- Tarefas feitas -->
+  <h4>Executadas</h4>
+  <div id="listaTarefasFeitas"></div>
+</div>

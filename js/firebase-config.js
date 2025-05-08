@@ -1,4 +1,8 @@
 // ===== CONFIGURAÇÃO DO FIREBASE =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// Configurações do Firebase (substitua com suas credenciais)
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -9,17 +13,11 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// ===== INICIALIZAR FIREBASE =====
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.database();
+// Inicializando o Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-// ===== VERIFICAR CONEXÃO =====
-db.ref(".info/connected").on("value", (snap) => {
-  if (snap.val() === true) {
-    console.log("🔥 Conectado ao Firebase");
-  } else {
-    console.warn("⚠️ Desconectado do Firebase");
-  }
-});
+// Exibindo mensagem de status
+console.log("✅ Firebase inicializado corretamente.");
+
+export { db };

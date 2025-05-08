@@ -1,5 +1,21 @@
-// ===== CONFIGURAÇÃO DO FIREBASE =====
-const db = firebase.database();
+// ===== INICIAR FIREBASE =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// Configurações do Firebase (deve estar em firebase-config.js)
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO.firebaseapp.com",
+  databaseURL: "https://SEU_DATABASE.firebaseio.com",
+  projectId: "SEU_PROJETO_ID",
+  storageBucket: "SEU_BUCKET.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+// Inicializando o Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
@@ -7,79 +23,76 @@ let indiceEdicaoAplicacao = null;
 
 // ===== ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
-  const novaAplicacao = {
+  const nova = {
     data: document.getElementById("dataApp").value,
     produto: document.getElementById("produtoApp").value.trim(),
-    dosagem: parseFloat(document.getElementById("dosagemApp").value),
+    dosagem: document.getElementById("dosagemApp").value.trim(),
+    tipo: document.getElementById("tipoApp").value,
     setor: document.getElementById("setorApp").value
   };
 
-  if (!novaAplicacao.data || !novaAplicacao.produto || isNaN(novaAplicacao.dosagem)) {
+  if (!nova.data || !nova.produto || !nova.dosagem) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
   if (indiceEdicaoAplicacao !== null) {
-    // Editando aplicação existente
-    db.ref(`Aplicacoes/${indiceEdicaoAplicacao}`).set(novaAplicacao)
-      .then(() => console.log("✅ Aplicação atualizada com sucesso."))
-      .catch((error) => console.error("❌ Erro ao atualizar aplicação:", error));
+    aplicacoes[indiceEdicaoAplicacao] = nova;
+    set(ref(db, 'Aplicacoes'), aplicacoes);
+    indiceEdicaoAplicacao = null;
   } else {
-    // Adicionando nova aplicação
-    db.ref('Aplicacoes').push(novaAplicacao)
-      .then(() => console.log("✅ Aplicação salva com sucesso."))
-      .catch((error) => console.error("❌ Erro ao salvar aplicação:", error));
+    push(ref(db, 'Aplicacoes'), nova);
   }
 
+  atualizarAplicacoes();
   limparCamposAplicacao();
-  carregarAplicacoes();
 }
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', (snapshot) => {
-    aplicacoes = snapshot.exists() ? snapshot.val() : {};
-    atualizarListaAplicacoes();
+  const aplicacoesRef = ref(db, 'Aplicacoes');
+  onValue(aplicacoesRef, (snapshot) => {
+    aplicacoes = [];
+    snapshot.forEach((childSnapshot) => {
+      aplicacoes.push({ ...childSnapshot.val(), key: childSnapshot.key });
+    });
+    atualizarAplicacoes();
   });
 }
 
 // ===== ATUALIZAR LISTA DE APLICAÇÕES =====
-function atualizarListaAplicacoes() {
+function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
-  for (const id in aplicacoes) {
-    const app = aplicacoes[id];
+  aplicacoes.forEach((app, index) => {
     const item = document.createElement("div");
-    item.classList.add("item-aplicacao");
+    item.className = "item-aplicacao";
     item.innerHTML = `
-      <span>${app.data} - ${app.produto} - ${app.dosagem} L/ha - ${app.setor}</span>
-      <div class="botoes">
-        <button onclick="editarAplicacao('${id}')"><i class="fas fa-edit"></i></button>
-        <button onclick="excluirAplicacao('${id}')"><i class="fas fa-trash"></i></button>
-      </div>
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+      <button onclick="excluirAplicacao('${app.key}')"><i class="fas fa-trash"></i></button>
     `;
     lista.appendChild(item);
-  }
+  });
 }
 
 // ===== EDITAR APLICAÇÃO =====
-function editarAplicacao(id) {
-  const app = aplicacoes[id];
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
   document.getElementById("setorApp").value = app.setor;
 
-  indiceEdicaoAplicacao = id;
+  indiceEdicaoAplicacao = index;
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
-function excluirAplicacao(id) {
-  if (confirm("Tem certeza que deseja excluir esta aplicação?")) {
-    db.ref(`Aplicacoes/${id}`).remove();
-    carregarAplicacoes();
-  }
+function excluirAplicacao(key) {
+  set(ref(db, 'Aplicacoes/' + key), null);
+  atualizarAplicacoes();
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -87,8 +100,8 @@ function limparCamposAplicacao() {
   document.getElementById("dataApp").value = '';
   document.getElementById("produtoApp").value = '';
   document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
   document.getElementById("setorApp").value = 'Setor 01';
-  indiceEdicaoAplicacao = null;
 }
 
 // ===== INICIAR AO CARREGAR =====

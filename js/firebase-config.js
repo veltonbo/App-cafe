@@ -1,4 +1,4 @@
-// ===== CONFIGURAÇÃO DO FIREBASE (Firebase inicializado de forma direta) =====
+// ===== CONFIGURAÇÃO DO FIREBASE =====
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -30,39 +30,6 @@ function carregarDadosFirebase(caminho, callback) {
     })
     .catch(error => console.error("Erro ao carregar dados:", error));
 }
-
-// ===== INTEGRANDO OS MENUS COM O FIREBASE =====
-document.addEventListener('DOMContentLoaded', () => {
-  // Carregar dados de cada menu ao iniciar
-  carregarDadosFirebase("aplicacoes", (data) => {
-    if (data) aplicacoes = data;
-    carregarAplicacoes();
-  });
-
-  carregarDadosFirebase("tarefas", (data) => {
-    if (data) {
-      tarefas = data.tarefas || [];
-      tarefasFeitas = data.tarefasFeitas || [];
-    }
-    carregarTarefas();
-  });
-
-  carregarDadosFirebase("financeiro", (data) => {
-    if (data) {
-      financeiro = data.financeiro || [];
-      financeiroPago = data.financeiroPago || [];
-    }
-    carregarFinanceiro();
-  });
-
-  carregarDadosFirebase("colheitas", (data) => {
-    if (data) {
-      colheitas = data.colheitas || [];
-      colheitasPagas = data.colheitasPagas || [];
-    }
-    carregarColheita();
-  });
-});
 
 // ===== SALVAR AUTOMATICAMENTE QUANDO HOUVER MUDANÇAS =====
 window.addEventListener("beforeunload", () => {

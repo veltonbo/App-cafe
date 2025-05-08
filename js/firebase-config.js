@@ -1,4 +1,4 @@
-// ===== Firebase Config =====
+// ===== CONFIGURAÇÃO DO FIREBASE =====
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -9,9 +9,18 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
+// ===== Inicializar Firebase (Apenas uma vez) =====
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
+const db = firebase.database();
+console.log("🔥 Firebase inicializado corretamente.");
+
+// ===== Verificar Conexão com o Firebase =====
+db.ref(".info/connected").on("value", (snap) => {
+  if (snap.val() === true) {
+    console.log("✅ Conectado ao Firebase");
+  } else {
+    console.warn("⚠️ Desconectado do Firebase");
+  }
+});

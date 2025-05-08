@@ -1,31 +1,8 @@
 <!-- colheita.html -->
-<div class="aba">
-  <h2>Colheita</h2>
+<h2>Colheita</h2>
+<input id="colhedor" placeholder="Nome do Colhedor">
+<input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
+<button onclick="adicionarColheita()">Salvar Colheita</button>
 
-  <!-- Formulário de Colheita -->
-  <h4>Registrar Nova Colheita</h4>
-  <input id="dataColheita" type="date">
-  <input id="colhedor" placeholder="Nome do Colhedor">
-  <input id="quantidadeLatas" type="number" step="0.01" placeholder="Quantidade de Latas">
-  <button onclick="adicionarColheita()"><i class="fas fa-save"></i> Salvar Colheita</button>
-
-  <!-- Filtros -->
-  <h4>Filtrar Colheitas</h4>
-  <input id="filtroDataInicioColheita" type="date" onchange="atualizarColheita()">
-  <input id="filtroDataFimColheita" type="date" onchange="atualizarColheita()">
-  <input id="pesquisaColheita" class="campo-pesquisa" placeholder="Pesquisar Colhedor..." oninput="atualizarColheita()">
-
-  <!-- Resumo e Listagem -->
-  <h4>Resumo da Colheita</h4>
-  <div id="resumoColheita" style="font-weight: bold; margin: 10px 0; color: #66bb6a;"></div>
-
-  <div class="coluna-pendente">
-    <h4 style="color: #ff9800;">Pendentes</h4>
-    <div id="colheitaPendentes"></div>
-  </div>
-
-  <div class="coluna-pago">
-    <h4 style="color: #4caf50;">Pagos</h4>
-    <div id="colheitaPagos"></div>
-  </div>
-</div>
+<h4>Lista de Colheitas</h4>
+<div id="listaColheitas"></div>

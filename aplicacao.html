@@ -1,49 +1,51 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Aplicações</title>
-  <link rel="stylesheet" href="css/aplicacao.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-  <header>
-    <h1>Manejo Café</h1>
-    <nav>
-      <button onclick="mudarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
-      <button onclick="mudarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-      <button onclick="mudarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
-      <button onclick="mudarAba('colheita')"><i class="fas fa-tractor"></i></button>
-      <button onclick="mudarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
-      <button onclick="mudarAba('configuracoes')"><i class="fas fa-cog"></i></button>
-    </nav>
-  </header>
-
-  <div class="conteudo">
-    <h2>Aplicações</h2>
-    <div class="formulario">
-      <input type="date" id="dataApp">
-      <input type="text" id="produtoApp" placeholder="Produto">
-      <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
-      <select id="tipoApp">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
-      </select>
-      <button class="btn-salvar" onclick="adicionarAplicacao()">
-        <i class="fas fa-save"></i> Salvar Aplicação
-      </button>
-    </div>
-
-    <div class="lista-aplicacoes" id="listaAplicacoes">
-      <!-- As aplicações serão listadas aqui -->
-    </div>
-  </div>
-
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="js/firebase-config.js" defer></script>
   <script src="js/aplicacao.js" defer></script>
-  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header>
+  <h1>Manejo Café</h1>
+  <nav class="navbar">
+    <a href="aplicacao.html" class="active">Aplicações</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="financeiro.html">Financeiro</a>
+    <a href="colheita.html">Colheita</a>
+    <a href="relatorio.html">Relatório</a>
+    <a href="configuracao.html">Configurações</a>
+  </nav>
+</header>
+
+<main>
+  <div class="formulario">
+    <h2>Aplicações</h2>
+    <input type="date" id="dataApp" placeholder="Data">
+    <input type="text" id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+    <datalist id="sugestoesProdutoApp"></datalist>
+    <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
+    <select id="tipoApp">
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+    </select>
+    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+  </div>
+
+  <div class="lista">
+    <h3>Lista de Aplicações</h3>
+    <input type="text" id="pesquisaAplicacoes" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+    <div id="listaAplicacoes"></div>
+  </div>
+</main>
+
 </body>
 </html>

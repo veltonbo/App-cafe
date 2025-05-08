@@ -1,28 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café</title>
+
+  <!-- Estilo Geral -->
+  <link rel="stylesheet" href="style.css">
 
   <!-- Firebase Config -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js" defer></script>
-
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
-
-  <!-- Chart.js e jsPDF -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Estilos Gerais -->
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Menu Superior -->
   <div class="menu-superior">
     <button onclick="mudarAba('aplicacoes')">Aplicações</button>
     <button onclick="mudarAba('tarefas')">Tarefas</button>
@@ -32,10 +24,9 @@
     <button onclick="mudarAba('configuracao')">Configurações</button>
   </div>
 
-  <!-- Conteúdo Dinâmico -->
   <div id="conteudo"></div>
 
-  <!-- Scripts de Controle -->
+  <!-- Script de Controle -->
   <script src="main.js" defer></script>
 </body>
 </html>

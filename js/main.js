@@ -1,68 +1,99 @@
-// ===== INICIALIZAÇÃO AO CARREGAR A PÁGINA =====
+// ===== INICIALIZAÇÃO DO APP =====
 document.addEventListener("DOMContentLoaded", () => {
-  carregarAbaInicial();
+  inicializarApp();
   configurarNavegacao();
 });
 
+// ===== INICIALIZAR APP =====
+function inicializarApp() {
+  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacoes";
+  mostrarAba(abaAtiva);
+}
+
 // ===== CONFIGURAR NAVEGAÇÃO =====
 function configurarNavegacao() {
-  const navLinks = document.querySelectorAll(".navbar a");
-  if (!navLinks) return;
-
-  navLinks.forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const destino = link.getAttribute("href");
-      mudarAba(destino);
+  document.querySelectorAll(".menu-superior button").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const aba = e.target.getAttribute("data-aba");
+      mostrarAba(aba);
     });
   });
 }
 
-// ===== MUDAR ABA =====
-function mudarAba(destino) {
-  const main = document.querySelector("main");
-  if (!main) return;
+// ===== MOSTRAR ABA =====
+function mostrarAba(aba) {
+  document.querySelectorAll(".aba").forEach(div => {
+    div.style.display = "none";
+  });
 
-  main.innerHTML = '<div class="loading">Carregando...</div>';
-  localStorage.setItem("abaAtiva", destino);
+  const abaAtiva = document.getElementById(aba);
+  if (abaAtiva) {
+    abaAtiva.style.display = "block";
+    localStorage.setItem("abaAtiva", aba);
 
-  fetch(destino)
-    .then(response => response.text())
-    .then(html => {
-      main.innerHTML = html;
-      carregarScriptsAba(destino);
-    })
-    .catch(() => {
-      main.innerHTML = '<div class="erro">Erro ao carregar o menu.</div>';
-    });
-}
-
-// ===== CARREGAR SCRIPTS DA ABA =====
-function carregarScriptsAba(destino) {
-  switch (destino) {
-    case "aplicacao.html":
-      carregarAplicacoes();
-      break;
-    case "tarefas.html":
-      carregarTarefas();
-      break;
-    case "financeiro.html":
-      carregarFinanceiro();
-      break;
-    case "colheita.html":
-      carregarColheita();
-      break;
-    case "relatorio.html":
-      carregarRelatorio();
-      break;
-    case "configuracao.html":
-      carregarConfiguracoes();
-      break;
+    // Carregar a função de cada aba automaticamente
+    switch (aba) {
+      case "aplicacoes":
+        carregarAplicacoes();
+        break;
+      case "tarefas":
+        carregarTarefas();
+        break;
+      case "financeiro":
+        carregarFinanceiro();
+        break;
+      case "colheita":
+        carregarColheita();
+        break;
+      case "relatorio":
+        carregarRelatorio();
+        break;
+      case "configuracoes":
+        carregarConfiguracoes();
+        break;
+    }
   }
 }
 
-// ===== CARREGAR ABA INICIAL (SALVA NO LOCAL STORAGE) =====
-function carregarAbaInicial() {
-  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacao.html";
-  mudarAba(abaAtiva);
+// ===== TEMA ESCURO/CLARO =====
+function alternarTema() {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("temaEscuro", document.body.classList.contains("dark-mode"));
+}
+
+// ===== APLICAR TEMA SALVO =====
+document.addEventListener("DOMContentLoaded", () => {
+  const temaEscuro = localStorage.getItem("temaEscuro") === "true";
+  if (temaEscuro) {
+    document.body.classList.add("dark-mode");
+  }
+});
+
+// ===== RECARREGAR ABA ATIVA =====
+function recarregarAba() {
+  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacoes";
+  mostrarAba(abaAtiva);
+}
+
+// ===== GERAR RELATÓRIO COMPLETO (PDF e CSV) =====
+function gerarRelatorioCompleto() {
+  const abaAtual = localStorage.getItem("abaAtiva");
+
+  switch (abaAtual) {
+    case "relatorio":
+      gerarRelatorioPDF();
+      gerarRelatorioCSV();
+      break;
+    default:
+      alert("Acesse o menu Relatório para gerar o relatório completo.");
+  }
+}
+
+// ===== LIMPAR DADOS (USADO NAS CONFIGURAÇÕES) =====
+function limparDados() {
+  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")) {
+    db.ref('/').set(null);
+    alert("Todos os dados foram apagados.");
+    recarregarAba();
+  }
 }

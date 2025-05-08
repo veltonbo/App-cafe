@@ -1,64 +1,68 @@
-// ===== MENU DE NAVEGAÇÃO DINÂMICA =====
+// ===== INICIALIZAÇÃO AO CARREGAR A PÁGINA =====
 document.addEventListener("DOMContentLoaded", () => {
   carregarAbaInicial();
   configurarNavegacao();
 });
 
-// ===== CARREGAR ABA INICIAL =====
-function carregarAbaInicial() {
-  const abaSalva = localStorage.getItem("abaAtiva") || "aplicacao.html";
-  mudarAba(abaSalva);
-}
-
 // ===== CONFIGURAR NAVEGAÇÃO =====
 function configurarNavegacao() {
-  document.querySelectorAll(".navbar a").forEach(link => {
+  const navLinks = document.querySelectorAll(".navbar a");
+  if (!navLinks) return;
+
+  navLinks.forEach(link => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      const destino = e.target.getAttribute("href");
+      const destino = link.getAttribute("href");
       mudarAba(destino);
     });
   });
 }
 
-// ===== MUDAR DE ABA =====
+// ===== MUDAR ABA =====
 function mudarAba(destino) {
-  document.querySelectorAll(".navbar a").forEach(link => link.classList.remove("active"));
-  document.querySelector(`.navbar a[href="${destino}"]`).classList.add("active");
-  
-  document.querySelector("main").innerHTML = '<div class="loading">Carregando...</div>';
+  const main = document.querySelector("main");
+  if (!main) return;
+
+  main.innerHTML = '<div class="loading">Carregando...</div>';
   localStorage.setItem("abaAtiva", destino);
 
   fetch(destino)
     .then(response => response.text())
     .then(html => {
-      document.querySelector("main").innerHTML = html;
+      main.innerHTML = html;
       carregarScriptsAba(destino);
     })
     .catch(() => {
-      document.querySelector("main").innerHTML = '<div class="erro">Erro ao carregar o menu.</div>';
+      main.innerHTML = '<div class="erro">Erro ao carregar o menu.</div>';
     });
 }
 
 // ===== CARREGAR SCRIPTS DA ABA =====
 function carregarScriptsAba(destino) {
-  const scriptPath = destino.replace(".html", ".js").replace("html", "js");
-  const script = document.createElement("script");
-  script.src = scriptPath;
-  script.defer = true;
-  document.body.appendChild(script);
+  switch (destino) {
+    case "aplicacao.html":
+      carregarAplicacoes();
+      break;
+    case "tarefas.html":
+      carregarTarefas();
+      break;
+    case "financeiro.html":
+      carregarFinanceiro();
+      break;
+    case "colheita.html":
+      carregarColheita();
+      break;
+    case "relatorio.html":
+      carregarRelatorio();
+      break;
+    case "configuracao.html":
+      carregarConfiguracoes();
+      break;
+  }
 }
 
-// ===== TEMA ESCURO/CLARO =====
-document.querySelector("#toggleTheme").addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-  localStorage.setItem("temaEscuro", document.body.classList.contains("dark-mode"));
-});
-
-// ===== APLICAR TEMA SALVO =====
-document.addEventListener("DOMContentLoaded", () => {
-  const temaEscuro = localStorage.getItem("temaEscuro") === "true";
-  if (temaEscuro) {
-    document.body.classList.add("dark-mode");
-  }
-});
+// ===== CARREGAR ABA INICIAL (SALVA NO LOCAL STORAGE) =====
+function carregarAbaInicial() {
+  const abaAtiva = localStorage.getItem("abaAtiva") || "aplicacao.html";
+  mudarAba(abaAtiva);
+}

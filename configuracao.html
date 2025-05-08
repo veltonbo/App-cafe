@@ -1,52 +1,44 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Configurações</title>
-  <link rel="stylesheet" href="css/configuracoes.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Manejo Café</h1>
-      <nav>
-        <button class="tab-button" onclick="mudarAba('configuracoes')">Configurações</button>
-        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
-        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
-        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
-        <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
-        <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
-      </nav>
-    </header>
+<!-- ========== MENU CONFIGURAÇÕES ========== -->
+<div id="configuracoes" class="aba">
+  <h2>Configurações</h2>
+  <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
 
-    <section id="configuracoes" class="aba">
-      <h2>Configurações do Sistema</h2>
-      <div class="form">
-        <label for="safraAtual">Safra Atual:</label>
-        <input type="text" id="safraAtual" placeholder="Digite o ano da safra (ex: 2025)">
-        
-        <label for="emailNotificacoes">Email para Notificações:</label>
-        <input type="email" id="emailNotificacoes" placeholder="Digite seu email">
-        
-        <label for="tema">Tema do Sistema:</label>
-        <select id="tema">
-          <option>Claro</option>
-          <option>Escuro</option>
-          <option>Automático</option>
-        </select>
+  <hr style="margin: 20px 0;">
+  <h3>Safra</h3>
+  <p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
 
-        <div class="buttons">
-          <button class="btn save" onclick="salvarConfiguracoes()">
-            <i class="fas fa-save"></i> Salvar Configurações
-          </button>
-          <button class="btn reset" onclick="restaurarPadroes()">
-            <i class="fas fa-redo"></i> Restaurar Padrões
-          </button>
-        </div>
-      </div>
-    </section>
+  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+    <button onclick="fecharSafraAtual()" style="background-color: #ff9800;">
+      <i class="fas fa-archive"></i> Fechar Safra Atual
+    </button>
+
+    <select id="safraSelecionada" style="margin-top: 10px;">
+      <option value="">Carregando safras disponíveis...</option>
+    </select>
+
+    <button onclick="restaurarSafra()" style="background-color: #29b6f6;">
+      <i class="fas fa-undo-alt"></i> Restaurar Safra Selecionada
+    </button>
+
+    <button onclick="deletarSafra()" style="background-color: #f44336;">
+      <i class="fas fa-trash-alt"></i> Deletar Safra Selecionada
+    </button>
   </div>
-</body>
-</html>
+
+  <hr style="margin: 20px 0;">
+  <h3>Backup Manual</h3>
+  <button onclick="fazerBackup()"><i class="fas fa-download"></i> Fazer Backup</button>
+
+  <input type="file" id="arquivoBackup" accept=".json">
+  <button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof inicializarApp === 'function') {
+      inicializarApp();
+    } else {
+      alert("Erro: função inicializarApp não encontrada.");
+    }
+  });
+</script>

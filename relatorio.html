@@ -1,48 +1,51 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Relatório</title>
-  <link rel="stylesheet" href="css/relatorio.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Manejo Café</h1>
-      <nav>
-        <button class="tab-button" onclick="mudarAba('relatorio')">Relatório</button>
-        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
-        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
-        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
-        <button class="tab-button" onclick="mudarAba('colheita')">Colheita</button>
-      </nav>
-    </header>
+<!-- ========== MENU RELATÓRIO APRIMORADO ========== -->
+<div id="relatorio" class="aba">
+  <h2>Relatório Geral</h2>
 
-    <section id="relatorio" class="aba">
-      <h2>Relatórios Gerais</h2>
-      <div class="form">
-        <input type="date" id="dataInicioRel" placeholder="Data Início">
-        <input type="date" id="dataFimRel" placeholder="Data Fim">
-        <div class="buttons">
-          <button class="btn generate" onclick="gerarRelatorio()">
-            <i class="fas fa-file-alt"></i> Gerar Relatório
-          </button>
-          <button class="btn export" onclick="exportarRelatorioPDF()">
-            <i class="fas fa-file-pdf"></i> Exportar PDF
-          </button>
-          <button class="btn export" onclick="exportarRelatorioCSV()">
-            <i class="fas fa-file-csv"></i> Exportar CSV
-          </button>
-        </div>
-      </div>
-
-      <div class="list">
-        <h3>Resultados do Relatório</h3>
-        <div id="resultadoRelatorio"></div>
-      </div>
-    </section>
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <input id="filtroDataInicioRel" type="date" />
+    <input id="filtroDataFimRel" type="date" />
+    <select id="filtroSetorRel">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <button onclick="gerarRelatorioCompleto()">Gerar Relatório</button>
   </div>
-</body>
-</html>
+
+  <div class="menu-superior" style="margin-bottom: 20px;">
+    <button id="btn-rel-aplicacoes" onclick="mostrarRelatorioCompleto('rel-aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-rel-tarefas" onclick="mostrarRelatorioCompleto('rel-tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-rel-financeiro" onclick="mostrarRelatorioCompleto('rel-financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-rel-colheita" onclick="mostrarRelatorioCompleto('rel-colheita')"><i class="fas fa-tractor"></i></button>
+  </div>
+
+  <div id="rel-aplicacoes" class="relatorio-subaba">
+    <h3>Aplicações</h3>
+    <div id="resumoRelAplicacoes"></div>
+    <canvas id="graficoRelAplicacoes"></canvas>
+  </div>
+
+  <div id="rel-tarefas" class="relatorio-subaba" style="display:none;">
+    <h3>Tarefas</h3>
+    <div id="resumoRelTarefas"></div>
+    <canvas id="graficoRelTarefas"></canvas>
+  </div>
+
+  <div id="rel-financeiro" class="relatorio-subaba" style="display:none;">
+    <h3>Financeiro</h3>
+    <div id="resumoRelFinanceiro"></div>
+    <canvas id="graficoRelFinanceiro"></canvas>
+  </div>
+
+  <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
+    <h3>Colheita</h3>
+    <div id="resumoRelColheita"></div>
+    <canvas id="graficoColheita"></canvas>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+    <button onclick="exportarRelatorioPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+  </div>
+</div>

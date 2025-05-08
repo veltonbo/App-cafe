@@ -1,125 +1,104 @@
 // ===== VARIÁVEIS GLOBAIS =====
-let lancamentos = [];
+let financeiro = [];
+let financeiroPago = [];
 let indiceEdicaoFinanceiro = null;
 
-// ===== CARREGAR LANÇAMENTOS =====
+// ===== FUNÇÃO: CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
-  db.ref('Financeiro').on('value', snap => {
-    lancamentos = snap.exists() ? snap.val() : [];
-    atualizarFinanceiro();
+  atualizarFinanceiro();
+}
+
+// ===== FUNÇÃO: ATUALIZAR FINANCEIRO =====
+function atualizarFinanceiro() {
+  const listaVencer = document.getElementById("financeiroVencer");
+  const listaPago = document.getElementById("financeiroPago");
+  listaVencer.innerHTML = "";
+  listaPago.innerHTML = "";
+
+  financeiro.forEach((fin, index) => {
+    const item = document.createElement("div");
+    item.classList.add("item");
+    item.innerHTML = `
+      <span>${fin.data} - ${fin.produto} - R$ ${parseFloat(fin.valor).toFixed(2)}</span>
+      <div class="botoes-acao">
+        <button class="botao-circular verde" onclick="pagarFinanceiro(${index})"><i class="fas fa-check"></i></button>
+        <button class="botao-circular azul" onclick="editarFinanceiro(${index})"><i class="fas fa-edit"></i></button>
+        <button class="botao-circular vermelho" onclick="excluirFinanceiro(${index})"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    `;
+    listaVencer.appendChild(item);
+  });
+
+  financeiroPago.forEach((fin, index) => {
+    const item = document.createElement("div");
+    item.classList.add("item");
+    item.innerHTML = `
+      <span>${fin.data} - ${fin.produto} - R$ ${parseFloat(fin.valor).toFixed(2)}</span>
+      <div class="botoes-acao">
+        <button class="botao-circular laranja" onclick="desfazerPagamento(${index})"><i class="fas fa-undo-alt"></i></button>
+        <button class="botao-circular vermelho" onclick="excluirFinanceiroPago(${index})"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    `;
+    listaPago.appendChild(item);
   });
 }
 
-// ===== ADICIONAR OU EDITAR LANÇAMENTO =====
+// ===== FUNÇÃO: ADICIONAR/EDITAR FINANCEIRO =====
 function adicionarFinanceiro() {
-  const data = document.getElementById("dataFinanceiro").value;
-  const descricao = document.getElementById("descricaoFinanceiro").value.trim();
-  const valor = parseFloat(document.getElementById("valorFinanceiro").value);
-  const tipo = document.getElementById("tipoFinanceiro").value;
-  const parcelado = document.getElementById("parceladoFinanceiro").checked;
-  const parcelas = parcelado ? parseInt(document.getElementById("parcelasFinanceiro").value) || 1 : 1;
+  const novo = {
+    data: document.getElementById("dataFin").value,
+    produto: document.getElementById("produtoFin").value.trim(),
+    valor: document.getElementById("valorFin").value.trim(),
+    descricao: document.getElementById("descricaoFin").value.trim(),
+    tipo: document.getElementById("tipoFin").value,
+  };
 
-  if (!data || !descricao || isNaN(valor)) {
+  if (!novo.data || !novo.produto || !novo.valor) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
-  const novoLancamento = {
-    data,
-    descricao,
-    valor,
-    tipo,
-    parcelado,
-    parcelas: parcelado ? gerarParcelas(valor, parcelas) : null
-  };
-
-  if (indiceEdicaoFinanceiro !== null) {
-    lancamentos[indiceEdicaoFinanceiro] = novoLancamento;
-    indiceEdicaoFinanceiro = null;
+  if (indiceEdicaoFinanceiro === null) {
+    financeiro.push(novo);
   } else {
-    lancamentos.push(novoLancamento);
+    financeiro[indiceEdicaoFinanceiro] = novo;
+    indiceEdicaoFinanceiro = null;
   }
 
-  db.ref('Financeiro').set(lancamentos);
-  atualizarFinanceiro();
   limparCamposFinanceiro();
+  atualizarFinanceiro();
 }
 
-// ===== GERAR PARCELAS =====
-function gerarParcelas(valorTotal, numParcelas) {
-  const valorParcela = (valorTotal / numParcelas).toFixed(2);
-  const parcelas = [];
-  for (let i = 0; i < numParcelas; i++) {
-    parcelas.push({
-      numero: i + 1,
-      valor: parseFloat(valorParcela),
-      pago: false
-    });
-  }
-  return parcelas;
+// ===== FUNÇÕES: PAGAR E DESFAZER =====
+function pagarFinanceiro(index) {
+  const lancamento = financeiro.splice(index, 1)[0];
+  financeiroPago.push(lancamento);
+  atualizarFinanceiro();
 }
 
-// ===== LIMPAR CAMPOS =====
-function limparCamposFinanceiro() {
-  document.getElementById("dataFinanceiro").value = '';
-  document.getElementById("descricaoFinanceiro").value = '';
-  document.getElementById("valorFinanceiro").value = '';
-  document.getElementById("tipoFinanceiro").value = 'Receita';
-  document.getElementById("parceladoFinanceiro").checked = false;
-  document.getElementById("parcelasFinanceiro").style.display = 'none';
+function desfazerPagamento(index) {
+  const lancamento = financeiroPago.splice(index, 1)[0];
+  financeiro.push(lancamento);
+  atualizarFinanceiro();
 }
 
-// ===== MOSTRAR PARCELAS =====
-function mostrarParcelas() {
-  const checkbox = document.getElementById("parceladoFinanceiro");
-  const inputParcelas = document.getElementById("parcelasFinanceiro");
-  inputParcelas.style.display = checkbox.checked ? "block" : "none";
-}
-
-// ===== ATUALIZAR LISTAGEM =====
-function atualizarFinanceiro() {
-  const lista = document.getElementById("listaFinanceiro");
-  lista.innerHTML = '';
-
-  const termoBusca = document.getElementById("pesquisaFinanceiro").value.toLowerCase();
-  lancamentos.forEach((lanc, index) => {
-    const item = document.createElement('div');
-    item.className = "item";
-    item.innerHTML = `
-      <div>
-        ${lanc.data} - ${lanc.descricao} - R$ ${lanc.valor.toFixed(2)} - ${lanc.tipo}
-        ${lanc.parcelado ? `(Parcelado: ${lanc.parcelas.length}x)` : ''}
-      </div>
-      <div>
-        <button class="botao-circular azul" onclick="editarFinanceiro(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirFinanceiro(${index})"><i class="fas fa-trash"></i></button>
-      </div>
-    `;
-    lista.appendChild(item);
-  });
-}
-
-// ===== EDITAR LANÇAMENTO =====
-function editarFinanceiro(index) {
-  const lanc = lancamentos[index];
-  document.getElementById("dataFinanceiro").value = lanc.data;
-  document.getElementById("descricaoFinanceiro").value = lanc.descricao;
-  document.getElementById("valorFinanceiro").value = lanc.valor;
-  document.getElementById("tipoFinanceiro").value = lanc.tipo;
-  document.getElementById("parceladoFinanceiro").checked = lanc.parcelado;
-  document.getElementById("parcelasFinanceiro").value = lanc.parcelado ? lanc.parcelas.length : '';
-  mostrarParcelas();
-  indiceEdicaoFinanceiro = index;
-}
-
-// ===== EXCLUIR LANÇAMENTO =====
+// ===== FUNÇÃO: EXCLUIR FINANCEIRO =====
 function excluirFinanceiro(index) {
-  if (confirm("Deseja excluir este lançamento?")) {
-    lancamentos.splice(index, 1);
-    db.ref('Financeiro').set(lancamentos);
-    atualizarFinanceiro();
-  }
+  financeiro.splice(index, 1);
+  atualizarFinanceiro();
 }
 
-// ===== INICIALIZAR =====
-document.addEventListener("DOMContentLoaded", carregarFinanceiro);
+// ===== FUNÇÃO: EXCLUIR FINANCEIRO PAGO =====
+function excluirFinanceiroPago(index) {
+  financeiroPago.splice(index, 1);
+  atualizarFinanceiro();
+}
+
+// ===== FUNÇÃO: LIMPAR CAMPOS =====
+function limparCamposFinanceiro() {
+  document.getElementById("dataFin").value = "";
+  document.getElementById("produtoFin").value = "";
+  document.getElementById("descricaoFin").value = "";
+  document.getElementById("valorFin").value = "";
+  document.getElementById("tipoFin").value = "Adubo";
+}

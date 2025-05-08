@@ -1,119 +1,50 @@
 /* ===== MENU SUPERIOR ===== */
-nav {
+.menu-superior {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  background-color: #2c2c2c;
+  background-color: #333;
   padding: 10px 0;
 }
 
-nav button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  transition: background 0.3s;
-}
-
-nav button:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* ===== FORMULÁRIO APLICAÇÃO ===== */
-.formulario-aplicacao {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.formulario-aplicacao .campo {
-  background-color: #2c2c2c;
-  border: 1px solid #444;
-  padding: 10px;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  height: 48px; /* Mesmo que o botão */
-}
-
-.botao-salvar {
-  background-color: #4caf50;
-  color: #fff;
-  padding: 0 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 48px;
-  width: 100%; /* Mesma largura dos campos */
-  transition: background-color 0.3s;
-}
-
-.botao-salvar:hover {
-  background-color: #45a049;
-}
-
-/* ===== LISTA DE APLICAÇÕES ===== */
-.lista-aplicacoes {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.lista-aplicacoes .item {
-  background-color: #1f1f1f;
-  padding: 10px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.lista-aplicacoes .item span {
-  color: #ddd;
-}
-
-.lista-aplicacoes .item .botoes {
-  display: flex;
-  gap: 8px;
-}
-
-.lista-aplicacoes .item .botao-icone {
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.lista-aplicacoes .item .botao-icone:hover {
-  color: #f44336;
-}
-
-/* ===== MENU SUPERIOR - ÍCONES ATIVOS ===== */
 .menu-superior button {
   background: none;
   border: none;
-  color: #aaa;
+  color: #888;
   font-size: 24px;
+  margin: 0 10px;
+  cursor: pointer;
   transition: color 0.3s;
 }
 
 .menu-superior button.ativo {
-  color: #4CAF50; /* Verde para o menu ativo */
+  color: #4CAF50; /* Verde para o ícone ativo */
+}
+
+/* ===== CONTEÚDO DINÂMICO ===== */
+#conteudo {
+  padding: 20px;
+}
+
+/* ===== FORMULÁRIOS E BOTÕES ===== */
+input, select, button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #444;
+  color: #fff;
+}
+
+button {
+  background-color: #4CAF50;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #45a049;
 }

@@ -1,49 +1,6 @@
 <!-- relatorio.html -->
-<div class="aba">
-  <h2>Relatório Geral</h2>
+<h2>Relatório Geral</h2>
+<button onclick="gerarRelatorioCompleto()">Gerar Relatório</button>
 
-  <!-- Filtros de Relatório -->
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-    <input id="filtroDataInicioRel" type="date" />
-    <input id="filtroDataFimRel" type="date" />
-    <select id="filtroSetorRel">
-      <option value="">Todos os Setores</option>
-      <option value="Setor 01">Setor 01</option>
-      <option value="Setor 02">Setor 02</option>
-    </select>
-    <button onclick="gerarRelatorioCompleto()">Gerar Relatório</button>
-  </div>
-
-  <!-- Menu de Navegação do Relatório -->
-  <div class="menu-superior" style="margin-bottom: 20px;">
-    <button onclick="mostrarRelatorio('rel-aplicacoes')"><i class="fas fa-flask"></i> Aplicações</button>
-    <button onclick="mostrarRelatorio('rel-tarefas')"><i class="fas fa-tasks"></i> Tarefas</button>
-    <button onclick="mostrarRelatorio('rel-financeiro')"><i class="fas fa-dollar-sign"></i> Financeiro</button>
-    <button onclick="mostrarRelatorio('rel-colheita')"><i class="fas fa-tractor"></i> Colheita</button>
-  </div>
-
-  <!-- Sub-Relatórios -->
-  <div id="rel-aplicacoes" class="relatorio-subaba">
-    <h3>Aplicações</h3>
-    <div id="resumoRelAplicacoes"></div>
-    <canvas id="graficoRelAplicacoes"></canvas>
-  </div>
-
-  <div id="rel-tarefas" class="relatorio-subaba" style="display:none;">
-    <h3>Tarefas</h3>
-    <div id="resumoRelTarefas"></div>
-    <canvas id="graficoRelTarefas"></canvas>
-  </div>
-
-  <div id="rel-financeiro" class="relatorio-subaba" style="display:none;">
-    <h3>Financeiro</h3>
-    <div id="resumoRelFinanceiro"></div>
-    <canvas id="graficoRelFinanceiro"></canvas>
-  </div>
-
-  <div id="rel-colheita" class="relatorio-subaba" style="display:none;">
-    <h3>Colheita</h3>
-    <div id="resumoRelColheita"></div>
-    <canvas id="graficoRelColheita"></canvas>
-  </div>
-</div>
+<h4>Relatório Gerado</h4>
+<div id="relatorioResultado"></div>

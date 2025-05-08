@@ -1,85 +1,59 @@
-// ===== CONTROLAR O CARREGAMENTO DOS MENUS =====
-document.addEventListener("DOMContentLoaded", () => {
-  const abas = ["aplicacoes", "tarefas", "financeiro", "colheita", "relatorio", "configuracoes"];
-  const abaInicial = localStorage.getItem("ultimaAba") || "aplicacoes";
-  mudarAba(abaInicial);
-});
-
-// ===== MUDAR ENTRE ABAS =====
-function mudarAba(aba) {
-  const todasAbas = document.querySelectorAll(".aba");
-  todasAbas.forEach((abaDiv) => {
-    abaDiv.style.display = "none";
+// ===== CARREGAR MENU SELECIONADO =====
+function mudarAba(menu) {
+  const abas = ['aplicacoes', 'tarefas', 'financeiro', 'colheita', 'relatorio', 'configuracoes'];
+  
+  abas.forEach(aba => {
+    document.getElementById(aba).style.display = (aba === menu) ? 'block' : 'none';
   });
 
-  document.getElementById(aba).style.display = "block";
-  localStorage.setItem("ultimaAba", aba);
+  // Armazenar o menu ativo no localStorage
+  localStorage.setItem('menuAtivo', menu);
 
-  // Carregar scripts específicos para cada aba
-  carregarScriptsAba(aba);
+  // Carregar o script correspondente
+  carregarScriptsAba(menu);
 }
 
-// ===== CARREGAR SCRIPTS ESPECÍFICOS DE CADA ABA =====
-function carregarScriptsAba(aba) {
-  switch (aba) {
-    case "aplicacoes":
+// ===== INICIALIZAR MENU ATIVO AO CARREGAR =====
+document.addEventListener("DOMContentLoaded", () => {
+  const menuAtivo = localStorage.getItem('menuAtivo') || 'aplicacoes';
+  mudarAba(menuAtivo);
+});
+
+// ===== CARREGAR SCRIPTS DE CADA ABA =====
+function carregarScriptsAba(menu) {
+  switch (menu) {
+    case 'aplicacoes':
       carregarAplicacoes();
       break;
-    case "tarefas":
+    case 'tarefas':
       carregarTarefas();
       break;
-    case "financeiro":
+    case 'financeiro':
       carregarFinanceiro();
       break;
-    case "colheita":
+    case 'colheita':
       carregarColheita();
       break;
-    case "relatorio":
-      // Nenhum carregamento específico necessário
+    case 'relatorio':
+      carregarRelatorio();
       break;
-    case "configuracoes":
+    case 'configuracoes':
       carregarConfiguracoes();
       break;
   }
 }
 
-// ===== ANIMAÇÃO DE TRANSIÇÃO SUAVE =====
-function transicaoSuave(aba) {
-  const container = document.getElementById(aba);
-  container.style.opacity = "0";
+// ===== ANIMAÇÃO SUAVE ENTRE MENUS =====
+function transicaoSuave() {
+  document.querySelector('.conteudo').classList.add('fade-in');
   setTimeout(() => {
-    mudarAba(aba);
-    container.style.opacity = "1";
-  }, 200);
+    document.querySelector('.conteudo').classList.remove('fade-in');
+  }, 300);
 }
 
-// ===== APLICAR TEMA AUTOMÁTICO COM BASE NO MODO DO SISTEMA =====
-function aplicarTemaAutomatico() {
-  const tema = localStorage.getItem("tema") || "Escuro";
-  if (tema === "Automático") {
-    const hora = new Date().getHours();
-    if (hora >= 18 || hora < 6) {
-      document.body.classList.add("tema-escuro");
-      document.body.classList.remove("tema-claro");
-    } else {
-      document.body.classList.add("tema-claro");
-      document.body.classList.remove("tema-escuro");
-    }
-  } else {
-    document.body.classList.toggle("tema-escuro", tema === "Escuro");
-    document.body.classList.toggle("tema-claro", tema === "Claro");
-  }
-}
-
-// ===== SALVAR E APLICAR TEMA =====
-function definirTema(tema) {
-  localStorage.setItem("tema", tema);
-  aplicarTemaAutomatico();
-}
-
-// ===== MONITORAR MUDANÇA DE TEMA NO MENU CONFIGURAÇÕES =====
-document.addEventListener("change", (event) => {
-  if (event.target.id === "tema") {
-    definirTema(event.target.value);
-  }
+// ===== APLICAR TRANSIÇÃO AO MUDAR ABA =====
+document.querySelectorAll('nav button').forEach(button => {
+  button.addEventListener('click', () => {
+    transicaoSuave();
+  });
 });

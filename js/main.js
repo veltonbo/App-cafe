@@ -4,8 +4,13 @@ function mudarAba(aba) {
   document.getElementById("conteudo").innerHTML = "";
 
   // Carregar o HTML da aba
-  fetch(`${aba}.html`)
-    .then((response) => response.text())
+  fetch(`./${aba}.html`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Aba não encontrada: " + aba);
+      }
+      return response.text();
+    })
     .then((html) => {
       document.getElementById("conteudo").innerHTML = html;
       carregarScriptAba(aba);

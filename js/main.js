@@ -1,7 +1,7 @@
-// ===== MAIN.JS - Controle de Navegação e Carregamento de Abas =====
+// ===== MAIN.JS - Controle de Navegação e Carregamento Dinâmico =====
 document.addEventListener("DOMContentLoaded", inicializarApp);
 
-// ===== Inicializar App =====
+// ===== Inicializar Aplicação =====
 function inicializarApp() {
   const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacoes";
   mudarAba(ultimaAba);

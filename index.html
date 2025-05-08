@@ -5,41 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
 
-  <!-- Firebase -->
+  <!-- Firebase Config -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js" defer></script>
 
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
 
-  <!-- Chart.js -->
+  <!-- Chart.js e jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- Estilos -->
+  <!-- Estilos Gerais -->
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Scripts -->
-  <script defer src="firebase-config.js"></script>
-  <script defer src="App-cafe/js/main.js"></script>
-  <script defer src="App-cafe/js/aplicacao.js"></script>
-  <script defer src="App-cafe/js/tarefas.js"></script>
-  <script defer src="App-cafe/js/financeiro.js"></script>
-  <script defer src="App-cafe/js/colheita.js"></script>
-  <script defer src="App-cafe/js/relatorio.js"></script>
-  <script defer src="App-cafe/js/configuracoes.js"></script>
 </head>
 <body>
+
+  <!-- Menu Superior -->
   <div class="menu-superior">
-    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
-    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
-    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
-    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
-    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+    <button onclick="mudarAba('aplicacoes')">Aplicações</button>
+    <button onclick="mudarAba('tarefas')">Tarefas</button>
+    <button onclick="mudarAba('financeiro')">Financeiro</button>
+    <button onclick="mudarAba('colheita')">Colheita</button>
+    <button onclick="mudarAba('relatorio')">Relatório</button>
+    <button onclick="mudarAba('configuracao')">Configurações</button>
   </div>
 
+  <!-- Conteúdo Dinâmico -->
+  <div id="conteudo"></div>
+
+  <!-- Scripts de Controle -->
+  <script src="main.js" defer></script>
 </body>
 </html>

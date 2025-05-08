@@ -17,11 +17,37 @@ document.addEventListener("DOMContentLoaded", () => {
   mudarAba('aplicacao');
 });
 
+// Função para mudar aba e destacar ícone ativo
 function mudarAba(aba) {
-  // Marcar ícone ativo
-  document.querySelectorAll(".menu-item").forEach(btn => btn.classList.remove("ativo"));
-  const ativo = document.getElementById(`menu-${aba}`);
-  if (ativo) ativo.classList.add("ativo");
+  localStorage.setItem("ultimaAba", aba);
+  document.getElementById("conteudo").innerHTML = "";
+
+  fetch(`${aba}.html`)
+    .then((response) => response.text())
+    .then((html) => {
+      document.getElementById("conteudo").innerHTML = html;
+      carregarScriptAba(aba);
+      destacarIconeAtivo(aba);
+    })
+    .catch((error) => {
+      console.error("Erro ao carregar a aba:", error);
+    });
+}
+
+// Função para destacar o ícone do menu ativo
+function destacarIconeAtivo(aba) {
+  const botoesMenu = document.querySelectorAll(".menu-superior button");
+  botoesMenu.forEach((botao) => botao.classList.remove("ativo"));
+  
+  const botaoAtivo = document.querySelector(`button[data-aba='${aba}']`);
+  if (botaoAtivo) botaoAtivo.classList.add("ativo");
+}
+
+// Verificar aba salva e destacar ao iniciar
+document.addEventListener("DOMContentLoaded", () => {
+  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
+  destacarIconeAtivo(ultimaAba);
+});
 
   // Carregar o conteúdo da aba
   fetch(`${aba}.html`)

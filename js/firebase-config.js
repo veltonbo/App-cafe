@@ -9,20 +9,36 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// ===== CARREGAR APLICAÇÕES (CORRIGIDO) =====
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snap => {
-    if (snap.exists()) {
-      aplicacoes = snap.val();
-      atualizarAplicacoes();
-      atualizarSugestoesProdutoApp();
+// ===== INICIALIZAR FIREBASE =====
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+// ===== VERIFICAR CONEXÃO =====
+db.ref(".info/connected").on("value", (snap) => {
+  if (snap.val() === true) {
+    console.log("🔥 Conectado ao Firebase");
+  } else {
+    console.warn("⚠️ Desconectado do Firebase");
+  }
+});
+
+// ===== FUNÇÃO DE VERIFICAÇÃO DE CONEXÃO =====
+function verificarConexaoFirebase() {
+  db.ref(".info/connected").on("value", (snap) => {
+    if (snap.val() === true) {
+      console.log("🔥 Conectado ao Firebase");
     } else {
-      aplicacoes = []; // Garante que o array não seja nulo
-      atualizarAplicacoes();
-      atualizarSugestoesProdutoApp();
-      console.warn("⚠️ Nenhuma aplicação encontrada.");
+      console.warn("⚠️ Desconectado do Firebase");
     }
-  }, (error) => {
-    console.error("Erro ao carregar aplicações:", error);
   });
+}
+
+// ===== FUNÇÃO PARA LIMPAR TODOS OS DADOS (USADO EM CONFIGURAÇÕES) =====
+function limparDadosFirebase() {
+  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")) {
+    db.ref("/").set(null);
+    alert("Todos os dados foram apagados.");
+  }
 }

@@ -1,53 +1,63 @@
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("App inicializado.");
-
-  // Carregar aba inicial (Aplicação)
-  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
-  mudarAba(ultimaAba);
-
-  // Controlar navegação do menu
-  document.querySelectorAll(".menu-superior button").forEach(button => {
-    button.addEventListener("click", () => {
-      const aba = button.getAttribute("data-aba");
-      mudarAba(aba);
-      destacarIconeAtivo(aba);
-    });
-  });
-});
-
-// ===== MUDAR ABA E DESTACAR ÍCONE =====
-function mudarAba(aba) {
-  localStorage.setItem("ultimaAba", aba);
-  document.getElementById("conteudo").innerHTML = "";
-
-  fetch(`${aba}.html`)
-    .then((response) => response.text())
-    .then((html) => {
-      document.getElementById("conteudo").innerHTML = html;
-      carregarScriptAba(aba);
-      destacarIconeAtivo(aba);
+// Função para carregar o conteúdo de uma aba de forma dinâmica
+function carregarAba(arquivo) {
+  fetch(arquivo)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('conteudoPrincipal').innerHTML = html;
+      inicializarAba(arquivo);
     })
-    .catch((error) => {
+    .catch(error => {
       console.error("Erro ao carregar a aba:", error);
     });
-}
 
-// ===== DESTACAR ÍCONE DO MENU ATIVO =====
-function destacarIconeAtivo(aba) {
-  document.querySelectorAll(".menu-superior button").forEach((botao) => {
-    botao.classList.remove("ativo");
+  // Atualiza o botão ativo no menu
+  document.querySelectorAll('.menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
   });
-  const botaoAtivo = document.querySelector(`button[data-aba="${aba}"]`);
-  if (botaoAtivo) botaoAtivo.classList.add("ativo");
+
+  const btnId = 'btn-' + arquivo.replace('.html', '');
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+
+  localStorage.setItem('aba', arquivo);
 }
 
-// ===== CARREGAR SCRIPT DA ABA SELECIONADA =====
-function carregarScriptAba(aba) {
-  const scriptExistente = document.querySelector(`script[src="js/${aba}.js"]`);
-  if (scriptExistente) return;
-
-  const script = document.createElement("script");
-  script.src = `js/${aba}.js`;
-  script.defer = true;
-  document.body.appendChild(script);
+// Função para inicializar a aba carregada
+function inicializarAba(arquivo) {
+  switch (arquivo) {
+    case 'aplicacao.html':
+      if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+      break;
+    case 'tarefas.html':
+      if (typeof carregarTarefas === "function") carregarTarefas();
+      break;
+    case 'financeiro.html':
+      if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+      break;
+    case 'colheita.html':
+      if (typeof carregarColheita === "function") carregarColheita();
+      if (typeof carregarValorLata === "function") carregarValorLata();
+      break;
+    case 'relatorio.html':
+      if (typeof carregarRelatorio === "function") carregarRelatorio();
+      break;
+    case 'configuracoes.html':
+      if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+      if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+      break;
+  }
 }
+
+// Inicializa o aplicativo ao carregar a página
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacao.html';
+  carregarAba(abaInicial);
+
+  // Verifica o tema salvo
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
+  }
+}
+
+// Executa ao carregar a página
+document.addEventListener('DOMContentLoaded', inicializarApp);

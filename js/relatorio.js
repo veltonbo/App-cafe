@@ -1,104 +1,108 @@
-// ===== CARREGAR RELATÓRIO =====
-function carregarRelatorio() {
-  atualizarRelatorioAplicacoes();
-  atualizarRelatorioTarefas();
-  atualizarRelatorioFinanceiro();
-  atualizarRelatorioColheita();
+// ===== FUNÇÃO: GERAR RELATÓRIO COMPLETO =====
+function gerarRelatorioCompleto() {
+  gerarRelatorioAplicacoes();
+  gerarRelatorioTarefas();
+  gerarRelatorioFinanceiro();
+  gerarRelatorioColheita();
 }
 
-// ===== RELATÓRIO DE APLICAÇÕES =====
-function atualizarRelatorioAplicacoes() {
-  db.ref('Aplicacoes').once('value', snap => {
-    const aplicacoes = snap.exists() ? snap.val() : [];
-    const container = document.getElementById("relatorioAplicacoes");
-    container.innerHTML = aplicacoes.map(app => `
-      <div>
-        ${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} L/ha - ${app.setor}
-      </div>
-    `).join('');
+// ===== FUNÇÃO: MOSTRAR SUB-RELATÓRIO =====
+function mostrarRelatorio(relatorioId) {
+  document.querySelectorAll('.relatorio-subaba').forEach(subaba => {
+    subaba.style.display = 'none';
+  });
+
+  document.getElementById(relatorioId).style.display = 'block';
+}
+
+// ===== RELATÓRIO: APLICAÇÕES =====
+function gerarRelatorioAplicacoes() {
+  const resumo = document.getElementById("resumoRelAplicacoes");
+  const ctx = document.getElementById("graficoRelAplicacoes").getContext("2d");
+  resumo.textContent = "Total de Aplicações: " + aplicacoes.length;
+
+  const produtos = aplicacoes.reduce((acc, app) => {
+    acc[app.produto] = (acc[app.produto] || 0) + 1;
+    return acc;
+  }, {});
+
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(produtos),
+      datasets: [{
+        data: Object.values(produtos),
+        backgroundColor: ["#4caf50", "#2196f3", "#ff9800", "#f44336"]
+      }]
+    }
   });
 }
 
-// ===== RELATÓRIO DE TAREFAS =====
-function atualizarRelatorioTarefas() {
-  db.ref('Tarefas').once('value', snap => {
-    const tarefas = snap.exists() ? snap.val() : [];
-    const container = document.getElementById("relatorioTarefas");
-    container.innerHTML = tarefas.map(tar => `
-      <div>
-        ${tar.data} - ${tar.descricao} (${tar.prioridade}) - ${tar.setor} - ${tar.feita ? "Feita" : "Pendente"}
-      </div>
-    `).join('');
+// ===== RELATÓRIO: TAREFAS =====
+function gerarRelatorioTarefas() {
+  const resumo = document.getElementById("resumoRelTarefas");
+  const ctx = document.getElementById("graficoRelTarefas").getContext("2d");
+  resumo.textContent = "Total de Tarefas: " + (tarefas.length + tarefasFeitas.length);
+
+  const status = {
+    "A Fazer": tarefas.length,
+    "Executadas": tarefasFeitas.length
+  };
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(status),
+      datasets: [{
+        data: Object.values(status),
+        backgroundColor: ["#ff9800", "#4caf50"]
+      }]
+    }
   });
 }
 
-// ===== RELATÓRIO FINANCEIRO =====
-function atualizarRelatorioFinanceiro() {
-  db.ref('Financeiro').once('value', snap => {
-    const lancamentos = snap.exists() ? snap.val() : [];
-    const container = document.getElementById("relatorioFinanceiro");
-    container.innerHTML = lancamentos.map(lanc => `
-      <div>
-        ${lanc.data} - ${lanc.descricao} - R$ ${lanc.valor.toFixed(2)} - ${lanc.tipo}
-        ${lanc.parcelado ? `(Parcelado: ${lanc.parcelas.length}x)` : ''}
-      </div>
-    `).join('');
+// ===== RELATÓRIO: FINANCEIRO =====
+function gerarRelatorioFinanceiro() {
+  const resumo = document.getElementById("resumoRelFinanceiro");
+  const ctx = document.getElementById("graficoRelFinanceiro").getContext("2d");
+  resumo.textContent = "Total de Lançamentos: " + (financeiro.length + financeiroPago.length);
+
+  const valores = {
+    "A Vencer": financeiro.length,
+    "Pagos": financeiroPago.length
+  };
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(valores),
+      datasets: [{
+        data: Object.values(valores),
+        backgroundColor: ["#ff9800", "#4caf50"]
+      }]
+    }
   });
 }
 
-// ===== RELATÓRIO DE COLHEITA =====
-function atualizarRelatorioColheita() {
-  db.ref('Colheita').once('value', snap => {
-    const colheitas = snap.exists() ? snap.val() : [];
-    const container = document.getElementById("relatorioColheita");
-    container.innerHTML = colheitas.map(col => `
-      <div>
-        ${col.data} - ${col.quantidade} Kg ${col.descricao ? `- ${col.descricao}` : ''}
-      </div>
-    `).join('');
+// ===== RELATÓRIO: COLHEITA =====
+function gerarRelatorioColheita() {
+  const resumo = document.getElementById("resumoRelColheita");
+  const ctx = document.getElementById("graficoRelColheita").getContext("2d");
+  resumo.textContent = "Total de Latas Colhidas: " + colheitas.reduce((acc, col) => acc + col.quantidade, 0);
+
+  const colhedores = colheitas.reduce((acc, col) => {
+    acc[col.colhedor] = (acc[col.colhedor] || 0) + col.quantidade;
+    return acc;
+  }, {});
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(colhedores),
+      datasets: [{
+        data: Object.values(colhedores),
+        backgroundColor: "#66bb6a"
+      }]
+    }
   });
 }
-
-// ===== EXPORTAR RELATÓRIO COMO PDF =====
-function gerarRelatorioPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text("Relatório Completo - Manejo Café", 20, 20);
-
-  let y = 40;
-  ["Aplicacoes", "Tarefas", "Financeiro", "Colheita"].forEach(secao => {
-    doc.text(secao, 20, y);
-    y += 10;
-    const container = document.getElementById(`relatorio${secao}`);
-    container.querySelectorAll("div").forEach(div => {
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(div.textContent, 20, y);
-      y += 8;
-    });
-    y += 10;
-  });
-
-  doc.save("relatorio_manejo_cafe.pdf");
-}
-
-// ===== EXPORTAR RELATÓRIO COMO CSV =====
-function gerarRelatorioCSV() {
-  const csv = [
-    "Seção,Data,Descrição,Detalhes",
-    ...document.querySelectorAll("#relatorioAplicacoes div, #relatorioTarefas div, #relatorioFinanceiro div, #relatorioColheita div")
-      .map(div => `Relatório,${div.textContent.replaceAll(" - ", ",")}`)
-  ].join("\n");
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `relatorio_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
-}
-
-// ===== INICIALIZAR =====
-document.addEventListener("DOMContentLoaded", carregarRelatorio);

@@ -1,54 +1,55 @@
-// ===== CARREGAR CONFIGURAÇÕES =====
-function carregarConfiguracoes() {
-  db.ref('Configuracoes').on('value', snap => {
-    const config = snap.val();
-    if (config) {
-      document.getElementById("safraAtual").value = config.safra || '';
-      document.getElementById("emailNotificacoes").value = config.email || '';
-      document.getElementById("tema").value = config.tema || 'Escuro';
-      aplicarTema(config.tema);
-    }
+// ===== VERIFICAR CONEXÃO COM O FIREBASE =====
+document.addEventListener("DOMContentLoaded", verificarConexaoFirebase);
+
+function verificarConexaoFirebase() {
+  db.ref(".info/connected").on("value", (snap) => {
+    const status = snap.val() ? "✅ Conectado ao Firebase" : "⚠️ Desconectado do Firebase";
+    document.getElementById("statusFirebase").innerText = status;
   });
 }
 
-// ===== SALVAR CONFIGURAÇÕES =====
-function salvarConfiguracoes() {
-  const config = {
-    safra: document.getElementById("safraAtual").value.trim(),
-    email: document.getElementById("emailNotificacoes").value.trim(),
-    tema: document.getElementById("tema").value
-  };
-
-  db.ref('Configuracoes').set(config);
-  aplicarTema(config.tema);
-  alert("Configurações salvas com sucesso.");
-}
-
-// ===== RESTAURAR PADRÕES =====
-function restaurarPadroes() {
-  if (!confirm("Deseja restaurar as configurações padrão?")) return;
-  document.getElementById("safraAtual").value = '';
-  document.getElementById("emailNotificacoes").value = '';
-  document.getElementById("tema").value = 'Escuro';
-  salvarConfiguracoes();
-}
-
-// ===== APLICAR TEMA =====
-function aplicarTema(tema) {
-  if (tema === "Claro") {
-    document.body.classList.remove("tema-escuro");
-    document.body.classList.add("tema-claro");
-  } else if (tema === "Escuro") {
-    document.body.classList.remove("tema-claro");
-    document.body.classList.add("tema-escuro");
-  } else {
-    const hora = new Date().getHours();
-    if (hora >= 18 || hora < 6) {
-      document.body.classList.add("tema-escuro");
-      document.body.classList.remove("tema-claro");
-    } else {
-      document.body.classList.add("tema-claro");
-      document.body.classList.remove("tema-escuro");
-    }
+// ===== LIMPAR TODOS OS DADOS =====
+function limparTodosOsDados() {
+  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")) {
+    db.ref("/").set(null);
+    alert("Todos os dados foram apagados.");
   }
+}
+
+// ===== EXPORTAR BACKUP =====
+function exportarBackup() {
+  db.ref("/").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `backup_manejo_cafe_${new Date().toISOString().split("T")[0]}.json`;
+    link.click();
+  });
+}
+
+// ===== IMPORTAR BACKUP =====
+function importarBackup() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        db.ref("/").set(data);
+        alert("Backup importado com sucesso.");
+      } catch (error) {
+        alert("Erro ao importar o backup. Verifique o arquivo.");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }

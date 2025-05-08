@@ -41,23 +41,14 @@ function atualizarAplicacoes() {
   lista.innerHTML = '';
 
   aplicacoes.forEach((app, index) => {
-    const item = document.createElement("div");
-    item.className = "item";
-    item.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem}</span>
-      <div class="buttons">
-        <button class="btn" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
-        <button class="btn red" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+    lista.innerHTML += `
+      <div class="item">
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem}</span>
+        <div class="botoes">
+          <button class="btn blue" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+          <button class="btn red" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+        </div>
       </div>
     `;
-    lista.appendChild(item);
   });
-}
-
-// ===== LIMPAR FORMULÁRIO =====
-function limparFormularioAplicacao() {
-  document.getElementById("dataApp").value = "";
-  document.getElementById("produtoApp").value = "";
-  document.getElementById("dosagemApp").value = "";
-  document.getElementById("tipoApp").value = "Adubo";
 }

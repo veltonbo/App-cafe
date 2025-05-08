@@ -1,5 +1,5 @@
 // ===== CONFIGURAÇÃO DO FIREBASE (Já deve estar carregado no firebase-config.js) =====
-const db = firebase.database();
+js/firebase-config.js const db = firebase.database();
 
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];

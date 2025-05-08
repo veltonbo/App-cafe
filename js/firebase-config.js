@@ -9,17 +9,16 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// ===== Inicializar Firebase (Apenas uma vez) =====
+// ===== INICIALIZAR FIREBASE =====
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
-console.log("🔥 Firebase inicializado corretamente.");
 
-// ===== Verificar Conexão com o Firebase =====
+// ===== VERIFICAR CONEXÃO =====
 db.ref(".info/connected").on("value", (snap) => {
   if (snap.val() === true) {
-    console.log("✅ Conectado ao Firebase");
+    console.log("🔥 Conectado ao Firebase");
   } else {
     console.warn("⚠️ Desconectado do Firebase");
   }

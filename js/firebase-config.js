@@ -9,17 +9,20 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// ===== INICIALIZAR FIREBASE =====
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+// ===== CARREGAR APLICAÇÕES (CORRIGIDO) =====
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').on('value', snap => {
+    if (snap.exists()) {
+      aplicacoes = snap.val();
+      atualizarAplicacoes();
+      atualizarSugestoesProdutoApp();
+    } else {
+      aplicacoes = []; // Garante que o array não seja nulo
+      atualizarAplicacoes();
+      atualizarSugestoesProdutoApp();
+      console.warn("⚠️ Nenhuma aplicação encontrada.");
+    }
+  }, (error) => {
+    console.error("Erro ao carregar aplicações:", error);
+  });
 }
-const db = firebase.database();
-
-// ===== VERIFICAR CONEXÃO =====
-db.ref(".info/connected").on("value", (snap) => {
-  if (snap.val() === true) {
-    console.log("🔥 Conectado ao Firebase");
-  } else {
-    console.warn("⚠️ Desconectado do Firebase");
-  }
-});

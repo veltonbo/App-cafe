@@ -4,49 +4,91 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café - Tarefas</title>
-  <link rel="stylesheet" href="css/tarefas.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/main.js" defer></script>
+  <script src="js/tarefas.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Manejo Café</h1>
-      <nav>
-        <button class="tab-button" onclick="mudarAba('tarefas')">Tarefas</button>
-        <button class="tab-button" onclick="mudarAba('aplicacoes')">Aplicações</button>
-        <button class="tab-button" onclick="mudarAba('financeiro')">Financeiro</button>
-      </nav>
-    </header>
+  <header>
+    <h1>Tarefas</h1>
+    <div class="icon" onclick="toggleNotificacoes()">
+      <i class="fas fa-bell"></i>
+    </div>
+  </header>
 
-    <section id="tarefas" class="aba">
-      <h2>Gestão de Tarefas</h2>
-      <div class="form">
-        <input type="date" id="dataTarefa" placeholder="Data">
-        <input type="text" id="descricaoTarefa" placeholder="Descrição da tarefa">
-        <select id="prioridadeTarefa">
-          <option>Alta</option>
-          <option>Média</option>
-          <option>Baixa</option>
+  <main class="conteudo">
+    <div class="formulario">
+      <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
+      <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
+      
+      <select id="prioridadeTarefa">
+        <option value="Alta">Alta</option>
+        <option value="Média">Média</option>
+        <option value="Baixa">Baixa</option>
+      </select>
+
+      <select id="setorTarefa">
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+      </select>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+        <label for="eAplicacaoCheckbox">É Aplicação</label>
+      </div>
+
+      <div id="camposAplicacao" style="display:none;">
+        <input id="dosagemAplicacao" placeholder="Dosagem (L/ha)">
+        <select id="tipoAplicacao">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
         </select>
-        <div class="buttons">
-          <button class="btn save" onclick="adicionarTarefa()">
-            <i class="fas fa-save"></i> Salvar
-          </button>
-          <button class="btn cancel" id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display:none;">
-            <i class="fas fa-times"></i> Cancelar
-          </button>
-        </div>
       </div>
 
-      <div class="list">
-        <h3>Tarefas a Fazer</h3>
-        <input type="text" id="pesquisaTarefas" placeholder="Pesquisar...">
-        <div id="listaTarefas"></div>
+      <button id="btnSalvarTarefa" onclick="adicionarTarefa()">Salvar Tarefa</button>
+    </div>
 
-        <h3>Tarefas Concluídas</h3>
-        <div id="listaTarefasFeitas"></div>
-      </div>
-    </section>
+    <div class="lista" id="listaTarefas">
+      <h3>A Fazer</h3>
+      <div id="tarefasAFazer"></div>
+
+      <h3>Executadas</h3>
+      <div id="tarefasExecutadas"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="menu-item" id="menu-aplicacoes" onclick="mudarAba('aplicacoes')">
+      <i class="fas fa-flask icon"></i>
+      <span>Aplicações</span>
+    </div>
+    <div class="menu-item active" id="menu-tarefas" onclick="mudarAba('tarefas')">
+      <i class="fas fa-tasks icon"></i>
+      <span>Tarefas</span>
+    </div>
+    <div class="menu-item" id="menu-financeiro" onclick="mudarAba('financeiro')">
+      <i class="fas fa-dollar-sign icon"></i>
+      <span>Financeiro</span>
+    </div>
+    <div class="menu-item" id="menu-colheita" onclick="mudarAba('colheita')">
+      <i class="fas fa-tractor icon"></i>
+      <span>Colheita</span>
+    </div>
+    <div class="menu-item" id="menu-relatorio" onclick="mudarAba('relatorio')">
+      <i class="fas fa-chart-line icon"></i>
+      <span>Relatório</span>
+    </div>
+    <div class="menu-item" id="menu-configuracoes" onclick="mudarAba('configuracoes')">
+      <i class="fas fa-cog icon"></i>
+      <span>Configurações</span>
+    </div>
+  </footer>
+
+  <!-- Botão Flutuante para Adicionar Tarefa -->
+  <div class="float-button" onclick="mostrarFormularioTarefa()">
+    <i class="fas fa-plus"></i>
   </div>
 </body>
 </html>

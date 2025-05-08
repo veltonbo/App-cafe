@@ -1,44 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café</title>
 
-  <!-- FontAwesome CDN - Corrigido -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/style.css" />
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-lZN37fPoZ1hNF4e59wW8YgF8vZl1F7nHvIT5UVyD+P7Fn8eh7Y+45i3QklQ0+fN" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-  <!-- ===== MENU SUPERIOR COM ÍCONES ===== -->
   <nav class="menu-superior">
-    <button onclick="mudarAba('aplicacao')" class="menu-item" id="menu-aplicacao" title="Aplicações">
-      <i class="fas fa-flask"></i>
-    </button>
-    <button onclick="mudarAba('tarefas')" class="menu-item" id="menu-tarefas" title="Tarefas">
-      <i class="fas fa-list-check"></i>
-    </button>
-    <button onclick="mudarAba('financeiro')" class="menu-item" id="menu-financeiro" title="Financeiro">
-      <i class="fas fa-dollar-sign"></i>
-    </button>
-    <button onclick="mudarAba('colheita')" class="menu-item" id="menu-colheita" title="Colheita">
-      <i class="fas fa-tractor"></i>
-    </button>
-    <button onclick="mudarAba('relatorio')" class="menu-item" id="menu-relatorio" title="Relatórios">
-      <i class="fas fa-chart-line"></i>
-    </button>
-    <button onclick="mudarAba('configuracao')" class="menu-item" id="menu-configuracao" title="Configurações">
-      <i class="fas fa-cog"></i>
-    </button>
+    <button data-aba="aplicacao" class="menu-item fas fa-flask"></button>
+    <button data-aba="tarefas" class="menu-item fas fa-tasks"></button>
+    <button data-aba="financeiro" class="menu-item fas fa-dollar-sign"></button>
+    <button data-aba="colheita" class="menu-item fas fa-tractor"></button>
+    <button data-aba="relatorio" class="menu-item fas fa-chart-line"></button>
+    <button data-aba="configuracoes" class="menu-item fas fa-cog"></button>
   </nav>
 
-  <!-- Conteúdo dinâmico -->
-  <div id="conteudo" class="conteudo"></div>
+  <div id="conteudo"></div>
 
-  <!-- Scripts -->
   <script src="js/main.js" defer></script>
 </body>
 </html>

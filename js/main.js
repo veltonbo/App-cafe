@@ -1,34 +1,36 @@
-// ===== INICIAR APLICAÇÃO =====
 document.addEventListener("DOMContentLoaded", () => {
-  inicializarApp();
-  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
-  mudarAba(ultimaAba);
+  console.log("App inicializado.");
+
+  // Carregar aba inicial (Aplicação)
+  mudarAba("aplicacao");
+
+  // Controlar navegação do menu
+  document.querySelectorAll(".menu-superior button").forEach(button => {
+    button.addEventListener("click", () => {
+      const aba = button.getAttribute("data-aba");
+      mudarAba(aba);
+      destacarIconeAtivo(aba);
+    });
+  });
 });
 
-// ===== INICIALIZAR APP =====
-function inicializarApp() {
-  console.log("App inicializado.");
-  destacarIconeAtivo(localStorage.getItem("ultimaAba") || "aplicacao");
-}
-
-// ===== MUDAR ABA =====
+// Função para mudar a aba
 function mudarAba(aba) {
   localStorage.setItem("ultimaAba", aba);
   document.getElementById("conteudo").innerHTML = "";
 
   fetch(`${aba}.html`)
-    .then((response) => response.text())
-    .then((html) => {
+    .then(response => response.text())
+    .then(html => {
       document.getElementById("conteudo").innerHTML = html;
       carregarScriptAba(aba);
-      destacarIconeAtivo(aba);
     })
-    .catch((error) => {
+    .catch(error => {
       console.error("Erro ao carregar a aba:", error);
     });
 }
 
-// ===== CARREGAR SCRIPT DA ABA =====
+// Função para carregar o script da aba selecionada
 function carregarScriptAba(aba) {
   const script = document.createElement("script");
   script.src = `js/${aba}.js`;
@@ -36,19 +38,10 @@ function carregarScriptAba(aba) {
   document.getElementById("conteudo").appendChild(script);
 }
 
-// ===== DESTACAR ÍCONE DO MENU ATIVO =====
+// Função para destacar o ícone do menu ativo
 function destacarIconeAtivo(aba) {
-  const botoesMenu = document.querySelectorAll(".menu-superior button");
-  botoesMenu.forEach((botao) => botao.classList.remove("ativo"));
-
-  const botaoAtivo = document.querySelector(`button[data-aba='${aba}']`);
-  if (botaoAtivo) botaoAtivo.classList.add("ativo");
-}
-
-// ===== MENU SUPERIOR - EVENTOS =====
-document.querySelectorAll(".menu-superior button").forEach((botao) => {
-  botao.addEventListener("click", () => {
-    const aba = botao.getAttribute("data-aba");
-    mudarAba(aba);
+  document.querySelectorAll(".menu-superior button").forEach(button => {
+    button.classList.remove("ativo");
   });
-});
+  document.querySelector(`button[data-aba="${aba}"]`).classList.add("ativo");
+}

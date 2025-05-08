@@ -1,126 +1,247 @@
 /* ===== LAYOUT GERAL ===== */
 body {
-  background-color: #f4f4f9;
-  color: #333;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Roboto', sans-serif;
+  background-color: #121212;
+  color: #ffffff;
   margin: 0;
   padding: 0;
+  line-height: 1.6;
 }
 
 header {
-  background-color: #ffffff;
-  padding: 15px 20px;
+  background-color: #1f1f1f;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 100;
+  padding: 15px 20px;
+  color: #ffffff;
+  border-bottom: 1px solid #333;
 }
 
 header h1 {
-  font-size: 1.3rem;
-  margin: 0;
-  color: #333;
-  flex-grow: 1;
-  text-align: center;
-}
-
-header .icon {
-  font-size: 1.5rem;
-  color: #666;
-  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 main {
-  margin-top: 70px;
-  padding: 20px;
+  padding: 15px 20px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-footer {
-  background-color: #ffffff;
-  padding: 10px 20px;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
+/* ===== MENU SUPERIOR ===== */
+.navbar {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  gap: 10px;
+  padding: 10px;
+  background-color: #1f1f1f;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-footer .menu-item {
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-  transition: color 0.3s;
-}
-
-footer .menu-item:hover {
-  color: #4caf50;
-}
-
-footer .menu-item.active {
-  color: #4caf50;
-}
-
-footer .menu-item .icon {
-  font-size: 1.5rem;
-}
-
-/* ===== FORMULÁRIOS GLOBAIS ===== */
-input,
-select {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
+.navbar a {
+  padding: 10px 15px;
+  background-color: #333;
+  color: #ffffff;
+  text-decoration: none;
   border-radius: 8px;
-  color: #333;
-  font-size: 1rem;
+  transition: background 0.3s;
 }
 
-input::placeholder {
+.navbar a:hover {
+  background-color: #4caf50;
+}
+
+.navbar a.active {
+  background-color: #4caf50;
+}
+
+/* ===== FORMULÁRIOS ===== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.formulario input,
+.formulario select {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1f1f1f;
+  color: #ffffff;
+  outline: none;
+  font-size: 1rem;
+  transition: background 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formulario input::placeholder {
   color: #888;
 }
 
-button {
+.formulario button {
   background-color: #4caf50;
   color: #ffffff;
   border: none;
   padding: 12px;
-  border-radius: 8px;
   font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formulario button:hover {
+  background-color: #45a049;
+}
+
+.formulario label {
+  color: #cccccc;
+}
+
+/* ===== LISTAGEM DE ITENS ===== */
+.lista {
+  margin-top: 20px;
+}
+
+.lista h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.item {
+  background-color: #1f1f1f;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.3s;
+}
+
+.item:hover {
+  transform: scale(1.02);
+}
+
+.item .conteudo-item {
+  flex: 1;
+  color: #e0e0e0;
+  word-wrap: break-word;
+}
+
+.botoes-item {
+  display: flex;
+  gap: 8px;
+}
+
+/* ===== BOTÕES CIRCULARES ===== */
+.botao-circular {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-button:hover {
-  background-color: #45a049;
+.botao-circular.verde {
+  background-color: #4caf50;
 }
 
-/* ===== BOTÕES FLUTUANTES ===== */
+.botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botao-circular.laranja {
+  background-color: #ff9800;
+}
+
+.botao-circular i {
+  color: #ffffff;
+  font-size: 1.2rem;
+}
+
+/* ===== RESUMO FINANCEIRO ===== */
+.resumo {
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.resumo div {
+  flex: 1;
+  text-align: center;
+  color: #ffffff;
+}
+
+.resumo div span {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* ===== GRÁFICO FINANCEIRO ===== */
+.grafico-container {
+  background-color: #1f1f1f;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+canvas {
+  max-width: 100%;
+}
+
+/* ===== BOTÃO FLUTUANTE ===== */
 .float-button {
   position: fixed;
-  bottom: 70px;
+  bottom: 20px;
   right: 20px;
+  width: 55px;
+  height: 55px;
   background-color: #4caf50;
   color: #ffffff;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  font-size: 24px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: background 0.3s;
 }
 
 .float-button:hover {
   background-color: #45a049;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.4s ease-in-out;
 }

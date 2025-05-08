@@ -1,17 +1,7 @@
 // ===== MUDAR ABA =====
 function mudarAba(aba) {
-  // Remove classe "ativo" de todos os ícones
-  document.querySelectorAll(".menu-item").forEach(item => item.classList.remove("ativo"));
+  document.getElementById("conteudo").innerHTML = "";
 
-  // Adiciona classe "ativo" ao ícone da aba selecionada
-  document.getElementById(`menu-${aba}`).classList.add("ativo");
-
-  // Carrega o conteúdo da aba
-  carregarAba(aba);
-}
-
-// ===== CARREGAR ABA (AJAX) =====
-function carregarAba(aba) {
   fetch(`${aba}.html`)
     .then(response => response.text())
     .then(html => {
@@ -22,7 +12,7 @@ function carregarAba(aba) {
     });
 }
 
-// Inicializa com a primeira aba ativa
+// Inicializar com a primeira aba (Aplicação)
 document.addEventListener("DOMContentLoaded", () => {
   mudarAba('aplicacao');
 });

@@ -9,17 +9,27 @@
 <body>
 
   <!-- ===== MENU SUPERIOR ===== -->
-  <nav class="menu-superior">
-    <button onclick="mudarAba('aplicacao')">
-      <i class="fas fa-flask"></i>
-    </button>
-    <button onclick="mudarAba('tarefas')">
-      <i class="fas fa-tasks"></i>
-    </button>
-    <button onclick="mudarAba('financeiro')">
-      <i class="fas fa-dollar-sign"></i>
-    </button>
-  </nav>
+  <!-- ===== MENU SUPERIOR COM ÍCONES ===== -->
+<nav class="menu-superior">
+  <button onclick="mudarAba('aplicacao')" class="menu-item" id="menu-aplicacao">
+    <i class="fas fa-flask"></i>
+  </button>
+  <button onclick="mudarAba('tarefas')" class="menu-item" id="menu-tarefas">
+    <i class="fas fa-tasks"></i>
+  </button>
+  <button onclick="mudarAba('financeiro')" class="menu-item" id="menu-financeiro">
+    <i class="fas fa-dollar-sign"></i>
+  </button>
+  <button onclick="mudarAba('colheita')" class="menu-item" id="menu-colheita">
+    <i class="fas fa-tractor"></i>
+  </button>
+  <button onclick="mudarAba('relatorio')" class="menu-item" id="menu-relatorio">
+    <i class="fas fa-chart-line"></i>
+  </button>
+  <button onclick="mudarAba('configuracao')" class="menu-item" id="menu-configuracao">
+    <i class="fas fa-cog"></i>
+  </button>
+</nav>
 
   <div id="conteudo" class="conteudo"></div>
 

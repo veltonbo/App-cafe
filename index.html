@@ -1,61 +1,105 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manejo Café</title>
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="/App-cafe/css/style.css">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js" defer></script>
+    <!-- Firebase Config -->
+    <script src="/App-cafe/js/firebase-config.js" defer></script>
 
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- jsPDF (para Relatórios) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- CSS Principal -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Scripts de cada menu -->
-  <script src="main.js" defer></script>
-  <script src="aplicacao.js" defer></script>
-  <script src="tarefas.js" defer></script>
-  <script src="financeiro.js" defer></script>
-  <script src="colheita.js" defer></script>
-  <script src="relatorio.js" defer></script>
-  <script src="configuracoes.js" defer></script>
+    <!-- Scripts de cada menu -->
+    <script src="/App-cafe/js/aplicacao.js" defer></script>
+    <script src="/App-cafe/js/tarefas.js" defer></script>
+    <script src="/App-cafe/js/financeiro.js" defer></script>
+    <script src="/App-cafe/js/colheita.js" defer></script>
+    <script src="/App-cafe/js/relatorio.js" defer></script>
+    <script src="/App-cafe/js/configuracoes.js" defer></script>
+    <script src="/App-cafe/js/main.js" defer></script>
 </head>
-<body onload="inicializarApp()">
+<body>
 
-  <!-- Menu Superior (Navegação) -->
-  <div class="menu-superior">
-    <button data-aba="aplicacoes"><i class="fas fa-flask"></i> Aplicações</button>
-    <button data-aba="tarefas"><i class="fas fa-tasks"></i> Tarefas</button>
-    <button data-aba="financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</button>
-    <button data-aba="colheita"><i class="fas fa-tractor"></i> Colheita</button>
-    <button data-aba="relatorio"><i class="fas fa-chart-line"></i> Relatório</button>
-    <button data-aba="configuracoes"><i class="fas fa-cog"></i> Configurações</button>
-  </div>
+    <header>
+        <h1>Manejo Café</h1>
+        <nav>
+            <button onclick="mudarAba('aplicacoes')">Aplicações</button>
+            <button onclick="mudarAba('tarefas')">Tarefas</button>
+            <button onclick="mudarAba('financeiro')">Financeiro</button>
+            <button onclick="mudarAba('colheita')">Colheita</button>
+            <button onclick="mudarAba('relatorio')">Relatório</button>
+            <button onclick="mudarAba('configuracoes')">Configurações</button>
+        </nav>
+    </header>
 
-  <!-- Conteúdo das Abas -->
-  <main class="conteudo">
-    <div id="aplicacoes" class="aba"></div>
-    <div id="tarefas" class="aba"></div>
-    <div id="financeiro" class="aba"></div>
-    <div id="colheita" class="aba"></div>
-    <div id="relatorio" class="aba"></div>
-    <div id="configuracoes" class="aba"></div>
-  </main>
+    <main>
+        <!-- Aba Aplicações -->
+        <section id="aplicacoes" class="aba">
+            <h2>Aplicações</h2>
+            <input id="dataApp" type="date" placeholder="Data">
+            <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+            <datalist id="sugestoesProdutoApp"></datalist>
+            <input id="dosagemApp" placeholder="Dosagem (L/ha)">
+            <select id="tipoApp">
+                <option>Adubo</option>
+                <option>Fungicida</option>
+                <option>Inseticida</option>
+                <option>Herbicida</option>
+            </select>
+            <select id="setorApp">
+                <option>Setor 01</option>
+                <option>Setor 02</option>
+            </select>
+            <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+            <div id="listaAplicacoes"></div>
+        </section>
 
-  <!-- Botão Flutuante (Ação Rápida) -->
-  <div class="float-button" onclick="mostrarFormularioRapido()">
-    <i class="fas fa-plus"></i>
-  </div>
+        <!-- Aba Tarefas -->
+        <section id="tarefas" class="aba" style="display: none;">
+            <h2>Tarefas</h2>
+            <input id="dataTarefa" type="date" placeholder="Data">
+            <input id="descricaoTarefa" placeholder="Descrição">
+            <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+            <div id="listaTarefas"></div>
+        </section>
+
+        <!-- Aba Financeiro -->
+        <section id="financeiro" class="aba" style="display: none;">
+            <h2>Financeiro</h2>
+            <input id="descricaoFinanceiro" placeholder="Descrição">
+            <input id="valorFinanceiro" type="number" placeholder="Valor (R$)">
+            <button onclick="adicionarFinanceiro()">Salvar</button>
+            <div id="listaFinanceiro"></div>
+        </section>
+
+        <!-- Aba Colheita -->
+        <section id="colheita" class="aba" style="display: none;">
+            <h2>Colheita</h2>
+            <input id="dataColheita" type="date" placeholder="Data">
+            <input id="quantidadeColheita" type="number" placeholder="Quantidade (Kg)">
+            <button onclick="adicionarColheita()">Salvar Colheita</button>
+            <div id="listaColheita"></div>
+        </section>
+
+        <!-- Aba Relatório -->
+        <section id="relatorio" class="aba" style="display: none;">
+            <h2>Relatório</h2>
+            <button onclick="gerarRelatorio()">Gerar Relatório</button>
+            <div id="relatorioGerado"></div>
+        </section>
+
+        <!-- Aba Configurações -->
+        <section id="configuracoes" class="aba" style="display: none;">
+            <h2>Configurações</h2>
+            <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Manejo Café</p>
+    </footer>
+
 </body>
 </html>

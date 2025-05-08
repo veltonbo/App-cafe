@@ -1,30 +1,30 @@
-// ===== MAIN.JS - Controle de Navegação e Carregamento Dinâmico =====
-document.addEventListener("DOMContentLoaded", inicializarApp);
-
-// ===== Inicializar Aplicação =====
-function inicializarApp() {
-  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacoes";
-  mudarAba(ultimaAba);
-}
-
-// ===== Mudar Aba =====
+// Função para mudar de aba e carregar conteúdo
 function mudarAba(aba) {
   localStorage.setItem("ultimaAba", aba);
   document.getElementById("conteudo").innerHTML = "";
 
+  // Carregar o HTML da aba
   fetch(`${aba}.html`)
-    .then(response => response.text())
-    .then(html => {
+    .then((response) => response.text())
+    .then((html) => {
       document.getElementById("conteudo").innerHTML = html;
       carregarScriptAba(aba);
     })
-    .catch(error => console.error("Erro ao carregar a aba:", error));
+    .catch((error) => {
+      console.error("Erro ao carregar a aba:", error);
+    });
 }
 
-// ===== Carregar Script da Aba =====
+// Função para carregar o script da aba selecionada
 function carregarScriptAba(aba) {
   const script = document.createElement("script");
-  script.src = `${aba}.js`;
+  script.src = `./js/${aba}.js`;
   script.defer = true;
   document.body.appendChild(script);
 }
+
+// Verificar se há uma aba salva no LocalStorage
+document.addEventListener("DOMContentLoaded", () => {
+  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
+  mudarAba(ultimaAba);
+});

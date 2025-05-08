@@ -1,8 +1,8 @@
 /* ===== LAYOUT GERAL ===== */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #121212;
-  color: #ffffff;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f2f3f5;
+  color: #333;
   margin: 0;
   padding: 0;
   display: flex;
@@ -10,209 +10,162 @@ body {
   align-items: center;
 }
 
-/* ===== MENU SUPERIOR ===== */
+.conteudo {
+  max-width: 800px;
+  width: 100%;
+  padding: 20px;
+}
+
+/* ===== MENU SUPERIOR COM ÍCONES ===== */
 .menu-superior {
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 12px;
-  background-color: #1e1e1e;
-  gap: 25px;
-  border-top: 1px solid #333;
+  gap: 20px;
+  background-color: #2c3e50;
+  padding: 10px 0;
+  width: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.menu-superior .menu-item {
+.menu-superior button {
   background: none;
   border: none;
-  font-size: 24px;
-  color: #8a8a8a;
+  font-size: 22px;
+  color: #bbb;
   cursor: pointer;
   transition: color 0.3s, transform 0.2s;
 }
 
-.menu-superior .menu-item:hover {
+.menu-superior button:hover {
   color: #4caf50;
   transform: scale(1.1);
 }
 
-.menu-superior .menu-item.ativo {
+.menu-superior button.ativo {
   color: #4caf50;
 }
 
-/* ===== MENU DE NAVEGAÇÃO ===== */
-nav {
-  display: flex;
-  gap: 10px;
-  margin: 15px 0;
-}
-
-nav button {
-  background-color: #4caf50;
-  color: #ffffff;
-  border: none;
-  padding: 10px 15px;
-  font-size: 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-nav button:hover {
-  background-color: #45a049;
-}
-
-/* ===== CONTEÚDO PRINCIPAL ===== */
-#conteudo {
-  max-width: 800px;
-  width: 100%;
-  padding: 20px;
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+/* ===== TÍTULOS ===== */
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
 }
 
 /* ===== FORMULÁRIOS ===== */
-input {
-  display: block;
+input,
+select {
   width: 100%;
   max-width: 400px;
   padding: 12px;
-  margin-bottom: 10px;
-  background-color: #333;
-  border: 1px solid #555;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  color: #fff;
+  background-color: #fff;
   font-size: 16px;
-  outline: none;
-  transition: background 0.3s;
+  box-sizing: border-box;
 }
 
-input:focus {
-  background-color: #444;
+input:focus,
+select:focus {
   border-color: #4caf50;
+  outline: none;
 }
 
-/* ===== BOTÃO SALVAR ===== */
-.botoes-acoes {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-.botoes-acoes button {
+/* ===== BOTÃO PADRÃO ===== */
+button {
+  padding: 10px 18px;
   background-color: #4caf50;
   border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
   color: #fff;
   font-size: 16px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.botoes-acoes button:hover {
+button:hover {
   background-color: #45a049;
 }
 
-/* ===== LISTA DE COLHEITAS ===== */
-#listaColheitas {
-  margin-top: 20px;
-  background-color: #222;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-.campo-pesquisa {
-  display: block;
-  width: 100%;
-  max-width: 400px;
-  padding: 10px;
-  margin-bottom: 10px;
-  background-color: #333;
-  border: 1px solid #555;
-  border-radius: 8px;
-  color: #fff;
+/* ===== BOTÕES DE AÇÃO CIRCULARES ===== */
+.botao-circular {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   font-size: 16px;
-  outline: none;
-  transition: background 0.3s;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.campo-pesquisa:focus {
-  background-color: #444;
-  border-color: #4caf50;
+.botao-circular.verde { background-color: #4caf50; }
+.botao-circular.azul  { background-color: #2196f3; }
+.botao-circular.vermelho { background-color: #e74c3c; }
+.botao-circular.laranja { background-color: #ff9800; }
+
+.botao-circular:hover {
+  filter: brightness(0.9);
 }
 
 /* ===== LISTAGEM DE ITENS ===== */
-.lista {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.lista li {
-  background-color: #2e2e2e;
-  padding: 15px;
+.item {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  padding: 12px;
   margin-bottom: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background-color 0.3s;
+  transition: background 0.2s;
 }
 
-.lista li:hover {
-  background-color: #3a3a3a;
+.item:hover {
+  background-color: #f0f0f0;
 }
 
-/* ===== BOTÕES DE AÇÃO ===== */
-.botoes-acao {
+.item span {
+  flex-grow: 1;
+  font-size: 15px;
+}
+
+.botoes-tarefa {
   display: flex;
   gap: 10px;
 }
 
-.botoes-acao button {
-  background-color: #4caf50;
-  color: #ffffff;
-  border: none;
-  padding: 8px 12px;
-  font-size: 16px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.botoes-acao button.editar {
-  background-color: #2196f3;
-}
-
-.botoes-acao button.excluir {
-  background-color: #f44336;
-}
-
-.botoes-acao button:hover {
-  opacity: 0.8;
+/* ===== PESQUISA ===== */
+.campo-pesquisa {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 
 /* ===== MODO RESPONSIVO ===== */
-@media (max-width: 768px) {
-  #conteudo {
-    padding: 15px;
+@media (max-width: 600px) {
+  .menu-superior {
+    flex-wrap: wrap;
+    padding: 8px;
   }
 
-  input[type="text"],
-  input[type="number"],
-  input[type="date"],
-  select {
-    width: 100%;
-    max-width: none;
-  }
-
-  .lista li {
+  .item {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .botoes-acao {
+  .botoes-tarefa {
+    margin-top: 10px;
     justify-content: flex-start;
+  }
+
+  input, select, .campo-pesquisa {
+    max-width: 100%;
   }
 }

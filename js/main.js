@@ -14,23 +14,33 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Função para mudar a aba
+// ===== MUDAR ABA E DESTACAR ÍCONE =====
 function mudarAba(aba) {
   localStorage.setItem("ultimaAba", aba);
   document.getElementById("conteudo").innerHTML = "";
 
   fetch(`${aba}.html`)
-    .then(response => response.text())
-    .then(html => {
+    .then((response) => response.text())
+    .then((html) => {
       document.getElementById("conteudo").innerHTML = html;
       carregarScriptAba(aba);
+      destacarIconeAtivo(aba);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Erro ao carregar a aba:", error);
     });
 }
 
-// Função para carregar o script da aba selecionada
+// ===== DESTACAR ÍCONE DO MENU ATIVO =====
+function destacarIconeAtivo(aba) {
+  const botoesMenu = document.querySelectorAll(".menu-superior button");
+  botoesMenu.forEach((botao) => botao.classList.remove("ativo"));
+
+  const botaoAtivo = document.querySelector(`button[data-aba="${aba}"]`);
+  if (botaoAtivo) botaoAtivo.classList.add("ativo");
+}
+
+// ===== CARREGAR SCRIPT DA ABA SELECIONADA =====
 function carregarScriptAba(aba) {
   const script = document.createElement("script");
   script.src = `js/${aba}.js`;
@@ -38,10 +48,8 @@ function carregarScriptAba(aba) {
   document.getElementById("conteudo").appendChild(script);
 }
 
-// Função para destacar o ícone do menu ativo
-function destacarIconeAtivo(aba) {
-  document.querySelectorAll(".menu-superior button").forEach(button => {
-    button.classList.remove("ativo");
-  });
-  document.querySelector(`button[data-aba="${aba}"]`).classList.add("ativo");
-}
+// ===== INICIALIZAÇÃO =====
+document.addEventListener("DOMContentLoaded", () => {
+  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
+  mudarAba(ultimaAba);
+});

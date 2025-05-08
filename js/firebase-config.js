@@ -9,36 +9,26 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// ===== INICIALIZAR FIREBASE =====
+// ===== INICIALIZAR FIREBASE (Verificar se já está inicializado) =====
 if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
 
-// ===== VERIFICAR CONEXÃO =====
+// ===== VERIFICAR CONEXÃO COM O FIREBASE =====
 db.ref(".info/connected").on("value", (snap) => {
-  if (snap.val() === true) {
-    console.log("🔥 Conectado ao Firebase");
-  } else {
-    console.warn("⚠️ Desconectado do Firebase");
-  }
+    if (snap.val() === true) {
+        console.log("🔥 Conectado ao Firebase");
+    } else {
+        console.warn("⚠️ Desconectado do Firebase");
+    }
 });
 
-// ===== FUNÇÃO DE VERIFICAÇÃO DE CONEXÃO =====
-function verificarConexaoFirebase() {
-  db.ref(".info/connected").on("value", (snap) => {
-    if (snap.val() === true) {
-      console.log("🔥 Conectado ao Firebase");
+// ===== GARANTIR QUE O FIREBASE ESTÁ CARREGADO EM TODAS AS ABAS =====
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof firebase === "undefined" || !firebase.apps.length) {
+        console.error("🚨 Firebase não carregou corretamente.");
     } else {
-      console.warn("⚠️ Desconectado do Firebase");
+        console.log("✅ Firebase carregado com sucesso.");
     }
-  });
-}
-
-// ===== FUNÇÃO PARA LIMPAR TODOS OS DADOS (USADO EM CONFIGURAÇÕES) =====
-function limparDadosFirebase() {
-  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.")) {
-    db.ref("/").set(null);
-    alert("Todos os dados foram apagados.");
-  }
-}
+});

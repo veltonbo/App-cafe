@@ -1,45 +1,83 @@
-// ===== GERAR RELATÓRIO =====
-function gerarRelatorio() {
-  const dataInicio = document.getElementById("dataInicioRel").value;
-  const dataFim = document.getElementById("dataFimRel").value;
-  const resultado = document.getElementById("resultadoRelatorio");
-  resultado.innerHTML = "";
+// ===== CARREGAR RELATÓRIO =====
+function carregarRelatorio() {
+  atualizarRelatorioAplicacoes();
+  atualizarRelatorioTarefas();
+  atualizarRelatorioFinanceiro();
+  atualizarRelatorioColheita();
+}
 
-  if (!dataInicio || !dataFim) {
-    alert("Selecione o período para o relatório.");
-    return;
-  }
+// ===== RELATÓRIO DE APLICAÇÕES =====
+function atualizarRelatorioAplicacoes() {
+  db.ref('Aplicacoes').once('value', snap => {
+    const aplicacoes = snap.exists() ? snap.val() : [];
+    const container = document.getElementById("relatorioAplicacoes");
+    container.innerHTML = aplicacoes.map(app => `
+      <div>
+        ${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} L/ha - ${app.setor}
+      </div>
+    `).join('');
+  });
+}
 
-  // Exemplo de dados combinados (Aplicações, Tarefas, Financeiro, Colheita)
-  const relatorio = [...aplicacoes, ...tarefas, ...movimentos, ...colheitas]
-    .filter(item => item.data >= dataInicio && item.data <= dataFim);
+// ===== RELATÓRIO DE TAREFAS =====
+function atualizarRelatorioTarefas() {
+  db.ref('Tarefas').once('value', snap => {
+    const tarefas = snap.exists() ? snap.val() : [];
+    const container = document.getElementById("relatorioTarefas");
+    container.innerHTML = tarefas.map(tar => `
+      <div>
+        ${tar.data} - ${tar.descricao} (${tar.prioridade}) - ${tar.setor} - ${tar.feita ? "Feita" : "Pendente"}
+      </div>
+    `).join('');
+  });
+}
 
-  if (relatorio.length === 0) {
-    resultado.innerHTML = "<p>Nenhum dado encontrado para o período selecionado.</p>";
-    return;
-  }
+// ===== RELATÓRIO FINANCEIRO =====
+function atualizarRelatorioFinanceiro() {
+  db.ref('Financeiro').once('value', snap => {
+    const lancamentos = snap.exists() ? snap.val() : [];
+    const container = document.getElementById("relatorioFinanceiro");
+    container.innerHTML = lancamentos.map(lanc => `
+      <div>
+        ${lanc.data} - ${lanc.descricao} - R$ ${lanc.valor.toFixed(2)} - ${lanc.tipo}
+        ${lanc.parcelado ? `(Parcelado: ${lanc.parcelas.length}x)` : ''}
+      </div>
+    `).join('');
+  });
+}
 
-  relatorio.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerText = `${item.data} - ${item.produto || item.descricao || item.quantidade || ''}`;
-    resultado.appendChild(div);
+// ===== RELATÓRIO DE COLHEITA =====
+function atualizarRelatorioColheita() {
+  db.ref('Colheita').once('value', snap => {
+    const colheitas = snap.exists() ? snap.val() : [];
+    const container = document.getElementById("relatorioColheita");
+    container.innerHTML = colheitas.map(col => `
+      <div>
+        ${col.data} - ${col.quantidade} Kg ${col.descricao ? `- ${col.descricao}` : ''}
+      </div>
+    `).join('');
   });
 }
 
 // ===== EXPORTAR RELATÓRIO COMO PDF =====
-function exportarRelatorioPDF() {
+function gerarRelatorioPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.text("Relatório Manejo Café", 20, 20);
+  doc.text("Relatório Completo - Manejo Café", 20, 20);
 
   let y = 40;
-  document.querySelectorAll("#resultadoRelatorio .item").forEach((item) => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-    doc.text(item.textContent, 20, y);
+  ["Aplicacoes", "Tarefas", "Financeiro", "Colheita"].forEach(secao => {
+    doc.text(secao, 20, y);
+    y += 10;
+    const container = document.getElementById(`relatorio${secao}`);
+    container.querySelectorAll("div").forEach(div => {
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(div.textContent, 20, y);
+      y += 8;
+    });
     y += 10;
   });
 
@@ -47,18 +85,20 @@ function exportarRelatorioPDF() {
 }
 
 // ===== EXPORTAR RELATÓRIO COMO CSV =====
-function exportarRelatorioCSV() {
-  const linhas = ["Data,Descrição"];
-  document.querySelectorAll("#resultadoRelatorio .item").forEach((item) => {
-    linhas.push(item.textContent);
-  });
+function gerarRelatorioCSV() {
+  const csv = [
+    "Seção,Data,Descrição,Detalhes",
+    ...document.querySelectorAll("#relatorioAplicacoes div, #relatorioTarefas div, #relatorioFinanceiro div, #relatorioColheita div")
+      .map(div => `Relatório,${div.textContent.replaceAll(" - ", ",")}`)
+  ].join("\n");
 
-  const csvContent = "data:text/csv;charset=utf-8," + linhas.join("\n");
-  const encodedUri = encodeURI(csvContent);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "relatorio_manejo_cafe.csv");
-  document.body.appendChild(link);
+  link.href = url;
+  link.download = `relatorio_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
   link.click();
-  document.body.removeChild(link);
 }
+
+// ===== INICIALIZAR =====
+document.addEventListener("DOMContentLoaded", carregarRelatorio);

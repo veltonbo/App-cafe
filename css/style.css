@@ -13,28 +13,30 @@ body {
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 10px 20px;
+  padding: 12px;
   background-color: #1e1e1e;
-  width: 100%;
-  max-width: 1000px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  gap: 25px;
+  border-top: 1px solid #333;
 }
 
-.menu-superior button {
-  background-color: #4caf50;
-  color: #ffffff;
+.menu-superior .menu-item {
+  background: none;
   border: none;
-  padding: 10px 15px;
-  font-size: 16px;
-  border-radius: 5px;
+  font-size: 24px;
+  color: #8a8a8a;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: color 0.3s, transform 0.2s;
 }
 
-.menu-superior button:hover {
-  background-color: #45a049;
+.menu-superior .menu-item:hover {
+  color: #4caf50;
+  transform: scale(1.1);
+}
+
+.menu-superior .menu-item.ativo {
+  color: #4caf50;
 }
 
 /* ===== MENU DE NAVEGAÇÃO ===== */

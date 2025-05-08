@@ -5,15 +5,6 @@ const db = firebase.database();
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
-// ===== CARREGAR APLICAÇÕES =====
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', (snapshot) => {
-    aplicacoes = snapshot.exists() ? snapshot.val() : [];
-    atualizarAplicacoes();
-    atualizarSugestoesProdutoApp();
-  });
-}
-
 // ===== ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
   const nova = {
@@ -29,16 +20,28 @@ function adicionarAplicacao() {
     return;
   }
 
-  if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
-    indiceEdicaoAplicacao = null;
-  } else {
-    aplicacoes.push(nova);
-  }
+  // Verificando se o Firebase está conectado corretamente
+  console.log("Salvando aplicação:", nova);
+  
+  db.ref('Aplicacoes').push(nova)
+    .then(() => {
+      console.log("✅ Aplicação salva com sucesso no Firebase.");
+      atualizarAplicacoes();
+      limparCamposAplicacao();
+    })
+    .catch((error) => {
+      console.error("❌ Erro ao salvar aplicação no Firebase:", error);
+      alert("Erro ao salvar aplicação. Verifique sua conexão.");
+    });
+}
 
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
-  limparCamposAplicacao();
+// ===== CARREGAR APLICAÇÕES =====
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').on('value', (snapshot) => {
+    aplicacoes = snapshot.exists() ? snapshot.val() : [];
+    atualizarAplicacoes();
+    atualizarSugestoesProdutoApp();
+  });
 }
 
 // ===== CANCELAR EDIÇÃO =====

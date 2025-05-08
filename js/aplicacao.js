@@ -2,13 +2,13 @@
 const db = firebase.database();
 
 // ===== VARIÁVEIS GLOBAIS =====
-let aplicacoes = {};
+let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', (snapshot) => {
-    aplicacoes = snapshot.exists() ? snapshot.val() : {};
+  db.ref('Aplicacoes').on('value', (snap) => {
+    aplicacoes = snap.exists() ? snap.val() : [];
     atualizarAplicacoes();
     atualizarSugestoesProdutoApp();
   });
@@ -29,21 +29,34 @@ function adicionarAplicacao() {
     return;
   }
 
-  if (indiceEdicaoAplicacao) {
-    db.ref(`Aplicacoes/${indiceEdicaoAplicacao}`).set(nova)
-      .then(() => {
-        console.log("✅ Aplicação editada com sucesso no Firebase.");
-        indiceEdicaoAplicacao = null;
-        limparCamposAplicacao();
-      });
+  // Verificando se é edição
+  if (indiceEdicaoAplicacao !== null) {
+    aplicacoes[indiceEdicaoAplicacao] = nova;
+    indiceEdicaoAplicacao = null;
+    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
-    const novaChave = db.ref('Aplicacoes').push().key;
-    db.ref(`Aplicacoes/${novaChave}`).set(nova)
-      .then(() => {
-        console.log("✅ Aplicação salva com sucesso no Firebase.");
-        limparCamposAplicacao();
-      });
+    aplicacoes.push(nova);
   }
+
+  // Salvar diretamente o array atualizado no Firebase
+  db.ref('Aplicacoes').set(aplicacoes)
+    .then(() => {
+      console.log("✅ Aplicação salva com sucesso no Firebase.");
+      atualizarAplicacoes();
+      limparCamposAplicacao();
+    })
+    .catch((error) => {
+      console.error("❌ Erro ao salvar aplicação no Firebase:", error);
+    });
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  indiceEdicaoAplicacao = null;
+  limparCamposAplicacao();
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -53,7 +66,6 @@ function limparCamposAplicacao() {
   document.getElementById("dosagemApp").value = '';
   document.getElementById("tipoApp").value = 'Adubo';
   document.getElementById("setorApp").value = 'Setor 01';
-  indiceEdicaoAplicacao = null;
 }
 
 // ===== ATUALIZAR LISTA DE APLICAÇÕES =====
@@ -61,14 +73,14 @@ function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
-  Object.entries(aplicacoes).forEach(([id, app]) => {
+  aplicacoes.forEach((app, index) => {
     const item = document.createElement("div");
     item.className = "item";
     item.innerHTML = `
       <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
       <div class="botoes">
-        <button onclick="editarAplicacao('${id}')"><i class="fas fa-edit"></i></button>
-        <button onclick="excluirAplicacao('${id}')"><i class="fas fa-trash"></i></button>
+        <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+        <button onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
       </div>
     `;
     lista.appendChild(item);
@@ -76,31 +88,41 @@ function atualizarAplicacoes() {
 }
 
 // ===== EDITAR APLICAÇÃO =====
-function editarAplicacao(id) {
-  const app = aplicacoes[id];
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  if (!app) return;
+
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
   document.getElementById("tipoApp").value = app.tipo;
   document.getElementById("setorApp").value = app.setor;
 
-  indiceEdicaoAplicacao = id;
+  indiceEdicaoAplicacao = index;
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
-function excluirAplicacao(id) {
-  if (confirm("Deseja excluir esta aplicação?")) {
-    db.ref(`Aplicacoes/${id}`).remove()
-      .then(() => {
-        console.log("✅ Aplicação excluída com sucesso.");
-      });
-  }
+function excluirAplicacao(index) {
+  if (!confirm("Deseja excluir esta aplicação?")) return;
+  aplicacoes.splice(index, 1);
+
+  // Salvar o array atualizado no Firebase
+  db.ref('Aplicacoes').set(aplicacoes)
+    .then(() => {
+      console.log("✅ Aplicação excluída com sucesso.");
+      atualizarAplicacoes();
+    })
+    .catch((error) => {
+      console.error("❌ Erro ao excluir aplicação no Firebase:", error);
+    });
 }
 
 // ===== SUGESTÕES DE PRODUTO =====
 function atualizarSugestoesProdutoApp() {
   const lista = document.getElementById("sugestoesProdutoApp");
-  const produtosUnicos = [...new Set(Object.values(aplicacoes).map(a => a.produto))];
+  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
   lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
 }
 

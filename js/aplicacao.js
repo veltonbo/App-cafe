@@ -1,17 +1,20 @@
+// ===== CONFIGURAÇÃO DO FIREBASE (Já deve estar carregado no firebase-config.js) =====
+const db = firebase.database();
+
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
+let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  // Exemplo de lista (simulação)
-  aplicacoes = [
-    { data: "2025-05-07", produto: "Adubo", dosagem: "200", tipo: "Adubo", setor: "Setor 01" },
-    { data: "2025-05-08", produto: "Fungicida", dosagem: "150", tipo: "Fungicida", setor: "Setor 02" }
-  ];
-  atualizarAplicacoes();
+  db.ref('Aplicacoes').on('value', (snapshot) => {
+    aplicacoes = snapshot.exists() ? snapshot.val() : [];
+    atualizarAplicacoes();
+    atualizarSugestoesProdutoApp();
+  });
 }
 
-// ===== ADICIONAR APLICAÇÃO =====
+// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
   const nova = {
     data: document.getElementById("dataApp").value,
@@ -21,37 +24,52 @@ function adicionarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
-  if (!nova.data || !nova.produto || !nova.dosagem) {
-    alert("Preencha todos os campos.");
+  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
+    alert("Preencha todos os campos corretamente.");
     return;
   }
 
-  aplicacoes.push(nova);
+  if (indiceEdicaoAplicacao !== null) {
+    aplicacoes[indiceEdicaoAplicacao] = nova;
+    indiceEdicaoAplicacao = null;
+    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  } else {
+    aplicacoes.push(nova);
+  }
+
+  db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
-  limparCampos();
+  limparCamposAplicacao();
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  indiceEdicaoAplicacao = null;
+  limparCamposAplicacao();
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
 }
 
 // ===== LIMPAR CAMPOS =====
-function limparCampos() {
+function limparCamposAplicacao() {
   document.getElementById("dataApp").value = '';
   document.getElementById("produtoApp").value = '';
   document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
+  document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTA =====
+// ===== ATUALIZAR LISTA DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
   aplicacoes.forEach((app, index) => {
-    const item = document.createElement('div');
-    item.className = "item";
+    const item = document.createElement("div");
+    item.className = "item-aplicacao";
     item.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem}L - ${app.setor}</span>
-      <div class="botoes">
-        <button class="botao-icone" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-icone" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
-      </div>
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <button class="btn-editar" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+      <button class="btn-excluir" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
     `;
     lista.appendChild(item);
   });
@@ -63,13 +81,28 @@ function editarAplicacao(index) {
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
+  document.getElementById("setorApp").value = app.setor;
+
+  indiceEdicaoAplicacao = index;
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
-  aplicacoes.splice(index, 1);
-  atualizarAplicacoes();
+  if (confirm("Deseja excluir esta aplicação?")) {
+    aplicacoes.splice(index, 1);
+    db.ref('Aplicacoes').set(aplicacoes);
+    atualizarAplicacoes();
+  }
 }
 
-// ===== INICIALIZAR AO CARREGAR =====
+// ===== SUGESTÕES DE PRODUTO =====
+function atualizarSugestoesProdutoApp() {
+  const lista = document.getElementById("sugestoesProdutoApp");
+  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
+  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
+}
+
+// ===== INICIAR =====
 document.addEventListener("DOMContentLoaded", carregarAplicacoes);

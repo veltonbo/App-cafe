@@ -1,5 +1,5 @@
-// ===== CONFIGURAÇÃO DO FIREBASE (Já deve estar carregado no firebase-config.js) =====
-js/firebase-config.js const db = firebase.database();
+// ===== CONFIGURAÇÃO DO FIREBASE (Firebase inicializado em firebase-config.js) =====
+const db = firebase.database();
 
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
@@ -32,7 +32,6 @@ function adicionarAplicacao() {
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   } else {
     aplicacoes.push(nova);
   }
@@ -46,7 +45,6 @@ function adicionarAplicacao() {
 function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
-  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -65,11 +63,13 @@ function atualizarAplicacoes() {
 
   aplicacoes.forEach((app, index) => {
     const item = document.createElement("div");
-    item.className = "item-aplicacao";
+    item.className = "item";
     item.innerHTML = `
       <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-      <button class="btn-editar" onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
-      <button class="btn-excluir" onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+      <div class="botoes">
+        <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+        <button onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
+      </div>
     `;
     lista.appendChild(item);
   });
@@ -85,24 +85,14 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
-  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
-  if (confirm("Deseja excluir esta aplicação?")) {
-    aplicacoes.splice(index, 1);
-    db.ref('Aplicacoes').set(aplicacoes);
-    atualizarAplicacoes();
-  }
+  aplicacoes.splice(index, 1);
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
 }
 
-// ===== SUGESTÕES DE PRODUTO =====
-function atualizarSugestoesProdutoApp() {
-  const lista = document.getElementById("sugestoesProdutoApp");
-  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
-  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
-}
-
-// ===== INICIAR =====
+// ===== INICIAR AO CARREGAR =====
 document.addEventListener("DOMContentLoaded", carregarAplicacoes);

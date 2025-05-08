@@ -1,39 +1,27 @@
-/* ===== MENU SUPERIOR COM ÍCONES ===== */
-.menu-superior {
+/* ===== MENU SUPERIOR ===== */
+nav {
   display: flex;
   justify-content: center;
-  align-items: center;
-  background-color: #1f1f1f;
-  padding: 12px;
-  gap: 25px;
-  width: 100%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  gap: 10px;
+  background-color: #2c2c2c;
+  padding: 10px 0;
 }
 
-.menu-superior .menu-item {
-  background-color: #333;
+nav button {
+  background: none;
   border: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  color: #ccc;
-  font-size: 20px;
+  color: #fff;
+  font-size: 24px;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.3s, transform 0.2s, color 0.3s;
+  padding: 10px;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  transition: background 0.3s;
 }
 
-.menu-superior .menu-item:hover {
-  background-color: #4caf50;
-  color: #fff;
-  transform: scale(1.1);
-}
-
-.menu-superior .menu-item.ativo {
-  background-color: #4caf50;
-  color: #fff;
+nav button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== FORMULÁRIO APLICAÇÃO ===== */
@@ -53,12 +41,14 @@
   color: #fff;
   font-size: 16px;
   width: 100%;
+  box-sizing: border-box;
+  height: 48px; /* Mesmo que o botão */
 }
 
 .botao-salvar {
   background-color: #4caf50;
   color: #fff;
-  padding: 12px;
+  padding: 0 16px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -67,6 +57,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  height: 48px;
+  width: 100%; /* Mesma largura dos campos */
   transition: background-color 0.3s;
 }
 
@@ -74,6 +66,7 @@
   background-color: #45a049;
 }
 
+/* ===== LISTA DE APLICAÇÕES ===== */
 .lista-aplicacoes {
   margin-top: 20px;
   display: flex;

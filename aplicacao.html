@@ -6,25 +6,20 @@
   <title>Aplicações - Manejo Café</title>
 </head>
 <body>
-  <div class="conteudo-aplicacao">
-    <h2>Aplicações</h2>
-    <input type="date" id="dataApp" placeholder="Data">
-    <input type="text" id="produtoApp" placeholder="Produto">
-    <input type="text" id="dosagemApp" placeholder="Dosagem (L/ha)">
-    <select id="tipoApp">
-      <option value="Adubo">Adubo</option>
-      <option value="Defensivo">Defensivo</option>
-      <option value="Fungicida">Fungicida</option>
-    </select>
-    <select id="setorApp">
-      <option value="Setor 01">Setor 01</option>
-      <option value="Setor 02">Setor 02</option>
-    </select>
-    <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
-    
-    <h3>Lista de Aplicações</h3>
-    <div id="listaAplicacoes"></div>
-  </div>
+ <div class="conteudo-aplicacao">
+  <input type="date" id="dataApp" placeholder="Data">
+  <input type="text" id="produtoApp" placeholder="Produto">
+  <input type="number" id="dosagemApp" placeholder="Dosagem (L/ha)">
+  <select id="setorApp">
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+    <option value="Setor 03">Setor 03</option>
+  </select>
+  <button onclick="adicionarAplicacao()">Salvar</button>
+</div>
+
+<!-- LISTA DE APLICAÇÕES -->
+<div id="listaAplicacoes"></div>
 
   <!-- Script da Aplicação -->
   <script src="js/aplicacao.js"></script>

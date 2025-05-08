@@ -11,12 +11,12 @@
   <header>
     <h1>Manejo Café</h1>
     <nav>
-      <button onclick="mudarAba('aplicacoes')">Aplicações</button>
-      <button onclick="mudarAba('tarefas')">Tarefas</button>
-      <button onclick="mudarAba('financeiro')">Financeiro</button>
-      <button onclick="mudarAba('colheita')">Colheita</button>
-      <button onclick="mudarAba('relatorio')">Relatório</button>
-      <button onclick="mudarAba('configuracoes')">Configurações</button>
+      <button onclick="mudarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+      <button onclick="mudarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+      <button onclick="mudarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+      <button onclick="mudarAba('colheita')"><i class="fas fa-tractor"></i></button>
+      <button onclick="mudarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+      <button onclick="mudarAba('configuracoes')"><i class="fas fa-cog"></i></button>
     </nav>
   </header>
 
@@ -32,10 +32,12 @@
         <option>Inseticida</option>
         <option>Herbicida</option>
       </select>
-      <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      <button class="btn-salvar" onclick="adicionarAplicacao()">Salvar Aplicação</button>
     </div>
 
-    <div class="list" id="listaAplicacoes"></div>
+    <div class="list" id="listaAplicacoes">
+      <!-- As aplicações serão listadas aqui -->
+    </div>
   </div>
 
   <!-- Scripts -->

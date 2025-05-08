@@ -1,63 +1,11 @@
 <!-- financeiro.html -->
-<div class="aba">
-  <h2>Financeiro</h2>
+<h2>Financeiro</h2>
+<input id="descricaoFin" placeholder="Descrição do Gasto">
+<input id="valorFin" type="number" placeholder="Valor (R$)">
+<button onclick="adicionarFinanceiro()">Salvar Gasto</button>
 
-  <!-- Botão Flutuante para Adicionar Lançamento -->
-  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()" class="botao-flutuante">
-    <i class="fas fa-plus"></i>
-  </button>
+<h4>Gastos a Pagar</h4>
+<div id="listaFinanceiro"></div>
 
-  <!-- Formulário Financeiro Oculto -->
-  <div id="formularioFinanceiro" style="display: none;">
-    <input id="dataFin" type="date">
-    <input id="produtoFin" placeholder="Produto">
-    <input id="descricaoFin" placeholder="Descrição (opcional)">
-    <input id="valorFin" type="number" placeholder="Valor (R$)">
-    
-    <select id="tipoFin">
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-
-    <label>
-      <input type="checkbox" id="parceladoFin" onchange="mostrarParcelas()"> Parcelado
-    </label>
-    <input id="parcelasFin" type="number" placeholder="Número de parcelas" style="display: none;" />
-
-    <div style="display: flex; gap: 10px;">
-      <button onclick="adicionarFinanceiro()" id="btnSalvarFinanceiro">Salvar Gasto</button>
-      <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">Cancelar Edição</button>
-    </div>
-  </div>
-
-  <!-- Filtros e Pesquisa -->
-  <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-    <button onclick="toggleFiltrosFinanceiro()" id="btnToggleFiltrosFin" class="botao-circular azul" title="Mostrar/Esconder Filtros">
-      <i class="fas fa-filter"></i>
-    </button>
-  </div>
-
-  <div id="filtrosFinanceiro" style="display: none;">
-    <input id="filtroDataInicioFin" type="date" onchange="atualizarFinanceiro()">
-    <input id="filtroDataFimFin" type="date" onchange="atualizarFinanceiro()">
-    <select id="filtroTipoFin" onchange="atualizarFinanceiro()">
-      <option value="">Todos os Tipos</option>
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-    <input id="pesquisaFinanceiro" class="campo-pesquisa" placeholder="Pesquisar produto ou descrição..." oninput="atualizarFinanceiro()">
-  </div>
-
-  <!-- Listagem de Lançamentos -->
-  <h4 style="color: #ff9800;">A Vencer</h4>
-  <div id="financeiroVencer"></div>
-
-  <h4 style="color: #4caf50;">Pagos</h4>
-  <div id="financeiroPago"></div>
-</div>
+<h4>Gastos Pagos</h4>
+<div id="listaFinanceiroPago"></div>

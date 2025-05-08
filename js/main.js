@@ -1,39 +1,30 @@
-function mostrarAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => {
-    aba.style.display = 'none';
-  });
+// ===== MAIN.JS - Controle de Navegação e Carregamento de Abas =====
+document.addEventListener("DOMContentLoaded", inicializarApp);
 
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) abaSelecionada.style.display = 'block';
-
-  document.querySelectorAll('.menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
-  if (btn) btn.classList.add('active');
-
-  localStorage.setItem('aba', abaId);
-}
-
+// ===== Inicializar App =====
 function inicializarApp() {
-  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
-  mostrarAba(abaInicial);
-
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
-  }
-
-  // Chama as funções de carregamento se estiverem disponíveis
-  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-  if (typeof carregarTarefas === "function") carregarTarefas();
-  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
-  if (typeof carregarColheita === "function") carregarColheita();
-  if (typeof carregarValorLata === "function") carregarValorLata();
-  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
-  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+  const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacoes";
+  mudarAba(ultimaAba);
 }
 
-// Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);
+// ===== Mudar Aba =====
+function mudarAba(aba) {
+  localStorage.setItem("ultimaAba", aba);
+  document.getElementById("conteudo").innerHTML = "";
+
+  fetch(`${aba}.html`)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById("conteudo").innerHTML = html;
+      carregarScriptAba(aba);
+    })
+    .catch(error => console.error("Erro ao carregar a aba:", error));
+}
+
+// ===== Carregar Script da Aba =====
+function carregarScriptAba(aba) {
+  const script = document.createElement("script");
+  script.src = `${aba}.js`;
+  script.defer = true;
+  document.body.appendChild(script);
+}

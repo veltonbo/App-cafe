@@ -1,8 +1,8 @@
 /* ===== LAYOUT GERAL ===== */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f9;
-  color: #333;
+  background-color: #121212;
+  color: #ffffff;
   margin: 0;
   padding: 0;
   display: flex;
@@ -10,212 +10,166 @@ body {
   align-items: center;
 }
 
-h2 {
-  margin-top: 20px;
-  font-size: 24px;
-  color: #4a4a4a;
-}
-
-h3 {
-  font-size: 20px;
-  margin: 15px 0;
-  color: #4a4a4a;
-}
-
+/* ===== MENU SUPERIOR ===== */
 .menu-superior {
-  background-color: #2c3e50;
-  width: 100%;
-  padding: 10px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.menu-superior button {
-  background-color: #34495e;
-  color: #ecf0f1;
-  border: none;
-  padding: 10px 15px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s;
-}
-
-.menu-superior button:hover {
-  background-color: #1abc9c;
-}
-
-/* ===== FORMULÁRIOS ===== */
-.formulario {
-  margin: 20px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: 600px;
-  align-items: center;
-  justify-content: center;
-}
-
-.formulario input,
-.formulario select {
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  flex: 1;
-  max-width: 200px;
-}
-
-.formulario button {
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  padding: 10px 15px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s;
-}
-
-.formulario button:hover {
-  background-color: #2980b9;
-}
-
-/* ===== LISTAGEM DE ITENS ===== */
-.item {
-  background-color: #ecf0f1;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 20px;
+  background-color: #1e1e1e;
+  width: 100%;
+  max-width: 1000px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.item div {
+.menu-superior button {
+  background-color: #4caf50;
+  color: #ffffff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.menu-superior button:hover {
+  background-color: #45a049;
+}
+
+/* ===== MENU DE NAVEGAÇÃO ===== */
+nav {
   display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+nav button {
+  background-color: #4caf50;
+  color: #ffffff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+nav button:hover {
+  background-color: #45a049;
+}
+
+/* ===== CONTEÚDO PRINCIPAL ===== */
+#conteudo {
+  max-width: 800px;
+  width: 100%;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== FORMULÁRIOS ===== */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #444;
+  background-color: #2e2e2e;
+  color: #fff;
+  border-radius: 5px;
+}
+
+button#btnSalvar {
+  background-color: #4caf50;
+  color: #ffffff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button#btnSalvar:hover {
+  background-color: #45a049;
+}
+
+/* ===== LISTAGEM DE ITENS ===== */
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lista li {
+  background-color: #2e2e2e;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  transition: background-color 0.3s;
+}
+
+.lista li:hover {
+  background-color: #3a3a3a;
+}
+
+/* ===== BOTÕES DE AÇÃO ===== */
+.botoes-acao {
+  display: flex;
   gap: 10px;
 }
 
-.item .botao-circular {
-  background-color: #3498db;
-  color: #fff;
+.botoes-acao button {
+  background-color: #4caf50;
+  color: #ffffff;
   border: none;
-  padding: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s;
-}
-
-.item .botao-circular.azul {
-  background-color: #3498db;
-}
-
-.item .botao-circular.vermelho {
-  background-color: #e74c3c;
-}
-
-.item .botao-circular.verde {
-  background-color: #2ecc71;
-}
-
-.item .botao-circular:hover {
-  filter: brightness(0.9);
-}
-
-/* ===== FILTROS E PESQUISA ===== */
-input[type="text"][placeholder="Pesquisar..."] {
-  width: 100%;
-  max-width: 300px;
-  padding: 8px;
-  margin: 10px 0;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-/* ===== MENSAGENS E AVISOS ===== */
-.alerta {
-  background-color: #f39c12;
-  color: #fff;
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  text-align: center;
-}
-
-.sucesso {
-  background-color: #2ecc71;
-  color: #fff;
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  text-align: center;
-}
-
-/* ===== TABELA RELATÓRIO ===== */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-table th,
-table td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-table th {
-  background-color: #3498db;
-  color: #fff;
-}
-
-table tr:nth-child(even) {
-  background-color: #f4f4f9;
-}
-
-/* ===== MODAIS (CONFIRMAÇÃO E ALERTAS) ===== */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  display: none;
-}
-
-.modal .conteudo {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  text-align: center;
-}
-
-.modal button {
-  margin-top: 15px;
   padding: 8px 12px;
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
+  font-size: 16px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background-color 0.3s;
 }
 
-.modal button:hover {
-  background-color: #2980b9;
+.botoes-acao button.editar {
+  background-color: #2196f3;
+}
+
+.botoes-acao button.excluir {
+  background-color: #f44336;
+}
+
+.botoes-acao button:hover {
+  opacity: 0.8;
+}
+
+/* ===== MODO RESPONSIVO ===== */
+@media (max-width: 768px) {
+  #conteudo {
+    padding: 15px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    width: 100%;
+    max-width: none;
+  }
+
+  .lista li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .botoes-acao {
+    justify-content: flex-start;
+  }
 }

@@ -1,8 +1,7 @@
-// ===== INICIALIZAÇÃO DO APP =====
 document.addEventListener("DOMContentLoaded", () => {
   console.log("App inicializado.");
 
-  // Carregar a última aba acessada ou a aba inicial (Aplicação)
+  // Carregar aba inicial (Aplicação)
   const ultimaAba = localStorage.getItem("ultimaAba") || "aplicacao";
   mudarAba(ultimaAba);
 
@@ -11,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => {
       const aba = button.getAttribute("data-aba");
       mudarAba(aba);
+      destacarIconeAtivo(aba);
     });
   });
 });
@@ -18,13 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // ===== MUDAR ABA E DESTACAR ÍCONE =====
 function mudarAba(aba) {
   localStorage.setItem("ultimaAba", aba);
-  document.getElementById("conteudo").innerHTML = ""; // Limpar conteúdo anterior
+  document.getElementById("conteudo").innerHTML = "";
 
   fetch(`${aba}.html`)
-    .then((response) => {
-      if (!response.ok) throw new Error("Erro ao carregar a aba.");
-      return response.text();
-    })
+    .then((response) => response.text())
     .then((html) => {
       document.getElementById("conteudo").innerHTML = html;
       carregarScriptAba(aba);
@@ -32,7 +29,6 @@ function mudarAba(aba) {
     })
     .catch((error) => {
       console.error("Erro ao carregar a aba:", error);
-      document.getElementById("conteudo").innerHTML = "<p>Erro ao carregar a página.</p>";
     });
 }
 
@@ -41,21 +37,17 @@ function destacarIconeAtivo(aba) {
   document.querySelectorAll(".menu-superior button").forEach((botao) => {
     botao.classList.remove("ativo");
   });
-
-  const botaoAtivo = document.querySelector(`.menu-superior button[data-aba="${aba}"]`);
+  const botaoAtivo = document.querySelector(`button[data-aba="${aba}"]`);
   if (botaoAtivo) botaoAtivo.classList.add("ativo");
 }
 
 // ===== CARREGAR SCRIPT DA ABA SELECIONADA =====
 function carregarScriptAba(aba) {
-  // Remover qualquer script da aba anterior
-  const scriptExistente = document.querySelector(`#script-${aba}`);
-  if (scriptExistente) scriptExistente.remove();
+  const scriptExistente = document.querySelector(`script[src="js/${aba}.js"]`);
+  if (scriptExistente) return;
 
-  // Adicionar novo script da aba atual
   const script = document.createElement("script");
   script.src = `js/${aba}.js`;
-  script.id = `script-${aba}`;
   script.defer = true;
   document.body.appendChild(script);
 }

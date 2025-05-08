@@ -1,18 +1,6 @@
-// ===== CONFIGURAÇÃO DO FIREBASE (Firebase inicializado em firebase-config.js) =====
-const db = firebase.database();
-
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
-
-// ===== CARREGAR APLICAÇÕES =====
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', (snap) => {
-    aplicacoes = snap.exists() ? snap.val() : [];
-    atualizarAplicacoes();
-    atualizarSugestoesProdutoApp();
-  });
-}
 
 // ===== ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
@@ -29,17 +17,13 @@ function adicionarAplicacao() {
     return;
   }
 
-  // Verificando se é edição
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
     aplicacoes.push(nova);
   }
 
-  // Salvar diretamente o array atualizado no Firebase
   db.ref('Aplicacoes').set(aplicacoes)
     .then(() => {
       console.log("✅ Aplicação salva com sucesso no Firebase.");
@@ -51,12 +35,12 @@ function adicionarAplicacao() {
     });
 }
 
-// ===== CANCELAR EDIÇÃO =====
-function cancelarEdicaoAplicacao() {
-  indiceEdicaoAplicacao = null;
-  limparCamposAplicacao();
-  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+// ===== CARREGAR APLICAÇÕES =====
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').on('value', (snapshot) => {
+    aplicacoes = snapshot.exists() ? Object.values(snapshot.val()) : [];
+    atualizarAplicacoes();
+  });
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -75,55 +59,21 @@ function atualizarAplicacoes() {
 
   aplicacoes.forEach((app, index) => {
     const item = document.createElement("div");
-    item.className = "item";
+    item.className = "item-aplicacao";
     item.innerHTML = `
       <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-      <div class="botoes">
-        <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
-        <button onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
-      </div>
+      <button onclick="editarAplicacao(${index})"><i class="fas fa-edit"></i></button>
+      <button onclick="excluirAplicacao(${index})"><i class="fas fa-trash"></i></button>
     `;
     lista.appendChild(item);
   });
 }
 
-// ===== EDITAR APLICAÇÃO =====
-function editarAplicacao(index) {
-  const app = aplicacoes[index];
-  if (!app) return;
-
-  document.getElementById("dataApp").value = app.data;
-  document.getElementById("produtoApp").value = app.produto;
-  document.getElementById("dosagemApp").value = app.dosagem;
-  document.getElementById("tipoApp").value = app.tipo;
-  document.getElementById("setorApp").value = app.setor;
-
-  indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
-  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
-}
-
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
-  if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-
-  // Salvar o array atualizado no Firebase
-  db.ref('Aplicacoes').set(aplicacoes)
-    .then(() => {
-      console.log("✅ Aplicação excluída com sucesso.");
-      atualizarAplicacoes();
-    })
-    .catch((error) => {
-      console.error("❌ Erro ao excluir aplicação no Firebase:", error);
-    });
-}
-
-// ===== SUGESTÕES DE PRODUTO =====
-function atualizarSugestoesProdutoApp() {
-  const lista = document.getElementById("sugestoesProdutoApp");
-  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
-  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
 }
 
 // ===== INICIAR AO CARREGAR =====

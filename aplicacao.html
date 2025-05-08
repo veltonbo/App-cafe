@@ -1,28 +1,33 @@
-<!-- FORMULÁRIO APLICAÇÃO -->
-<div class="conteudo">
-  <h2>Aplicações</h2>
-  
-  <div class="formulario-aplicacao">
-    <input id="dataApp" type="date" class="campo" placeholder="Data">
-    <input id="produtoApp" list="sugestoesProdutoApp" class="campo" placeholder="Produto">
-    <datalist id="sugestoesProdutoApp"></datalist>
-    <input id="dosagemApp" class="campo" placeholder="Dosagem (L/ha)">
-    <select id="tipoApp" class="campo">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-    <select id="setorApp" class="campo">
-      <option>Setor 01</option>
-      <option>Setor 02</option>
-    </select>
-    
-    <button id="btnSalvarAplicacao" class="botao-salvar" onclick="adicionarAplicacao()">
-      <i class="fas fa-save"></i> Salvar
-    </button>
-  </div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café - Aplicações</title>
 
-  <h3>Lista de Aplicações</h3>
-  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-</div>
+  <!-- Font Awesome para Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- FORMULÁRIO APLICAÇÃO -->
+  <div class="conteudo">
+    <h2>Aplicações</h2>
+    
+    <div class="formulario-aplicacao">
+      <input id="dataApp" type="date" class="campo" placeholder="Data">
+      <input id="produtoApp" list="sugestoesProdutoApp" class="campo" placeholder="Produto">
+      <datalist id="sugestoesProdutoApp"></datalist>
+      <input id="dosagemApp" class="campo" placeholder="Dosagem (L/ha)">
+      <select id="tipoApp" class="campo">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <select id="setorApp" class="campo">
+        <option>Setor 01</option>
+        <option>Setor 02

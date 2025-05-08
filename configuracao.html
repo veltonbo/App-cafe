@@ -1,40 +1,7 @@
 <!-- configuracoes.html -->
-<div class="aba">
-  <h2>Configurações</h2>
+<h2>Configurações</h2>
+<button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
 
-  <!-- Alternar Tema Claro/Escuro -->
-  <button onclick="alternarTema()">Alternar Tema Claro/Escuro</button>
-
-  <hr style="margin: 20px 0;">
-
-  <!-- Gerenciamento de Safras -->
-  <h3>Safra</h3>
-  <p>A safra atual é: <strong id="anoSafraAtual">---</strong></p>
-
-  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-    <button onclick="fecharSafraAtual()" style="background-color: #ff9800;">
-      <i class="fas fa-archive"></i> Fechar Safra Atual
-    </button>
-
-    <select id="safraSelecionada" style="margin-top: 10px;">
-      <option value="">Carregando safras disponíveis...</option>
-    </select>
-
-    <button onclick="restaurarSafra()" style="background-color: #29b6f6;">
-      <i class="fas fa-undo-alt"></i> Restaurar Safra Selecionada
-    </button>
-
-    <button onclick="deletarSafra()" style="background-color: #f44336;">
-      <i class="fas fa-trash-alt"></i> Deletar Safra Selecionada
-    </button>
-  </div>
-
-  <hr style="margin: 20px 0;">
-
-  <!-- Backup e Restauração -->
-  <h3>Backup Manual</h3>
-  <button onclick="fazerBackup()"><i class="fas fa-download"></i> Fazer Backup</button>
-
-  <input type="file" id="arquivoBackup" accept=".json" onchange="importarBackup()">
-  <button onclick="importarBackup()"><i class="fas fa-upload"></i> Importar Backup</button>
-</div>
+<h3>Backup e Restauração</h3>
+<button onclick="fazerBackup()">Fazer Backup</button>
+<input type="file" id="arquivoBackup" onchange="importarBackup()">

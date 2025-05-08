@@ -1,4 +1,3 @@
-// ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 

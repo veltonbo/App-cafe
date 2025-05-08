@@ -3,41 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café - Aplicações</title>
+  <title>Aplicações - Manejo Café</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- CONTEÚDO PRINCIPAL DO MENU APLICAÇÃO -->
-  <div class="conteudo-aplicacao">
-    <h2>Aplicações</h2>
+<div class="conteudo-aplicacao">
+  <h2>Aplicações</h2>
+  <input type="date" id="dataApp" placeholder="Data">
+  <input type="text" id="produtoApp" placeholder="Produto">
+  <input type="number" id="dosagemApp" placeholder="Dosagem (L/ha)">
+  <select id="tipoApp">
+    <option value="Adubo">Adubo</option>
+    <option value="Herbicida">Herbicida</option>
+    <option value="Fungicida">Fungicida</option>
+  </select>
+  <select id="setorApp">
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+    <option value="Setor 03">Setor 03</option>
+  </select>
+  <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
 
-    <div class="formulario-aplicacao">
-      <input type="date" id="dataApp" placeholder="Data">
-      <input type="text" id="produtoApp" placeholder="Produto">
-      <input type="number" id="dosagemApp" placeholder="Dosagem (L/ha)">
-      
-      <select id="setorApp">
-        <option value="Setor 01">Setor 01</option>
-        <option value="Setor 02">Setor 02</option>
-        <option value="Setor 03">Setor 03</option>
-      </select>
+  <h3>Lista de Aplicações</h3>
+  <div id="listaAplicacoes"></div>
+</div>
 
-      <button class="btn-salvar" onclick="adicionarAplicacao()">
-        <i class="fas fa-save"></i> Salvar
-      </button>
-    </div>
-
-    <h3>Lista de Aplicações</h3>
-    <div id="listaAplicacoes" class="lista-aplicacoes">
-      <!-- As aplicações serão carregadas aqui dinamicamente -->
-    </div>
-  </div>
-
-  <!-- SCRIPTS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/aplicacao.js"></script>
-  <script src="js/main.js" defer></script>
+<!-- Script do Aplicação -->
+<script src="js/aplicacao.js" defer></script>
 </body>
 </html>

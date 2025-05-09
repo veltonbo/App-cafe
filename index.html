@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café</title>
+  <title>Manejo Café - Aplicações</title>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -12,12 +12,6 @@
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <!-- Estilos -->
   <link rel="stylesheet" href="css/style.css" />
 
@@ -25,20 +19,66 @@
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/main.js"></script>
   <script defer src="js/aplicacao.js"></script>
-  <script defer src="js/tarefas.js"></script>
-  <script defer src="js/financeiro.js"></script>
-  <script defer src="js/colheita.js"></script>
-  <script defer src="js/relatorio.js"></script>
-  <script defer src="js/configuracoes.js"></script>
 </head>
 <body>
+  <!-- Menu Superior -->
   <div class="menu-superior">
-    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
-    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
-    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
-    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
-    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Início</button>
+    <button onclick="window.location.href='tarefas.html'">Tarefas</button>
+    <button onclick="window.location.href='financeiro.html'">Financeiro</button>
+    <button onclick="window.location.href='colheita.html'">Colheita</button>
+    <button onclick="window.location.href='relatorio.html'">Relatório</button>
+    <button onclick="window.location.href='configuracoes.html'">Configurações</button>
   </div>
 
+  <!-- Conteúdo do Menu Aplicações -->
   <div class="conteudo">
+    <h2>Aplicações</h2>
+    <div class="formulario-aplicacoes">
+      <input id="dataApp" type="date" placeholder="Data" class="input-campo">
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto" class="input-campo">
+      <datalist id="sugestoesProdutoApp"></datalist>
+      <input id="dosagemApp" placeholder="Dosagem" class="input-campo">
+      
+      <select id="tipoApp" class="input-campo">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+
+      <select id="setorApp" class="input-campo">
+        <option>Setor 01</option>
+        <option>Setor 02</option>
+      </select>
+    </div>
+
+    <div class="botoes-acoes">
+      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
+        <i class="fas fa-save"></i> Salvar Aplicação
+      </button>
+      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="botao-secundario" style="display: none;">
+        <i class="fas fa-times"></i> Cancelar Edição
+      </button>
+    </div>
+
+    <!-- Filtros e Pesquisa -->
+    <div class="filtros-aplicacoes">
+      <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()" class="input-campo">
+        <option value="">Todos os Setores</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+      </select>
+      <input id="pesquisaAplicacoes" class="campo-pesquisa input-campo" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+    </div>
+
+    <!-- Listagem de Aplicações -->
+    <div id="listaAplicacoes" class="lista-aplicacoes"></div>
+
+    <!-- Botão de Exportação CSV -->
+    <button onclick="exportarAplicacoesCSV()" class="botao-primario exportar-csv">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+  </div>
+</body>
+</html>

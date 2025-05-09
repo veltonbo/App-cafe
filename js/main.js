@@ -25,32 +25,20 @@ function carregarAba(arquivo) {
 // ===== FUNÇÃO: INICIALIZAR A ABA CARREGADA =====
 function inicializarAba(arquivo) {
   switch (arquivo) {
-    case 'aplicacao.html':
-      carregarAplicacoes();
-      break;
-    case 'tarefas.html':
-      carregarTarefas();
-      break;
-    case 'financeiro.html':
-      carregarFinanceiro();
-      break;
-    case 'colheita.html':
-      carregarColheita();
-      break;
-    case 'relatorio.html':
-      gerarRelatorioCompleto();
-      break;
-    case 'configuracoes.html':
-      carregarConfiguracoes();
-      break;
+    case 'aplicacao.html': carregarAplicacoes(); break;
+    case 'tarefas.html': carregarTarefas(); break;
+    case 'financeiro.html': carregarFinanceiro(); break;
+    case 'colheita.html': carregarColheita(); break;
+    case 'relatorio.html': gerarRelatorioCompleto(); break;
+    case 'configuracoes.html': carregarConfiguracoes(); break;
   }
 }
 
 // ===== FUNÇÃO: CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  const listaAplicacoes = document.getElementById("listaAplicacoes");
-  if (!listaAplicacoes) return;
-  listaAplicacoes.innerHTML = aplicacoes.map((app, index) => `
+  const lista = document.getElementById("listaAplicacoes");
+  if (!lista) return;
+  lista.innerHTML = aplicacoes.map((app, index) => `
     <div>${app.data} - ${app.produto} (${app.dosagem}) 
       <button onclick="excluirAplicacao(${index})">Excluir</button>
     </div>
@@ -59,12 +47,20 @@ function carregarAplicacoes() {
 
 function adicionarAplicacao() {
   const nova = {
-    data: document.getElementById("dataApp").value,
-    produto: document.getElementById("produtoApp").value,
-    dosagem: document.getElementById("dosagemApp").value
+    data: document.getElementById("dataApp").value.trim(),
+    produto: document.getElementById("produtoApp").value.trim(),
+    dosagem: document.getElementById("dosagemApp").value.trim()
   };
+
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
   aplicacoes.push(nova);
   carregarAplicacoes();
+  salvarDadosFirebase("aplicacoes", aplicacoes);
+  limparFormulario("formAplicacao");
 }
 
 function excluirAplicacao(index) {
@@ -74,9 +70,9 @@ function excluirAplicacao(index) {
 
 // ===== FUNÇÃO: CARREGAR TAREFAS =====
 function carregarTarefas() {
-  const listaTarefas = document.getElementById("listaTarefas");
-  if (!listaTarefas) return;
-  listaTarefas.innerHTML = tarefas.map((tarefa, index) => `
+  const lista = document.getElementById("listaTarefas");
+  if (!lista) return;
+  lista.innerHTML = tarefas.map((tarefa, index) => `
     <div>${tarefa.descricao} 
       <button onclick="marcarFeita(${index})">Feita</button>
     </div>
@@ -84,11 +80,16 @@ function carregarTarefas() {
 }
 
 function adicionarTarefa() {
-  const nova = {
-    descricao: document.getElementById("descricaoTarefa").value
-  };
-  tarefas.push(nova);
+  const descricao = document.getElementById("descricaoTarefa").value.trim();
+  if (!descricao) {
+    alert("Preencha a descrição.");
+    return;
+  }
+
+  tarefas.push({ descricao });
   carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
+  limparFormulario("formTarefa");
 }
 
 function marcarFeita(index) {
@@ -99,10 +100,10 @@ function marcarFeita(index) {
 
 // ===== FUNÇÃO: CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
-  const listaFinanceiro = document.getElementById("listaFinanceiro");
-  if (!listaFinanceiro) return;
-  listaFinanceiro.innerHTML = financeiro.map((fin, index) => `
-    <div>${fin.descricao} - R$ ${fin.valor} 
+  const lista = document.getElementById("listaFinanceiro");
+  if (!lista) return;
+  lista.innerHTML = financeiro.map((fin, index) => `
+    <div>${fin.descricao} - R$ ${parseFloat(fin.valor).toFixed(2)} 
       <button onclick="pagarFinanceiro(${index})">Pagar</button>
     </div>
   `).join("");
@@ -110,11 +111,19 @@ function carregarFinanceiro() {
 
 function adicionarFinanceiro() {
   const novo = {
-    descricao: document.getElementById("descricaoFin").value,
-    valor: document.getElementById("valorFin").value
+    descricao: document.getElementById("descricaoFin").value.trim(),
+    valor: parseFloat(document.getElementById("valorFin").value)
   };
+
+  if (!novo.descricao || isNaN(novo.valor)) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
   financeiro.push(novo);
   carregarFinanceiro();
+  salvarDadosFirebase("financeiro", { financeiro, financeiroPago });
+  limparFormulario("formFinanceiro");
 }
 
 function pagarFinanceiro(index) {
@@ -123,34 +132,28 @@ function pagarFinanceiro(index) {
   carregarFinanceiro();
 }
 
-// ===== FUNÇÃO: CARREGAR COLHEITAS =====
-function carregarColheita() {
-  const listaColheitas = document.getElementById("listaColheitas");
-  if (!listaColheitas) return;
-  listaColheitas.innerHTML = colheitas.map((colheita, index) => `
-    <div>${colheita.colhedor} - ${colheita.quantidade} Latas 
-      <button onclick="excluirColheita(${index})">Excluir</button>
-    </div>
-  `).join("");
+// ===== FUNÇÃO: LIMPAR E OCULTAR FORMULÁRIO =====
+function limparFormulario(formId) {
+  const form = document.getElementById(formId);
+  if (form) {
+    form.querySelectorAll("input").forEach(input => input.value = "");
+    form.style.display = "none";
+  }
 }
 
-function adicionarColheita() {
-  const nova = {
-    colhedor: document.getElementById("colhedor").value,
-    quantidade: document.getElementById("quantidadeLatas").value
-  };
-  colheitas.push(nova);
-  carregarColheita();
-}
+// ===== FUNÇÃO: ALTERNAR FORMULÁRIO COM ANIMAÇÃO =====
+function alternarFormulario(id) {
+  const form = document.getElementById(id);
+  if (!form) return;
 
-function excluirColheita(index) {
-  colheitas.splice(index, 1);
-  carregarColheita();
-}
-
-// ===== FUNÇÃO: GERAR RELATÓRIO =====
-function gerarRelatorioCompleto() {
-  console.log("Relatório Gerado");
+  form.style.transition = "max-height 0.4s ease, opacity 0.4s";
+  if (form.style.maxHeight) {
+    form.style.maxHeight = null;
+    form.style.opacity = 0;
+  } else {
+    form.style.maxHeight = form.scrollHeight + "px";
+    form.style.opacity = 1;
+  }
 }
 
 // ===== FUNÇÃO: CONFIGURAÇÕES =====
@@ -160,175 +163,13 @@ function carregarConfiguracoes() {
   }
 }
 
-// ===== EVENTO: INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', () => {
-  const abaInicial = localStorage.getItem('aba') || 'aplicacao.html';
-  carregarAba(abaInicial);
-});
-
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE APLICAÇÃO =====
-function alternarFormularioAplicacao() {
-  const form = document.getElementById("formAplicacao");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR APLICAÇÃO (com fechamento automático) =====
-function adicionarAplicacao() {
-  const nova = {
-    data: document.getElementById("dataApp").value,
-    produto: document.getElementById("produtoApp").value.trim(),
-    dosagem: document.getElementById("dosagemApp").value.trim()
-  };
-
-  if (!nova.data || !nova.produto || !nova.dosagem) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  aplicacoes.push(nova);
-  carregarAplicacoes();
-  salvarDadosFirebase("aplicacoes", aplicacoes);
-
-  // Limpar e fechar formulário
-  document.getElementById("dataApp").value = "";
-  document.getElementById("produtoApp").value = "";
-  document.getElementById("dosagemApp").value = "";
-  document.getElementById("formAplicacao").style.display = "none";
-}
-
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE TAREFA =====
-function alternarFormularioTarefa() {
-  const form = document.getElementById("formTarefa");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR TAREFA (com fechamento automático) =====
-function adicionarTarefa() {
-  const descricao = document.getElementById("descricaoTarefa").value.trim();
-  if (!descricao) {
-    alert("Preencha a descrição.");
-    return;
-  }
-
-  tarefas.push({ descricao });
-  carregarTarefas();
-  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
-
-  // Limpar e fechar formulário
-  document.getElementById("descricaoTarefa").value = "";
-  document.getElementById("formTarefa").style.display = "none";
-}
-
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO FINANCEIRO =====
-function alternarFormularioFinanceiro() {
-  const form = document.getElementById("formFinanceiro");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR FINANCEIRO (com fechamento automático) =====
-function adicionarFinanceiro() {
-  const novo = {
-    descricao: document.getElementById("descricaoFin").value.trim(),
-    valor: parseFloat(document.getElementById("valorFin").value)
-  };
-
-  if (!novo.descricao || isNaN(novo.valor)) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  financeiro.push(novo);
-  carregarFinanceiro();
-  salvarDadosFirebase("financeiro", { financeiro, financeiroPago });
-
-  // Limpar e fechar formulário
-  document.getElementById("descricaoFin").value = "";
-  document.getElementById("valorFin").value = "";
-  document.getElementById("formFinanceiro").style.display = "none";
-}
-
 // ===== FUNÇÃO: CONTROLAR EXIBIÇÃO DO BOTÃO FLUTUANTE =====
 document.addEventListener('DOMContentLoaded', () => {
   const botoesFlutuantes = document.querySelectorAll(".botao-flutuante");
-  botoesFlutuantes.forEach(botao => {
-    botao.classList.add("mostrar");
-  });
+  botoesFlutuantes.forEach(botao => botao.classList.add("mostrar"));
 });
 
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE APLICAÇÃO =====
-function alternarFormularioAplicacao() {
-  const form = document.getElementById("formAplicacao");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR APLICAÇÃO (com fechamento automático) =====
-function adicionarAplicacao() {
-  const nova = {
-    data: document.getElementById("dataApp").value,
-    produto: document.getElementById("produtoApp").value.trim(),
-    dosagem: document.getElementById("dosagemApp").value.trim()
-  };
-
-  if (!nova.data || !nova.produto || !nova.dosagem) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  aplicacoes.push(nova);
-  carregarAplicacoes();
-  salvarDadosFirebase("aplicacoes", aplicacoes);
-
-  document.getElementById("dataApp").value = "";
-  document.getElementById("produtoApp").value = "";
-  document.getElementById("dosagemApp").value = "";
-  document.getElementById("formAplicacao").style.display = "none";
-}
-
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE TAREFA =====
-function alternarFormularioTarefa() {
-  const form = document.getElementById("formTarefa");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR TAREFA (com fechamento automático) =====
-function adicionarTarefa() {
-  const descricao = document.getElementById("descricaoTarefa").value.trim();
-  if (!descricao) {
-    alert("Preencha a descrição.");
-    return;
-  }
-
-  tarefas.push({ descricao });
-  carregarTarefas();
-  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
-
-  document.getElementById("descricaoTarefa").value = "";
-  document.getElementById("formTarefa").style.display = "none";
-}
-
-// ===== FUNÇÃO: ALTERNAR FORMULÁRIO FINANCEIRO =====
-function alternarFormularioFinanceiro() {
-  const form = document.getElementById("formFinanceiro");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: ADICIONAR FINANCEIRO (com fechamento automático) =====
-function adicionarFinanceiro() {
-  const novo = {
-    descricao: document.getElementById("descricaoFin").value.trim(),
-    valor: parseFloat(document.getElementById("valorFin").value)
-  };
-
-  if (!novo.descricao || isNaN(novo.valor)) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  financeiro.push(novo);
-  carregarFinanceiro();
-  salvarDadosFirebase("financeiro", { financeiro, financeiroPago });
-
-  document.getElementById("descricaoFin").value = "";
-  document.getElementById("valorFin").value = "";
-  document.getElementById("formFinanceiro").style.display = "none";
+// ===== FUNÇÃO: SALVAR DADOS NO FIREBASE (AJUSTE) =====
+function salvarDadosFirebase(caminho, dados) {
+  console.log(`Salvando em ${caminho}`, dados);
 }

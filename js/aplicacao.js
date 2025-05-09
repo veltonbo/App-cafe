@@ -1,4 +1,6 @@
-// Inicializa Firebase
+// aplicacao.js
+
+// Verifica se o Firebase está carregado corretamente
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof firebase === "undefined") {
     alert("Firebase não está carregado corretamente.");
@@ -7,27 +9,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const db = firebase.database().ref("aplicacoes");
 
-  // Carrega Aplicações ao iniciar
+  // Carrega as aplicações ao iniciar
   carregarAplicacoes();
 
-  // Atribui funções aos botões
+  // Atribui eventos aos botões
   document.getElementById("btnSalvarAplicacao").onclick = adicionarAplicacao;
   document.getElementById("btnCancelarEdicaoApp").onclick = cancelarEdicaoAplicacao;
 });
 
-// Função para alternar visibilidade do formulário
+// Função para alternar o formulário de aplicação (Mostrar/Ocultar)
 function alternarFormularioAplicacao() {
   const formulario = document.getElementById("formularioAplicacao");
   formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+  if (formulario.style.display === "block") {
+    limparFormularioAplicacao(); // Limpa os campos ao abrir
+  }
 }
 
-// Função para alternar visibilidade dos filtros
+// Função para alternar os filtros (Mostrar/Ocultar)
 function alternarFiltrosAplicacao() {
   const filtros = document.getElementById("filtrosAplicacoes");
   filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
 }
 
-// Função para adicionar ou editar aplicação
+// Função para adicionar ou editar uma aplicação
 function adicionarAplicacao() {
   const data = document.getElementById("dataApp").value;
   const produto = document.getElementById("produtoApp").value;
@@ -40,14 +45,14 @@ function adicionarAplicacao() {
     return;
   }
 
-  const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
   const db = firebase.database().ref("aplicacoes");
+  const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
 
   if (aplicacaoId) {
-    // Editando aplicação existente
+    // Editando uma aplicação existente
     db.child(aplicacaoId).update({ data, produto, dosagem, tipo, setor });
   } else {
-    // Adicionando nova aplicação
+    // Adicionando uma nova aplicação
     db.push().set({ data, produto, dosagem, tipo, setor });
   }
 
@@ -56,13 +61,13 @@ function adicionarAplicacao() {
   document.getElementById("formularioAplicacao").style.display = "none";
 }
 
-// Função para cancelar a edição
+// Função para cancelar a edição e limpar o formulário
 function cancelarEdicaoAplicacao() {
   limparFormularioAplicacao();
   document.getElementById("formularioAplicacao").style.display = "none";
 }
 
-// Função para limpar o formulário
+// Função para limpar o formulário de aplicação
 function limparFormularioAplicacao() {
   document.getElementById("dataApp").value = "";
   document.getElementById("produtoApp").value = "";
@@ -73,13 +78,13 @@ function limparFormularioAplicacao() {
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
 }
 
-// Função para carregar aplicações do Firebase
+// Função para carregar as aplicações do Firebase
 function carregarAplicacoes() {
   const db = firebase.database().ref("aplicacoes");
-  db.on("value", (snapshot) => {
-    const lista = document.getElementById("listaAplicacoes");
-    lista.innerHTML = "";
+  const lista = document.getElementById("listaAplicacoes");
+  lista.innerHTML = "";
 
+  db.once("value", (snapshot) => {
     snapshot.forEach((childSnapshot) => {
       const id = childSnapshot.key;
       const aplicacao = childSnapshot.val();
@@ -101,7 +106,7 @@ function carregarAplicacoes() {
 }
 
 // Função para editar uma aplicação
-window.editarAplicacao = function(id) {
+function editarAplicacao(id) {
   const db = firebase.database().ref("aplicacoes");
   db.child(id).once("value").then((snapshot) => {
     const aplicacao = snapshot.val();
@@ -114,13 +119,13 @@ window.editarAplicacao = function(id) {
     document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
     document.getElementById("formularioAplicacao").style.display = "block";
   });
-};
+}
 
-// Função para excluir aplicação
-window.excluirAplicacao = function(id) {
+// Função para excluir uma aplicação
+function excluirAplicacao(id) {
   if (confirm("Tem certeza que deseja excluir esta aplicação?")) {
     const db = firebase.database().ref("aplicacoes");
     db.child(id).remove();
     carregarAplicacoes();
   }
-};
+}

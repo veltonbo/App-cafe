@@ -17,7 +17,6 @@ body {
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
   background-color: #1f1f1f;
   padding: 10px 0;
@@ -31,18 +30,29 @@ body {
   background: none;
   border: none;
   color: #aaa;
-  font-size: 18px;
-  margin: 0 10px;
+  font-size: 24px;
+  margin: 0 12px;
   cursor: pointer;
   transition: color 0.3s;
 }
 
+.menu-superior button.active,
 .menu-superior button:hover {
   color: #4caf50;
 }
 
 .menu-superior button i {
   pointer-events: none;
+}
+
+/* ===== ÍCONE ATIVO (VERDE) ===== */
+.menu-icone {
+  color: #aaa; /* Ícone padrão em cinza */
+  transition: color 0.3s;
+}
+
+.menu-icone.active {
+  color: #4caf50; /* Ícone ativo em verde */
 }
 
 /* ===== FORMULÁRIOS E CAMPOS ===== */

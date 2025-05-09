@@ -11,11 +11,13 @@ body {
   padding: 20px;
   max-width: 800px;
   margin: auto;
+  box-sizing: border-box;
 }
 
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   background-color: #1f1f1f;
   padding: 10px 0;
@@ -30,7 +32,7 @@ body {
   border: none;
   color: #aaa;
   font-size: 18px;
-  margin: 0 15px;
+  margin: 0 10px;
   cursor: pointer;
   transition: color 0.3s;
 }
@@ -46,7 +48,7 @@ body {
 /* ===== FORMULÁRIOS E CAMPOS ===== */
 input, select, button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin: 8px 0;
   border-radius: 8px;
   border: 1px solid #555;
@@ -101,8 +103,8 @@ button:hover {
   background-color: #4caf50;
   color: #fff;
   border: none;
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -125,6 +127,7 @@ button:hover {
   gap: 10px;
   margin-top: 10px;
   display: none;
+  flex-direction: column;
 }
 
 .campo-pesquisa {
@@ -152,6 +155,14 @@ button:hover {
   justify-content: space-between;
   align-items: center;
   transition: background 0.3s;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item div {
+  flex: 1;
+  min-width: 200px;
+  word-wrap: break-word;
 }
 
 .item:hover {
@@ -160,7 +171,7 @@ button:hover {
 
 .acoes {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .acoes button {
@@ -184,4 +195,31 @@ button:hover {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  .menu-superior {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .botao-circular {
+    bottom: 15px;
+    right: 15px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .acoes {
+    justify-content: flex-start;
+    width: 100%;
+    margin-top: 5px;
+  }
 }

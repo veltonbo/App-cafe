@@ -215,3 +215,36 @@ body.claro .item button:hover {
   opacity: 1;
   display: block;
 }
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.botao-flutuante.mostrar {
+  opacity: 1;
+  visibility: visible;
+}
+
+.botao-flutuante:hover {
+  background-color: #45a049;
+  transform: scale(1.1);
+}

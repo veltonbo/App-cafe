@@ -1,108 +1,4 @@
-/* ===== LAYOUT GERAL ===== */
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #121212;
-  color: #e0e0e0;
-  overflow-x: hidden;
-}
-
-.conteudo {
-  padding: 20px;
-  max-width: 800px;
-  margin: auto;
-  animation: fadeIn 0.3s ease;
-}
-
-/* ===== ANIMAÇÕES ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ===== MENU SUPERIOR ===== */
-.menu-superior {
-  display: flex;
-  justify-content: center;
-  background-color: #1f1f1f;
-  padding: 10px 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-}
-
-.menu-superior button {
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 22px;
-  margin: 0 10px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.menu-superior button.active,
-.menu-superior button:hover {
-  color: #4caf50;
-}
-
-/* ===== FORMULÁRIOS ===== */
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #2c2c2c;
-  color: #fff;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-/* ===== BOTÕES PADRÃO ===== */
-button {
-  background-color: #4caf50;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-/* ===== LISTA DE ITENS ===== */
-.item {
-  background-color: #1e1e1e;
-  margin-bottom: 8px;
-  padding: 12px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.item.aparecendo {
-  opacity: 0;
-  transform: translateY(-20px);
-  animation: fadeInSlide 0.4s forwards;
-}
-
-@keyframes fadeInSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===== BOTÃO FLUTUANTE COM ANIMAÇÃO ===== */
+/* ===== BOTÃO FLUTUANTE ===== */
 .botao-flutuante {
   position: fixed;
   bottom: 20px;
@@ -114,80 +10,20 @@ button:hover {
   width: 56px;
   height: 56px;
   font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background 0.3s, transform 0.3s, rotate 0.3s;
-  z-index: 1000;
-  opacity: 0;
+  transition: background 0.3s;
   visibility: hidden;
-  transform: scale(0.8) rotate(0deg);
+  opacity: 0;
 }
 
 .botao-flutuante.mostrar {
-  opacity: 1;
   visibility: visible;
-  transform: scale(1) rotate(0deg);
-}
-
-.botao-flutuante.ativo {
-  transform: scale(1) rotate(45deg); /* Girar ao abrir o formulário */
+  opacity: 1;
 }
 
 .botao-flutuante:hover {
   background-color: #45a049;
-}
-
-/* ===== FORMULÁRIOS DESLIZANTES COM SUAVIDADE ===== */
-.formulario-deslizante {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.4s ease;
-  transform: scaleY(0);
-  transform-origin: top;
-}
-
-.formulario-deslizante.mostrar {
-  max-height: 400px;
-  opacity: 1;
-  transform: scaleY(1);
-}
-
-/* ===== MODO CLARO ===== */
-body.claro {
-  background-color: #f5f5f5;
-  color: #222;
-}
-
-body.claro .conteudo {
-  background-color: #fff;
-}
-
-body.claro .item {
-  background-color: #fafafa;
-  color: #222;
-}
-
-body.claro input, 
-body.claro button {
-  background-color: #e0e0e0;
-  color: #000;
-  border: 1px solid #ccc;
-}
-
-body.claro .menu-superior {
-  background-color: #f0f0f0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-body.claro .menu-superior button {
-  color: #444;
-}
-
-body.claro .menu-superior button.active,
-body.claro .menu-superior button:hover {
-  color: #4caf50;
 }

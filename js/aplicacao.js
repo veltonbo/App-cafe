@@ -10,7 +10,7 @@ function alternarFormularioAplicacao() {
   formulario.style.display = formulario.style.display === "none" ? "block" : "none";
 }
 
-// Função para salvar aplicação no Firebase
+// Função para salvar ou editar aplicação no Firebase
 function salvarAplicacao() {
   const data = document.getElementById("dataApp").value;
   const produto = document.getElementById("produtoApp").value;
@@ -27,47 +27,64 @@ function salvarAplicacao() {
   const aplicacao = { data, produto, dosagem, tipo, setor };
 
   if (aplicacaoId) {
+    // Atualiza a aplicação existente
     db.child(aplicacaoId).set(aplicacao);
+    alert("Aplicação editada com sucesso!");
   } else {
+    // Adiciona uma nova aplicação
     db.push().set(aplicacao);
+    alert("Aplicação adicionada com sucesso!");
   }
 
   cancelarAplicacao();
   carregarAplicacoes();
 }
 
-// Função para carregar aplicações do Firebase
+// Função para carregar aplicações com filtro e ordenação
 function carregarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = "";
 
-  db.on("value", (snapshot) => {
-    lista.innerHTML = ""; // Limpa a lista antes de atualizar
+  const filtroSetor = document.getElementById("filtroSetor").value;
+  const termoPesquisa = document.getElementById("pesquisaAplicacao").value.trim().toLowerCase();
+
+  db.once("value", (snapshot) => {
+    lista.innerHTML = "";
+    const aplicacoes = [];
 
     snapshot.forEach((childSnapshot) => {
       const id = childSnapshot.key;
       const aplicacao = childSnapshot.val();
-
-      const item = document.createElement("div");
-      item.className = "item";
-      item.innerHTML = `
-        <strong>${aplicacao.data}</strong> - ${aplicacao.produto} (${aplicacao.dosagem}) - ${aplicacao.tipo} - ${aplicacao.setor}
-        <div class="acoes">
-          <button onclick="editarAplicacao('${id}')"><i class="fas fa-edit"></i></button>
-          <button onclick="excluirAplicacao('${id}')"><i class="fas fa-trash-alt"></i></button>
-        </div>
-      `;
-      lista.appendChild(item);
+      aplicacoes.push({ id, ...aplicacao });
     });
-  });
-}
 
-// Função para excluir aplicação
-function excluirAplicacao(id) {
-  if (confirm("Deseja realmente excluir esta aplicação?")) {
-    db.child(id).remove();
-    carregarAplicacoes();
-  }
+    // Ordena as aplicações do mais recente para o mais antigo
+    aplicacoes.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+    aplicacoes.forEach((aplicacao) => {
+      if ((filtroSetor === "" || aplicacao.setor === filtroSetor) &&
+          (termoPesquisa === "" || 
+           aplicacao.produto.toLowerCase().includes(termoPesquisa) ||
+           aplicacao.tipo.toLowerCase().includes(termoPesquisa) ||
+           aplicacao.dosagem.toLowerCase().includes(termoPesquisa))) {
+        
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <strong>${aplicacao.data}</strong> - ${aplicacao.produto} (${aplicacao.dosagem}) - ${aplicacao.tipo} - ${aplicacao.setor}
+          <div class="acoes">
+            <button onclick="editarAplicacao('${aplicacao.id}')"><i class="fas fa-edit"></i></button>
+            <button onclick="excluirAplicacao('${aplicacao.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        `;
+        lista.appendChild(item);
+      }
+    });
+
+    if (lista.innerHTML === "") {
+      lista.innerHTML = "<p style='text-align:center; color: #aaa;'>Nenhuma aplicação encontrada.</p>";
+    }
+  });
 }
 
 // Função para editar aplicação
@@ -81,11 +98,13 @@ function editarAplicacao(id) {
     document.getElementById("setorApp").value = aplicacao.setor;
 
     document.getElementById("btnSalvarAplicacao").dataset.editing = id;
+    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Alterações";
+    document.getElementById("btnCancelarEdicao").style.display = "inline-block";
     alternarFormularioAplicacao();
   });
 }
 
-// Função para cancelar aplicação
+// Função para cancelar edição e limpar formulário
 function cancelarAplicacao() {
   document.getElementById("formularioAplicacao").style.display = "none";
   document.getElementById("dataApp").value = "";
@@ -94,4 +113,14 @@ function cancelarAplicacao() {
   document.getElementById("tipoApp").value = "Adubo";
   document.getElementById("setorApp").value = "Setor 01";
   document.getElementById("btnSalvarAplicacao").removeAttribute("data-editing");
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar";
+  document.getElementById("btnCancelarEdicao").style.display = "none";
+}
+
+// Função para excluir aplicação
+function excluirAplicacao(id) {
+  if (confirm("Deseja realmente excluir esta aplicação?")) {
+    db.child(id).remove();
+    carregarAplicacoes();
+  }
 }

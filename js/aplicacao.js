@@ -21,16 +21,23 @@ function carregarAplicacoes() {
 function adicionarAplicacao() {
   const nova = {
     data: document.getElementById("dataApp").value,
-    produto: document.getElementById("produtoApp").value,
-    dosagem: document.getElementById("dosagemApp").value
+    produto: document.getElementById("produtoApp").value.trim(),
+    dosagem: document.getElementById("dosagemApp").value.trim()
   };
+
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos.");
+    return;
+  }
 
   aplicacoes.push(nova);
   carregarAplicacoes();
+  salvarDadosFirebase("aplicacoes", aplicacoes);
 }
 
 // ===== FUNÇÃO: EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   aplicacoes.splice(index, 1);
   carregarAplicacoes();
+  salvarDadosFirebase("aplicacoes", aplicacoes);
 }

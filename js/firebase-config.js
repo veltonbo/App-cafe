@@ -22,3 +22,4 @@
   const db = firebase.database();
   console.log("Firebase inicializado corretamente.");
 </script>
+

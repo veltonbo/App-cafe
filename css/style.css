@@ -14,10 +14,11 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== MENU SUPERIOR ===== */
+/* ===== MENU SUPERIOR EM LINHA ===== */
 .menu-superior {
   display: flex;
   justify-content: center;
+  align-items: center;
   background-color: #1f1f1f;
   padding: 10px 0;
   position: sticky;
@@ -31,7 +32,7 @@ body {
   border: none;
   color: #aaa;
   font-size: 24px;
-  margin: 0 12px;
+  margin: 0 15px;
   cursor: pointer;
   transition: color 0.3s;
 }

@@ -1,14 +1,11 @@
+<!-- aplicacao.html -->
 <h2>Aplicações</h2>
-<div id="formAplicacao" class="formulario-deslizante" style="display: none;">
-  <input id="dataApp" type="date" placeholder="Data">
-  <input id="produtoApp" placeholder="Produto">
-  <input id="dosagemApp" placeholder="Dosagem">
+<div id="listaAplicacoes"></div>
+
+<!-- Formulário Oculto (Desliza ao clicar no botão +) -->
+<div id="formAplicacao" style="display: none; margin-top: 15px;">
+  <input type="date" id="dataApp" placeholder="Data da Aplicação">
+  <input placeholder="Produto" id="produtoApp">
+  <input placeholder="Dosagem" id="dosagemApp">
   <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
 </div>
-
-<div>
-<button id="botaoFlutuante" class="botao-flutuante" onclick="controlarFormularioFlutuante()">+</button>
-</div>
-
-<h4>Lista de Aplicações</h4>
-<div id="listaAplicacoes"></div>

@@ -100,3 +100,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
+
+
+// Alternar Visibilidade do Formulário
+function alternarFormularioAplicacao() {
+  const formulario = document.getElementById("formularioAplicacao");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}
+
+// Alternar Visibilidade dos Filtros
+function alternarFiltrosAplicacao() {
+  const filtros = document.getElementById("filtrosAplicacoes");
+  filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
+}
+
+// Ajuste no Salvar Aplicação para Ocultar o Formulário após Salvar
+function adicionarAplicacao() {
+  const data = document.getElementById("dataApp").value;
+  const produto = document.getElementById("produtoApp").value;
+  const dosagem = document.getElementById("dosagemApp").value;
+  const tipo = document.getElementById("tipoApp").value;
+  const setor = document.getElementById("setorApp").value;
+
+  if (!data || !produto || !dosagem) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
+  const db = firebase.database().ref("aplicacoes");
+
+  if (aplicacaoId) {
+    db.child(aplicacaoId).update({ data, produto, dosagem, tipo, setor });
+  } else {
+    db.push().set({ data, produto, dosagem, tipo, setor });
+  }
+
+  cancelarEdicaoAplicacao();
+  alternarFormularioAplicacao();
+  carregarAplicacoes();
+}

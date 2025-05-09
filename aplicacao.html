@@ -1,35 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café - Aplicações</title>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="css/style.css" />
-
-  <!-- Scripts -->
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/main.js"></script>
-  <script defer src="js/aplicacao.js"></script>
-</head>
-<body>
-  <!-- Menu Superior -->
-  <div class="menu-superior">
-    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Início</button>
-    <button onclick="window.location.href='tarefas.html'">Tarefas</button>
-    <button onclick="window.location.href='financeiro.html'">Financeiro</button>
-    <button onclick="window.location.href='colheita.html'">Colheita</button>
-    <button onclick="window.location.href='relatorio.html'">Relatório</button>
-    <button onclick="window.location.href='configuracoes.html'">Configurações</button>
-  </div>
+<div class="conteudo">
+  <h2>Aplicações</h2>
 
   <!-- Botão Flutuante para Adicionar Aplicação -->
   <button class="botao-flutuante" onclick="alternarFormularioAplicacao()">
@@ -37,7 +7,7 @@
   </button>
 
   <!-- Formulário Oculto -->
-  <div id="formularioAplicacao" class="formulario-aplicacoes" style="display: none;">
+  <div id="formularioAplicacao" class="formulario-aplicacoes">
     <input id="dataApp" type="date" placeholder="Data">
     <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
     <datalist id="sugestoesProdutoApp"></datalist>
@@ -52,15 +22,12 @@
       <option>Setor 01</option>
       <option>Setor 02</option>
     </select>
-
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
-        <i class="fas fa-save"></i> Salvar Aplicação
-      </button>
-      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="botao-secundario" style="display: none;">
-        <i class="fas fa-times"></i> Cancelar Edição
-      </button>
-    </div>
+    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
+      Salvar Aplicação
+    </button>
+    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="botao-secundario" style="display: none;">
+      Cancelar Edição
+    </button>
   </div>
 
   <!-- Botão para Mostrar Filtros -->
@@ -71,7 +38,7 @@
   </div>
 
   <!-- Filtros Ocultos -->
-  <div id="filtrosAplicacoes" class="filtros-aplicacoes" style="display: none;">
+  <div id="filtrosAplicacoes" class="filtros-aplicacoes">
     <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
       <option value="">Todos os Setores</option>
       <option value="Setor 01">Setor 01</option>
@@ -82,5 +49,4 @@
 
   <!-- Listagem de Aplicações -->
   <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-</body>
-</html>
+</div>

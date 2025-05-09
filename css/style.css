@@ -48,7 +48,7 @@ body {
 
 /* ===== FORMULÁRIO DE APLICAÇÕES ===== */
 .formulario-aplicacoes {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
@@ -56,23 +56,27 @@ body {
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  max-width: 400px; /* Ajuste para largura máxima do formulário */
+  margin: auto; /* Centraliza o formulário */
 }
 
-input, select, button {
-  width: 100%;
+.formulario-aplicacoes input,
+.formulario-aplicacoes select,
+.formulario-aplicacoes button {
+  width: 100%; /* Garante que todos os campos tenham o mesmo tamanho */
   padding: 12px;
-  margin: 8px 0;
   border-radius: 8px;
   border: 1px solid #555;
   background-color: #2c2c2c;
   color: #fff;
   font-size: 16px;
   outline: none;
+  box-sizing: border-box; /* Evita que padding afete o tamanho */
   transition: background 0.3s;
 }
 
-input:focus, select:focus {
+.formulario-aplicacoes input:focus,
+.formulario-aplicacoes select:focus {
   background-color: #333;
   border-color: #4caf50;
 }
@@ -97,7 +101,7 @@ input:focus, select:focus {
   display: none;
 }
 
-/* ===== BOTÃO FLUTUANTE ===== */
+/* ===== AJUSTE DO BOTÃO FLUTUANTE ===== */
 .botao-circular {
   position: fixed;
   bottom: 20px;

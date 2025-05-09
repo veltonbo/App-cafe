@@ -47,16 +47,13 @@ body {
 }
 
 /* ===== FORMULÁRIO DE APLICAÇÕES ===== */
-.formulario-aplicacoes {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-  background-color: #1e1e1e;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+.formulario-aplicacoes input,
+.formulario-aplicacoes select,
+.formulario-aplicacoes button {
+  width: calc(100% - 20px); /* Mesma largura do botão */
+  max-width: 400px; /* Limite máximo para evitar distorções */
+  margin: auto; /* Centraliza */
+  display: block; /* Garante alinhamento */
 }
 
 input, select, button {

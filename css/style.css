@@ -20,207 +20,587 @@ body {
   to { opacity: 1; }
 }
 
-/* ===== MENU SUPERIOR ===== */
-.menu-superior {
-  display: flex;
-  justify-content: center;
-  background-color: #1f1f1f;
-  padding: 10px 0;
-  border-bottom: 2px solid #333;
-}
+/* ===== ABAS ===== */
+.aba { display: none; }
+.aba.active { display: block; }
 
-.menu-superior button {
-  background: none;
-  border: none;
-  color: #e0e0e0;
-  font-size: 18px;
-  padding: 10px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.menu-superior button:hover {
-  color: #66bb6a;
-}
-
-.menu-superior button.active {
-  color: #66bb6a;
-  font-weight: bold;
-}
-
-/* ===== FORMULÁRIOS ===== */
+/* ===== CAMPOS DE FORMULÁRIO ===== */
 input, select, button {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   margin: 8px 0;
   border-radius: 8px;
   border: 1px solid #555;
   background-color: #2c2c2c;
   color: #fff;
   font-size: 16px;
-  outline: none;
-  transition: background 0.3s, box-shadow 0.3s;
+  box-sizing: border-box;
 }
 
-input:focus, select:focus {
-  background-color: #333;
-  box-shadow: 0 0 5px #66bb6a;
-}
-
+/* ===== BOTÕES PADRÃO ===== */
 button {
-  background-color: #66bb6a;
-  color: #fff;
+  background-color: #4caf50;
   border: none;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s, transform 0.2s;
+  transition: background 0.3s;
 }
 
 button:hover {
-  background-color: #4caf50;
-  transform: translateY(-2px);
+  background-color: #45a049;
 }
 
-.botao-primario {
-  background-color: #66bb6a;
-}
-
-.botao-primario:hover {
-  background-color: #4caf50;
-}
-
-.botao-secundario {
-  background-color: #f44336;
-}
-
-.botao-secundario:hover {
-  background-color: #e53935;
-}
-
-/* ===== LISTAGEM DE APLICAÇÕES ===== */
-.lista-aplicacoes {
-  margin-top: 15px;
+/* ===== MENU SUPERIOR ===== */
+.menu-superior {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  background-color: #1f1f1f;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.menu-superior button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 22px;
+  margin: 0 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.menu-superior button.active,
+.menu-superior button:hover {
+  color: #4caf50;
+}
+
+.menu-superior button i {
+  pointer-events: none;
+}
+
+/* ===== CAMPO DE PESQUISA ===== */
+.campo-pesquisa {
+  padding: 10px;
+  background: #2c2c2c;
+  border: 1px solid #555;
+  border-radius: 8px;
+  margin: 10px 0;
+  color: white;
+  font-size: 16px;
+}
+
+/* ===== GRUPOS DE DATA ===== */
+.grupo-data {
+  font-weight: bold;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #2f2f2f;
+  border-left: 5px solid #4caf50;
+  border-radius: 6px;
+}
+
+.grupo-data small {
+  font-size: 12px;
+  color: #aaa;
 }
 
 .item {
-  background-color: #2c2c2c;
-  padding: 12px;
-  border-radius: 8px;
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: #1e1e1e;
+  border-left: 4px solid #66bb6a;
+}
+
+.item span {
+  display: block;
+  padding-right: 70px; /* garante espaço para os botões */
+  word-break: break-word;
+  color: #fff;
+  flex: 1;
+}
+
+.botoes-tarefa {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.botoes-aplicacao {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== BOTÕES CIRCULARES ===== */
+.botao-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.botao-circular:hover {
+  transform: scale(1.1);
+}
+
+.botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botao-circular.vermelho:hover {
+  background-color: #d32f2f;
+}
+
+.botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botao-circular.azul:hover {
+  background-color: #1976d2;
+}
+
+.botao-circular.verde {
+  background-color: #4caf50;
+}
+
+.botao-circular.verde:hover {
+  background-color: #388e3c;
+}
+
+.botao-circular.laranja {
+  background-color: #ff9800;
+}
+
+/* ===== BOTÕES DE AÇÃO ===== */
+.botao-excluir {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.botao-excluir:hover {
+  background-color: #d32f2f;
+}
+
+.botao-financeiro {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.botao-financeiro:hover {
+  background-color: #388e3c;
+}
+
+/* ===== BOTÕES DE PARCELAS ===== */
+.botao-parcelas {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
   transition: background 0.3s;
 }
 
-.item:hover {
-  background-color: #3a3a3a;
+.botao-parcelas:hover {
+  background-color: #1976d2;
 }
 
-.item div {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.acoes {
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.acoes button {
-  background: none;
+/* ===== BOTÕES PADRÃO GENÉRICOS ===== */
+.botao-padrao {
+  padding: 6px 12px;
   border: none;
-  color: #e0e0e0;
-  font-size: 18px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: color 0.3s;
+  font-weight: bold;
+  transition: background 0.3s;
+  color: white;
 }
 
-.acoes button:hover {
-  color: #66bb6a;
+.botao-padrao:hover {
+  opacity: 0.9;
 }
 
-/* ===== FILTROS E PESQUISA ===== */
-.filtros-aplicacoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.botao-pagar {
+  background-color: #4caf50;
+}
+
+/* ===== INDICAÇÃO DE ERRO EM CAMPOS ===== */
+.input-erro {
+  border: 1px solid #f44336 !important;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+/* ===== ANIMAÇÕES ===== */
+.item.aparecendo {
+  animation: fadeInItem 0.5s ease forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+.item.fade-in {
+  animation: fadeInItem 0.4s ease;
+}
+
+@keyframes fadeInItem {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RELATÓRIOS ===== */
+.relatorio-subaba {
+  padding: 10px 0;
+}
+
+.relatorio-subaba h3 {
   margin-bottom: 10px;
-  align-items: center;
+  color: #66bb6a;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
 }
 
-.campo-pesquisa {
-  flex-grow: 1;
+#relatorio canvas {
+  background: #1e1e1e;
+  border-radius: 8px;
+  margin-top: 15px;
   padding: 10px;
+}
+
+#resumoFinanceiro .item,
+#ultimasAplicacoes .item,
+#ultimasTarefas .item {
+  background-color: #2c2c2c;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#resumoFinanceiro .item strong {
+  color: #fff;
+}
+
+#relatorio button {
+  margin-top: 20px;
+  margin-right: 10px;
+  padding: 10px 15px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#relatorio button:hover {
+  background-color: #45a049;
+}
+
+/* ===== MODAL PARCELAS ===== */
+#modalParcelas .parcela-item {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#modalParcelas .parcela-item label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  word-break: break-word;
+}
+
+#modalParcelas input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+/* ===== INPUT DE ARQUIVO ===== */
+input[type="file"] {
   background-color: #2c2c2c;
   border: 1px solid #555;
   border-radius: 8px;
+  padding: 10px;
   color: #e0e0e0;
-  outline: none;
+  font-size: 16px;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.claro input[type="file"] {
+  background-color: #f9f9f9;
+  color: #333;
+  border-color: #ccc;
+}
+
+/* ===== MODO CLARO ===== */
+.claro body {
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+.claro .conteudo {
+  background-color: #fff;
+}
+
+.claro .item {
+  background-color: #fafafa;
+  color: #222;
+}
+
+.claro .campo-pesquisa,
+.claro input,
+.claro select {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+.claro .botao-circular {
+  color: white;
+}
+
+.claro .grupo-data {
+  background-color: #eee;
+  border-left-color: #2e7d32;
+}
+
+.claro #resumoFinanceiroMensal {
+  background: #f9f9f9;
+  color: #333;
+  border-left-color: #2e7d32;
+}
+
+/* ===== AJUSTES DE CHECKBOX ===== */
+#eAplicacaoCheckbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+#eAplicacaoCheckbox + label,
+#eAplicacaoCheckbox + span,
+label[for="eAplicacaoCheckbox"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+}
+
+.botoes-tarefa {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.botao-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
   transition: background 0.3s;
 }
 
-.campo-pesquisa:focus {
-  background-color: #333;
-  box-shadow: 0 0 5px #66bb6a;
+/* Estilo padrão dos botões circulares */
+.botao-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
 }
 
-.campo-pesquisa::placeholder {
-  color: #999;
+.botao-circular i {
+  pointer-events: none;
 }
 
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
+.botao-circular.verde {
+  background-color: #4caf50;
+}
+
+.botao-circular.verde:hover {
+  background-color: #388e3c;
+}
+
+.botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botao-circular.vermelho:hover {
+  background-color: #d32f2f;
+}
+
+.botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botao-circular.azul:hover {
+  background-color: #1976d2;
+}
+
+.item.botoes-3 span {
+  padding-right: 70px;
+}
+
+.item.botoes-2 span {
+  padding-right: 20px;
+}
+
+/* ===== MODAIS FINANCEIRO ===== */
+#modalConfirmarExclusaoParcela,
+#modalEditarParcela {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+#modalConfirmarExclusaoParcela > div,
+#modalEditarParcela > div {
+  background: #2c2c2c;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+}
+
+#modalConfirmarExclusaoParcela p,
+#modalEditarParcela p {
+  color: #ffffff;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+#modalConfirmarExclusaoParcela button,
+#modalEditarParcela button {
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+#modalConfirmarExclusaoParcela button:hover,
+#modalEditarParcela button:hover {
+  opacity: 0.9;
+}
+
+#modalConfirmarExclusaoParcela button:nth-child(2) {
+  background-color: #ff9800;
+}
+
+#modalConfirmarExclusaoParcela button:nth-child(3),
+#modalEditarParcela button:nth-child(3) {
+  background-color: #f44336;
+}
+
+#modalConfirmarExclusaoParcela button:last-child,
+#modalEditarParcela button:last-child {
+  background-color: #555;
+}
+
+#modalEditarParcela button:nth-child(2) {
+  background-color: #ff9800;
+}
+
+#modalEditarParcela button:nth-child(3) {
+  background-color: #4caf50;
+}
+
+#btnMostrarFormularioFinanceiro {
   position: fixed;
   bottom: 20px;
   right: 20px;
   background-color: #4caf50;
-  color: #fff;
-  width: 50px;
-  height: 50px;
+  color: white;
+  border: none;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 56px;
+  height: 56px;
   font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transition: background 0.3s, transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   z-index: 1000;
-}
-
-.botao-flutuante:hover {
-  background-color: #66bb6a;
-  transform: translateY(-3px);
-}
-
-/* ===== ANIMAÇÃO SUAVE ===== */
-.fadeIn {
-  animation: fadeIn 0.5s ease;
-}
-
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
-  .conteudo {
-    padding: 15px;
-  }
-
-  .item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .acoes {
-    justify-content: flex-end;
-    margin-top: 5px;
-  }
-
-  .menu-superior {
-    flex-wrap: wrap;
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

@@ -1,29 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
-  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Scripts -->
+  <script defer src="firebase-config.js"></script>
+  <script defer src="main.js"></script>
+  <script defer src="aplicacao.js"></script>
+  <script defer src="tarefas.js"></script>
+  <script defer src="financeiro.js"></script>
+  <script defer src="colheita.js"></script>
+  <script defer src="relatorio.js"></script>
+  <script defer src="configuracoes.js"></script>
 </head>
 <body>
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
+    <button id="btn-colheita" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+  </div>
 
-<!-- Menu Superior -->
-<div class="menu-superior">
-  <button onclick="carregarAba('aplicacao.html')">Aplicações</button>
-  <button onclick="carregarAba('tarefas.html')">Tarefas</button>
-  <button onclick="carregarAba('financeiro.html')">Financeiro</button>
-  <button onclick="carregarAba('relatorio.html')">Relatório</button>
-  <button onclick="carregarAba('configuracoes.html')">Configurações</button>
-</div>
-
-<!-- Conteúdo Dinâmico -->
-<div id="conteudoPrincipal"></div>
-
-<!-- Botão Flutuante -->
-<button id="botaoFlutuante" class="botao-flutuante" onclick="controlarFormularioFlutuante()">+</button>
-
-<!-- Scripts -->
-<script src="js/main.js"></script>
-</body>
-</html>
+  <div class="conteudo">

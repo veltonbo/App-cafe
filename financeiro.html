@@ -1,11 +1,16 @@
 <!-- financeiro.html -->
 <h2>Financeiro</h2>
-<input id="descricaoFin" placeholder="Descrição do Gasto">
-<input id="valorFin" type="number" placeholder="Valor (R$)">
-<button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+<div id="formFinanceiro" style="display: none;">
+  <input id="descricaoFin" placeholder="Descrição do Gasto">
+  <input id="valorFin" type="number" placeholder="Valor (R$)">
+  <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+</div>
 
 <h4>Gastos a Pagar</h4>
 <div id="listaFinanceiro"></div>
 
 <h4>Gastos Pagos</h4>
 <div id="listaFinanceiroPago"></div>
+
+<!-- Botão Flutuante -->
+<button class="botao-flutuante" onclick="alternarFormularioFinanceiro()">+</button>

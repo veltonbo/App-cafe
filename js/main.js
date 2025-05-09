@@ -153,13 +153,32 @@ function controlarFormularioFlutuante() {
 function exibirBotaoFlutuante() {
   const abaAtual = localStorage.getItem('aba');
   const botao = document.getElementById("botaoFlutuante");
-  botao.style.display = ['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual) ? "flex" : "none";
+  
+  if (['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual)) {
+    botao.classList.add("mostrar");
+  } else {
+    botao.classList.remove("mostrar");
+  }
 }
 
 // ===== CHAMAR A EXIBIÇÃO AUTOMÁTICA DO BOTÃO =====
 document.addEventListener('DOMContentLoaded', () => {
   exibirBotaoFlutuante();
 });
+
+// ===== AJUSTE NA FUNÇÃO DE CARREGAR ABA =====
+function carregarAba(arquivo) {
+  fetch(arquivo)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('conteudoPrincipal').innerHTML = html;
+      inicializarAba(arquivo);
+      exibirBotaoFlutuante();
+    })
+    .catch(error => console.error("Erro ao carregar a aba:", error));
+  
+  localStorage.setItem('aba', arquivo);
+}
 
 // ===== FUNÇÃO: SALVAR DADOS (FAKE) =====
 function salvarDadosFirebase(caminho, dados) {

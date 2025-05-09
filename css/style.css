@@ -201,3 +201,16 @@ body.claro .item button:hover {
   background-color: #45a049;
   transform: scale(1.1);
 }
+
+/* ===== ANIMAÇÃO SUAVE PARA FORMULÁRIOS ===== */
+.formulario-deslizante {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+}
+
+.formulario-deslizante.mostrar {
+  max-height: 300px; /* Limite máximo (ajuste conforme necessário) */
+  opacity: 1;
+}

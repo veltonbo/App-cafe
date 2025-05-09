@@ -1,10 +1,15 @@
 <!-- tarefas.html -->
 <h2>Tarefas</h2>
-<input id="descricaoTarefa" placeholder="Descrição da Tarefa">
-<button onclick="adicionarTarefa()">Salvar Tarefa</button>
+<div id="formTarefa" style="display: none;">
+  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+</div>
 
 <h4>Tarefas a Fazer</h4>
 <div id="listaTarefas"></div>
 
 <h4>Tarefas Concluídas</h4>
 <div id="listaTarefasFeitas"></div>
+
+<!-- Botão Flutuante -->
+<button class="botao-flutuante" onclick="alternarFormularioTarefa()">+</button>

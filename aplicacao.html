@@ -31,15 +31,18 @@
     <h2>Aplicações</h2>
 
     <!-- Filtros e Pesquisa -->
-    <div class="filtros-aplicacoes">
-      <select id="filtroSetor" onchange="atualizarAplicacoes()">
-        <option value="">Todos os Setores</option>
-        <option value="Setor 01">Setor 01</option>
-        <option value="Setor 02">Setor 02</option>
-        <option value="Setor 03">Setor 03</option>
-      </select>
-      <input id="pesquisaAplicacao" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-    </div>
+<div class="filtros-aplicacoes">
+  <select id="filtroSetor" onchange="carregarAplicacoes()">
+    <option value="">Todos os Setores</option>
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+    <option value="Setor 03">Setor 03</option>
+  </select>
+  <input id="pesquisaAplicacao" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
+  <button onclick="exportarAplicacoesCSV()" class="botao-primario">
+    <i class="fas fa-file-csv"></i> Exportar CSV
+  </button>
+</div>
 
     <!-- Formulário Oculto -->
     <div id="formularioAplicacao" style="display: none;">

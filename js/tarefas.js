@@ -1,67 +1,32 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let tarefas = [];
 let tarefasFeitas = [];
-let indiceEdicaoTarefa = null;
 
 // ===== FUNÇÃO: CARREGAR TAREFAS =====
 function carregarTarefas() {
-  atualizarTarefas();
-}
-
-// ===== FUNÇÃO: ATUALIZAR TAREFAS =====
-function atualizarTarefas() {
   const listaTarefas = document.getElementById("listaTarefas");
   const listaTarefasFeitas = document.getElementById("listaTarefasFeitas");
-
   listaTarefas.innerHTML = "";
   listaTarefasFeitas.innerHTML = "";
 
-  const filtroSetor = document.getElementById("filtroSetorTarefas").value;
-  const pesquisa = document.getElementById("pesquisaTarefas").value.toLowerCase();
-
-  const tarefasFiltradas = tarefas.filter(tarefa => {
-    return (
-      (filtroSetor === "" || tarefa.setor === filtroSetor) &&
-      tarefa.descricao.toLowerCase().includes(pesquisa)
-    );
-  });
-
-  const feitasFiltradas = tarefasFeitas.filter(tarefa => {
-    return (
-      (filtroSetor === "" || tarefa.setor === filtroSetor) &&
-      tarefa.descricao.toLowerCase().includes(pesquisa)
-    );
-  });
-
-  // Exibe tarefas a fazer
-  if (tarefasFiltradas.length === 0) {
-    listaTarefas.innerHTML = "<p style='text-align:center;'>Nenhuma tarefa encontrada.</p>";
-  }
-
-  tarefasFiltradas.forEach((tarefa, index) => {
+  tarefas.forEach((tarefa, index) => {
     const item = document.createElement("div");
     item.classList.add("item");
     item.innerHTML = `
-      <span><strong>${tarefa.data}</strong> - ${tarefa.descricao} (${tarefa.prioridade}) - ${tarefa.setor}</span>
-      <div class="botoes-acao">
-        <button class="botao-circular verde" onclick="marcarTarefa(${index})"><i class="fas fa-check"></i></button>
-        <button class="botao-circular azul" onclick="editarTarefa(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})"><i class="fas fa-trash-alt"></i></button>
-      </div>
+      <span>${tarefa.descricao}</span>
+      <button onclick="marcarFeita(${index})">Feita</button>
+      <button onclick="excluirTarefa(${index})">Excluir</button>
     `;
     listaTarefas.appendChild(item);
   });
 
-  // Exibe tarefas concluídas
-  feitasFiltradas.forEach((tarefa, index) => {
+  tarefasFeitas.forEach((tarefa, index) => {
     const item = document.createElement("div");
     item.classList.add("item");
     item.innerHTML = `
-      <span><strong>${tarefa.data}</strong> - ${tarefa.descricao} (${tarefa.prioridade}) - ${tarefa.setor}</span>
-      <div class="botoes-acao">
-        <button class="botao-circular laranja" onclick="desmarcarTarefa(${index})"><i class="fas fa-undo-alt"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirTarefaFeita(${index})"><i class="fas fa-trash-alt"></i></button>
-      </div>
+      <span>${tarefa.descricao}</span>
+      <button onclick="desfazerFeita(${index})">Desfazer</button>
+      <button onclick="excluirTarefaFeita(${index})">Excluir</button>
     `;
     listaTarefasFeitas.appendChild(item);
   });
@@ -69,70 +34,43 @@ function atualizarTarefas() {
 
 // ===== FUNÇÃO: ADICIONAR TAREFA =====
 function adicionarTarefa() {
-  const nova = {
-    data: document.getElementById("dataTarefa").value,
-    descricao: document.getElementById("descricaoTarefa").value.trim(),
-    prioridade: document.getElementById("prioridadeTarefa").value,
-    setor: document.getElementById("setorTarefa").value
-  };
-
-  if (!nova.data || !nova.descricao) {
-    alert("Preencha todos os campos corretamente.");
+  const descricao = document.getElementById("descricaoTarefa").value.trim();
+  if (!descricao) {
+    alert("Preencha a descrição.");
     return;
   }
 
-  if (indiceEdicaoTarefa === null) {
-    tarefas.push(nova);
-  } else {
-    tarefas[indiceEdicaoTarefa] = nova;
-    indiceEdicaoTarefa = null;
-  }
-
-  limparCamposTarefa();
-  atualizarTarefas();
-}
-
-// ===== FUNÇÃO: EDITAR TAREFA =====
-function editarTarefa(index) {
-  const tarefa = tarefas[index];
-  document.getElementById("dataTarefa").value = tarefa.data;
-  document.getElementById("descricaoTarefa").value = tarefa.descricao;
-  document.getElementById("prioridadeTarefa").value = tarefa.prioridade;
-  document.getElementById("setorTarefa").value = tarefa.setor;
-
-  indiceEdicaoTarefa = index;
+  tarefas.push({ descricao });
+  carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
 }
 
 // ===== FUNÇÃO: MARCAR COMO FEITA =====
-function marcarTarefa(index) {
+function marcarFeita(index) {
   const tarefa = tarefas.splice(index, 1)[0];
   tarefasFeitas.push(tarefa);
-  atualizarTarefas();
+  carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
 }
 
-// ===== FUNÇÃO: DESMARCAR TAREFA =====
-function desmarcarTarefa(index) {
+// ===== FUNÇÃO: DESFAZER =====
+function desfazerFeita(index) {
   const tarefa = tarefasFeitas.splice(index, 1)[0];
   tarefas.push(tarefa);
-  atualizarTarefas();
+  carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
 }
 
 // ===== FUNÇÃO: EXCLUIR TAREFA =====
 function excluirTarefa(index) {
   tarefas.splice(index, 1);
-  atualizarTarefas();
+  carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
 }
 
 // ===== FUNÇÃO: EXCLUIR TAREFA FEITA =====
 function excluirTarefaFeita(index) {
   tarefasFeitas.splice(index, 1);
-  atualizarTarefas();
-}
-
-// ===== FUNÇÃO: LIMPAR CAMPOS =====
-function limparCamposTarefa() {
-  document.getElementById("dataTarefa").value = "";
-  document.getElementById("descricaoTarefa").value = "";
-  document.getElementById("prioridadeTarefa").value = "Alta";
-  document.getElementById("setorTarefa").value = "Setor 01";
+  carregarTarefas();
+  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
 }

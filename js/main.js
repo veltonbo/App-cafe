@@ -7,6 +7,20 @@ let tarefasFeitas = [];
 let financeiro = [];
 let financeiroPago = [];
 
+// ===== FUNÇÃO: INICIALIZAR A ABA CARREGADA =====
+function inicializarAba(arquivo) {
+  switch (arquivo) {
+    case 'aplicacao.html': carregarAplicacoes(); break;
+    case 'tarefas.html': carregarTarefas(); break;
+    case 'financeiro.html': carregarFinanceiro(); break;
+    case 'colheita.html': carregarColheita(); break;
+    case 'relatorio.html': gerarRelatorioCompleto(); break;
+    case 'configuracoes.html': carregarConfiguracoes(); break;
+    default:
+      console.error("Erro: Aba desconhecida:", arquivo);
+  }
+}
+
 // ===== FUNÇÃO: CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");

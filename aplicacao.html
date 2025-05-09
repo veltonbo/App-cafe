@@ -1,8 +1,41 @@
-   <div class="conteudo">
-    <!-- ========== MENU APLICAÇÕES ========== -->
-    <div id="aplicacoes" class="aba">
-      <h2>Aplicações</h2>
-      <input id="dataApp" type="date">
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café - Aplicações</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Scripts -->
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/aplicacao.js"></script>
+</head>
+<body>
+  <!-- Menu Superior -->
+  <div class="menu-superior">
+    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Início</button>
+    <button onclick="window.location.href='tarefas.html'">Tarefas</button>
+    <button onclick="window.location.href='financeiro.html'">Financeiro</button>
+    <button onclick="window.location.href='colheita.html'">Colheita</button>
+    <button onclick="window.location.href='relatorio.html'">Relatório</button>
+    <button onclick="window.location.href='configuracoes.html'">Configurações</button>
+  </div>
+
+  <!-- Conteúdo do Menu Aplicações -->
+  <div class="conteudo">
+    <h2>Aplicações</h2>
+    <div class="formulario-aplicacoes">
+      <input id="dataApp" type="date" placeholder="Data">
       <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
       <datalist id="sugestoesProdutoApp"></datalist>
       <input id="dosagemApp" placeholder="Dosagem">
@@ -16,20 +49,34 @@
         <option>Setor 01</option>
         <option>Setor 02</option>
       </select>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-        <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none; background-color: #888;">
-          Cancelar Edição
-        </button>
-      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
+        <i class="fas fa-save"></i> Salvar Aplicação
+      </button>
+      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;" class="botao-secundario">
+        <i class="fas fa-times"></i> Cancelar Edição
+      </button>
+    </div>
+
+    <!-- Filtros e Pesquisa -->
+    <div class="filtros-aplicacoes">
       <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
         <option value="">Todos os Setores</option>
         <option value="Setor 01">Setor 01</option>
         <option value="Setor 02">Setor 02</option>
       </select>
       <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
-      <div id="listaAplicacoes"></div>
-      <button onclick="exportarAplicacoesCSV()" style="margin-top: 10px;">
-        <i class="fas fa-file-csv"></i> Exportar CSV
-      </button>
     </div>
+
+    <!-- Listagem de Aplicações -->
+    <div id="listaAplicacoes" class="lista-aplicacoes"></div>
+
+    <!-- Botão de Exportação CSV -->
+    <button onclick="exportarAplicacoesCSV()" class="botao-primario" style="margin-top: 10px;">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+  </div>
+</body>
+</html> 

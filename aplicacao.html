@@ -10,15 +10,6 @@
 
   <!-- Estilos -->
   <link rel="stylesheet" href="css/style.css" />
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- Configuração Firebase -->
-  <script src="js/firebase-config.js" defer></script>
-  <!-- Script da aplicação -->
-  <script src="js/aplicacao.js" defer></script>
 </head>
 <body>
 
@@ -62,5 +53,10 @@
   <div id="listaAplicacoes" class="lista-aplicacoes"></div>
 </div>
 
+<!-- Scripts (Carregados ao final do body) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/aplicacao.js"></script>
 </body>
 </html>

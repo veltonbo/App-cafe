@@ -202,7 +202,7 @@ body.claro .item button:hover {
   transform: scale(1.1);
 }
 
-/* ===== ANIMAÇÃO SUAVE PARA FORMULÁRIOS ===== */
+/* ===== FORMULÁRIOS DESLIZANTES ===== */
 .formulario-deslizante {
   max-height: 0;
   opacity: 0;
@@ -211,6 +211,7 @@ body.claro .item button:hover {
 }
 
 .formulario-deslizante.mostrar {
-  max-height: 300px; /* Limite máximo (ajuste conforme necessário) */
+  max-height: 300px; /* Ajuste conforme necessário */
   opacity: 1;
+  display: block;
 }

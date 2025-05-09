@@ -47,25 +47,20 @@ body {
 }
 
 /* ===== FORMULÁRIO DE APLICAÇÕES ===== */
-.formulario-aplicacoes {
+#formularioAplicacao {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
-  background-color: #1e1e1e;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
-  max-width: 400px;
-  width: 100%;
+  margin-top: 20px;
 }
 
-/* Ajuste dos Campos do Formulário */
-.formulario-aplicacoes input,
-.formulario-aplicacoes select,
-.formulario-aplicacoes button {
+/* Campos de Formulário - Mesma Largura */
+#formularioAplicacao input,
+#formularioAplicacao select,
+#formularioAplicacao button {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 12px;
   margin: 8px 0;
   border-radius: 8px;
@@ -73,18 +68,34 @@ body {
   background-color: #2c2c2c;
   color: #fff;
   font-size: 16px;
-  box-sizing: border-box;
+  outline: none;
+  transition: background 0.3s;
 }
 
-/* Ajuste Visual dos Botões */
+/* Botão Salvar e Cancelar - Mesma Largura */
+#formularioAplicacao div {
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+}
+
+#btnSalvarAplicacao,
+#btnCancelarEdicaoApp {
+  flex: 1;
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+  display: block;
+  text-align: center;
+}
+
 #btnSalvarAplicacao {
   background-color: #4caf50;
   color: #fff;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s;
-  width: 100%;
 }
 
 #btnSalvarAplicacao:hover {
@@ -94,12 +105,11 @@ body {
 #btnCancelarEdicaoApp {
   background-color: #f44336;
   color: #fff;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s;
-  display: none;
-  width: 100%;
+  display: none; /* Mantém oculto por padrão */
+}
+
+#btnCancelarEdicaoApp:hover {
+  background-color: #e53935;
 }
 
 /* ===== BOTÃO FLUTUANTE ===== */

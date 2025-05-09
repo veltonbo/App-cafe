@@ -1,4 +1,3 @@
-<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café</title>
@@ -28,7 +27,6 @@
   <script defer src="js/colheita.js"></script>
   <script defer src="js/relatorio.js"></script>
   <script defer src="js/configuracoes.js"></script>
-</head>
 
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];

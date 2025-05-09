@@ -31,6 +31,7 @@ function salvarAplicacao() {
   }
 
   const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
+  const db = firebase.database().ref("aplicacoes");
 
   if (aplicacaoId) {
     db.child(aplicacaoId).set({ data, produto, dosagem, tipo, setor });
@@ -44,6 +45,7 @@ function salvarAplicacao() {
 
 // Função para carregar aplicações
 function carregarAplicacoes() {
+  const db = firebase.database().ref("aplicacoes");
   db.on("value", (snapshot) => {
     const lista = document.getElementById("listaAplicacoes");
     lista.innerHTML = "";
@@ -63,20 +65,7 @@ function carregarAplicacoes() {
   });
 }
 
-// Função para editar aplicação
-function editarAplicacao(id) {
-  db.child(id).once("value", (snapshot) => {
-    const aplicacao = snapshot.val();
-    document.getElementById("dataApp").value = aplicacao.data;
-    document.getElementById("produtoApp").value = aplicacao.produto;
-    document.getElementById("dosagemApp").value = aplicacao.dosagem;
-    document.getElementById("tipoApp").value = aplicacao.tipo;
-    document.getElementById("setorApp").value = aplicacao.setor;
-    document.getElementById("btnSalvarAplicacao").dataset.editing = id;
-  });
-}
-
-// Função para cancelar a edição
+// Função para cancelar o formulário
 function cancelarAplicacao() {
   document.getElementById("formularioAplicacao").style.display = "none";
   document.getElementById("dataApp").value = "";
@@ -85,12 +74,4 @@ function cancelarAplicacao() {
   document.getElementById("tipoApp").value = "Adubo";
   document.getElementById("setorApp").value = "Setor 01";
   document.getElementById("btnSalvarAplicacao").removeAttribute("data-editing");
-}
-
-// Função para excluir aplicação
-function excluirAplicacao(id) {
-  if (confirm("Deseja realmente excluir esta aplicação?")) {
-    db.child(id).remove();
-    carregarAplicacoes();
-  }
 }

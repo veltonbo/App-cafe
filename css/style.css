@@ -56,9 +56,9 @@ body {
 
 .formulario-aplicacoes input,
 .formulario-aplicacoes select,
-#btnSalvarAplicacao {
+.formulario-aplicacoes button {
   width: 100%;
-  max-width: 400px;
+  max-width: 400px; /* Define um tamanho máximo */
   padding: 12px;
   margin: 8px 0;
   border-radius: 8px;
@@ -71,7 +71,6 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== BOTÃO SALVAR APLICAÇÃO ===== */
 #btnSalvarAplicacao {
   background-color: #4caf50;
   color: #fff;
@@ -79,6 +78,10 @@ body {
   border: none;
   cursor: pointer;
   transition: background 0.3s;
+}
+
+#btnSalvarAplicacao:hover {
+  background-color: #45a049;
 }
 
 #btnSalvarAplicacao:hover {

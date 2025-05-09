@@ -25,6 +25,8 @@ body {
   top: 0;
   z-index: 999;
   box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  overflow-x: auto; /* Permite rolar horizontalmente se necessário */
+  white-space: nowrap; /* Impede a quebra dos botões */
 }
 
 .menu-superior button {
@@ -32,18 +34,21 @@ body {
   border: none;
   color: #aaa;
   font-size: 24px;
-  margin: 0 15px;
+  margin: 0 12px;
   cursor: pointer;
   transition: color 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-superior button i {
+  pointer-events: none;
 }
 
 .menu-superior button.active,
 .menu-superior button:hover {
   color: #4caf50;
-}
-
-.menu-superior button i {
-  pointer-events: none;
 }
 
 /* ===== ÍCONE ATIVO (VERDE) ===== */

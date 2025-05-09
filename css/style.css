@@ -14,26 +14,37 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== MENU SUPERIOR ===== */
+/* ===== MENU SUPERIOR EM LINHA ===== */
 .menu-superior {
   display: flex;
   justify-content: center;
+  align-items: center;
   background-color: #1f1f1f;
   padding: 10px 0;
   position: sticky;
   top: 0;
   z-index: 999;
   box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  white-space: nowrap; /* Garante que os ícones não quebrem para outra linha */
+  overflow-x: auto; /* Permite rolagem horizontal se necessário */
 }
 
 .menu-superior button {
   background: none;
   border: none;
   color: #aaa;
-  font-size: 22px;
+  font-size: 24px;
   margin: 0 15px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Impede que os ícones se comprimam */
+}
+
+.menu-superior button i {
+  pointer-events: none;
 }
 
 .menu-superior button.active,
@@ -41,58 +52,14 @@ body {
   color: #4caf50;
 }
 
-.menu-superior button i {
-  pointer-events: none;
+/* ===== ÍCONE ATIVO (VERDE) ===== */
+.menu-icone {
+  color: #aaa; /* Ícone padrão em cinza */
+  transition: color 0.3s;
 }
 
-/* ===== FORMULÁRIOS E CAMPOS ===== */
-input, select, button {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #2c2c2c;
-  color: #fff;
-  font-size: 16px;
-  outline: none;
-  box-sizing: border-box;
-  transition: background 0.3s, border-color 0.3s;
-}
-
-input:focus, select:focus {
-  background-color: #333;
-  border-color: #4caf50;
-}
-
-/* ===== BOTÕES PADRÃO ===== */
-button {
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-.botao-primario {
-  background-color: #4caf50;
-}
-
-.botao-primario:hover {
-  background-color: #388e3c;
-}
-
-.botao-secundario {
-  background-color: #f44336;
-}
-
-.botao-secundario:hover {
-  background-color: #d32f2f;
+.menu-icone.active {
+  color: #4caf50; /* Ícone ativo em verde */
 }
 
 /* ===== BOTÃO FLUTUANTE ===== */

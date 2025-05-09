@@ -16,6 +16,7 @@ function carregarAba(arquivo) {
     .then(html => {
       document.getElementById('conteudoPrincipal').innerHTML = html;
       inicializarAba(arquivo);
+      exibirBotaoFlutuante();
     })
     .catch(error => console.error("Erro ao carregar a aba:", error));
   
@@ -59,13 +60,7 @@ function adicionarAplicacao() {
 
   aplicacoes.push(nova);
   carregarAplicacoes();
-  salvarDadosFirebase("aplicacoes", aplicacoes);
-  limparFormulario("formAplicacao");
-}
-
-function excluirAplicacao(index) {
-  aplicacoes.splice(index, 1);
-  carregarAplicacoes();
+  limparFormulario('formAplicacao');
 }
 
 // ===== FUNÇÃO: CARREGAR TAREFAS =====
@@ -88,14 +83,7 @@ function adicionarTarefa() {
 
   tarefas.push({ descricao });
   carregarTarefas();
-  salvarDadosFirebase("tarefas", { tarefas, tarefasFeitas });
-  limparFormulario("formTarefa");
-}
-
-function marcarFeita(index) {
-  const tarefa = tarefas.splice(index, 1)[0];
-  tarefasFeitas.push(tarefa);
-  carregarTarefas();
+  limparFormulario('formTarefa');
 }
 
 // ===== FUNÇÃO: CARREGAR FINANCEIRO =====
@@ -122,14 +110,7 @@ function adicionarFinanceiro() {
 
   financeiro.push(novo);
   carregarFinanceiro();
-  salvarDadosFirebase("financeiro", { financeiro, financeiroPago });
-  limparFormulario("formFinanceiro");
-}
-
-function pagarFinanceiro(index) {
-  const item = financeiro.splice(index, 1)[0];
-  financeiroPago.push(item);
-  carregarFinanceiro();
+  limparFormulario('formFinanceiro');
 }
 
 // ===== FUNÇÃO: LIMPAR E OCULTAR FORMULÁRIO =====
@@ -137,7 +118,8 @@ function limparFormulario(formId) {
   const form = document.getElementById(formId);
   if (form) {
     form.querySelectorAll("input").forEach(input => input.value = "");
-    form.style.display = "none";
+    form.style.maxHeight = null;
+    form.style.opacity = 0;
   }
 }
 
@@ -146,46 +128,24 @@ function alternarFormulario(id) {
   const form = document.getElementById(id);
   if (!form) return;
 
-  if (form.style.display === "none" || form.style.display === "") {
-    form.style.display = "block";
+  form.style.transition = "max-height 0.4s ease, opacity 0.4s ease";
+  if (form.style.maxHeight) {
+    form.style.maxHeight = null;
+    form.style.opacity = 0;
   } else {
-    form.style.display = "none";
+    form.style.maxHeight = form.scrollHeight + "px";
+    form.style.opacity = 1;
   }
-}
-
-// ===== FUNÇÃO: CONFIGURAÇÕES =====
-function carregarConfiguracoes() {
-  if (localStorage.getItem("tema") === "claro") {
-    document.body.classList.add("claro");
-  }
-}
-
-// ===== FUNÇÃO: CONTROLAR EXIBIÇÃO DO BOTÃO FLUTUANTE =====
-document.addEventListener('DOMContentLoaded', () => {
-  const botoesFlutuantes = document.querySelectorAll(".botao-flutuante");
-  botoesFlutuantes.forEach(botao => botao.classList.add("mostrar"));
-});
-
-// ===== FUNÇÃO: SALVAR DADOS NO FIREBASE (AJUSTE) =====
-function salvarDadosFirebase(caminho, dados) {
-  console.log(`Salvando em ${caminho}`, dados);
 }
 
 // ===== FUNÇÃO: CONTROLAR BOTÃO FLUTUANTE =====
 function controlarFormularioFlutuante() {
   const abaAtual = localStorage.getItem('aba');
   switch (abaAtual) {
-    case 'aplicacao.html':
-      alternarFormulario('formAplicacao');
-      break;
-    case 'tarefas.html':
-      alternarFormulario('formTarefa');
-      break;
-    case 'financeiro.html':
-      alternarFormulario('formFinanceiro');
-      break;
-    default:
-      alert("Este menu não tem formulário flutuante.");
+    case 'aplicacao.html': alternarFormulario('formAplicacao'); break;
+    case 'tarefas.html': alternarFormulario('formTarefa'); break;
+    case 'financeiro.html': alternarFormulario('formFinanceiro'); break;
+    default: alert("Este menu não tem formulário flutuante.");
   }
 }
 
@@ -193,13 +153,7 @@ function controlarFormularioFlutuante() {
 function exibirBotaoFlutuante() {
   const abaAtual = localStorage.getItem('aba');
   const botao = document.getElementById("botaoFlutuante");
-  
-  // Verifica se está em uma das abas que devem ter botão flutuante
-  if (['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual)) {
-    botao.style.display = "flex";
-  } else {
-    botao.style.display = "none";
-  }
+  botao.style.display = ['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual) ? "flex" : "none";
 }
 
 // ===== CHAMAR A EXIBIÇÃO AUTOMÁTICA DO BOTÃO =====
@@ -207,16 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   exibirBotaoFlutuante();
 });
 
-// ===== AJUSTE NA FUNÇÃO DE CARREGAR ABA =====
-function carregarAba(arquivo) {
-  fetch(arquivo)
-    .then(response => response.text())
-    .then(html => {
-      document.getElementById('conteudoPrincipal').innerHTML = html;
-      inicializarAba(arquivo);
-      exibirBotaoFlutuante();
-    })
-    .catch(error => console.error("Erro ao carregar a aba:", error));
-  
-  localStorage.setItem('aba', arquivo);
+// ===== FUNÇÃO: SALVAR DADOS (FAKE) =====
+function salvarDadosFirebase(caminho, dados) {
+  console.log(`Salvando em ${caminho}:`, JSON.stringify(dados));
 }

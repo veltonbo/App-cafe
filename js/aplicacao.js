@@ -129,3 +129,54 @@ function excluirAplicacao(id) {
     carregarAplicacoes();
   }
 }
+
+// Alternar Visibilidade do Formulário
+function alternarFormularioAplicacao() {
+  const formulario = document.getElementById("formularioAplicacao");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}
+
+// Alternar Visibilidade dos Filtros
+function alternarFiltrosAplicacao() {
+  const filtros = document.getElementById("filtrosAplicacoes");
+  filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
+}
+
+// Adicionar Aplicação
+function adicionarAplicacao() {
+  const data = document.getElementById("dataApp").value;
+  const produto = document.getElementById("produtoApp").value;
+  const dosagem = document.getElementById("dosagemApp").value;
+  const tipo = document.getElementById("tipoApp").value;
+  const setor = document.getElementById("setorApp").value;
+
+  if (!data || !produto || !dosagem) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  const db = firebase.database().ref("aplicacoes");
+  const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
+
+  if (aplicacaoId) {
+    db.child(aplicacaoId).update({ data, produto, dosagem, tipo, setor });
+  } else {
+    db.push().set({ data, produto, dosagem, tipo, setor });
+  }
+
+  cancelarEdicaoAplicacao();
+  carregarAplicacoes();
+  alternarFormularioAplicacao();
+}
+
+// Cancelar Edição
+function cancelarEdicaoAplicacao() {
+  limparFormularioAplicacao();
+  document.getElementById("formularioAplicacao").style.display = "none";
+}
+
+// Limpar Formulário
+function limparFormularioAplicacao() {
+  document.getElementById("dataApp").value = "";
+  document.getElementById("produtoApp").value = "";
+  document.getElement

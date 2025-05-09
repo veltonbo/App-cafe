@@ -8,8 +8,8 @@ body {
 }
 
 .conteudo {
-  padding: 20px;
-  max-width: 800px;
+  padding: 15px;
+  max-width: 400px;
   margin: auto;
   animation: fadeIn 0.5s ease;
 }

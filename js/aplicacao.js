@@ -16,31 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnSalvarAplicacao").onclick = adicionarAplicacao;
   document.getElementById("btnCancelarEdicaoApp").onclick = cancelarEdicaoAplicacao;
 
-  function adicionarAplicacao() {
-    const data = document.getElementById("dataApp").value;
-    const produto = document.getElementById("produtoApp").value;
-    const dosagem = document.getElementById("dosagemApp").value;
-    const tipo = document.getElementById("tipoApp").value;
-    const setor = document.getElementById("setorApp").value;
-
-    if (!data || !produto || !dosagem) {
-      alert("Preencha todos os campos.");
-      return;
-    }
-
-    const aplicacaoId = document.getElementById("btnSalvarAplicacao").dataset.editing;
-    if (aplicacaoId) {
-      db.child(aplicacaoId).update({ data, produto, dosagem, tipo, setor });
-      document.getElementById("btnSalvarAplicacao").removeAttribute("data-editing");
-    } else {
-      const novaAplicacao = db.push();
-      novaAplicacao.set({ data, produto, dosagem, tipo, setor });
-    }
-
-    limparFormularioAplicacao();
-    carregarAplicacoes();
-  }
-
   function cancelarEdicaoAplicacao() {
     limparFormularioAplicacao();
   }

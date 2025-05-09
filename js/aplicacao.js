@@ -59,18 +59,11 @@ function carregarAplicacoes() {
     lista.innerHTML = "";
 
     snapshot.forEach((childSnapshot) => {
-      const id = childSnapshot.key;
       const aplicacao = childSnapshot.val();
-      const item = `
-        <div class="item">
-          <div>${aplicacao.data} - ${aplicacao.produto} (${aplicacao.dosagem}) - ${aplicacao.tipo} - ${aplicacao.setor}</div>
-          <div class="acoes">
-            <button onclick="editarAplicacao('${id}')"><i class="fas fa-edit"></i></button>
-            <button onclick="excluirAplicacao('${id}')"><i class="fas fa-trash-alt"></i></button>
-          </div>
-        </div>
-      `;
-      lista.insertAdjacentHTML('beforeend', item);
+      lista.innerHTML += `<div>${aplicacao.data} - ${aplicacao.produto} (${aplicacao.dosagem}) - ${aplicacao.tipo} - ${aplicacao.setor}</div>`;
     });
   });
 }
+
+// Inicializa ao carregar
+document.addEventListener("DOMContentLoaded", carregarAplicacoes);

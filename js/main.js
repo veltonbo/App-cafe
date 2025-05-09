@@ -6,44 +6,21 @@ let tarefas = [];
 let tarefasFeitas = [];
 let financeiro = [];
 let financeiroPago = [];
-let colheitas = [];
-let colheitasPagas = [];
-
-// ===== FUNÇÃO: CARREGAR ABA DE FORMA DINÂMICA =====
-function carregarAba(arquivo) {
-  fetch(arquivo)
-    .then(response => response.text())
-    .then(html => {
-      document.getElementById('conteudoPrincipal').innerHTML = html;
-      inicializarAba(arquivo);
-      exibirBotaoFlutuante();
-    })
-    .catch(error => console.error("Erro ao carregar a aba:", error));
-  
-  localStorage.setItem('aba', arquivo);
-}
-
-// ===== FUNÇÃO: INICIALIZAR A ABA CARREGADA =====
-function inicializarAba(arquivo) {
-  switch (arquivo) {
-    case 'aplicacao.html': carregarAplicacoes(); break;
-    case 'tarefas.html': carregarTarefas(); break;
-    case 'financeiro.html': carregarFinanceiro(); break;
-    case 'colheita.html': carregarColheita(); break;
-    case 'relatorio.html': gerarRelatorioCompleto(); break;
-    case 'configuracoes.html': carregarConfiguracoes(); break;
-  }
-}
 
 // ===== FUNÇÃO: CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   if (!lista) return;
-  lista.innerHTML = aplicacoes.map((app, index) => `
-    <div>${app.data} - ${app.produto} (${app.dosagem}) 
+  lista.innerHTML = "";
+  aplicacoes.forEach((app, index) => {
+    const item = document.createElement("div");
+    item.className = "item aparecendo";
+    item.innerHTML = `
+      ${app.data} - ${app.produto} (${app.dosagem}) 
       <button onclick="excluirAplicacao(${index})">Excluir</button>
-    </div>
-  `).join("");
+    `;
+    lista.appendChild(item);
+  });
 }
 
 function adicionarAplicacao() {
@@ -67,11 +44,16 @@ function adicionarAplicacao() {
 function carregarTarefas() {
   const lista = document.getElementById("listaTarefas");
   if (!lista) return;
-  lista.innerHTML = tarefas.map((tarefa, index) => `
-    <div>${tarefa.descricao} 
+  lista.innerHTML = "";
+  tarefas.forEach((tarefa, index) => {
+    const item = document.createElement("div");
+    item.className = "item aparecendo";
+    item.innerHTML = `
+      ${tarefa.descricao} 
       <button onclick="marcarFeita(${index})">Feita</button>
-    </div>
-  `).join("");
+    `;
+    lista.appendChild(item);
+  });
 }
 
 function adicionarTarefa() {
@@ -90,11 +72,16 @@ function adicionarTarefa() {
 function carregarFinanceiro() {
   const lista = document.getElementById("listaFinanceiro");
   if (!lista) return;
-  lista.innerHTML = financeiro.map((fin, index) => `
-    <div>${fin.descricao} - R$ ${parseFloat(fin.valor).toFixed(2)} 
+  lista.innerHTML = "";
+  financeiro.forEach((fin, index) => {
+    const item = document.createElement("div");
+    item.className = "item aparecendo";
+    item.innerHTML = `
+      ${fin.descricao} - R$ ${parseFloat(fin.valor).toFixed(2)} 
       <button onclick="pagarFinanceiro(${index})">Pagar</button>
-    </div>
-  `).join("");
+    `;
+    lista.appendChild(item);
+  });
 }
 
 function adicionarFinanceiro() {
@@ -126,19 +113,23 @@ function limparFormulario(formId) {
 function alternarFormulario(id) {
   const form = document.getElementById(id);
   if (!form) return;
-
   form.classList.toggle("mostrar");
 }
 
 // ===== FUNÇÃO: CONTROLAR BOTÃO FLUTUANTE =====
 function controlarFormularioFlutuante() {
   const abaAtual = localStorage.getItem('aba');
+  const botao = document.getElementById("botaoFlutuante");
+  
   switch (abaAtual) {
     case 'aplicacao.html': alternarFormulario('formAplicacao'); break;
     case 'tarefas.html': alternarFormulario('formTarefa'); break;
     case 'financeiro.html': alternarFormulario('formFinanceiro'); break;
     default: alert("Este menu não tem formulário flutuante.");
   }
+
+  // Girar o botão ao abrir o formulário
+  botao.classList.toggle("ativo");
 }
 
 // ===== FUNÇÃO: EXIBIR OU OCULTAR BOTÃO FLUTUANTE =====

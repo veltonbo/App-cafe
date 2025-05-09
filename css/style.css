@@ -39,11 +39,7 @@ body {
   font-size: 22px;
   margin: 0 15px;
   cursor: pointer;
-  transition: color 0.3s;
-}
-
-.menu-superior button i {
-  pointer-events: none;
+  transition: 0.3s;
 }
 
 .menu-superior button.active,
@@ -52,7 +48,7 @@ body {
 }
 
 .menu-superior button i {
-  margin-right: 5px;
+  pointer-events: none;
 }
 
 

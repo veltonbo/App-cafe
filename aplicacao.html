@@ -17,29 +17,36 @@
 </head>
 <body>
   <!-- Menu Superior - Apenas Ícones -->
-<div class="menu-superior">
-  <button onclick="window.location.href='index.html'" class="menu-icone"><i class="fas fa-home"></i></button>
-  <button onclick="window.location.href='tarefas.html'" class="menu-icone"><i class="fas fa-tasks"></i></button>
-  <button onclick="window.location.href='financeiro.html'" class="menu-icone"><i class="fas fa-dollar-sign"></i></button>
-  <button onclick="window.location.href='colheita.html'" class="menu-icone"><i class="fas fa-tractor"></i></button>
-  <button onclick="window.location.href='relatorio.html'" class="menu-icone"><i class="fas fa-chart-line"></i></button>
-  <button onclick="window.location.href='configuracao.html'" class="menu-icone"><i class="fas fa-cog"></i></button>
-</div>
+  <div class="menu-superior">
+    <button onclick="window.location.href='index.html'" class="menu-icone"><i class="fas fa-home"></i></button>
+    <button onclick="window.location.href='tarefas.html'" class="menu-icone"><i class="fas fa-tasks"></i></button>
+    <button onclick="window.location.href='financeiro.html'" class="menu-icone"><i class="fas fa-dollar-sign"></i></button>
+    <button onclick="window.location.href='colheita.html'" class="menu-icone"><i class="fas fa-tractor"></i></button>
+    <button onclick="window.location.href='relatorio.html'" class="menu-icone"><i class="fas fa-chart-line"></i></button>
+    <button onclick="window.location.href='configuracao.html'" class="menu-icone"><i class="fas fa-cog"></i></button>
+  </div>
 
+  <!-- Conteúdo do Menu Aplicações -->
   <div class="conteudo">
     <h2>Aplicações</h2>
 
-    <!-- Botão Flutuante para Adicionar Aplicação -->
-    <button class="botao-circular verde" onclick="alternarFormularioAplicacao()" title="Adicionar Aplicação">
-      <i class="fas fa-plus"></i>
-    </button>
+    <!-- Filtros e Pesquisa -->
+    <div class="filtros-aplicacoes">
+      <select id="filtroSetor" onchange="atualizarAplicacoes()">
+        <option value="">Todos os Setores</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
+        <option value="Setor 03">Setor 03</option>
+      </select>
+      <input id="pesquisaAplicacao" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+    </div>
 
     <!-- Formulário Oculto -->
     <div id="formularioAplicacao" style="display: none;">
-      <input id="dataApp" type="date" placeholder="Data">
-      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+      <input id="dataApp" type="date" placeholder="Data" />
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto" />
       <datalist id="sugestoesProdutoApp"></datalist>
-      <input id="dosagemApp" placeholder="Dosagem">
+      <input id="dosagemApp" type="text" placeholder="Dosagem" />
       <select id="tipoApp">
         <option value="Adubo">Adubo</option>
         <option value="Fungicida">Fungicida</option>
@@ -49,36 +56,21 @@
       <select id="setorApp">
         <option value="Setor 01">Setor 01</option>
         <option value="Setor 02">Setor 02</option>
+        <option value="Setor 03">Setor 03</option>
       </select>
-      
       <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
-          <i class="fas fa-save"></i> Salvar Aplicação
-        </button>
-        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="botao-secundario" style="display: none;">
-          <i class="fas fa-times"></i> Cancelar Edição
-        </button>
+        <button onclick="salvarAplicacao()" class="botao-primario"><i class="fas fa-save"></i> Salvar</button>
+        <button onclick="cancelarAplicacao()" class="botao-secundario"><i class="fas fa-times"></i> Cancelar</button>
       </div>
-    </div>
-
-    <!-- Filtros e Pesquisa -->
-    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-      <button class="botao-circular azul" onclick="alternarFiltrosAplicacao()" title="Filtros">
-        <i class="fas fa-filter"></i>
-      </button>
-    </div>
-
-    <div id="filtrosAplicacoes" class="filtros-aplicacoes" style="display: none;">
-      <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
-        <option value="">Todos os Setores</option>
-        <option value="Setor 01">Setor 01</option>
-        <option value="Setor 02">Setor 02</option>
-      </select>
-      <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
     </div>
 
     <!-- Listagem de Aplicações -->
     <div id="listaAplicacoes" class="lista-aplicacoes"></div>
+
+    <!-- Botão Flutuante para Adicionar Aplicação -->
+    <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
+      <i class="fas fa-plus"></i>
+    </button>
   </div>
 </body>
 </html>

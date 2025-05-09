@@ -24,7 +24,7 @@ body {
   display: flex;
   justify-content: center;
   background-color: #1f1f1f;
-  padding: 10px 0;
+  padding: 15px 0;
   position: sticky;
   top: 0;
   z-index: 999;
@@ -47,17 +47,18 @@ body {
 }
 
 /* ===== FORMULÁRIO DE APLICAÇÕES ===== */
-.formulario-aplicacoes input,
-.formulario-aplicacoes select,
-.formulario-aplicacoes button {
-  width: calc(100% - 20px); /* Mesma largura do botão */
-  max-width: 400px; /* Limite máximo para evitar distorções */
-  margin: auto; /* Centraliza */
-  display: block; /* Garante alinhamento */
+.formulario-aplicacoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-input, select, button {
+.formulario-aplicacoes input,
+.formulario-aplicacoes select,
+#btnSalvarAplicacao {
   width: 100%;
+  max-width: 400px;
   padding: 12px;
   margin: 8px 0;
   border-radius: 8px;
@@ -67,11 +68,7 @@ input, select, button {
   font-size: 16px;
   outline: none;
   transition: background 0.3s;
-}
-
-input:focus, select:focus {
-  background-color: #333;
-  border-color: #4caf50;
+  box-sizing: border-box;
 }
 
 /* ===== BOTÃO SALVAR APLICAÇÃO ===== */

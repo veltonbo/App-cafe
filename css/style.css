@@ -48,33 +48,37 @@ body {
 
 /* ===== FORMULÁRIO DE APLICAÇÕES ===== */
 .formulario-aplicacoes {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
-  background-color: #1e1e1e;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  max-width: 400px; /* Define o tamanho máximo do formulário */
+  margin: auto; /* Centraliza o formulário */
 }
 
-input, select, button {
-  width: 100%;
+.formulario-aplicacoes input,
+.formulario-aplicacoes select,
+.formulario-aplicacoes button {
+  width: 100%; /* Garante que todos os campos tenham o mesmo tamanho */
   padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
   background-color: #2c2c2c;
-  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #e0e0e0;
   font-size: 16px;
-  outline: none;
+  transition: background 0.3s;
+  box-sizing: border-box; /* Garante que padding não afete o tamanho */
+}
+
+.formulario-aplicacoes button {
+  background-color: #4caf50;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
   transition: background 0.3s;
 }
 
-input:focus, select:focus {
-  background-color: #333;
-  border-color: #4caf50;
+.formulario-aplicacoes button:hover {
+  background-color: #45a049;
 }
 
 /* ===== BOTÃO SALVAR APLICAÇÃO ===== */

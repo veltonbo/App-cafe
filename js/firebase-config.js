@@ -1,21 +1,24 @@
-// js/firebase-config.js
+<!-- Firebase (Compatível com versões sem módulos) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-// Verifica se o Firebase já foi inicializado
-if (!firebase.apps.length) {
+<script>
+  // Configurações do Firebase
   const firebaseConfig = {
-    apiKey: "AIzaSyD735HjSt1yolt1X7RbsaeZN2oIyxRDcOc",
-    authDomain: "manejo-cafe.firebaseapp.com",
-    databaseURL: "https://manejo-cafe-default-rtdb.firebaseio.com",
-    projectId: "manejo-cafe",
-    storageBucket: "manejo-cafe.appspot.com",
-    messagingSenderId: "808391206364",
-    appId: "1:808391206364:web:1537f2dfcbdc2e4f5fc5c3"
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com", // Corrigido o storageBucket
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
   };
 
   // Inicializa o Firebase
-  firebase.initializeApp(firebaseConfig);
-}
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
-// Inicializa o Database
-const db = firebase.database().ref("aplicacoes");
-console.log("Firebase inicializado corretamente.");
+  const db = firebase.database();
+  console.log("Firebase inicializado corretamente.");
+</script>

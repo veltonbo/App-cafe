@@ -1,14 +1,10 @@
-<!-- aplicacao.html -->
 <h2>Aplicações</h2>
-<div id="formAplicacao" style="display: none;">
+<div id="formAplicacao" class="formulario-deslizante" style="display: none;">
   <input id="dataApp" type="date" placeholder="Data">
   <input id="produtoApp" placeholder="Produto">
   <input id="dosagemApp" placeholder="Dosagem">
-  <button class="botao-flutuante" onclick="alternarFormulario('formAplicacao')">+</button>
+  <button onclick="adicionarAplicacao()">Salvar Aplicação</button>
 </div>
 
 <h4>Lista de Aplicações</h4>
 <div id="listaAplicacoes"></div>
-
-<!-- Botão Flutuante -->
-<button class="botao-flutuante" onclick="alternarFormularioAplicacao()">+</button>

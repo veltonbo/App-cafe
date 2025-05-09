@@ -14,7 +14,7 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== MENU SUPERIOR EM LINHA ===== */
+/* ===== MENU SUPERIOR EM LINHA (APENAS ÍCONES) ===== */
 .menu-superior {
   display: flex;
   justify-content: center;
@@ -25,8 +25,9 @@ body {
   top: 0;
   z-index: 999;
   box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-  white-space: nowrap; /* Garante que os ícones não quebrem para outra linha */
+  white-space: nowrap; /* Garante que não quebre em outra linha */
   overflow-x: auto; /* Permite rolagem horizontal se necessário */
+  gap: 15px; /* Espaço entre os ícones */
 }
 
 .menu-superior button {
@@ -34,7 +35,6 @@ body {
   border: none;
   color: #aaa;
   font-size: 24px;
-  margin: 0 15px;
   cursor: pointer;
   transition: color 0.3s;
   display: flex;
@@ -52,7 +52,7 @@ body {
   color: #4caf50;
 }
 
-/* ===== ÍCONE ATIVO (VERDE) ===== */
+/* ===== ÍCONE PADRÃO (CINZA) E ATIVO (VERDE) ===== */
 .menu-icone {
   color: #aaa; /* Ícone padrão em cinza */
   transition: color 0.3s;
@@ -60,6 +60,11 @@ body {
 
 .menu-icone.active {
   color: #4caf50; /* Ícone ativo em verde */
+}
+
+/* ===== REMOVER TEXTO DOS BOTÕES ===== */
+.menu-superior button span {
+  display: none; /* Oculta o texto do botão */
 }
 
 /* ===== BOTÃO FLUTUANTE ===== */

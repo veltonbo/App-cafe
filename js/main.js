@@ -197,6 +197,7 @@ function exibirBotaoFlutuante() {
   const abaAtual = localStorage.getItem('aba');
   const botao = document.getElementById("botaoFlutuante");
   
+  // Verifica se está em uma das abas que devem ter botão flutuante
   if (['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual)) {
     botao.style.display = "flex";
   } else {

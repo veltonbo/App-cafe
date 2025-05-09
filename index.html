@@ -17,52 +17,17 @@
 <body>
   <!-- Menu Superior -->
   <div class="menu-superior">
-    <button onclick="mostrarAba('inicio')"><i class="fas fa-home"></i></button>
-    <button onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i></button>
-    <button onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i></button>
-    <button onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i></button>
-    <button onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i></button>
-    <button onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i></button>
-    <button onclick="mostrarAba('configuracoes')"><i class="fas fa-cog"></i></button>
+    <button onclick="navegar('aplicacao.html')"><i class="fas fa-flask"></i> Aplicações</button>
+    <button onclick="navegar('tarefas.html')"><i class="fas fa-tasks"></i> Tarefas</button>
+    <button onclick="navegar('financeiro.html')"><i class="fas fa-dollar-sign"></i> Financeiro</button>
+    <button onclick="navegar('colheita.html')"><i class="fas fa-tractor"></i> Colheita</button>
+    <button onclick="navegar('relatorio.html')"><i class="fas fa-chart-line"></i> Relatórios</button>
+    <button onclick="navegar('configuracao.html')"><i class="fas fa-cog"></i> Configurações</button>
   </div>
 
   <div class="conteudo">
-    <!-- Página Inicial -->
-    <div id="inicio" class="aba active">
-      <h2>Bem-vindo ao Manejo Café</h2>
-      <p>Gerencie suas aplicações, tarefas, finanças e muito mais.</p>
-    </div>
-
-    <!-- Abas do Sistema -->
-    <div id="aplicacoes" class="aba">
-      <h2>Aplicações</h2>
-      <p>Gerencie suas aplicações agrícolas.</p>
-    </div>
-
-    <div id="tarefas" class="aba">
-      <h2>Tarefas</h2>
-      <p>Gerencie suas tarefas agrícolas.</p>
-    </div>
-
-    <div id="financeiro" class="aba">
-      <h2>Financeiro</h2>
-      <p>Controle suas finanças e gastos.</p>
-    </div>
-
-    <div id="colheita" class="aba">
-      <h2>Colheita</h2>
-      <p>Gerencie suas colheitas de café.</p>
-    </div>
-
-    <div id="relatorio" class="aba">
-      <h2>Relatórios</h2>
-      <p>Acompanhe o desempenho e os resultados.</p>
-    </div>
-
-    <div id="configuracoes" class="aba">
-      <h2>Configurações</h2>
-      <p>Ajuste as configurações do aplicativo.</p>
-    </div>
+    <h2>Bem-vindo ao Manejo Café</h2>
+    <p>Gerencie suas aplicações, tarefas, finanças, colheitas e relatórios de forma simples e eficiente.</p>
   </div>
 </body>
 </html>

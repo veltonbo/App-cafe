@@ -13,18 +13,17 @@
 
   <!-- Scripts -->
   <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/main.js"></script>
   <script defer src="js/aplicacao.js"></script>
 </head>
 <body>
   <!-- Menu Superior -->
   <div class="menu-superior">
-    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i></button>
-    <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i></button>
-    <button onclick="window.location.href='financeiro.html'"><i class="fas fa-dollar-sign"></i></button>
-    <button onclick="window.location.href='colheita.html'"><i class="fas fa-tractor"></i></button>
-    <button onclick="window.location.href='relatorio.html'"><i class="fas fa-chart-line"></i></button>
-    <button onclick="window.location.href='configuracoes.html'"><i class="fas fa-cog"></i></button>
+    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Início</button>
+    <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i> Tarefas</button>
+    <button onclick="window.location.href='financeiro.html'"><i class="fas fa-dollar-sign"></i> Financeiro</button>
+    <button onclick="window.location.href='colheita.html'"><i class="fas fa-tractor"></i> Colheita</button>
+    <button onclick="window.location.href='relatorio.html'"><i class="fas fa-chart-line"></i> Relatórios</button>
+    <button onclick="window.location.href='configuracao.html'"><i class="fas fa-cog"></i> Configurações</button>
   </div>
 
   <div class="conteudo">
@@ -42,14 +41,14 @@
       <datalist id="sugestoesProdutoApp"></datalist>
       <input id="dosagemApp" placeholder="Dosagem">
       <select id="tipoApp">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
+        <option value="Adubo">Adubo</option>
+        <option value="Fungicida">Fungicida</option>
+        <option value="Inseticida">Inseticida</option>
+        <option value="Herbicida">Herbicida</option>
       </select>
       <select id="setorApp">
-        <option>Setor 01</option>
-        <option>Setor 02</option>
+        <option value="Setor 01">Setor 01</option>
+        <option value="Setor 02">Setor 02</option>
       </select>
       
       <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -62,14 +61,13 @@
       </div>
     </div>
 
-    <!-- Botão para Mostrar Filtros -->
+    <!-- Filtros e Pesquisa -->
     <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
       <button class="botao-circular azul" onclick="alternarFiltrosAplicacao()" title="Filtros">
         <i class="fas fa-filter"></i>
       </button>
     </div>
 
-    <!-- Filtros Ocultos -->
     <div id="filtrosAplicacoes" class="filtros-aplicacoes" style="display: none;">
       <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
         <option value="">Todos os Setores</option>

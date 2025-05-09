@@ -11,40 +11,34 @@ body {
   padding: 20px;
   max-width: 800px;
   margin: auto;
-  box-sizing: border-box;
+  animation: fadeIn 0.5s ease;
 }
 
-/* ===== MENU SUPERIOR EM LINHA (APENAS ÍCONES) ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
   justify-content: center;
-  align-items: center;
   background-color: #1f1f1f;
   padding: 10px 0;
   position: sticky;
   top: 0;
   z-index: 999;
   box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-  white-space: nowrap; /* Garante que não quebre em outra linha */
-  overflow-x: auto; /* Permite rolagem horizontal se necessário */
-  gap: 15px; /* Espaço entre os ícones */
 }
 
 .menu-superior button {
   background: none;
   border: none;
   color: #aaa;
-  font-size: 24px;
+  font-size: 22px;
+  margin: 0 15px;
   cursor: pointer;
   transition: color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0; /* Impede que os ícones se comprimam */
-}
-
-.menu-superior button i {
-  pointer-events: none;
 }
 
 .menu-superior button.active,
@@ -52,22 +46,19 @@ body {
   color: #4caf50;
 }
 
-/* ===== ÍCONE PADRÃO (CINZA) E ATIVO (VERDE) ===== */
-.menu-icone {
-  color: #aaa; /* Ícone padrão em cinza */
-  transition: color 0.3s;
+/* ===== FORMULÁRIO DE APLICAÇÕES ===== */
+.formulario-aplicacoes {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  background-color: #1e1e1e;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
 }
 
-.menu-icone.active {
-  color: #4caf50; /* Ícone ativo em verde */
-}
-
-/* ===== REMOVER TEXTO DOS BOTÕES ===== */
-.menu-superior button span {
-  display: none; /* Oculta o texto do botão */
-}
-
-/* ===== CAMPOS DE FORMULÁRIO ===== */
 input, select, button {
   width: 100%;
   padding: 12px;
@@ -75,20 +66,19 @@ input, select, button {
   border-radius: 8px;
   border: 1px solid #555;
   background-color: #2c2c2c;
-  color: #e0e0e0;
+  color: #fff;
   font-size: 16px;
-  box-sizing: border-box;
   outline: none;
-  transition: background 0.3s, border 0.3s;
+  transition: background 0.3s;
 }
 
 input:focus, select:focus {
-  border: 1px solid #4caf50;
   background-color: #333;
+  border-color: #4caf50;
 }
 
-/* ===== BOTÃO SALVAR ===== */
-button#btnSalvarAplicacao {
+/* ===== BOTÃO SALVAR APLICAÇÃO ===== */
+#btnSalvarAplicacao {
   background-color: #4caf50;
   color: #fff;
   font-weight: bold;
@@ -97,41 +87,68 @@ button#btnSalvarAplicacao {
   transition: background 0.3s;
 }
 
-button#btnSalvarAplicacao:hover {
+#btnSalvarAplicacao:hover {
   background-color: #45a049;
 }
 
-button#btnCancelarEdicaoApp {
+#btnCancelarEdicaoApp {
   background-color: #f44336;
   color: #fff;
-  font-weight: bold;
+  display: none;
+}
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-circular {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
   border: none;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transition: background 0.3s;
 }
 
-button#btnCancelarEdicaoApp:hover {
-  background-color: #e53935;
+.botao-circular:hover {
+  background-color: #45a049;
 }
 
 /* ===== LISTAGEM DE APLICAÇÕES ===== */
-.lista-aplicacoes .item {
-  background-color: #2c2c2c;
+.lista-aplicacoes {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  background-color: #1e1e1e;
   padding: 12px;
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: background 0.3s;
-  margin-top: 10px;
 }
 
-.lista-aplicacoes .item:hover {
-  background-color: #3a3a3a;
+.item:hover {
+  background-color: #2c2c2c;
 }
 
-/* ===== BOTÕES DE AÇÃO (EDITAR/EXCLUIR) ===== */
-.lista-aplicacoes .acoes button {
+.acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.acoes button {
   background: none;
   border: none;
   color: #e0e0e0;
@@ -140,51 +157,11 @@ button#btnCancelarEdicaoApp:hover {
   transition: color 0.3s;
 }
 
-.lista-aplicacoes .acoes button:hover {
-  color: #66bb6a;
+.acoes button:hover {
+  color: #4caf50;
 }
 
-/* ===== FILTROS E PESQUISA ===== */
-.filtros-aplicacoes {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-.campo-pesquisa {
-  flex-grow: 1;
-  padding: 12px;
-  background-color: #2c2c2c;
-  border: 1px solid #555;
-  border-radius: 8px;
-  color: #e0e0e0;
-}
-
-.campo-pesquisa::placeholder {
-  color: #999;
-}
-
-/* ===== BOTÃO FLUTUANTE (ADICIONAR) ===== */
-.botao-circular.verde {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.botao-circular.verde:hover {
-  background-color: #45a049;
+/* ===== ANIMAÇÃO SUAVE ===== */
+.fadeIn {
+  animation: fadeIn 0.5s ease;
 }

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/aplicacao.css" />
 
   <!-- Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -33,13 +33,8 @@
 <div class="conteudo">
   <h2>Aplicações</h2>
 
-  <!-- Botão Flutuante para Adicionar Aplicação -->
-  <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
-    <i class="fas fa-plus"></i>
-  </button>
-
-  <!-- Formulário de Aplicações (Oculto Inicialmente) -->
-  <div id="formularioAplicacao" style="display: none; margin-top: 20px;">
+  <!-- Formulário de Aplicações -->
+  <div id="formularioAplicacao">
     <input id="dataApp" type="date" placeholder="Data" />
     <input id="produtoApp" placeholder="Produto" />
     <input id="dosagemApp" placeholder="Dosagem" />
@@ -53,14 +48,12 @@
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="btnSalvarAplicacao" class="botao-primario"><i class="fas fa-save"></i> Salvar Aplicação</button>
-      <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;"><i class="fas fa-times"></i> Cancelar</button>
-    </div>
+    <button id="btnSalvarAplicacao"><i class="fas fa-save"></i> Salvar Aplicação</button>
+    <button id="btnCancelarEdicaoApp" style="display: none;"><i class="fas fa-times"></i> Cancelar</button>
   </div>
 
   <!-- Filtros e Pesquisa -->
-  <div class="filtros-aplicacoes" style="margin-top: 20px;">
+  <div class="filtros-aplicacoes">
     <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
     <select id="filtroSetorAplicacoes" onchange="carregarAplicacoes()">
       <option value="">Todos os Setores</option>
@@ -70,11 +63,11 @@
   </div>
 
   <!-- Listagem de Aplicações -->
-  <div id="listaAplicacoes" class="lista-aplicacoes" style="margin-top: 20px;"></div>
+  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
 
-  <!-- Botão de Exportação CSV -->
-  <button onclick="exportarAplicacoesCSV()" class="botao-primario" style="margin-top: 15px;">
-    <i class="fas fa-file-csv"></i> Exportar CSV
+  <!-- Botão Flutuante para Adicionar -->
+  <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
+    <i class="fas fa-plus"></i>
   </button>
 </div>
 

@@ -60,7 +60,7 @@ input, button {
   box-sizing: border-box;
 }
 
-/* ===== BOTÕES ===== */
+/* ===== BOTÕES PADRÃO ===== */
 button {
   background-color: #4caf50;
   border: none;
@@ -82,32 +82,78 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.item button {
-  background-color: #f44336;
+.item.aparecendo {
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: fadeInSlide 0.4s forwards;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== BOTÃO FLUTUANTE COM ANIMAÇÃO ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
   border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+  transition: background 0.3s, transform 0.3s, rotate 0.3s;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8) rotate(0deg);
 }
 
-.item button:hover {
-  background-color: #d32f2f;
+.botao-flutuante.mostrar {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) rotate(0deg);
 }
 
-/* ===== RELATÓRIO ===== */
-#relatorioResultado {
-  background: #1e1e1e;
-  padding: 15px;
-  border-radius: 8px;
-  color: #fff;
+.botao-flutuante.ativo {
+  transform: scale(1) rotate(45deg); /* Girar ao abrir o formulário */
 }
 
-/* ===== CONFIGURAÇÕES ===== */
-#arquivoBackup {
-  margin-top: 10px;
+.botao-flutuante:hover {
+  background-color: #45a049;
+}
+
+/* ===== FORMULÁRIOS DESLIZANTES COM SUAVIDADE ===== */
+.formulario-deslizante {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.formulario-deslizante.mostrar {
+  max-height: 400px;
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 /* ===== MODO CLARO ===== */
@@ -144,107 +190,4 @@ body.claro .menu-superior button {
 body.claro .menu-superior button.active,
 body.claro .menu-superior button:hover {
   color: #4caf50;
-}
-
-body.claro .item button {
-  background-color: #f44336;
-  color: #fff;
-}
-
-body.claro .item button:hover {
-  background-color: #d32f2f;
-}
-
-/* ===== MENSAGEM DE BEM-VINDO ===== */
-.conteudo h2 {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.conteudo p {
-  text-align: center;
-  font-size: 18px;
-  color: #bbb;
-}
-
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.3s;
-  opacity: 0;
-  visibility: hidden;
-  transform: scale(0.8);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.botao-flutuante.mostrar {
-  opacity: 1;
-  visibility: visible;
-  transform: scale(1);
-}
-
-.botao-flutuante:hover {
-  background-color: #45a049;
-  transform: scale(1.1);
-}
-
-/* ===== FORMULÁRIOS DESLIZANTES ===== */
-.formulario-deslizante {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.4s ease;
-}
-
-.formulario-deslizante.mostrar {
-  max-height: 300px; /* Ajuste conforme necessário */
-  opacity: 1;
-  display: block;
-}
-
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.3s;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.botao-flutuante.mostrar {
-  opacity: 1;
-  visibility: visible;
-}
-
-.botao-flutuante:hover {
-  background-color: #45a049;
-  transform: scale(1.1);
 }

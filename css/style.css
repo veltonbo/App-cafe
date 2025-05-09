@@ -20,14 +20,6 @@ body {
   to { opacity: 1; }
 }
 
-/* ===== ABAS ===== */
-.aba {
-  display: none;
-}
-.aba.active {
-  display: block;
-}
-
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
@@ -47,7 +39,11 @@ body {
   font-size: 22px;
   margin: 0 15px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: color 0.3s;
+}
+
+.menu-superior button i {
+  pointer-events: none;
 }
 
 .menu-superior button.active,
@@ -56,9 +52,8 @@ body {
 }
 
 .menu-superior button i {
-  pointer-events: none;
+  margin-right: 5px;
 }
-
 
 
 /* ===== CAMPOS DE FORMULÁRIO ===== */
@@ -97,7 +92,6 @@ input, select, button {
   75% { transform: translateX(-5px); }
   100% { transform: translateX(0); }
 }
-
 
 
 /* ===== BOTÕES PADRÃO ===== */
@@ -166,7 +160,6 @@ button:hover {
 }
 
 
-
 /* ===== LISTA DE ITENS ===== */
 .item {
   position: relative;
@@ -197,7 +190,6 @@ button:hover {
   display: flex;
   gap: 10px;
 }
-
 
 
 /* ===== MODAIS ===== */

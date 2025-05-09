@@ -1,6 +1,6 @@
 // js/firebase-config.js
 
-// Verifica se o Firebase já foi inicializado para evitar erros
+// Verifica se o Firebase já foi inicializado
 if (!firebase.apps.length) {
   const firebaseConfig = {
     apiKey: "AIzaSyD735HjSt1yolt1X7RbsaeZN2oIyxRDcOc",
@@ -12,8 +12,10 @@ if (!firebase.apps.length) {
     appId: "1:808391206364:web:1537f2dfcbdc2e4f5fc5c3"
   };
 
+  // Inicializa o Firebase
   firebase.initializeApp(firebaseConfig);
 }
 
-// Garante que o database seja inicializado corretamente
+// Inicializa o Database
 const db = firebase.database().ref("aplicacoes");
+console.log("Firebase inicializado corretamente.");

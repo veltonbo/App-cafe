@@ -173,3 +173,52 @@ document.addEventListener('DOMContentLoaded', () => {
 function salvarDadosFirebase(caminho, dados) {
   console.log(`Salvando em ${caminho}`, dados);
 }
+
+// ===== FUNÇÃO: CONTROLAR BOTÃO FLUTUANTE =====
+function controlarFormularioFlutuante() {
+  const abaAtual = localStorage.getItem('aba');
+  switch (abaAtual) {
+    case 'aplicacao.html':
+      alternarFormulario('formAplicacao');
+      break;
+    case 'tarefas.html':
+      alternarFormulario('formTarefa');
+      break;
+    case 'financeiro.html':
+      alternarFormulario('formFinanceiro');
+      break;
+    default:
+      alert("Este menu não tem formulário flutuante.");
+  }
+}
+
+// ===== FUNÇÃO: EXIBIR OU OCULTAR BOTÃO FLUTUANTE =====
+function exibirBotaoFlutuante() {
+  const abaAtual = localStorage.getItem('aba');
+  const botao = document.getElementById("botaoFlutuante");
+  
+  if (['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual)) {
+    botao.style.display = "flex";
+  } else {
+    botao.style.display = "none";
+  }
+}
+
+// ===== CHAMAR A EXIBIÇÃO AUTOMÁTICA DO BOTÃO =====
+document.addEventListener('DOMContentLoaded', () => {
+  exibirBotaoFlutuante();
+});
+
+// ===== AJUSTE NA FUNÇÃO DE CARREGAR ABA =====
+function carregarAba(arquivo) {
+  fetch(arquivo)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('conteudoPrincipal').innerHTML = html;
+      inicializarAba(arquivo);
+      exibirBotaoFlutuante();
+    })
+    .catch(error => console.error("Erro ao carregar a aba:", error));
+  
+  localStorage.setItem('aba', arquivo);
+}

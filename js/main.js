@@ -146,13 +146,10 @@ function alternarFormulario(id) {
   const form = document.getElementById(id);
   if (!form) return;
 
-  form.style.transition = "max-height 0.4s ease, opacity 0.4s";
-  if (form.style.maxHeight) {
-    form.style.maxHeight = null;
-    form.style.opacity = 0;
+  if (form.style.display === "none" || form.style.display === "") {
+    form.style.display = "block";
   } else {
-    form.style.maxHeight = form.scrollHeight + "px";
-    form.style.opacity = 1;
+    form.style.display = "none";
   }
 }
 

@@ -1,3 +1,35 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejo Café</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Scripts -->
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/aplicacao.js"></script>
+  <script defer src="js/tarefas.js"></script>
+  <script defer src="js/financeiro.js"></script>
+  <script defer src="js/colheita.js"></script>
+  <script defer src="js/relatorio.js"></script>
+  <script defer src="js/configuracoes.js"></script>
+</head>
+
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;

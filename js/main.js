@@ -165,3 +165,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const abaInicial = localStorage.getItem('aba') || 'aplicacao.html';
   carregarAba(abaInicial);
 });
+
+// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE APLICAÇÃO =====
+function alternarFormularioAplicacao() {
+  const form = document.getElementById("formAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+// ===== FUNÇÃO: ALTERNAR FORMULÁRIO DE TAREFA =====
+function alternarFormularioTarefa() {
+  const form = document.getElementById("formTarefa");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+// ===== FUNÇÃO: ALTERNAR FORMULÁRIO FINANCEIRO =====
+function alternarFormularioFinanceiro() {
+  const form = document.getElementById("formFinanceiro");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}

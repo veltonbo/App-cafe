@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manejo Café - Aplicações</title>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
 
@@ -13,32 +17,32 @@
 
   <!-- Scripts -->
   <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/main.js"></script>
   <script defer src="js/aplicacao.js"></script>
 </head>
 <body>
   <!-- Menu Superior -->
   <div class="menu-superior">
-    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i></button>
-    <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i></button>
-    <button onclick="window.location.href='financeiro.html'"><i class="fas fa-dollar-sign"></i></button>
-    <button onclick="window.location.href='colheita.html'"><i class="fas fa-tractor"></i></button>
-    <button onclick="window.location.href='relatorio.html'"><i class="fas fa-chart-line"></i></button>
-    <button onclick="window.location.href='configuracoes.html'"><i class="fas fa-cog"></i></button>
+    <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Início</button>
+    <button onclick="window.location.href='tarefas.html'">Tarefas</button>
+    <button onclick="window.location.href='financeiro.html'">Financeiro</button>
+    <button onclick="window.location.href='colheita.html'">Colheita</button>
+    <button onclick="window.location.href='relatorio.html'">Relatório</button>
+    <button onclick="window.location.href='configuracoes.html'">Configurações</button>
   </div>
 
   <div class="conteudo">
     <h2>Aplicações</h2>
 
     <!-- Botão Flutuante para Adicionar Aplicação -->
-    <button class="botao-circular verde" onclick="alternarFormularioAplicacao()" style="position: fixed; bottom: 20px; right: 20px;">
+    <button class="botao-flutuante" onclick="alternarFormularioAplicacao()">
       <i class="fas fa-plus"></i>
     </button>
 
     <!-- Formulário Oculto -->
     <div id="formularioAplicacao" style="display: none;">
       <input id="dataApp" type="date" placeholder="Data">
-      <input id="produtoApp" placeholder="Produto">
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+      <datalist id="sugestoesProdutoApp"></datalist>
       <input id="dosagemApp" placeholder="Dosagem">
       <select id="tipoApp">
         <option>Adubo</option>
@@ -50,9 +54,14 @@
         <option>Setor 01</option>
         <option>Setor 02</option>
       </select>
+      
       <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button id="btnSalvarAplicacao" class="botao-primario" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-        <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;" onclick="cancelarEdicaoAplicacao()">Cancelar Edição</button>
+        <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()" class="botao-primario">
+          <i class="fas fa-save"></i> Salvar Aplicação
+        </button>
+        <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="botao-secundario" style="display: none;">
+          <i class="fas fa-times"></i> Cancelar Edição
+        </button>
       </div>
     </div>
 

@@ -118,8 +118,7 @@ function limparFormulario(formId) {
   const form = document.getElementById(formId);
   if (form) {
     form.querySelectorAll("input").forEach(input => input.value = "");
-    form.style.maxHeight = null;
-    form.style.opacity = 0;
+    form.classList.remove("mostrar");
   }
 }
 
@@ -128,14 +127,7 @@ function alternarFormulario(id) {
   const form = document.getElementById(id);
   if (!form) return;
 
-  form.style.transition = "max-height 0.4s ease, opacity 0.4s ease";
-  if (form.style.maxHeight) {
-    form.style.maxHeight = null;
-    form.style.opacity = 0;
-  } else {
-    form.style.maxHeight = form.scrollHeight + "px";
-    form.style.opacity = 1;
-  }
+  form.classList.toggle("mostrar");
 }
 
 // ===== FUNÇÃO: CONTROLAR BOTÃO FLUTUANTE =====
@@ -153,32 +145,13 @@ function controlarFormularioFlutuante() {
 function exibirBotaoFlutuante() {
   const abaAtual = localStorage.getItem('aba');
   const botao = document.getElementById("botaoFlutuante");
-  
-  if (['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual)) {
-    botao.classList.add("mostrar");
-  } else {
-    botao.classList.remove("mostrar");
-  }
+  botao.style.display = ['aplicacao.html', 'tarefas.html', 'financeiro.html'].includes(abaAtual) ? "flex" : "none";
 }
 
 // ===== CHAMAR A EXIBIÇÃO AUTOMÁTICA DO BOTÃO =====
 document.addEventListener('DOMContentLoaded', () => {
   exibirBotaoFlutuante();
 });
-
-// ===== AJUSTE NA FUNÇÃO DE CARREGAR ABA =====
-function carregarAba(arquivo) {
-  fetch(arquivo)
-    .then(response => response.text())
-    .then(html => {
-      document.getElementById('conteudoPrincipal').innerHTML = html;
-      inicializarAba(arquivo);
-      exibirBotaoFlutuante();
-    })
-    .catch(error => console.error("Erro ao carregar a aba:", error));
-  
-  localStorage.setItem('aba', arquivo);
-}
 
 // ===== FUNÇÃO: SALVAR DADOS (FAKE) =====
 function salvarDadosFirebase(caminho, dados) {

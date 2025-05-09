@@ -3,13 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café – Aplicações</title>
+  <title>Manejo Café - Aplicações</title>
 
   <!-- FontAwesome para Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-
+  
   <!-- Estilos -->
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/aplicacao.js"></script>
 </head>
 <body>
 
@@ -26,10 +32,17 @@
 <!-- Conteúdo do Menu Aplicações -->
 <div class="conteudo">
   <h2>Aplicações</h2>
-  <div id="formularioAplicacao" style="display: none;">
-    <input type="date" id="dataApp" placeholder="Data">
-    <input type="text" id="produtoApp" placeholder="Produto">
-    <input type="text" id="dosagemApp" placeholder="Dosagem">
+
+  <!-- Botão Flutuante para Adicionar Aplicação -->
+  <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
+    <i class="fas fa-plus"></i>
+  </button>
+
+  <!-- Formulário de Aplicações (Oculto Inicialmente) -->
+  <div id="formularioAplicacao" style="display: none; margin-top: 20px;">
+    <input id="dataApp" type="date" placeholder="Data" />
+    <input id="produtoApp" placeholder="Produto" />
+    <input id="dosagemApp" placeholder="Dosagem" />
     <select id="tipoApp">
       <option value="Adubo">Adubo</option>
       <option value="Fungicida">Fungicida</option>
@@ -40,24 +53,30 @@
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
-    <button id="btnSalvarAplicacao" onclick="salvarAplicacao()">Salvar</button>
-    <button id="btnCancelarEdicao" onclick="cancelarAplicacao()" style="display: none;">Cancelar</button>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button id="btnSalvarAplicacao" class="botao-primario"><i class="fas fa-save"></i> Salvar Aplicação</button>
+      <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;"><i class="fas fa-times"></i> Cancelar</button>
+    </div>
   </div>
 
-  <!-- Botão Flutuante para Adicionar Aplicação -->
-  <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
-    <i class="fas fa-plus"></i>
-  </button>
+  <!-- Filtros e Pesquisa -->
+  <div class="filtros-aplicacoes" style="margin-top: 20px;">
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
+    <select id="filtroSetorAplicacoes" onchange="carregarAplicacoes()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+  </div>
 
   <!-- Listagem de Aplicações -->
-  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
+  <div id="listaAplicacoes" class="lista-aplicacoes" style="margin-top: 20px;"></div>
+
+  <!-- Botão de Exportação CSV -->
+  <button onclick="exportarAplicacoesCSV()" class="botao-primario" style="margin-top: 15px;">
+    <i class="fas fa-file-csv"></i> Exportar CSV
+  </button>
 </div>
 
-<!-- Scripts carregados ao final do body -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="js/firebase-config.js"></script>
-<script src="js/aplicacao.js"></script>
-  
 </body>
 </html>

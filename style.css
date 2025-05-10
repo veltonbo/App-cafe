@@ -45,10 +45,6 @@ body {
   color: #4caf50;
 }
 
-.menu-superior button.active {
-  color: #4caf50;
-}
-
 /* ===== FORMULÁRIOS PADRONIZADOS ===== */
 input, select, button {
   width: 100%;
@@ -59,7 +55,6 @@ input, select, button {
   background-color: #2c2c2c;
   color: #fff;
   font-size: 16px;
-  box-sizing: border-box;
   transition: background 0.3s;
 }
 
@@ -80,37 +75,12 @@ button:hover {
   background-color: #45a049;
 }
 
-/* ===== BOTÕES PADRÃO ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s;
-  z-index: 9999;
-}
-
-.botao-flutuante:hover {
-  transform: scale(1.1);
-}
-
 /* ===== LISTAGEM DE ITENS ===== */
 .lista {
   margin-top: 15px;
 }
 
-.lista div {
+.lista .item {
   background-color: #2c2c2c;
   padding: 10px;
   margin-bottom: 8px;
@@ -120,10 +90,9 @@ button:hover {
   align-items: center;
 }
 
-.lista div span {
+.lista .item span {
   flex-grow: 1;
   word-break: break-word;
-  margin-right: 10px;
   color: #fff;
 }
 
@@ -145,37 +114,30 @@ button:hover {
   transition: background 0.3s;
 }
 
-/* ===== BOTÕES DE CORES PADRÃO ===== */
-.botao-verde {
+/* ===== CORES DOS BOTÕES ===== */
+.botao-circular {
   background-color: #4caf50;
+  color: #fff;
 }
 
-.botao-verde:hover {
-  background-color: #388e3c;
+.botao-circular:hover {
+  background-color: #45a049;
 }
 
-.botao-azul {
-  background-color: #2196f3;
-}
-
-.botao-azul:hover {
-  background-color: #1976d2;
-}
-
-.botao-vermelho {
+.botao-circular.vermelho {
   background-color: #f44336;
 }
 
-.botao-vermelho:hover {
+.botao-circular.vermelho:hover {
   background-color: #d32f2f;
 }
 
-.botao-laranja {
-  background-color: #ff9800;
+.botao-circular.azul {
+  background-color: #2196f3;
 }
 
-.botao-laranja:hover {
-  background-color: #f57c00;
+.botao-circular.azul:hover {
+  background-color: #1976d2;
 }
 
 /* ===== RELATÓRIO ===== */
@@ -215,31 +177,30 @@ button:hover {
   background-color: #ffffff;
 }
 
-.claro input, .claro select, .claro button {
+.claro input, 
+.claro select, 
+.claro button {
   background-color: #ffffff;
   color: #000;
   border: 1px solid #ccc;
 }
 
-.claro .lista div {
+.claro .lista .item {
   background-color: #f0f0f0;
   color: #222;
 }
 
-.claro .botao-verde {
+.claro .botao-circular {
   background-color: #4caf50;
+  color: #fff;
 }
 
-.claro .botao-azul {
-  background-color: #2196f3;
-}
-
-.claro .botao-vermelho {
+.claro .botao-circular.vermelho {
   background-color: #f44336;
 }
 
-.claro .botao-laranja {
-  background-color: #ff9800;
+.claro .botao-circular.azul {
+  background-color: #2196f3;
 }
 
 .claro #conteudoRelatorio {

@@ -6,41 +6,44 @@ document.addEventListener("DOMContentLoaded", () => {
     initColheita();
     initFinanceiro();
     initTarefas();
-    mostrarMenu('aplicacao'); // Exibe o menu inicial (Aplicações)
+    mostrarMenu('aplicacao'); // Menu inicial padrão
+
+    // Configurar o tema inicial
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        document.getElementById("theme-toggle").textContent = "☀️ Modo Claro";
+    } else {
+        document.getElementById("theme-toggle").textContent = "🌙 Modo Escuro";
+    }
 });
-
-// Função para trocar entre os menus
-function mostrarMenu(menu) {
-    document.querySelectorAll(".menu").forEach(el => el.classList.remove("active"));
-    document.getElementById(menu).classList.add("active");
-}
-
-function mostrarMenu(menu) {
-    document.querySelectorAll(".menu").forEach(el => el.style.display = "none");
-    document.getElementById(menu).style.display = "block";
-}
 
 // Alternar Tema (Claro / Escuro)
 function toggleTheme() {
     document.body.classList.toggle("dark");
     const themeToggle = document.getElementById("theme-toggle");
+    
     if (document.body.classList.contains("dark")) {
         themeToggle.textContent = "☀️ Modo Claro";
+        localStorage.setItem("theme", "dark");
     } else {
         themeToggle.textContent = "🌙 Modo Escuro";
+        localStorage.setItem("theme", "light");
     }
 }
 
-// Iniciar com o tema salvo (se houver)
-document.addEventListener("DOMContentLoaded", () => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-        document.getElementById("theme-toggle").textContent = "☀️ Modo Claro";
-    }
-
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        document.body.classList.toggle("dark");
-        localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+// Função para trocar entre os menus com animação suave
+function mostrarMenu(menu) {
+    // Oculta todos os menus com transição
+    document.querySelectorAll(".menu").forEach(el => {
+        el.classList.remove("active");
     });
-});
+
+    // Mostra o menu desejado com efeito suave
+    const targetMenu = document.getElementById(menu);
+    if (targetMenu) {
+        setTimeout(() => {
+            targetMenu.classList.add("active");
+        }, 100);
+    }
+}

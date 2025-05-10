@@ -41,10 +41,11 @@ function adicionarAplicacao() {
 
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
-  indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
+  indiceEdicaoAplicacao = null;
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+  alternarFormularioAplicacao();
 }
 
 // ===== LIMPAR CAMPOS =====

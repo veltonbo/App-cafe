@@ -4,11 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Sistema Manejo Café Iniciado");
     initAplicacao();
     initColheita();
-    initConfiguracoes();
     initFinanceiro();
-    initRelatorio();
     initTarefas();
+    mostrarMenu('aplicacao'); // Exibe o menu inicial (Aplicações)
 });
+
+// Função para trocar entre os menus
+function mostrarMenu(menu) {
+    document.querySelectorAll(".menu").forEach(el => el.classList.remove("active"));
+    document.getElementById(menu).classList.add("active");
+}
 
 function mostrarMenu(menu) {
     document.querySelectorAll(".menu").forEach(el => el.style.display = "none");

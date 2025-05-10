@@ -7,27 +7,33 @@
 
   <!-- FontAwesome para Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-
+  
   <!-- Estilos -->
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script defer src="js/firebase-config.js"></script>
   <script defer src="js/main.js"></script>
 </head>
 <body>
-  <!-- Menu Superior - Apenas Ícones -->
+
+<!-- Menu Superior - Apenas Ícones -->
 <div class="menu-superior">
-  <button id="btn-aplicacoes" onclick="navegar('aplicacao.html')" class="menu-icone"><i class="fas fa-flask"></i></button>
-  <button id="btn-tarefas" onclick="navegar('tarefas.html')" class="menu-icone"><i class="fas fa-tasks"></i></button>
-  <button id="btn-financeiro" onclick="navegar('financeiro.html')" class="menu-icone"><i class="fas fa-dollar-sign"></i></button>
-  <button id="btn-colheita" onclick="navegar('colheita.html')" class="menu-icone"><i class="fas fa-tractor"></i></button>
-  <button id="btn-relatorio" onclick="navegar('relatorio.html')" class="menu-icone"><i class="fas fa-chart-line"></i></button>
-  <button id="btn-configuracoes" onclick="navegar('configuracao.html')" class="menu-icone"><i class="fas fa-cog"></i></button>
+  <button onclick="window.location.href='aplicacao.html'"><i class="fas fa-flask"></i></button>
+  <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i></button>
+  <button onclick="window.location.href='financeiro.html'"><i class="fas fa-dollar-sign"></i></button>
+  <button onclick="window.location.href='colheita.html'"><i class="fas fa-tractor"></i></button>
+  <button onclick="window.location.href='relatorio.html'"><i class="fas fa-chart-line"></i></button>
+  <button onclick="window.location.href='configuracoes.html'"><i class="fas fa-cog"></i></button>
 </div>
 
-  <div class="conteudo">
-    <h2>Bem-vindo ao Manejo Café</h2>
-    <p>Gerencie suas aplicações, tarefas, finanças, colheitas e relatórios de forma simples e eficiente.</p>
-  </div>
+<!-- Conteúdo Principal -->
+<div class="conteudo">
+  <h2>Bem-vindo ao Manejo Café</h2>
+  <p>Escolha uma das opções no menu acima para gerenciar suas operações.</p>
+</div>
+
 </body>
 </html>

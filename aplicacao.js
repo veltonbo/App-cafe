@@ -162,3 +162,9 @@ function exportarAplicacoesCSV() {
   link.download = `aplicacoes_${new Date().toISOString().split("T")[0]}.csv`;
   link.click();
 }
+
+// ===== BOTÃO FLUTUANTE (Alternar Formulário) =====
+function alternarFormularioAplicacao() {
+  const form = document.getElementById("formularioAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}

@@ -33,8 +33,7 @@
 <div class="conteudo">
   <h2>Aplicações</h2>
 
-  <!-- Formulário de Aplicações -->
-  <div id="formularioAplicacao" class="formulario-aplicacoes">
+  <div class="formulario-aplicacoes">
     <input id="dataApp" type="date" placeholder="Data da Aplicação">
     <input id="produtoApp" placeholder="Produto">
     <input id="dosagemApp" placeholder="Dosagem">
@@ -48,15 +47,18 @@
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
-    <button id="btnSalvarAplicacao" onclick="salvarAplicacao()">
+    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
       <i class="fas fa-save"></i> Salvar Aplicação
+    </button>
+    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
+      <i class="fas fa-times"></i> Cancelar
     </button>
   </div>
 
   <!-- Filtros e Pesquisa -->
   <div class="filtros-aplicacoes" style="margin-top: 20px;">
-    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar...">
-    <select id="filtroSetorAplicacoes">
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar Produto..." oninput="atualizarAplicacoes()">
+    <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
       <option value="">Todos os Setores</option>
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
@@ -65,7 +67,7 @@
 
   <!-- Lista de Aplicações -->
   <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-</div>
 
+</div>
 </body>
 </html>

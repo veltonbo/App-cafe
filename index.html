@@ -39,7 +39,7 @@
         <option>Herbicida</option>
       </select>
       <button onclick="adicionarAplicacao()">Adicionar Aplicação</button>
-      <div id="listaAplicacoes"></div>
+      <div id="listaAplicacoes" class="lista"></div>
     </div>
 
     <!-- ========== MENU TAREFAS ========== -->
@@ -53,7 +53,7 @@
         <option>Baixa</option>
       </select>
       <button onclick="adicionarTarefa()">Adicionar Tarefa</button>
-      <div id="listaTarefas"></div>
+      <div id="listaTarefas" class="lista"></div>
     </div>
 
     <!-- ========== MENU FINANCEIRO ========== -->
@@ -63,7 +63,7 @@
       <input id="produtoFin" placeholder="Produto">
       <input id="valorFin" type="number" placeholder="Valor (R$)">
       <button onclick="adicionarFinanceiro()">Adicionar Gasto</button>
-      <div id="listaFinanceiro"></div>
+      <div id="listaFinanceiro" class="lista"></div>
     </div>
 
     <!-- ========== MENU COLHEITA ========== -->
@@ -73,12 +73,13 @@
       <input id="colhedor" placeholder="Nome do Colhedor">
       <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
       <button onclick="adicionarColheita()">Adicionar Colheita</button>
-      <div id="listaColheitas"></div>
+      <div id="listaColheitas" class="lista"></div>
     </div>
 
     <!-- ========== MENU RELATÓRIO ========== -->
     <div id="relatorio" class="aba" style="display:none;">
       <h2>Relatório Geral</h2>
+      <button onclick="gerarRelatorio()">Gerar Relatório</button>
       <div id="conteudoRelatorio">Nenhum relatório gerado.</div>
     </div>
 

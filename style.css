@@ -623,6 +623,7 @@ label[for="eAplicacaoCheckbox"] {
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s, background-color 0.3s;
+  z-index: 9999; /* Garante que o botão fique acima de outros elementos */
 }
 
 .botao-flutuante:hover {

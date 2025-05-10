@@ -1,20 +1,39 @@
-// js/main.js
+function mostrarAba(abaId) {
+  document.querySelectorAll('.aba').forEach(aba => {
+    aba.style.display = 'none';
+  });
 
-document.addEventListener("DOMContentLoaded", () => {
-    mostrarMenu('aplicacao');
-});
+  const abaSelecionada = document.getElementById(abaId);
+  if (abaSelecionada) abaSelecionada.style.display = 'block';
 
-function mostrarMenu(menu) {
-    document.querySelectorAll(".menu").forEach(el => el.style.display = "none");
-    document.getElementById(menu).style.display = "block";
+  document.querySelectorAll('.menu-superior button').forEach(btn => {
+    btn.classList.remove('active');
+  });
 
-    document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
-    document.querySelector(`nav button[onclick="mostrarMenu('${menu}')"]`).classList.add("active");
+  const btnId = 'btn-' + abaId;
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+
+  localStorage.setItem('aba', abaId);
 }
 
-// Alternar Tema (Claro/Escuro)
-function toggleTheme() {
-    document.body.classList.toggle("dark");
-    const themeToggle = document.getElementById("theme-toggle");
-    themeToggle.textContent = document.body.classList.contains("dark") ? "☀️ Modo Claro" : "🌙 Modo Escuro";
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
+  mostrarAba(abaInicial);
+
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
+  }
+
+  // Chama as funções de carregamento se estiverem disponíveis
+  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+  if (typeof carregarTarefas === "function") carregarTarefas();
+  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+  if (typeof carregarColheita === "function") carregarColheita();
+  if (typeof carregarValorLata === "function") carregarValorLata();
+  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
 }
+
+// Executa ao carregar a página
+window.addEventListener('DOMContentLoaded', inicializarApp);

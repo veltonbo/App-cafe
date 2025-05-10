@@ -1,5 +1,4 @@
-// js/firebase-config.js
-// Firebase Configuração (substitua com suas credenciais)
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
@@ -10,9 +9,9 @@ const firebaseConfig = {
   appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// Inicializa o Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}

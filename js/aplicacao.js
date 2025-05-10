@@ -1,110 +1,112 @@
+// ===== CONFIGURAÇÃO FIREBASE =====
+const db = firebase.database();
+
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
-// ===== INICIALIZAR APLICAÇÕES =====
-document.addEventListener("DOMContentLoaded", function() {
+// ===== INICIALIZAÇÃO =====
+document.addEventListener("DOMContentLoaded", () => {
   carregarAplicacoes();
 });
 
-// ===== CARREGAR APLICAÇÕES =====
+// ===== FUNÇÃO: CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  db.ref("Aplicacoes").on("value", (snapshot) => {
-    aplicacoes = snapshot.exists() ? snapshot.val() : [];
+  db.ref('Aplicacoes').on('value', snapshot => {
+    aplicacoes = snapshot.exists() ? Object.values(snapshot.val()) : [];
     atualizarAplicacoes();
   });
 }
 
-// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
+// ===== FUNÇÃO: ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
-  const nova = {
+  const novaAplicacao = {
     data: document.getElementById("dataApp").value,
     produto: document.getElementById("produtoApp").value.trim(),
     dosagem: document.getElementById("dosagemApp").value.trim(),
     tipo: document.getElementById("tipoApp").value,
-    setor: document.getElementById("setorApp").value,
+    setor: document.getElementById("setorApp").value
   };
 
-  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
+  if (!novaAplicacao.data || !novaAplicacao.produto || !novaAplicacao.dosagem) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
   if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
+    aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
     indiceEdicaoAplicacao = null;
     document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
-    aplicacoes.push(nova);
+    aplicacoes.push(novaAplicacao);
   }
 
-  db.ref("Aplicacoes").set(aplicacoes);
-  atualizarAplicacoes();
+  db.ref('Aplicacoes').set(aplicacoes);
   limparCamposAplicacao();
-  document.getElementById("formularioAplicacao").style.display = "none";
+  atualizarAplicacoes();
 }
 
-// ===== CANCELAR EDIÇÃO =====
+// ===== FUNÇÃO: CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
 }
 
-// ===== LIMPAR CAMPOS =====
+// ===== FUNÇÃO: LIMPAR CAMPOS =====
 function limparCamposAplicacao() {
-  document.getElementById("dataApp").value = "";
-  document.getElementById("produtoApp").value = "";
-  document.getElementById("dosagemApp").value = "";
-  document.getElementById("tipoApp").value = "Adubo";
-  document.getElementById("setorApp").value = "Setor 01";
+  document.getElementById("dataApp").value = '';
+  document.getElementById("produtoApp").value = '';
+  document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
+  document.getElementById("setorApp").value = 'Setor 01';
+  document.getElementById("formularioAplicacao").style.display = "none";
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== FUNÇÃO: ATUALIZAR LISTA DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
-  lista.innerHTML = "";
+  lista.innerHTML = '';
 
-  const filtroSetor = document.getElementById("filtroSetorAplicacoes")?.value || "";
-  const termoBusca = document.getElementById("pesquisaAplicacoes")?.value.toLowerCase() || "";
+  const filtroSetor = document.getElementById("filtroSetorAplicacoes").value;
+  const termoBusca = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
 
   aplicacoes
-    .filter(app =>
+    .filter(app => 
       (!filtroSetor || app.setor === filtroSetor) &&
-      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
+      (app.produto.toLowerCase().includes(termoBusca))
     )
     .sort((a, b) => b.data.localeCompare(a.data))
     .forEach((app, index) => {
       const item = document.createElement("div");
       item.className = "item";
 
-      const span = document.createElement("span");
-      span.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
-      item.appendChild(span);
+      const info = document.createElement("span");
+      info.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
+      item.appendChild(info);
 
-      const botoes = document.createElement("div");
-      botoes.className = "botoes-tarefa";
+      const acoes = document.createElement("div");
+      acoes.className = "acoes";
 
-      // Botão Editar
-      const botaoEditar = document.createElement("button");
-      botaoEditar.className = "botao-circular azul";
-      botaoEditar.innerHTML = '<i class="fas fa-edit"></i>';
-      botaoEditar.onclick = () => editarAplicacao(index);
-      botoes.appendChild(botaoEditar);
+      const btnEditar = document.createElement("button");
+      btnEditar.innerHTML = '<i class="fas fa-edit"></i>';
+      btnEditar.className = "botao-circular azul";
+      btnEditar.onclick = () => editarAplicacao(index);
+      acoes.appendChild(btnEditar);
 
-      // Botão Excluir
-      const botaoExcluir = document.createElement("button");
-      botaoExcluir.className = "botao-circular vermelho";
-      botaoExcluir.innerHTML = '<i class="fas fa-trash"></i>';
-      botaoExcluir.onclick = () => excluirAplicacao(index);
-      botoes.appendChild(botaoExcluir);
+      const btnExcluir = document.createElement("button");
+      btnExcluir.innerHTML = '<i class="fas fa-trash"></i>';
+      btnExcluir.className = "botao-circular vermelho";
+      btnExcluir.onclick = () => excluirAplicacao(index);
+      acoes.appendChild(btnExcluir);
 
-      item.appendChild(botoes);
+      item.appendChild(acoes);
       lista.appendChild(item);
     });
 }
 
-// ===== EDITAR =====
+// ===== FUNÇÃO: EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
@@ -117,43 +119,45 @@ function editarAplicacao(index) {
 
   indiceEdicaoAplicacao = index;
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
-// ===== EXCLUIR =====
+// ===== FUNÇÃO: EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  db.ref("Aplicacoes").set(aplicacoes);
+  db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
 }
 
-// ===== EXPORTAÇÃO CSV =====
+// ===== FUNÇÃO: EXPORTAR CSV =====
 function exportarAplicacoesCSV() {
-  if (!aplicacoes.length) {
-    alert("Nenhum dado disponível para exportação.");
+  if (aplicacoes.length === 0) {
+    alert("Nenhum dado para exportar.");
     return;
   }
 
   let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
-  aplicacoes.forEach(a => {
-    csv += `${a.data},${a.produto},${a.dosagem},${a.tipo},${a.setor}\n`;
+  aplicacoes.forEach(app => {
+    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
   });
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `aplicacoes_${new Date().toISOString().split("T")[0]}.csv`;
+  link.download = "aplicacoes.csv";
   link.click();
 }
 
-// ===== ALTERNAR FORMULÁRIO E FILTROS =====
+// ===== FUNÇÃO: TOGGLE FORMULÁRIO =====
 function alternarFormularioAplicacao() {
-  const formulario = document.getElementById("formularioAplicacao");
-  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+  const form = document.getElementById("formularioAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
 }
 
+// ===== FUNÇÃO: TOGGLE FILTROS =====
 function alternarFiltrosAplicacao() {
-  const filtros = document.getElementById("filtrosAplicacoes");
-  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+  const filtros = document.querySelector(".filtros-aplicacoes");
+  filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
 }

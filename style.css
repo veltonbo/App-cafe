@@ -35,19 +35,24 @@ body {
   background: none;
   border: none;
   color: #aaa;
-  font-size: 18px;
+  font-size: 22px;
   margin: 0 15px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: color 0.3s;
 }
 
-.menu-superior button.active,
 .menu-superior button:hover {
   color: #4caf50;
 }
 
 .menu-superior button i {
-  margin-right: 5px;
+  pointer-events: none;
+  font-size: 24px;
+}
+
+/* Ícone ativo (quando o menu está selecionado) */
+.menu-superior button.active {
+  color: #4caf50;
 }
 
 /* ===== ABAS ===== */

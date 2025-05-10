@@ -33,13 +33,8 @@
 <div class="conteudo">
   <h2>Aplicações</h2>
 
-  <!-- Botão Flutuante para Adicionar Aplicação -->
-  <button class="botao-circular verde" onclick="alternarFormularioAplicacao()">
-    <i class="fas fa-plus"></i>
-  </button>
-
   <!-- Formulário de Aplicações (Oculto Inicialmente) -->
-  <div id="formularioAplicacao" style="display: none; margin-top: 20px;">
+  <div id="formularioAplicacao" class="formulario-aplicacoes" style="display: none;">
     <input id="dataApp" type="date" placeholder="Data" />
     <input id="produtoApp" placeholder="Produto" />
     <input id="dosagemApp" placeholder="Dosagem" />
@@ -54,38 +49,37 @@
       <option value="Setor 02">Setor 02</option>
     </select>
     <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="btnSalvarAplicacao" class="botao-primario" onclick="adicionarAplicacao()">
-        <i class="fas fa-save"></i> Salvar Aplicação
-      </button>
-      <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;" onclick="cancelarEdicaoAplicacao()">
-        <i class="fas fa-times"></i> Cancelar
-      </button>
+      <button id="btnSalvarAplicacao" class="botao-primario"><i class="fas fa-save"></i> Salvar Aplicação</button>
+      <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;"><i class="fas fa-times"></i> Cancelar</button>
     </div>
   </div>
 
   <!-- Filtros e Pesquisa -->
-  <div class="filtros-aplicacoes" id="filtrosAplicacoes" style="margin-top: 10px;">
+  <div class="filtros-aplicacoes">
     <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
     <select id="filtroSetorAplicacoes" onchange="carregarAplicacoes()">
       <option value="">Todos os Setores</option>
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
+    <button class="botao-circular filtro-toggle" onclick="alternarFiltrosAplicacao()">
+      <i class="fas fa-filter"></i>
+    </button>
   </div>
 
-  <!-- Botão para Mostrar/Ocultar Filtros -->
-  <button class="botao-circular azul" style="float: right; margin-top: -40px;" onclick="alternarFiltrosAplicacao()">
-    <i class="fas fa-filter"></i>
-  </button>
-
   <!-- Listagem de Aplicações -->
-  <div id="listaAplicacoes" class="lista-aplicacoes" style="margin-top: 20px;"></div>
+  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
 
   <!-- Botão de Exportação CSV -->
   <button onclick="exportarAplicacoesCSV()" class="botao-primario" style="margin-top: 15px;">
     <i class="fas fa-file-csv"></i> Exportar CSV
   </button>
 </div>
+
+<!-- Botão Flutuante para Adicionar Aplicação -->
+<button class="botao-circular" onclick="alternarFormularioAplicacao()">
+  <i class="fas fa-plus"></i>
+</button>
 
 </body>
 </html>

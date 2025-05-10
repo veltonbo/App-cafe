@@ -630,3 +630,31 @@ label[for="eAplicacaoCheckbox"] {
   transform: scale(1.1);
   background-color: #388e3c;
 }
+
+/* ===== BOTÕES FORMULÁRIO DE APLICAÇÃO ===== */
+#formularioAplicacao button {
+  padding: 10px 15px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  color: #fff;
+}
+
+#btnSalvarAplicacao {
+  background-color: #4caf50;
+}
+
+#btnSalvarAplicacao:hover {
+  background-color: #388e3c;
+}
+
+#btnCancelarEdicaoApp {
+  background-color: #f44336;
+  display: none; /* Oculto por padrão */
+}
+
+#btnCancelarEdicaoApp:hover {
+  background-color: #d32f2f;
+}

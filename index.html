@@ -68,15 +68,15 @@
       <option>Setor 02</option>
     </select>
 
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()"><i class="fas fa-save"></i> Salvar Aplicação</button>
-      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
-  Cancelar Edição
-</button>
-        Cancelar Edição
-      </button>
-    </div>
-  </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 10px;">
+  <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
+    <i class="fas fa-save"></i> Salvar Edição
+  </button>
+  <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
+    Cancelar Edição
+  </button>
+</div>
+  
 
   <!-- Filtros e Pesquisa -->
   <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">

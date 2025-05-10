@@ -1,26 +1,36 @@
-// ===== CONFIGURAÇÃO FIREBASE =====
-const db = firebase.database();
-
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
-// ===== INICIALIZAÇÃO =====
+// ===== INICIALIZAR FIREBASE =====
 document.addEventListener("DOMContentLoaded", () => {
-  carregarAplicacoes();
+  if (typeof firebase === "undefined") {
+    alert("Firebase não está carregado corretamente.");
+    return;
+  }
+
+  const db = firebase.database().ref("Aplicacoes");
+
+  // Carregar Aplicações ao iniciar
+  carregarAplicacoes(db);
+
+  // Configurações de botões
+  document.getElementById("btnSalvarAplicacao").onclick = () => adicionarAplicacao(db);
+  document.getElementById("btnCancelarEdicaoApp").onclick = cancelarEdicaoAplicacao;
 });
 
-// ===== FUNÇÃO: CARREGAR APLICAÇÕES =====
-function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snapshot => {
-    aplicacoes = snapshot.exists() ? Object.values(snapshot.val()) : [];
+// ===== FUNÇÃO PARA CARREGAR APLICAÇÕES =====
+function carregarAplicacoes(db) {
+  db.on("value", (snapshot) => {
+    aplicacoes = snapshot.val() ? Object.values(snapshot.val()) : [];
     atualizarAplicacoes();
+    atualizarSugestoesProdutoApp();
   });
 }
 
-// ===== FUNÇÃO: ADICIONAR OU EDITAR APLICAÇÃO =====
-function adicionarAplicacao() {
-  const novaAplicacao = {
+// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
+function adicionarAplicacao(db) {
+  const nova = {
     data: document.getElementById("dataApp").value,
     produto: document.getElementById("produtoApp").value.trim(),
     dosagem: document.getElementById("dosagemApp").value.trim(),
@@ -28,43 +38,40 @@ function adicionarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
-  if (!novaAplicacao.data || !novaAplicacao.produto || !novaAplicacao.dosagem) {
+  if (!nova.data || !nova.produto || !nova.dosagem) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
   if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
+    db.child(indiceEdicaoAplicacao).set(nova);
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   } else {
-    aplicacoes.push(novaAplicacao);
+    db.push().set(nova);
   }
 
-  db.ref('Aplicacoes').set(aplicacoes);
   limparCamposAplicacao();
-  atualizarAplicacoes();
+  alternarFormularioAplicacao();
 }
 
-// ===== FUNÇÃO: CANCELAR EDIÇÃO =====
+// ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
 }
 
-// ===== FUNÇÃO: LIMPAR CAMPOS =====
+// ===== LIMPAR CAMPOS =====
 function limparCamposAplicacao() {
   document.getElementById("dataApp").value = '';
   document.getElementById("produtoApp").value = '';
   document.getElementById("dosagemApp").value = '';
   document.getElementById("tipoApp").value = 'Adubo';
   document.getElementById("setorApp").value = 'Setor 01';
-  document.getElementById("formularioAplicacao").style.display = "none";
 }
 
-// ===== FUNÇÃO: ATUALIZAR LISTA DE APLICAÇÕES =====
+// ===== ATUALIZAR LISTAGEM =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
@@ -73,40 +80,26 @@ function atualizarAplicacoes() {
   const termoBusca = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
 
   aplicacoes
-    .filter(app => 
+    .filter(app =>
       (!filtroSetor || app.setor === filtroSetor) &&
-      (app.produto.toLowerCase().includes(termoBusca))
+      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
     )
     .sort((a, b) => b.data.localeCompare(a.data))
     .forEach((app, index) => {
       const item = document.createElement("div");
       item.className = "item";
-
-      const info = document.createElement("span");
-      info.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
-      item.appendChild(info);
-
-      const acoes = document.createElement("div");
-      acoes.className = "acoes";
-
-      const btnEditar = document.createElement("button");
-      btnEditar.innerHTML = '<i class="fas fa-edit"></i>';
-      btnEditar.className = "botao-circular azul";
-      btnEditar.onclick = () => editarAplicacao(index);
-      acoes.appendChild(btnEditar);
-
-      const btnExcluir = document.createElement("button");
-      btnExcluir.innerHTML = '<i class="fas fa-trash"></i>';
-      btnExcluir.className = "botao-circular vermelho";
-      btnExcluir.onclick = () => excluirAplicacao(index);
-      acoes.appendChild(btnExcluir);
-
-      item.appendChild(acoes);
+      item.innerHTML = `
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="acoes">
+          <button class="azul" onclick="editarAplicacao('${index}')"><i class="fas fa-edit"></i></button>
+          <button class="vermelho" onclick="excluirAplicacao('${index}')"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
       lista.appendChild(item);
     });
 }
 
-// ===== FUNÇÃO: EDITAR APLICAÇÃO =====
+// ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
@@ -118,46 +111,53 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
-// ===== FUNÇÃO: EXCLUIR APLICAÇÃO =====
+// ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
-  aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
+  const db = firebase.database().ref("Aplicacoes");
+  db.child(indiceEdicaoAplicacao).remove();
+  carregarAplicacoes(db);
 }
 
-// ===== FUNÇÃO: EXPORTAR CSV =====
+// ===== ALTERNAR FORMULÁRIO =====
+function alternarFormularioAplicacao() {
+  const form = document.getElementById("formularioAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  if (form.style.display === "none") limparCamposAplicacao();
+}
+
+// ===== ALTERNAR FILTROS =====
+function alternarFiltrosAplicacao() {
+  const filtros = document.getElementById("filtrosAplicacoes");
+  filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
+}
+
+// ===== SUGESTÕES DE PRODUTO =====
+function atualizarSugestoesProdutoApp() {
+  const lista = document.getElementById("sugestoesProdutoApp");
+  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
+  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
+}
+
+// ===== EXPORTAÇÃO CSV =====
 function exportarAplicacoesCSV() {
-  if (aplicacoes.length === 0) {
-    alert("Nenhum dado para exportar.");
+  if (!aplicacoes.length) {
+    alert("Nenhum dado disponível para exportação.");
     return;
   }
 
   let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
-  aplicacoes.forEach(app => {
-    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
+  aplicacoes.forEach(a => {
+    csv += `${a.data},${a.produto},${a.dosagem},${a.tipo},${a.setor}\n`;
   });
 
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "aplicacoes.csv";
+  link.download = `aplicacoes_${new Date().toISOString().split("T")[0]}.csv`;
   link.click();
-}
-
-// ===== FUNÇÃO: TOGGLE FORMULÁRIO =====
-function alternarFormularioAplicacao() {
-  const form = document.getElementById("formularioAplicacao");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// ===== FUNÇÃO: TOGGLE FILTROS =====
-function alternarFiltrosAplicacao() {
-  const filtros = document.querySelector(".filtros-aplicacoes");
-  filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
 }

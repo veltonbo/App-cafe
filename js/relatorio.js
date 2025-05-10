@@ -1,3 +1,49 @@
+// ====== VARIÁVEIS GLOBAIS ======
+let relatorioAplicacoes = [];
+let relatorioTarefas = [];
+let relatorioFinanceiro = [];
+let relatorioColheita = [];
+
+// ====== ATUALIZAR RELATÓRIO COMPLETO ======
+function atualizarRelatorioCompleto() {
+  atualizarRelatorioAplicacoes();
+  atualizarRelatorioTarefas();
+  atualizarRelatorioFinanceiro();
+  atualizarRelatorioColheita();
+}
+
+// ====== ATUALIZAR RELATÓRIO APLICAÇÕES ======
+function atualizarRelatorioAplicacoes() {
+  relatorioAplicacoes = aplicacoes || [];
+  document.getElementById("resumoRelAplicacoes").innerHTML = relatorioAplicacoes.length
+    ? relatorioAplicacoes.map(app => `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`).join('<br>')
+    : "Nenhuma aplicação registrada.";
+}
+
+// ====== ATUALIZAR RELATÓRIO TAREFAS ======
+function atualizarRelatorioTarefas() {
+  relatorioTarefas = (tarefas || []).concat(tarefasFeitas || []);
+  document.getElementById("resumoRelTarefas").innerHTML = relatorioTarefas.length
+    ? relatorioTarefas.map(t => `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`).join('<br>')
+    : "Nenhuma tarefa registrada.";
+}
+
+// ====== ATUALIZAR RELATÓRIO FINANCEIRO ======
+function atualizarRelatorioFinanceiro() {
+  relatorioFinanceiro = gastos || [];
+  document.getElementById("resumoRelFinanceiro").innerHTML = relatorioFinanceiro.length
+    ? relatorioFinanceiro.map(g => `${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`).join('<br>')
+    : "Nenhum lançamento financeiro registrado.";
+}
+
+// ====== ATUALIZAR RELATÓRIO COLHEITA ======
+function atualizarRelatorioColheita() {
+  relatorioColheita = colheita || [];
+  document.getElementById("resumoRelColheita").innerHTML = relatorioColheita.length
+    ? relatorioColheita.map(c => `${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`).join('<br>')
+    : "Nenhum registro de colheita.";
+}
+
 // ====== EXPORTAR RELATÓRIO COMPLETO EM PDF ======
 function exportarPDF() {
   const { jsPDF } = window.jspdf;
@@ -9,35 +55,26 @@ function exportarPDF() {
   y += 10;
 
   doc.setFontSize(12);
-  doc.text("Aplicações:", 20, y); y += 8;
-  aplicacoes.forEach(a => {
-    doc.text(`${a.data} - ${a.produto} (${a.dosagem}) - ${a.tipo} - ${a.setor}`, 20, y);
-    y += 6; if (y > 270) { doc.addPage(); y = 20; }
-  });
-
-  y += 8;
-  doc.text("Tarefas:", 20, y); y += 8;
-  tarefas.concat(tarefasFeitas).forEach(t => {
-    doc.text(`${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`, 20, y);
-    y += 6; if (y > 270) { doc.addPage(); y = 20; }
-  });
-
-  y += 8;
-  doc.text("Financeiro (pagos):", 20, y); y += 8;
-  gastos.filter(g => g.pago).forEach(g => {
-    doc.text(`${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`, 20, y);
-    y += 6; if (y > 270) { doc.addPage(); y = 20; }
-  });
-
-  y += 8;
-  doc.text("Colheita:", 20, y); y += 8;
-  colheita.forEach(c => {
-    doc.text(`${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`, 20, y);
-    y += 6; if (y > 270) { doc.addPage(); y = 20; }
-  });
+  adicionarTextoPDF(doc, "Aplicações:", relatorioAplicacoes, y);
+  adicionarTextoPDF(doc, "Tarefas:", relatorioTarefas, y);
+  adicionarTextoPDF(doc, "Financeiro:", relatorioFinanceiro, y);
+  adicionarTextoPDF(doc, "Colheita:", relatorioColheita, y);
 
   const hoje = new Date().toISOString().split("T")[0];
   doc.save(`relatorio_manejo_cafe_${hoje}.pdf`);
+}
+
+function adicionarTextoPDF(doc, titulo, dados, y) {
+  doc.text(titulo, 20, y);
+  y += 8;
+  dados.forEach(dado => {
+    doc.text(dado, 20, y);
+    y += 6;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
 }
 
 // ====== EXPORTAR RELATÓRIO EM CSV ======
@@ -52,7 +89,7 @@ function exportarRelatorioCSV() {
     csv += `Tarefa,${t.data},"${t.descricao} (${t.prioridade})",${t.setor},\n`;
   });
 
-  gastos.filter(g => g.pago).forEach(g => {
+  gastos.forEach(g => {
     csv += `Financeiro,${g.data},"${g.produto}",,${g.valor.toFixed(2)}\n`;
   });
 
@@ -69,37 +106,5 @@ function exportarRelatorioCSV() {
   a.click();
 }
 
-// ====== ATUALIZAÇÃO INICIAL DO RELATÓRIO ======
-function atualizarRelatorioCompleto() {
-  atualizarRelatorioAplicacoes();
-  atualizarRelatorioTarefas();
-  atualizarRelatorioFinanceiro();
-  atualizarRelatorioColheita();
-}
-
-// Aguarda os dados carregarem antes de gerar o relatório
-function aguardarDadosCarregados(callback) {
-  let tentativas = 0;
-  const checar = setInterval(() => {
-    tentativas++;
-    if (
-      aplicacoes.length > 0 ||
-      tarefas.length > 0 ||
-      tarefasFeitas.length > 0 ||
-      gastos.length > 0 ||
-      colheita.length > 0
-    ) {
-      clearInterval(checar);
-      callback();
-    } else if (tentativas > 50) {
-      clearInterval(checar);
-      alert("Não foi possível carregar os dados do relatório.");
-    }
-  }, 200);
-}
-
-// Substitui clique no botão de relatório para aguardar os dados
-document.getElementById("btn-relatorio").addEventListener("click", () => {
-  mostrarAba("relatorio");
-  aguardarDadosCarregados(gerarRelatorioCompleto);
-});
+// ====== INICIALIZAR RELATÓRIO ======
+document.addEventListener("dadosCarregados", atualizarRelatorioCompleto);

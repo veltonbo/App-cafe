@@ -57,36 +57,28 @@ function limparCamposAplicacao() {
   document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ====== ATUALIZAR LISTAGEM ======
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
+  if (!lista) return;
   lista.innerHTML = '';
 
-  const filtroSetor = document.getElementById("filtroSetorAplicacoes").value;
-  const termoBusca = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-
-  aplicacoes
-    .filter(app =>
-      (!filtroSetor || app.setor === filtroSetor) &&
-      (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termoBusca))
-    )
-    .sort((a, b) => b.data.localeCompare(a.data))
-    .forEach((app, i) => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <div class="botoes-aplicacao">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+  aplicacoes.forEach((app, i) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <div class="botoes-aplicacao">
+        <button class="botao-circular azul" onclick="editarAplicacao(${i})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    lista.appendChild(item);
+  });
 }
 
 // ===== EDITAR APLICAÇÃO =====

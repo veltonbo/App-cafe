@@ -112,20 +112,27 @@ function atualizarAplicacoes() {
     });
 }
 
-// ===== EDITAR =====
+// ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
 
+  // Preenche os campos com os dados da aplicação
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
   document.getElementById("tipoApp").value = app.tipo;
   document.getElementById("setorApp").value = app.setor;
 
+  // Define o índice da aplicação que está sendo editada
   indiceEdicaoAplicacao = index;
+  
+  // Atualiza o texto do botão para "Salvar Edição" e exibe o botão "Cancelar"
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
+  
+  // Abre o formulário automaticamente
+  document.getElementById("formularioAplicacao").style.display = "block";
 }
 
 // ===== EXCLUIR =====

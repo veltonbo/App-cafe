@@ -34,5 +34,28 @@
     <script src="js/financeiro.js"></script>
     <script src="js/relatorio.js"></script>
     <script src="js/tarefas.js"></script>
+
+    <body>
+    <h1>Manejo Café</h1>
+    <button id="theme-toggle" onclick="toggleTheme()">🌙 Modo Escuro</button>
+    <div id="menu">
+        <button onclick="mostrarMenu('aplicacao')">Aplicações</button>
+        <button onclick="mostrarMenu('colheita')">Colheita</button>
+        <button onclick="mostrarMenu('financeiro')">Financeiro</button>
+        <button onclick="mostrarMenu('relatorio')">Relatório</button>
+        <button onclick="mostrarMenu('tarefas')">Tarefas</button>
+        <button onclick="mostrarMenu('configuracoes')">Configurações</button>
+    </div>
+    <div id="conteudo">
+        <div id="aplicacao" class="menu active">
+            <h2>Aplicações</h2>
+            <form id="aplicacaoForm">
+                <input type="text" id="produto" placeholder="Produto">
+                <input type="number" id="quantidade" placeholder="Quantidade">
+                <button type="submit">Adicionar</button>
+            </form>
+            <ul id="aplicacaoList"></ul>
+        </div>
+    </div>
 </body>
 </html>

@@ -187,7 +187,7 @@ ul li .item-actions button:hover {
 /* ===== FORMULÁRIO FLUTUANTE ===== */
 .floating-form {
     position: fixed;
-    bottom: 90px;
+    bottom: 80px;
     right: 20px;
     background-color: var(--background-color);
     padding: 15px;
@@ -196,8 +196,10 @@ ul li .item-actions button:hover {
     display: none;
     flex-direction: column;
     gap: 10px;
-    width: 260px;
+    width: 250px;
     transition: opacity 0.3s, transform 0.3s;
+    opacity: 0;
+    transform: translateY(20px);
 }
 
 .floating-form.open {

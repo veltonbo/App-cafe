@@ -29,8 +29,6 @@ function adicionarAplicacao() {
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
     aplicacoes.push(nova);
   }
@@ -38,6 +36,7 @@ function adicionarAplicacao() {
   db.ref('Aplicacoes').set(aplicacoes);
   atualizarAplicacoes();
   limparCamposAplicacao();
+  alternarFormularioAplicacao();
 }
 
 // ===== CANCELAR EDIÇÃO =====

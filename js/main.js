@@ -47,3 +47,13 @@ function mostrarMenu(menu) {
         }, 100);
     }
 }
+
+// Função para exibir o formulário flutuante
+function mostrarFormulario(formId) {
+    document.getElementById(formId).style.display = "flex";
+}
+
+// Função para fechar o formulário flutuante
+function fecharFormulario(formId) {
+    document.getElementById(formId).style.display = "none";
+}

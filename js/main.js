@@ -1,30 +1,14 @@
-// main.js
-
-// Função para navegação entre os menus
-function navegar(menu) {
-  window.location.href = menu;
+// ===== NAVEGAÇÃO ENTRE MENUS =====
+function inicializarApp() {
+  const abaInicial = localStorage.getItem('aba') || 'aplicacao';
+  mostrarAba(abaInicial);
 }
 
-// Função para navegação e destaque do menu ativo
-function navegar(menu) {
-  window.location.href = menu;
-  setTimeout(() => {
-    destacarMenuAtivo(menu);
-  }, 100);
+function mostrarAba(abaId) {
+  document.querySelectorAll('.menu-superior button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.conteudo').forEach(section => section.style.display = 'none');
+
+  document.querySelector(`[onclick="window.location.href='${abaId}.html'"]`).classList.add('active');
 }
 
-// Destaca o menu ativo com o ícone verde
-function destacarMenuAtivo(menu) {
-  document.querySelectorAll(".menu-icone").forEach(btn => {
-    btn.classList.remove("active");
-  });
-
-  const menuAtivo = document.querySelector(`.menu-superior button[onclick="navegar('${menu}')"]`);
-  if (menuAtivo) menuAtivo.classList.add("active");
-}
-
-// Inicializa o menu ativo ao carregar a página
-document.addEventListener("DOMContentLoaded", () => {
-  const path = window.location.pathname.split("/").pop();
-  destacarMenuAtivo(path);
-});
+window.addEventListener('DOMContentLoaded', inicializarApp);

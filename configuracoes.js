@@ -6,7 +6,7 @@ function carregarConfiguracoes() {
   });
 }
 
-// ====== ALTERAR TEMA (AUTOMÁTICO) ======
+// ====== ALTERAR TEMA (CLARO/ESCURO) ======
 function alternarTema() {
   const temaAtual = document.body.classList.contains("claro") ? "escuro" : "claro";
   document.body.className = temaAtual;

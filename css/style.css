@@ -9,7 +9,7 @@ body {
 
 .conteudo {
   padding: 15px;
-  max-width: 400px;
+  max-width: 600px;
   margin: auto;
   animation: fadeIn 0.5s ease;
 }
@@ -28,7 +28,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 999;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.6);
 }
 
 .menu-superior button {
@@ -36,7 +36,7 @@ body {
   border: none;
   color: #aaa;
   font-size: 22px;
-  margin: 0 10px;
+  margin: 0 8px;
   cursor: pointer;
   transition: color 0.3s;
 }
@@ -56,16 +56,13 @@ body {
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  max-width: 400px;
-  margin: 0 auto;
+  transition: all 0.3s ease;
 }
 
 .formulario-aplicacoes input,
-.formulario-aplicacoes select,
-.formulario-aplicacoes button {
-  width: 100%;
+.formulario-aplicacoes select {
+  width: calc(100% - 10px);
   padding: 12px;
-  margin: 8px 0;
   border-radius: 8px;
   border: 1px solid #555;
   background-color: #2c2c2c;
@@ -87,6 +84,9 @@ input:focus, select:focus {
   font-weight: bold;
   border: none;
   cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  width: 100%;
   transition: background 0.3s;
 }
 
@@ -101,9 +101,11 @@ input:focus, select:focus {
   font-weight: bold;
   border: none;
   cursor: pointer;
-  transition: background 0.3s;
+  padding: 12px;
+  border-radius: 8px;
   display: none;
   width: 100%;
+  margin-top: 10px;
 }
 
 /* ===== BOTÃO FLUTUANTE ===== */
@@ -111,7 +113,7 @@ input:focus, select:focus {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #4caf50;
+  background-color: #2196F3;
   color: white;
   border: none;
   width: 56px;
@@ -127,19 +129,31 @@ input:focus, select:focus {
 }
 
 .botao-circular:hover {
-  background-color: #45a049;
+  background-color: #1976D2;
 }
 
-.botao-circular.azul {
-  background-color: #007bff;
+/* ===== FILTROS E PESQUISA ===== */
+.filtros-aplicacoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.botao-circular.vermelho {
-  background-color: #f44336;
+.filtros-aplicacoes select,
+.filtros-aplicacoes input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: #2c2c2c;
+  color: #fff;
+  width: calc(50% - 5px);
 }
 
-.botao-circular.preto {
-  background-color: #333;
+.filtros-aplicacoes input {
+  flex-grow: 1;
 }
 
 /* ===== LISTAGEM DE APLICAÇÕES ===== */
@@ -180,33 +194,6 @@ input:focus, select:focus {
 
 .acoes button:hover {
   color: #4caf50;
-}
-
-/* ===== BOTÃO PARA MOSTRAR/OCULTAR FILTROS ===== */
-#btnMostrarFiltros {
-  background: none;
-  border: none;
-  color: #4caf50;
-  font-size: 20px;
-  cursor: pointer;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.filtros-aplicacoes {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  transition: height 0.3s ease;
-}
-
-.filtros-aplicacoes.oculto {
-  height: 0;
-  overflow: hidden;
-  opacity: 0;
 }
 
 /* ===== ANIMAÇÃO SUAVE ===== */

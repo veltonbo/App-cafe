@@ -101,55 +101,68 @@
 <div id="tarefas" class="aba">
   <h2>Tarefas</h2>
 
-  <input id="dataTarefa" type="date">
-  <input id="descricaoTarefa" placeholder="Descrição da tarefa">
-  
-  <select id="prioridadeTarefa">
-    <option>Alta</option>
-    <option>Média</option>
-    <option>Baixa</option>
-  </select>
+  <!-- Botão Flutuante para Adicionar Tarefa -->
+  <button id="btnMostrarFormularioTarefa" onclick="alternarFormularioTarefa()" class="botao-flutuante">
+    <i class="fas fa-plus"></i>
+  </button>
 
-  <select id="setorTarefa">
-    <option>Setor 01</option>
-    <option>Setor 02</option>
-  </select>
-
-  <!-- Checkbox e campos de aplicação -->
-  <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
-    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-    <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
-  </div>
-
-  <div id="camposAplicacao" style="display:none; margin-top:10px;">
-    <input id="dosagemAplicacao" placeholder="Dosagem">
-    <select id="tipoAplicacao">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
+  <!-- Formulário de Tarefa Oculto -->
+  <div id="formularioTarefa" style="display: none; margin-bottom: 15px;">
+    <input id="dataTarefa" type="date" placeholder="Data">
+    <input id="descricaoTarefa" placeholder="Descrição da tarefa">
+    
+    <select id="prioridadeTarefa">
+      <option>Alta</option>
+      <option>Média</option>
+      <option>Baixa</option>
     </select>
+
+    <select id="setorTarefa">
+      <option>Setor 01</option>
+      <option>Setor 02</option>
+    </select>
+
+    <!-- Checkbox e campos de aplicação -->
+    <div style="display: flex; align-items: center; margin-top: 10px; gap: 8px;">
+      <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+      <label for="eAplicacaoCheckbox" style="margin: 0;">É Aplicação</label>
+    </div>
+
+    <div id="camposAplicacao" style="display:none; margin-top:10px;">
+      <input id="dosagemAplicacao" placeholder="Dosagem">
+      <select id="tipoAplicacao">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+    </div>
+
+    <!-- Botões Salvar e Cancelar -->
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+      <button id="btnSalvarTarefa" onclick="adicionarTarefa()">
+        <i class="fas fa-save"></i> Salvar Tarefa
+      </button>
+      <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none;">
+        Cancelar Edição
+      </button>
+    </div>
   </div>
 
-  <!-- Botão Flutuante para Adicionar Aplicação -->
-<button id="btnMostrarFormularioAplicacao" onclick="alternarFormularioAplicacao()" class="botao-flutuante">
-  <i class="fas fa-plus"></i>
-</button>
+  <!-- Filtros e Pesquisa -->
+  <div style="margin-top: 10px;">
+    <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
+  </div>
 
-  <!-- Filtros -->
-  <select id="filtroSetorTarefas" onchange="atualizarTarefas()">
-    <option value="">Todos os Setores</option>
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-  </select>
-
-  <input id="pesquisaTarefas" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarTarefas()">
-
-  <!-- Tarefas a fazer -->
+  <!-- Listagem de Tarefas -->
   <h4>A Fazer</h4>
   <div id="listaTarefas"></div>
 
-  <!-- Tarefas feitas -->
   <h4>Executadas</h4>
   <div id="listaTarefasFeitas"></div>
 </div>

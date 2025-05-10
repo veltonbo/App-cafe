@@ -118,3 +118,15 @@ function mostrarCamposAplicacao() {
   const campos = document.getElementById('camposAplicacao');
   campos.style.display = document.getElementById('eAplicacaoCheckbox').checked ? 'block' : 'none';
 }
+
+
+// ====== FUNÇÃO PARA ALTERNAR FORMULÁRIO ======
+function alternarFormularioTarefa() {
+  const form = document.getElementById("formularioTarefa");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  
+  // Limpa os campos ao abrir
+  if (form.style.display === "block") {
+    limparCamposTarefa();
+  }
+}

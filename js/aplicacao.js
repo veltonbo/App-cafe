@@ -135,9 +135,14 @@ function alternarFiltrosAplicacao() {
   filtros.style.display = filtros.style.display === "none" ? "flex" : "none";
 }
 
-// ===== SUGESTÕES DE PRODUTO =====
+// ===== ATUALIZAR SUGESTÕES DE PRODUTO =====
 function atualizarSugestoesProdutoApp() {
   const lista = document.getElementById("sugestoesProdutoApp");
+  if (!lista) {
+    console.error("Elemento de sugestões de produto não encontrado.");
+    return;
+  }
+
   const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
   lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
 }

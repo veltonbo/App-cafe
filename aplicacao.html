@@ -1,42 +1,16 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manejo Café - Aplicações</title>
-
-  <!-- FontAwesome para Ícones -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  
-  <!-- Estilos -->
-  <link rel="stylesheet" href="css/style.css" />
-
-  <!-- Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/aplicacao.js"></script>
-</head>
-<body>
-
-<!-- Menu Superior - Apenas Ícones -->
-<div class="menu-superior">
-  <button onclick="window.location.href='index.html'"><i class="fas fa-flask"></i></button>
-  <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i></button>
-  <button onclick="window.location.href='financeiro.html'"><i class="fas fa-dollar-sign"></i></button>
-  <button onclick="window.location.href='colheita.html'"><i class="fas fa-tractor"></i></button>
-  <button onclick="window.location.href='relatorio.html'"><i class="fas fa-chart-line"></i></button>
-  <button onclick="window.location.href='configuracoes.html'"><i class="fas fa-cog"></i></button>
-</div>
-
-<!-- Conteúdo do Menu Aplicações -->
 <div class="conteudo">
   <h2>Aplicações</h2>
 
-  <div class="formulario-aplicacoes">
-    <input id="dataApp" type="date" placeholder="Data da Aplicação">
-    <input id="produtoApp" placeholder="Produto">
-    <input id="dosagemApp" placeholder="Dosagem">
+  <!-- Botão para Exibir/Ocultar Filtros -->
+  <button class="botao-filtros" onclick="alternarFiltrosAplicacao()">
+    <i class="fas fa-filter"></i> Filtros
+  </button>
+
+  <!-- Formulário de Aplicações -->
+  <div id="formularioAplicacao" class="formulario-aplicacoes">
+    <input id="dataApp" type="date" placeholder="Data" />
+    <input id="produtoApp" placeholder="Produto" />
+    <input id="dosagemApp" placeholder="Dosagem" />
     <select id="tipoApp">
       <option value="Adubo">Adubo</option>
       <option value="Fungicida">Fungicida</option>
@@ -47,18 +21,13 @@
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
-    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
-      <i class="fas fa-save"></i> Salvar Aplicação
-    </button>
-    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
-      <i class="fas fa-times"></i> Cancelar
-    </button>
+    <button id="btnSalvarAplicacao" class="botao-primario"><i class="fas fa-save"></i> Salvar Aplicação</button>
   </div>
 
-  <!-- Filtros e Pesquisa -->
-  <div class="filtros-aplicacoes" style="margin-top: 20px;">
-    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar Produto..." oninput="atualizarAplicacoes()">
-    <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+  <!-- Filtros e Pesquisa (Oculto por padrão) -->
+  <div id="filtrosAplicacoes" class="filtros-aplicacoes" style="display: none;">
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
+    <select id="filtroSetorAplicacoes" onchange="carregarAplicacoes()">
       <option value="">Todos os Setores</option>
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
@@ -68,6 +37,8 @@
   <!-- Lista de Aplicações -->
   <div id="listaAplicacoes" class="lista-aplicacoes"></div>
 
+  <!-- Botão Flutuante para Adicionar Aplicação -->
+  <button class="botao-flutuante" onclick="alternarFormularioAplicacao()">
+    <i class="fas fa-plus"></i>
+  </button>
 </div>
-</body>
-</html>

@@ -73,46 +73,23 @@ function atualizarAplicacoes() {
     .sort((a, b) => b.data.localeCompare(a.data))
     .forEach((app, i) => {
       const item = document.createElement('div');
-      
-      // Define a quantidade de botões: sempre 2 por padrão (Editar + Excluir)
-      const numBotoes = 2;
-
-      item.className = `item fade-in botoes-${numBotoes}`;
-      item.style.position = 'relative';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.paddingRight = '90px';
-
-      const span = document.createElement('span');
-      span.textContent = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
-      span.style.flexGrow = '1';
-      span.style.wordBreak = 'break-word';
-      item.appendChild(span);
-
-      const botoes = document.createElement('div');
-      botoes.className = 'botoes-tarefa';
-
-      // Botão Editar
-      const botaoEditar = document.createElement('button');
-      botaoEditar.className = 'botao-circular azul';
-      botaoEditar.innerHTML = '<i class="fas fa-edit"></i>';
-      botaoEditar.onclick = () => editarAplicacao(i);
-      botoes.appendChild(botaoEditar);
-
-      // Botão Excluir
-      const botaoExcluir = document.createElement('button');
-      botaoExcluir.className = 'botao-circular vermelho';
-      botaoExcluir.innerHTML = '<i class="fas fa-trash"></i>';
-      botaoExcluir.onclick = () => excluirAplicacao(i);
-      botoes.appendChild(botaoExcluir);
-
-      item.appendChild(botoes);
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="botoes-aplicacao">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
       lista.appendChild(item);
     });
 }
 
-// ===== EDITAR =====
+// ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
@@ -128,7 +105,7 @@ function editarAplicacao(index) {
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
-// ===== EXCLUIR =====
+// ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
@@ -143,22 +120,20 @@ function atualizarSugestoesProdutoApp() {
   lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
 }
 
-// ===== EXPORTAÇÃO CSV =====
+// ===== EXPORTAR CSV DE APLICAÇÕES =====
 function exportarAplicacoesCSV() {
-  if (!aplicacoes.length) {
-    alert("Nenhum dado disponível para exportação.");
-    return;
-  }
-
   let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
-  aplicacoes.forEach(a => {
-    csv += `${a.data},${a.produto},${a.dosagem},${a.tipo},${a.setor}\n`;
+  aplicacoes.forEach(app => {
+    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
   });
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `aplicacoes_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `aplicacoes_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
 }
+
+// ===== INICIALIZAR APLICAÇÕES =====
+document.addEventListener("dadosCarregados", carregarAplicacoes);

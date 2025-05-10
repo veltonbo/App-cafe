@@ -11,11 +11,8 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     font-size: 16px;
-    padding: 0;
-    transition: background-color 0.4s, color 0.4s;
 }
 
-/* ===== TEMA CLARO E ESCURO ===== */
 :root {
     --background-color: #f4f4f9;
     --text-color: #222;
@@ -30,53 +27,17 @@ body.dark {
     --text-color: #e0e0e0;
 }
 
-/* ===== CABEÇALHO ===== */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: var(--primary-color);
-    color: #fff;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    transition: background 0.4s;
-}
-
-header h1 {
-    font-size: 24px;
-    margin-right: 20px;
-}
-
-#theme-toggle {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #fff;
-    transition: color 0.3s;
-}
-
-#theme-toggle:hover {
-    color: #ffd700;
-}
-
 /* ===== MENU DE NAVEGAÇÃO ===== */
 nav {
     display: flex;
     justify-content: center;
-    align-items: center;
     gap: 15px;
     background-color: var(--primary-color);
-    padding: 10px 0;
+    padding: 10px;
     position: fixed;
-    top: 60px;
     width: 100%;
-    z-index: 999;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    top: 0;
+    z-index: 1000;
 }
 
 nav button {
@@ -84,35 +45,21 @@ nav button {
     border: none;
     color: #fff;
     font-size: 16px;
-    padding: 8px 12px;
     cursor: pointer;
-    transition: background 0.3s, color 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-nav button:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-radius: 5px;
+    transition: background 0.3s;
 }
 
 nav button.active {
-    background-color: rgba(255, 255, 255, 0.25);
-    color: #ffd700;
-    font-weight: bold;
+    background-color: #ffd700;
+    color: #004085;
     border-radius: 5px;
 }
 
 /* ===== CONTEÚDO PRINCIPAL ===== */
 main {
     max-width: 600px;
-    margin: 140px auto 0;
+    margin: 80px auto 0;
     padding: 20px;
-    background-color: var(--background-color);
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-    transition: opacity 0.3s, transform 0.3s;
 }
 
 /* ===== FORMULÁRIO E LISTA DE ITENS ===== */
@@ -120,134 +67,4 @@ ul {
     list-style: none;
     padding: 0;
     margin-top: 15px;
-}
-
-ul li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0, 123, 255, 0.1);
-    margin-bottom: 10px;
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: background 0.3s, transform 0.3s;
-}
-
-ul li:hover {
-    background: rgba(0, 123, 255, 0.15);
-    transform: translateY(-3px);
-}
-
-ul li .item-text {
-    flex-grow: 1;
-    text-align: left;
-}
-
-ul li .item-actions {
-    display: flex;
-    gap: 10px;
-}
-
-ul li .item-actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--primary-color);
-    font-size: 18px;
-    transition: color 0.3s, transform 0.3s;
-}
-
-ul li .item-actions button:hover {
-    color: var(--secondary-color);
-    transform: scale(1.1);
-}
-
-/* ===== BOTÃO FLUTUANTE ===== */
-.floating-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: var(--primary-color);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 55px;
-    height: 55px;
-    font-size: 28px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: background 0.3s, transform 0.3s;
-}
-
-.floating-button:hover {
-    background-color: var(--secondary-color);
-    transform: scale(1.05);
-}
-
-/* ===== FORMULÁRIO FLUTUANTE ===== */
-.floating-form {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    background-color: var(--background-color);
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    width: 250px;
-    transition: opacity 0.3s, transform 0.3s;
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.floating-form.open {
-    display: flex;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.floating-form h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.floating-form input {
-    padding: 10px;
-    border: 1px solid var(--primary-color);
-    border-radius: 5px;
-    width: 100%;
-}
-
-.floating-form button {
-    padding: 8px 12px;
-    border: none;
-    background-color: var(--primary-color);
-    color: #fff;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.3s;
-}
-
-.floating-form button:hover {
-    background-color: var(--secondary-color);
-}
-
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
-    nav {
-        flex-wrap: wrap;
-        gap: 5px;
-    }
-
-    nav button {
-        font-size: 14px;
-        padding: 6px 10px;
-    }
-
-    main {
-        width: 90%;
-        margin-top: 160px;
-    }
 }

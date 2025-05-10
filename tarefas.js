@@ -28,55 +28,32 @@ function atualizarTarefas() {
     .sort((a, b) => (a.data > b.data ? -1 : 1))
     .forEach((t, i) => {
       const item = document.createElement('div');
-      const numBotoes = t.feita ? 2 : 3;
-      item.className = `item fade-in botoes-${numBotoes}`;
-      item.style.position = 'relative';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.paddingRight = '90px';
-
-      const aplicacaoExtra = t.eAplicacao ? ` - ${t.tipo} (${t.dosagem})` : '';
-
-      const span = document.createElement('span');
-      span.textContent = `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}${aplicacaoExtra}`;
-      span.style.flexGrow = '1';
-      span.style.wordBreak = 'break-word';
-
-      const botoes = document.createElement('div');
-      botoes.className = 'botoes-tarefa';
-
-      if (!t.feita) {
-        botoes.innerHTML = `
-          <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
-            <i class="fas fa-check"></i>
+      item.className = `item fade-in`;
+      item.innerHTML = `
+        <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+        <div class="botoes-tarefa">
+          ${t.feita ? `
+            <button class="botao-circular laranja" onclick="desfazerTarefa(${i})">
+              <i class="fas fa-undo-alt"></i>
+            </button>
+          ` : `
+            <button class="botao-circular verde" onclick="marcarTarefaComoFeita(${i})">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="botao-circular azul" onclick="editarTarefa(${i})">
+              <i class="fas fa-edit"></i>
+            </button>
+          `}
+          <button class="botao-circular vermelho" onclick="excluirTarefa(${i})">
+            <i class="fas fa-trash-alt"></i>
           </button>
-          <button class="botao-circular azul" onclick="editarTarefa(${i})">
-            <i class="fas fa-edit"></i>
-          </button>
-        `;
-      } else {
-        botoes.innerHTML = `
-          <button class="botao-circular laranja" onclick="desfazerTarefa(${i})">
-            <i class="fas fa-undo-alt"></i>
-          </button>
-        `;
-      }
-
-      botoes.innerHTML += `
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${i})">
-          <i class="fas fa-trash-alt"></i>
-        </button>
+        </div>
       `;
-
-      item.appendChild(span);
-      item.appendChild(botoes);
-
       (t.feita ? listaFeitas : listaAFazer).appendChild(item);
     });
 }
 
-// ====== ADICIONAR OU SALVAR EDIÇÃO ======
+// ====== ADICIONAR OU EDITAR TAREFA ======
 function adicionarTarefa() {
   const nova = {
     data: document.getElementById('dataTarefa').value,
@@ -89,21 +66,9 @@ function adicionarTarefa() {
     tipo: document.getElementById('tipoAplicacao').value
   };
 
-  if (!nova.data || !nova.descricao) {
-    alert("Preencha todos os campos obrigatórios!");
-    return;
-  }
-
-  if (nova.eAplicacao && (!nova.dosagem || isNaN(parseFloat(nova.dosagem)) || parseFloat(nova.dosagem) <= 0)) {
-    alert("A dosagem deve ser um número positivo.");
-    return;
-  }
-
   if (indiceEdicaoTarefa !== null) {
     tarefas[indiceEdicaoTarefa] = nova;
     indiceEdicaoTarefa = null;
-    document.getElementById('btnCancelarEdicaoTarefa').style.display = 'none';
-    document.querySelector('#tarefas button[onclick="adicionarTarefa()"]').innerText = "Salvar Tarefa";
   } else {
     tarefas.push(nova);
   }
@@ -111,13 +76,12 @@ function adicionarTarefa() {
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();
   limparCamposTarefa();
+  alternarFormularioTarefa();
 }
 
-// ====== EDITAR ======
+// ====== EDITAR TAREFA ======
 function editarTarefa(index) {
   const t = tarefas[index];
-  if (!t) return;
-
   document.getElementById('dataTarefa').value = t.data;
   document.getElementById('descricaoTarefa').value = t.descricao;
   document.getElementById('prioridadeTarefa').value = t.prioridade;
@@ -126,19 +90,18 @@ function editarTarefa(index) {
   document.getElementById('dosagemAplicacao').value = t.dosagem || '';
   document.getElementById('tipoAplicacao').value = t.tipo || 'Adubo';
   mostrarCamposAplicacao();
-
   indiceEdicaoTarefa = index;
-  document.querySelector('#tarefas button[onclick="adicionarTarefa()"]').innerText = "Salvar Edição";
-  document.getElementById('btnCancelarEdicaoTarefa').style.display = 'inline-block';
+  document.getElementById("formularioTarefa").style.display = "block";
 }
 
+// ====== CANCELAR EDIÇÃO ======
 function cancelarEdicaoTarefa() {
   limparCamposTarefa();
   indiceEdicaoTarefa = null;
-  document.querySelector('#tarefas button[onclick="adicionarTarefa()"]').innerText = "Salvar Tarefa";
-  document.getElementById('btnCancelarEdicaoTarefa').style.display = 'none';
+  document.getElementById("formularioTarefa").style.display = "none";
 }
 
+// ====== LIMPAR CAMPOS ======
 function limparCamposTarefa() {
   document.getElementById('dataTarefa').value = '';
   document.getElementById('descricaoTarefa').value = '';
@@ -150,68 +113,8 @@ function limparCamposTarefa() {
   mostrarCamposAplicacao();
 }
 
-// ====== MARCAR COMO FEITA ======
-function marcarTarefaComoFeita(index) {
-  const tarefa = tarefas[index];
-  tarefa.feita = true;
-
-  if (tarefa.eAplicacao) {
-    db.ref('Aplicacoes').once('value').then(snap => {
-      const aplicacoes = snap.exists() ? snap.val() : [];
-      aplicacoes.push({
-        data: tarefa.data,
-        produto: tarefa.descricao,
-        dosagem: tarefa.dosagem,
-        tipo: tarefa.tipo,
-        setor: tarefa.setor
-      });
-      db.ref('Aplicacoes').set(aplicacoes);
-    });
-  }
-
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-}
-
-// ====== DESFAZER ======
-function desfazerTarefa(index) {
-  const tarefa = tarefas[index];
-
-  if (tarefa.eAplicacao) {
-    db.ref('Aplicacoes').once('value').then(snap => {
-      let aplicacoes = snap.exists() ? snap.val() : [];
-      aplicacoes = aplicacoes.filter(app => !(app.produto === tarefa.descricao && app.data === tarefa.data));
-      db.ref('Aplicacoes').set(aplicacoes);
-    });
-  }
-
-  tarefa.feita = false;
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-}
-
-// ====== EXCLUIR ======
-function excluirTarefa(index) {
-  const tarefa = tarefas[index];
-
-  if (!confirm("Deseja excluir esta tarefa?")) return;
-
-  if (tarefa.feita && tarefa.eAplicacao) {
-    db.ref('Aplicacoes').once('value').then(snap => {
-      let aplicacoes = snap.exists() ? snap.val() : [];
-      aplicacoes = aplicacoes.filter(app => !(app.produto === tarefa.descricao && app.data === tarefa.data));
-      db.ref('Aplicacoes').set(aplicacoes);
-    });
-  }
-
-  tarefas.splice(index, 1);
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-}
-
 // ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
 function mostrarCamposAplicacao() {
-  const checkbox = document.getElementById('eAplicacaoCheckbox');
   const campos = document.getElementById('camposAplicacao');
-  campos.style.display = checkbox.checked ? 'block' : 'none';
+  campos.style.display = document.getElementById('eAplicacaoCheckbox').checked ? 'block' : 'none';
 }

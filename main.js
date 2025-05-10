@@ -1,58 +1,87 @@
-// ====== APLICAR PADRÃO DE BOTÕES COLORIDOS ======
+// ====== APLICAR PADRÃO DE EXIBIÇÃO DE BOTÕES DE EXPORTAÇÃO ======
 document.addEventListener("DOMContentLoaded", () => {
-  padronizarBotoes();
+  verificarBotoesExportacao();
 });
 
-// ====== FUNÇÃO PADRONIZAR BOTÕES ======
-function padronizarBotoes() {
-  const botoesMarcar = document.querySelectorAll(".botao-circular.verde");
-  const botoesEditar = document.querySelectorAll(".botao-circular.azul");
-  const botoesExcluir = document.querySelectorAll(".botao-circular.vermelho");
-  const botoesDesfazer = document.querySelectorAll(".botao-circular.laranja");
-
-  botoesMarcar.forEach(botao => {
-    botao.innerHTML = '<i class="fas fa-check"></i>';
-    botao.title = "Marcar como Feita";
-  });
-
-  botoesEditar.forEach(botao => {
-    botao.innerHTML = '<i class="fas fa-edit"></i>';
-    botao.title = "Editar";
-  });
-
-  botoesExcluir.forEach(botao => {
-    botao.innerHTML = '<i class="fas fa-trash-alt"></i>';
-    botao.title = "Excluir";
-  });
-
-  botoesDesfazer.forEach(botao => {
-    botao.innerHTML = '<i class="fas fa-undo-alt"></i>';
-    botao.title = "Desfazer";
-  });
+// ====== FUNÇÃO PARA VERIFICAR OS BOTÕES DE EXPORTAÇÃO ======
+function verificarBotoesExportacao() {
+  verificarExportacaoAplicacoes();
+  verificarExportacaoTarefas();
+  verificarExportacaoFinanceiro();
+  verificarExportacaoRelatorio();
 }
 
-// ====== EXEMPLO DE COMO ADICIONAR OS BOTÕES EM QUALQUER MENU ======
-function criarBotaoAcao(tipo, acao) {
-  const botao = document.createElement("button");
-  botao.classList.add("botao-circular", tipo);
-  botao.onclick = acao;
-  
-  // O conteúdo e a cor são automaticamente aplicados com a classe
-  padronizarBotoes(); // Garante que o ícone e a cor sejam aplicados
-  return botao;
+// ====== VERIFICAR BOTÕES DE EXPORTAÇÃO (APLICAÇÕES) ======
+function verificarExportacaoAplicacoes() {
+  const lista = document.getElementById("listaAplicacoes");
+  const btnExportarCSV = document.querySelector("#aplicacoes .botao-exportar.csv");
+
+  if (lista.children.length > 0) {
+    btnExportarCSV.style.display = "inline-flex";
+  } else {
+    btnExportarCSV.style.display = "none";
+  }
 }
 
-// ====== EXEMPLO DE USO NOS MENUS ======
-function exemploAdicionarBotoes() {
-  const exemploContainer = document.getElementById("exemploContainer");
-  
-  const botaoMarcar = criarBotaoAcao("verde", () => alert("Tarefa marcada como feita."));
-  const botaoEditar = criarBotaoAcao("azul", () => alert("Editando..."));
-  const botaoExcluir = criarBotaoAcao("vermelho", () => alert("Excluindo..."));
-  const botaoDesfazer = criarBotaoAcao("laranja", () => alert("Desfazendo..."));
+// ====== VERIFICAR BOTÕES DE EXPORTAÇÃO (TAREFAS) ======
+function verificarExportacaoTarefas() {
+  const lista = document.getElementById("listaTarefas");
+  const btnExportarCSV = document.querySelector("#tarefas .botao-exportar.csv");
 
-  exemploContainer.appendChild(botaoMarcar);
-  exemploContainer.appendChild(botaoEditar);
-  exemploContainer.appendChild(botaoExcluir);
-  exemploContainer.appendChild(botaoDesfazer);
+  if (lista.children.length > 0) {
+    btnExportarCSV.style.display = "inline-flex";
+  } else {
+    btnExportarCSV.style.display = "none";
+  }
+}
+
+// ====== VERIFICAR BOTÕES DE EXPORTAÇÃO (FINANCEIRO) ======
+function verificarExportacaoFinanceiro() {
+  const lista = document.getElementById("listaFinanceiro");
+  const btnExportarCSV = document.querySelector("#financeiro .botao-exportar.csv");
+  const btnExportarPDF = document.querySelector("#financeiro .botao-exportar.pdf");
+
+  if (lista.children.length > 0) {
+    btnExportarCSV.style.display = "inline-flex";
+    btnExportarPDF.style.display = "inline-flex";
+  } else {
+    btnExportarCSV.style.display = "none";
+    btnExportarPDF.style.display = "none";
+  }
+}
+
+// ====== VERIFICAR BOTÕES DE EXPORTAÇÃO (RELATÓRIO) ======
+function verificarExportacaoRelatorio() {
+  const relatorio = document.getElementById("conteudoRelatorio");
+  const btnExportarCSV = document.querySelector("#relatorio .botao-exportar.csv");
+  const btnExportarPDF = document.querySelector("#relatorio .botao-exportar.pdf");
+
+  if (relatorio.innerHTML.trim().length > 0) {
+    btnExportarCSV.style.display = "inline-flex";
+    btnExportarPDF.style.display = "inline-flex";
+  } else {
+    btnExportarCSV.style.display = "none";
+    btnExportarPDF.style.display = "none";
+  }
+}
+
+// ====== CHAMAR A VERIFICAÇÃO QUANDO OS DADOS FOREM ATUALIZADOS ======
+function atualizarAplicacoes() {
+  // Sua lógica para atualizar a lista de aplicações
+  verificarExportacaoAplicacoes();
+}
+
+function atualizarTarefas() {
+  // Sua lógica para atualizar a lista de tarefas
+  verificarExportacaoTarefas();
+}
+
+function atualizarFinanceiro() {
+  // Sua lógica para atualizar a lista de financeiro
+  verificarExportacaoFinanceiro();
+}
+
+function gerarRelatorio() {
+  // Sua lógica para gerar o relatório
+  verificarExportacaoRelatorio();
 }

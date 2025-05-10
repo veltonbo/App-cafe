@@ -12,12 +12,15 @@ function carregarAnoSafra() {
   document.getElementById("anoSafraAtual").innerText = anoAtual;
 }
 
-// ===== CARREGAR SAFRAS DISPONÍVEIS PARA RESTAURAR =====
+// ====== CARREGAR SAFRAS DISPONÍVEIS ======
 function carregarSafrasDisponiveis() {
   const select = document.getElementById("safraSelecionada");
+  if (!select) return;
+
   select.innerHTML = "<option value=''>Selecione o ano</option>";
   db.ref().once("value").then(snapshot => {
-    Object.keys(snapshot.val() || {}).forEach(key => {
+    const data = snapshot.val() || {};
+    Object.keys(data).forEach(key => {
       if (!["Aplicacoes", "Tarefas", "Financeiro", "Colheita", "ValorLata"].includes(key)) {
         const option = document.createElement("option");
         option.value = key;

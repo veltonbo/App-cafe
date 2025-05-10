@@ -1,3 +1,4 @@
+// ===== FUNÇÃO PARA TROCAR ABAS =====
 function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => {
     aba.style.display = 'none';
@@ -17,6 +18,7 @@ function mostrarAba(abaId) {
   localStorage.setItem('aba', abaId);
 }
 
+// ===== INICIALIZAR O APLICATIVO =====
 function inicializarApp() {
   const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
   mostrarAba(abaInicial);
@@ -25,14 +27,19 @@ function inicializarApp() {
     document.body.classList.add('claro');
   }
 
-  // Chama as funções de carregamento se estiverem disponíveis
-  if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-  if (typeof carregarTarefas === "function") carregarTarefas();
-  if (typeof carregarFinanceiro === "function") carregarFinanceiro();
-  if (typeof carregarColheita === "function") carregarColheita();
-  if (typeof carregarValorLata === "function") carregarValorLata();
-  if (typeof carregarAnoSafra === "function") carregarAnoSafra();
-  if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+  // Eventos customizados para garantir que as funções carreguem corretamente
+  document.addEventListener('dadosCarregados', () => {
+    if (typeof carregarAplicacoes === "function") carregarAplicacoes();
+    if (typeof carregarTarefas === "function") carregarTarefas();
+    if (typeof carregarFinanceiro === "function") carregarFinanceiro();
+    if (typeof carregarColheita === "function") carregarColheita();
+    if (typeof carregarValorLata === "function") carregarValorLata();
+    if (typeof carregarAnoSafra === "function") carregarAnoSafra();
+    if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+  });
+
+  // Disparar o evento após garantir que o DOM está pronto
+  document.dispatchEvent(new Event('dadosCarregados'));
 }
 
 // Executa ao carregar a página

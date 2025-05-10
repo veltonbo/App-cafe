@@ -2,10 +2,20 @@
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
-// ===== CARREGAR APLICAÇÕES =====
+// ===== INICIALIZAÇÃO E CARREGAMENTO =====
+document.addEventListener("DOMContentLoaded", () => {
+  carregarAplicacoes();
+});
+
+// ===== CARREGAR APLICAÇÕES DO FIREBASE =====
 function carregarAplicacoes() {
-  db.ref('Aplicacoes').on('value', snap => {
-    aplicacoes = snap.exists() ? snap.val() : [];
+  db.ref('Aplicacoes').on('value', snapshot => {
+    aplicacoes = [];
+    snapshot.forEach(childSnapshot => {
+      const aplicacao = childSnapshot.val();
+      aplicacao.id = childSnapshot.key; // Adiciona o ID da aplicação
+      aplicacoes.push(aplicacao);
+    });
     atualizarAplicacoes();
   });
 }
@@ -20,16 +30,45 @@ function adicionarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
-  if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
-    indiceEdicaoAplicacao = null;
-  } else {
-    aplicacoes.push(nova);
+  if (!nova.data || !nova.produto || !nova.dosagem) {
+    alert("Preencha todos os campos corretamente.");
+    return;
   }
 
-  db.ref('Aplicacoes').set(aplicacoes);
-  atualizarAplicacoes();
+  if (indiceEdicaoAplicacao !== null) {
+    const id = aplicacoes[indiceEdicaoAplicacao].id;
+    db.ref(`Aplicacoes/${id}`).update(nova);
+  } else {
+    db.ref('Aplicacoes').push(nova);
+  }
+
   limparCamposAplicacao();
+  indiceEdicaoAplicacao = null;
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+}
+
+// ===== EDITAR APLICAÇÃO =====
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  if (!app) return;
+
+  document.getElementById("dataApp").value = app.data;
+  document.getElementById("produtoApp").value = app.produto;
+  document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
+  document.getElementById("setorApp").value = app.setor;
+
+  indiceEdicaoAplicacao = index;
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
+}
+
+// ===== EXCLUIR APLICAÇÃO =====
+function excluirAplicacao(index) {
+  if (!confirm("Deseja excluir esta aplicação?")) return;
+  const id = aplicacoes[index].id;
+  db.ref(`Aplicacoes/${id}`).remove();
 }
 
 // ===== CANCELAR EDIÇÃO =====
@@ -37,6 +76,7 @@ function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -48,7 +88,7 @@ function limparCamposAplicacao() {
   document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== ATUALIZAR LISTA DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
@@ -56,7 +96,19 @@ function atualizarAplicacoes() {
   aplicacoes.forEach((app, index) => {
     const item = document.createElement('div');
     item.className = 'item';
-    item.innerHTML = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
+    item.innerHTML = `
+      <div>
+        <strong>${app.data}</strong> - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}
+      </div>
+      <div class="acoes">
+        <button class="botao-circular azul" onclick="editarAplicacao(${index})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="excluirAplicacao(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
     lista.appendChild(item);
   });
 }

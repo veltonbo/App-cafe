@@ -20,70 +20,32 @@
     </nav>
     
     <main id="conteudo">
-    <!-- Menu Aplicações -->
-    <div id="aplicacao" class="menu active">
-        <h2>🌱 Aplicações</h2>
-        <ul id="aplicacaoList"></ul>
-        <button class="floating-button" onclick="mostrarFormulario('aplicacaoForm')">➕</button>
-
-        <div id="aplicacaoForm" class="floating-form">
-            <h3>Adicionar Aplicação</h3>
-            <input type="text" id="produto" placeholder="Produto">
-            <input type="number" id="quantidade" placeholder="Quantidade">
-            <button onclick="adicionarAplicacao()">Salvar</button>
-            <button onclick="fecharFormulario('aplicacaoForm')">Cancelar</button>
+        <div id="aplicacao" class="menu">
+            <h2>🌱 Aplicações</h2>
+            <ul id="aplicacaoList"></ul>
         </div>
-    </div>
 
-    <!-- Menu Colheita -->
-    <div id="colheita" class="menu">
-        <h2>🌾 Colheita</h2>
-        <ul id="colheitaList"></ul>
-        <button class="floating-button" onclick="mostrarFormulario('colheitaForm')">➕</button>
-
-        <div id="colheitaForm" class="floating-form">
-            <h3>Adicionar Colheita</h3>
-            <input type="text" id="tipoColheita" placeholder="Tipo">
-            <input type="number" id="pesoColheita" placeholder="Peso (kg)">
-            <button onclick="adicionarColheita()">Salvar</button>
-            <button onclick="fecharFormulario('colheitaForm')">Cancelar</button>
+        <div id="colheita" class="menu" style="display: none;">
+            <h2>🌾 Colheita</h2>
+            <ul id="colheitaList"></ul>
         </div>
-    </div>
 
-    <!-- Menu Financeiro -->
-    <div id="financeiro" class="menu">
-        <h2>💰 Financeiro</h2>
-        <ul id="financeiroList"></ul>
-        <button class="floating-button" onclick="mostrarFormulario('financeiroForm')">➕</button>
-
-        <div id="financeiroForm" class="floating-form">
-            <h3>Adicionar Lançamento</h3>
-            <input type="text" id="descricaoFinanceiro" placeholder="Descrição">
-            <input type="number" id="valorFinanceiro" placeholder="Valor (R$)">
-            <button onclick="adicionarFinanceiro()">Salvar</button>
-            <button onclick="fecharFormulario('financeiroForm')">Cancelar</button>
+        <div id="financeiro" class="menu" style="display: none;">
+            <h2>💰 Financeiro</h2>
+            <ul id="financeiroList"></ul>
         </div>
-    </div>
-</main>
 
-        <!-- Menu Tarefas -->
-        <div id="tarefas" class="menu">
+        <div id="tarefas" class="menu" style="display: none;">
             <h2>✅ Tarefas</h2>
-            <form id="tarefasForm">
-                <input type="text" id="descricaoTarefa" placeholder="Descrição da Tarefa">
-                <button type="submit">Adicionar</button>
-            </form>
             <ul id="tarefasList"></ul>
         </div>
 
-        <!-- Menu Relatório -->
-        <div id="relatorio" class="menu">
+        <div id="relatorio" class="menu" style="display: none;">
             <h2>📊 Relatório</h2>
             <p>Em breve...</p>
         </div>
 
-        <!-- Menu Configurações -->
-        <div id="configuracoes" class="menu">
+        <div id="configuracoes" class="menu" style="display: none;">
             <h2>⚙️ Configurações</h2>
             <p>Ajustes de sistema e preferências.</p>
         </div>

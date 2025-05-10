@@ -112,3 +112,15 @@ function atualizarAplicacoes() {
     lista.appendChild(item);
   });
 }
+
+// Função para Alternar Filtros
+function alternarFiltrosAplicacao() {
+  const filtros = document.getElementById("filtrosAplicacoes");
+  filtros.style.display = filtros.style.display === "none" ? "block" : "none";
+}
+
+// Função para Alternar Formulário
+function alternarFormularioAplicacao() {
+  const formulario = document.getElementById("formularioAplicacao");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}

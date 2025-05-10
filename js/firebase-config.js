@@ -1,9 +1,6 @@
 // firebase-config.js
 // Configuração do Firebase
 const firebaseConfig = {
-  // firebase-config.js
-// Configuração do Firebase
-const firebaseConfig = {
   apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
   authDomain: "manej-cafe.firebaseapp.com",
   databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",

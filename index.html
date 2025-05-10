@@ -14,30 +14,75 @@
         <button onclick="mostrarMenu('aplicacao')">🌱 Aplicações</button>
         <button onclick="mostrarMenu('colheita')">🌾 Colheita</button>
         <button onclick="mostrarMenu('financeiro')">💰 Financeiro</button>
-        <button onclick="mostrarMenu('relatorio')">📊 Relatório</button>
         <button onclick="mostrarMenu('tarefas')">✅ Tarefas</button>
+        <button onclick="mostrarMenu('relatorio')">📊 Relatório</button>
         <button onclick="mostrarMenu('configuracoes')">⚙️ Configurações</button>
     </nav>
     
     <main id="conteudo">
-    <div id="aplicacao" class="menu active">
-        <h2>🌱 Aplicações</h2>
-        <form id="aplicacaoForm">
-            <input type="text" id="produto" placeholder="Produto">
-            <input type="number" id="quantidade" placeholder="Quantidade">
-            <button type="submit">Adicionar</button>
-        </form>
-        <ul id="aplicacaoList"></ul>
-    </div>
-</main>
+        <!-- Menu Aplicações -->
+        <div id="aplicacao" class="menu active">
+            <h2>🌱 Aplicações</h2>
+            <form id="aplicacaoForm">
+                <input type="text" id="produto" placeholder="Produto">
+                <input type="number" id="quantidade" placeholder="Quantidade">
+                <button type="submit">Adicionar</button>
+            </form>
+            <ul id="aplicacaoList"></ul>
+        </div>
+
+        <!-- Menu Colheita -->
+        <div id="colheita" class="menu">
+            <h2>🌾 Colheita</h2>
+            <form id="colheitaForm">
+                <input type="text" id="tipoColheita" placeholder="Tipo de Colheita">
+                <input type="number" id="pesoColheita" placeholder="Peso (kg)">
+                <button type="submit">Adicionar</button>
+            </form>
+            <ul id="colheitaList"></ul>
+        </div>
+
+        <!-- Menu Financeiro -->
+        <div id="financeiro" class="menu">
+            <h2>💰 Financeiro</h2>
+            <form id="financeiroForm">
+                <input type="text" id="descricaoFinanceiro" placeholder="Descrição">
+                <input type="number" id="valorFinanceiro" placeholder="Valor (R$)">
+                <button type="submit">Adicionar</button>
+            </form>
+            <ul id="financeiroList"></ul>
+        </div>
+
+        <!-- Menu Tarefas -->
+        <div id="tarefas" class="menu">
+            <h2>✅ Tarefas</h2>
+            <form id="tarefasForm">
+                <input type="text" id="descricaoTarefa" placeholder="Descrição da Tarefa">
+                <button type="submit">Adicionar</button>
+            </form>
+            <ul id="tarefasList"></ul>
+        </div>
+
+        <!-- Menu Relatório -->
+        <div id="relatorio" class="menu">
+            <h2>📊 Relatório</h2>
+            <p>Em breve...</p>
+        </div>
+
+        <!-- Menu Configurações -->
+        <div id="configuracoes" class="menu">
+            <h2>⚙️ Configurações</h2>
+            <p>Ajustes de sistema e preferências.</p>
+        </div>
+    </main>
 
     <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/aplicacao.js"></script>
     <script src="js/colheita.js"></script>
-    <script src="js/configuracoes.js"></script>
     <script src="js/financeiro.js"></script>
-    <script src="js/relatorio.js"></script>
     <script src="js/tarefas.js"></script>
+    <script src="js/relatorio.js"></script>
+    <script src="js/configuracoes.js"></script>
 </body>
 </html>

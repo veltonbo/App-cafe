@@ -19,7 +19,7 @@
 </head>
 <body>
 
-<!-- Menu Superior - Apenas Ícones -->
+<!-- Menu Superior - Ícones Modernos -->
 <div class="menu-superior">
   <button onclick="window.location.href='index.html'"><i class="fas fa-flask"></i></button>
   <button onclick="window.location.href='tarefas.html'"><i class="fas fa-tasks"></i></button>
@@ -33,53 +33,60 @@
 <div class="conteudo">
   <h2>Aplicações</h2>
 
-  <!-- Formulário de Aplicações (Oculto Inicialmente) -->
-  <div id="formularioAplicacao" class="formulario-aplicacoes" style="display: none;">
-    <input id="dataApp" type="date" placeholder="Data" />
-    <input id="produtoApp" placeholder="Produto" />
-    <input id="dosagemApp" placeholder="Dosagem" />
-    <select id="tipoApp">
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-    </select>
-    <select id="setorApp">
-      <option value="Setor 01">Setor 01</option>
-      <option value="Setor 02">Setor 02</option>
-    </select>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="btnSalvarAplicacao" class="botao-primario"><i class="fas fa-save"></i> Salvar Aplicação</button>
-      <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;"><i class="fas fa-times"></i> Cancelar</button>
-    </div>
-  </div>
+  <!-- Botão Exportar CSV -->
+  <button class="botao-exportar" onclick="exportarAplicacoesCSV()">
+    <i class="fas fa-file-csv"></i> Exportar CSV
+  </button>
 
-  <!-- Filtros e Pesquisa -->
-  <div class="filtros-aplicacoes">
+  <!-- Filtros e Pesquisa (Ocultos por padrão) -->
+  <div id="filtrosAplicacoes" class="filtros-aplicacoes" style="display: none;">
     <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="carregarAplicacoes()">
     <select id="filtroSetorAplicacoes" onchange="carregarAplicacoes()">
       <option value="">Todos os Setores</option>
       <option value="Setor 01">Setor 01</option>
       <option value="Setor 02">Setor 02</option>
     </select>
-    <button class="botao-circular filtro-toggle" onclick="alternarFiltrosAplicacao()">
-      <i class="fas fa-filter"></i>
-    </button>
   </div>
 
-  <!-- Listagem de Aplicações -->
-  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-
-  <!-- Botão de Exportação CSV -->
-  <button onclick="exportarAplicacoesCSV()" class="botao-primario" style="margin-top: 15px;">
-    <i class="fas fa-file-csv"></i> Exportar CSV
-  </button>
+  <!-- Lista de Aplicações -->
+  <div id="listaAplicacoes" class="lista-aplicacoes" style="margin-top: 15px;"></div>
 </div>
 
 <!-- Botão Flutuante para Adicionar Aplicação -->
 <button class="botao-circular" onclick="alternarFormularioAplicacao()">
   <i class="fas fa-plus"></i>
 </button>
+
+<!-- Botão Flutuante para Mostrar/Esconder Filtros -->
+<button id="btnToggleFiltros" class="botao-circular" onclick="alternarFiltrosAplicacao()">
+  <i class="fas fa-filter"></i>
+</button>
+
+<!-- Formulário de Aplicações (Oculto por padrão) -->
+<div id="formularioAplicacao" class="formulario-aplicacoes" style="display: none;">
+  <input id="dataApp" type="date" placeholder="Data" />
+  <input id="produtoApp" placeholder="Produto" />
+  <input id="dosagemApp" placeholder="Dosagem" />
+  <select id="tipoApp">
+    <option value="Adubo">Adubo</option>
+    <option value="Fungicida">Fungicida</option>
+    <option value="Inseticida">Inseticida</option>
+    <option value="Herbicida">Herbicida</option>
+  </select>
+  <select id="setorApp">
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+  </select>
+
+  <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button id="btnSalvarAplicacao" class="botao-primario" onclick="adicionarAplicacao()">
+      <i class="fas fa-save"></i> Salvar Aplicação
+    </button>
+    <button id="btnCancelarEdicaoApp" class="botao-secundario" style="display: none;" onclick="cancelarEdicaoAplicacao()">
+      <i class="fas fa-times"></i> Cancelar
+    </button>
+  </div>
+</div>
 
 </body>
 </html>

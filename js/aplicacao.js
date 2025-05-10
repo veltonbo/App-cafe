@@ -1,44 +1,62 @@
-// Firebase Configuração (js/firebase-config.js)
-const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  databaseURL: "SUA_DATABASE_URL",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
-};
+// ===== VARIÁVEIS GLOBAIS =====
+let aplicacoes = [];
+let indiceEdicaoAplicacao = null;
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database().ref("aplicacoes");
-
-// Funções
-function alternarFormularioAplicacao() {
-  const formulario = document.getElementById("formularioAplicacao");
-  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
-}
-
+// ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
-  db.on("value", (snapshot) => {
-    const lista = document.getElementById("listaAplicacoes");
-    lista.innerHTML = "";
-    snapshot.forEach((child) => {
-      const item = child.val();
-      lista.innerHTML += `<div class="item">
-        ${item.data} - ${item.produto} (${item.dosagem}) - ${item.tipo} - ${item.setor}
-      </div>`;
-    });
+  db.ref('Aplicacoes').on('value', snap => {
+    aplicacoes = snap.exists() ? snap.val() : [];
+    atualizarAplicacoes();
   });
 }
 
-function salvarAplicacao() {
-  const data = document.getElementById("dataApp").value;
-  const produto = document.getElementById("produtoApp").value;
-  const dosagem = document.getElementById("dosagemApp").value;
-  const tipo = document.getElementById("tipoApp").value;
-  const setor = document.getElementById("setorApp").value;
+// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
+function adicionarAplicacao() {
+  const nova = {
+    data: document.getElementById("dataApp").value,
+    produto: document.getElementById("produtoApp").value.trim(),
+    dosagem: document.getElementById("dosagemApp").value.trim(),
+    tipo: document.getElementById("tipoApp").value,
+    setor: document.getElementById("setorApp").value
+  };
 
-  db.push().set({ data, produto, dosagem, tipo, setor });
-  carregarAplicacoes();
+  if (indiceEdicaoAplicacao !== null) {
+    aplicacoes[indiceEdicaoAplicacao] = nova;
+    indiceEdicaoAplicacao = null;
+  } else {
+    aplicacoes.push(nova);
+  }
+
+  db.ref('Aplicacoes').set(aplicacoes);
+  atualizarAplicacoes();
+  limparCamposAplicacao();
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  indiceEdicaoAplicacao = null;
+  limparCamposAplicacao();
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+}
+
+// ===== LIMPAR CAMPOS =====
+function limparCamposAplicacao() {
+  document.getElementById("dataApp").value = '';
+  document.getElementById("produtoApp").value = '';
+  document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
+  document.getElementById("setorApp").value = 'Setor 01';
+}
+
+// ===== ATUALIZAR LISTAGEM =====
+function atualizarAplicacoes() {
+  const lista = document.getElementById("listaAplicacoes");
+  lista.innerHTML = '';
+
+  aplicacoes.forEach((app, index) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`;
+    lista.appendChild(item);
+  });
 }

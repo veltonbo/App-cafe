@@ -1,24 +1,39 @@
-// main.js
-document.addEventListener('DOMContentLoaded', inicializarApp);
+// ========== MAIN.JS - INICIALIZAÇÃO GLOBAL ==========
 
-// Inicializar o Aplicativo
-function inicializarApp() {
+// Importando o Firebase corretamente
+import { db, ref, set, get, onValue, push, update, remove } from "./firebase-config.js";
+
+// Inicializando o Aplicativo
+document.addEventListener("DOMContentLoaded", () => {
   console.log("Inicializando o aplicativo...");
-  
-  // Verifica se o Firebase está conectado
-  if (typeof db === 'undefined') {
-    console.error("Erro: Firebase não carregado corretamente.");
-    alert("Erro ao conectar ao Firebase.");
-    return;
-  }
 
-  // Carregar Aplicações
-  if (typeof carregarAplicacoes === 'function') {
-    carregarAplicacoes();
+  if (typeof inicializarApp === "function") {
+    inicializarApp();
   } else {
-    console.warn("Função carregarAplicacoes não encontrada.");
+    console.error("Erro: função inicializarApp não encontrada.");
   }
+});
 
-  // Carregar outras funções se necessário
-  console.log("Aplicativo inicializado com sucesso.");
+// Função de inicialização geral
+function inicializarApp() {
+  console.log("Aplicativo inicializado.");
+
+  // Verifica se o Firebase está corretamente configurado
+  if (db) {
+    console.log("Firebase configurado corretamente.");
+  } else {
+    console.error("Erro: Firebase não configurado corretamente.");
+  }
+  
+  // Verifica se o usuário está autenticado (se necessário)
+  // Aqui podemos adicionar lógica para controle de usuário, se necessário.
 }
+
+// Função para trocar de menu
+function mostrarAba(aba) {
+  document.querySelectorAll(".aba").forEach((el) => el.style.display = "none");
+  document.getElementById(aba).style.display = "block";
+}
+
+// Exemplo: Inicializando com a aba de aplicações
+mostrarAba("aplicacoes");

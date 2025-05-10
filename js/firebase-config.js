@@ -15,14 +15,12 @@ const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 console.log("Conectado ao Firebase");
 
-
-  // Verifica a conexão com o Firebase Realtime Database
-  const db = firebase.database();
-  db.ref(".info/connected").on("value", (snap) => {
-    if (snap.val()) {
-      console.log("✅ Conectado ao Firebase");
-    } else {
-      console.error("❌ Desconectado do Firebase");
-    }
-  });
+// Verificar se o Firebase foi inicializado corretamente
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof db === 'undefined') {
+    console.error("Firebase não está configurado corretamente.");
+    alert("Erro ao conectar ao Firebase.");
+  } else {
+    console.log("Firebase conectado com sucesso.");
+  }
 });

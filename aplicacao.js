@@ -171,7 +171,11 @@ function exportarAplicacoesCSV() {
 }
 
 // ===== BOTÃO FLUTUANTE (Alternar Formulário) =====
+// ===== FUNÇÃO PARA ALTERNAR FORMULÁRIO =====
 function alternarFormularioAplicacao() {
   const form = document.getElementById("formularioAplicacao");
   form.style.display = form.style.display === "none" ? "block" : "none";
+  
+  // Garante que as aplicações sejam sempre carregadas
+  carregarAplicacoes();
 }

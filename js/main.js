@@ -1,11 +1,8 @@
 // js/main.js
 
+// Inicializar o sistema e configurar o tema
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Sistema Manejo Café Iniciado");
-    initAplicacao();
-    initColheita();
-    initFinanceiro();
-    initTarefas();
     mostrarMenu('aplicacao'); // Menu inicial padrão
 
     // Configurar o tema inicial
@@ -32,28 +29,21 @@ function toggleTheme() {
     }
 }
 
-// Função para trocar entre os menus com animação suave
+// Função para mostrar e trocar entre os menus
 function mostrarMenu(menu) {
-    // Oculta todos os menus com transição
-    document.querySelectorAll(".menu").forEach(el => {
-        el.classList.remove("active");
-    });
+    document.querySelectorAll(".menu").forEach(el => el.classList.remove("active"));
+    document.getElementById(menu).classList.add("active");
 
-    // Mostra o menu desejado com efeito suave
-    const targetMenu = document.getElementById(menu);
-    if (targetMenu) {
-        setTimeout(() => {
-            targetMenu.classList.add("active");
-        }, 100);
-    }
+    // Destacar o botão do menu ativo
+    document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`nav button[onclick="mostrarMenu('${menu}')"]`).classList.add("active");
 }
 
-// Função para exibir o formulário flutuante
+// Funções para mostrar e fechar o formulário flutuante
 function mostrarFormulario(formId) {
-    document.getElementById(formId).style.display = "flex";
+    document.getElementById(formId).classList.add("open");
 }
 
-// Função para fechar o formulário flutuante
 function fecharFormulario(formId) {
-    document.getElementById(formId).style.display = "none";
+    document.getElementById(formId).classList.remove("open");
 }

@@ -11,8 +11,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     font-size: 16px;
-    padding: 20px;
-    text-align: center;
+    padding: 0;
 }
 
 /* ===== TEMA CLARO E ESCURO ===== */
@@ -30,40 +29,54 @@ body.dark {
     --text-color: var(--text-dark);
 }
 
-h1 {
-    margin-bottom: 20px;
-    font-size: 28px;
-    color: var(--primary-color);
-}
-
-/* ===== MENU DE NAVEGAÇÃO ===== */
-#menu {
+header {
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-#menu button {
-    padding: 10px 15px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
     background-color: var(--primary-color);
     color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+    font-size: 24px;
+}
+
+#theme-toggle {
+    background: none;
     border: none;
-    border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
-    font-weight: bold;
+    color: #fff;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    background-color: var(--primary-color);
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+nav button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 15px;
+    cursor: pointer;
     transition: background 0.3s;
 }
 
-#menu button:hover {
+nav button:hover {
     background-color: var(--secondary-color);
 }
 
-/* ===== CONTEÚDO PRINCIPAL ===== */
-#conteudo {
+main {
     max-width: 600px;
-    margin: 0 auto;
-    background-color: rgba(0, 0, 0, 0.05);
+    margin: 20px auto;
+    background: var(--background-color);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -77,12 +90,10 @@ h1 {
     display: block;
 }
 
-/* ===== FORMULÁRIOS ===== */
 form {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 15px;
 }
 
 form input, form button {
@@ -102,56 +113,62 @@ form button:hover {
     background-color: var(--secondary-color);
 }
 
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+ul li {
+    padding: 10px;
+    background: rgba(0, 123, 255, 0.1);
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
 /* ===== LISTA DE ITENS ===== */
 ul {
     list-style: none;
     padding: 0;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 ul li {
-    padding: 8px 12px;
-    background-color: rgba(0, 123, 255, 0.1);
-    margin-bottom: 5px;
-    border-radius: 5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(0, 123, 255, 0.1);
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background 0.3s;
 }
 
-ul li span {
+ul li:hover {
+    background: rgba(0, 123, 255, 0.15);
+}
+
+ul li .item-text {
     flex-grow: 1;
     text-align: left;
 }
 
-ul li button {
-    padding: 5px 10px;
-    background-color: var(--primary-color);
-    color: #fff;
+ul li .item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+ul li .item-actions button {
+    background: none;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
+    color: var(--primary-color);
+    font-size: 18px;
+    transition: color 0.3s;
 }
 
-ul li button:hover {
-    background-color: var(--secondary-color);
-}
-
-/* ===== BOTÃO DE TEMA ===== */
-#theme-toggle {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: var(--primary-color);
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
-}
-
-#theme-toggle:hover {
-    background-color: var(--secondary-color);
+ul li .item-actions button:hover {
+    color: var(--secondary-color);
 }

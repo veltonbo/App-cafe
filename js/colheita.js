@@ -113,11 +113,14 @@ function excluirColheita(index) {
 
 // ====== ATUALIZAR RESUMO COLHEITA ======
 function atualizarResumoColheita() {
-  const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
-  const totalPago = colheita.reduce((soma, c) => soma + c.pagoParcial * c.valorLata, 0);
-  const totalPendente = colheita.reduce((soma, c) => (c.quantidade - c.pagoParcial) * c.valorLata, 0);
+  const resumo = document.getElementById("resumoColheita");
+  if (!resumo) return;
 
-  document.getElementById('resumoColheita').innerHTML = `
+  const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+  const totalPago = colheita.reduce((soma, c) => c.pago ? c.quantidade * c.valorLata : 0, 0);
+  const totalPendente = colheita.reduce((soma, c) => !c.pago ? c.quantidade * c.valorLata : 0, 0);
+
+  resumo.innerHTML = `
     <div><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
     <div><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
     <div><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>

@@ -42,7 +42,7 @@
   </div>
 
   <div class="conteudo">
-    <!-- ========== MENU APLICAÇÕES ========== -->
+   <!-- ========== MENU APLICAÇÕES ========== -->
 <div id="aplicacoes" class="aba">
   <h2>Aplicações</h2>
 
@@ -69,24 +69,26 @@
     </select>
 
     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 10px;">
-  <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
-    <i class="fas fa-save"></i> Salvar Edição
-  </button>
-  <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
-    Cancelar Edição
-  </button>
-</div>
-  
+      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">
+        <i class="fas fa-save"></i> Salvar Edição
+      </button>
+      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">
+        Cancelar Edição
+      </button>
+    </div>
+  </div>
 
   <!-- Filtros e Pesquisa -->
-  <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
-    <option value="">Todos os Setores</option>
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-  </select>
-  <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+  <div style="margin-top: 15px;">
+    <select id="filtroSetorAplicacoes" onchange="atualizarAplicacoes()">
+      <option value="">Todos os Setores</option>
+      <option value="Setor 01">Setor 01</option>
+      <option value="Setor 02">Setor 02</option>
+    </select>
+    <input id="pesquisaAplicacoes" class="campo-pesquisa" placeholder="Pesquisar..." oninput="atualizarAplicacoes()">
+  </div>
 
-  <!-- Listagem de Aplicações -->
+  <!-- Listagem de Aplicações (SEPARADA DO FORMULÁRIO) -->
   <div id="listaAplicacoes"></div>
 
   <!-- Botão para Exportar CSV -->

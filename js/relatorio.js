@@ -12,6 +12,14 @@ function atualizarRelatorioCompleto() {
   atualizarRelatorioColheita();
 }
 
+// ====== ATUALIZAR RELATÓRIO COMPLETO ======
+function atualizarRelatorioCompleto() {
+  if (document.getElementById("resumoRelAplicacoes")) atualizarRelatorioAplicacoes();
+  if (document.getElementById("resumoRelTarefas")) atualizarRelatorioTarefas();
+  if (document.getElementById("resumoRelFinanceiro")) atualizarRelatorioFinanceiro();
+  if (document.getElementById("resumoRelColheita")) atualizarRelatorioColheita();
+}
+
 // ====== ATUALIZAR RELATÓRIO APLICAÇÕES ======
 function atualizarRelatorioAplicacoes() {
   relatorioAplicacoes = aplicacoes || [];

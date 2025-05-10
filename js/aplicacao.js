@@ -1,11 +1,36 @@
-// Inicializar Firebase
-document.addEventListener("DOMContentLoaded", () => {
-  const db = firebase.database().ref("aplicacoes");
-  carregarAplicacoes();
+// Firebase Configuração (js/firebase-config.js)
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
 
-  document.getElementById("btnSalvarAplicacao").onclick = salvarAplicacao;
-  document.getElementById("btnCancelarEdicaoApp").onclick = cancelarEdicaoAplicacao;
-});
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database().ref("aplicacoes");
+
+// Funções
+function alternarFormularioAplicacao() {
+  const formulario = document.getElementById("formularioAplicacao");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}
+
+function carregarAplicacoes() {
+  db.on("value", (snapshot) => {
+    const lista = document.getElementById("listaAplicacoes");
+    lista.innerHTML = "";
+    snapshot.forEach((child) => {
+      const item = child.val();
+      lista.innerHTML += `<div class="item">
+        ${item.data} - ${item.produto} (${item.dosagem}) - ${item.tipo} - ${item.setor}
+      </div>`;
+    });
+  });
+}
 
 function salvarAplicacao() {
   const data = document.getElementById("dataApp").value;
@@ -14,30 +39,6 @@ function salvarAplicacao() {
   const tipo = document.getElementById("tipoApp").value;
   const setor = document.getElementById("setorApp").value;
 
-  if (!data || !produto || !dosagem) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  const db = firebase.database().ref("aplicacoes");
   db.push().set({ data, produto, dosagem, tipo, setor });
-
   carregarAplicacoes();
-  cancelarEdicaoAplicacao();
-}
-
-function cancelarEdicaoAplicacao() {
-  document.getElementById("formularioAplicacao").reset();
-  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-}
-
-function carregarAplicacoes() {
-  const db = firebase.database().ref("aplicacoes");
-  db.on("value", (snapshot) => {
-    const lista = document.getElementById("listaAplicacoes");
-    lista.innerHTML = "";
-    snapshot.forEach((child) => {
-      lista.innerHTML += `<div class="item">${child.val().data} - ${child.val().produto}</div>`;
-    });
-  });
 }

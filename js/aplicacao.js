@@ -1,27 +1,8 @@
 // js/aplicacao.js
 
-function initAplicacao() {
-    console.log("Módulo Aplicações Iniciado");
-    document.getElementById("aplicacaoForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        adicionarAplicacao();
-    });
+document.addEventListener("DOMContentLoaded", () => {
     carregarAplicacoes();
-}
-
-function adicionarAplicacao() {
-    const produto = document.getElementById("produto").value;
-    const quantidade = document.getElementById("quantidade").value;
-    
-    db.ref("aplicacoes").push({
-        produto: produto,
-        quantidade: quantidade,
-        data: new Date().toISOString()
-    });
-
-    document.getElementById("produto").value = "";
-    document.getElementById("quantidade").value = "";
-}
+});
 
 function carregarAplicacoes() {
     db.ref("aplicacoes").on("value", (snapshot) => {
@@ -32,19 +13,22 @@ function carregarAplicacoes() {
             const key = childSnapshot.key;
             const listItem = document.createElement("li");
             listItem.innerHTML = `
-                <span class="item-text">${data.produto} - ${data.quantidade}</span>
-                <div class="item-actions">
-                    <button onclick="editarAplicacao('${key}')">
-                        ✏️
-                    </button>
-                    <button onclick="excluirAplicacao('${key}')">
-                        🗑️
-                    </button>
-                </div>
+                ${data.produto} - ${data.quantidade}
+                <button onclick="editarAplicacao('${key}')">✏️</button>
+                <button onclick="excluirAplicacao('${key}')">🗑️</button>
             `;
             aplicacaoList.appendChild(listItem);
         });
     });
+}
+
+function adicionarAplicacao() {
+    const produto = prompt("Digite o produto:");
+    const quantidade = prompt("Digite a quantidade:");
+
+    if (produto && quantidade) {
+        db.ref("aplicacoes").push({ produto, quantidade });
+    }
 }
 
 function editarAplicacao(key) {

@@ -131,8 +131,7 @@ function atualizarAplicacoes() {
 
   aplicacoes.forEach((app, i) => {
     const item = document.createElement('div');
-    item.className = 'item';
-
+    item.className = 'item-aplicacao';
     item.innerHTML = `
       <div class="conteudo-item">
         <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
@@ -140,7 +139,7 @@ function atualizarAplicacoes() {
           <i class="fas fa-chevron-down"></i>
         </button>
       </div>
-      <div class="opcoes-aplicacao" id="opcoesAplicacao-${i}" style="display: none;">
+      <div class="opcoes-aplicacao" id="opcoesAplicacao-${i}">
         <button class="botao-circular azul" onclick="editarAplicacao(${i})">
           <i class="fas fa-edit"></i> Editar
         </button>
@@ -158,12 +157,12 @@ function alternarOpcoes(index) {
   const opcoes = document.getElementById(`opcoesAplicacao-${index}`);
   const icone = opcoes.previousElementSibling.querySelector(".botao-seta i");
   
-  if (opcoes.style.display === "none") {
-    opcoes.style.display = "flex";
-    icone.classList.replace("fa-chevron-down", "fa-chevron-up");
-  } else {
+  if (opcoes.style.display === "flex") {
     opcoes.style.display = "none";
     icone.classList.replace("fa-chevron-up", "fa-chevron-down");
+  } else {
+    opcoes.style.display = "flex";
+    icone.classList.replace("fa-chevron-down", "fa-chevron-up");
   }
 }
 

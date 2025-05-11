@@ -1,144 +1,93 @@
-// ===== FUNÇÃO PARA TROCAR ABAS =====
+// ===== CONFIGURAÇÃO DO FIREBASE =====
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+
+// ===== INICIALIZAR APP =====
+document.addEventListener("DOMContentLoaded", () => {
+  mostrarAba('telaInicio');
+  atualizarResumoInicio();
+  carregarTodosMenus();
+});
+
+// ===== MOSTRAR ABAS =====
 function mostrarAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => {
-    aba.style.display = 'none';
+  document.querySelectorAll('.aba').forEach(aba => aba.style.display = 'none');
+  document.getElementById(abaId).style.display = 'block';
+  if (abaId === 'telaInicio') atualizarResumoInicio();
+}
+
+// ===== ATUALIZAR RESUMO DA TELA DE INÍCIO =====
+function atualizarResumoInicio() {
+  const resumo = document.querySelector('.resumo-geral');
+  let totalLatas = 0;
+  let totalPago = 0;
+  let totalPendente = 0;
+
+  firebase.database().ref('Colheita').once('value').then(snapshot => {
+    snapshot.forEach(snap => {
+      const c = snap.val();
+      totalLatas += parseFloat(c.quantidade);
+    });
+
+    resumo.innerHTML = `
+      <div><strong>Total de Latas Colhidas:</strong> ${totalLatas}</div>
+      <div><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
+      <div><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+    `;
   });
-
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) {
-    abaSelecionada.style.display = 'block';
-    carregarAbaEspecifica(abaId);
-  }
-
-  document.querySelectorAll('.menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
-  if (btn) btn.classList.add('active');
-
-  localStorage.setItem('aba', abaId);
 }
 
-// ===== FUNÇÃO PARA CARREGAR A ABA ESPECÍFICA =====
-function carregarAbaEspecifica(abaId) {
-  switch (abaId) {
-    case 'inicio':
-      if (typeof carregarInicio === "function") carregarInicio();
-      break;
-    case 'aplicacoes':
-      if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-      break;
-    case 'tarefas':
-      if (typeof carregarTarefas === "function") carregarTarefas();
-      break;
-    case 'financeiro':
-      if (typeof carregarFinanceiro === "function") carregarFinanceiro();
-      break;
-    case 'colheita':
-      if (typeof carregarColheita === "function") carregarColheita();
-      if (typeof carregarValorLata === "function") carregarValorLata();
-      break;
-    case 'configuracoes':
-      if (typeof carregarAnoSafra === "function") carregarAnoSafra();
-      if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
-      break;
-    default:
-      console.warn("Aba não reconhecida:", abaId);
-  }
+// ===== CARREGAR TODOS OS MENUS =====
+function carregarTodosMenus() {
+  atualizarAplicacoes();
+  atualizarTarefas();
+  atualizarFinanceiro();
+  atualizarColheita();
 }
 
-// ===== INICIALIZAR O APLICATIVO =====
-function inicializarApp() {
-  const abaInicial = localStorage.getItem('aba') || 'inicio';
-  mostrarAba(abaInicial);
-
-  aplicarTemaLocalStorage();
-
-  // Disparar o evento após garantir que o DOM está pronto
-  document.dispatchEvent(new Event('dadosCarregados'));
+// ===== MOSTRAR FORMULÁRIO FLUTUANTE =====
+function mostrarFormulario(idFormulario) {
+  document.getElementById(idFormulario).style.display = "block";
 }
 
-// ===== APLICAR TEMA COM BASE NO LOCALSTORAGE =====
-function aplicarTemaLocalStorage() {
-  const temaSalvo = localStorage.getItem('tema');
-  document.body.classList.toggle('claro', temaSalvo === 'claro');
+// ===== CANCELAR FORMULÁRIO FLUTUANTE =====
+function cancelarFormulario(idFormulario) {
+  document.getElementById(idFormulario).style.display = "none";
+  document.querySelectorAll(`#${idFormulario} input`).forEach(input => input.value = "");
 }
 
-// ===== TROCAR TEMA (CLARO/ESCURO) =====
+// ===== MODO CLARO/ESCURO =====
 function alternarTema() {
-  const temaAtual = document.body.classList.contains('claro') ? 'escuro' : 'claro';
-  document.body.classList.toggle('claro', temaAtual === 'claro');
-  localStorage.setItem('tema', temaAtual);
+  document.body.classList.toggle('claro');
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
 }
 
-// ===== FUNÇÃO PARA FORMATAR DATA (DD/MM/AAAA) =====
-  function formatarDataBR(dataISO) {
-    const [ano, mes, dia] = dataISO.split('-');
-    return `${dia}/${mes}/${ano}`;
+// ===== CARREGAR TEMA SALVO =====
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem('tema') === 'claro') {
+    document.body.classList.add('claro');
   }
+});
 
-  // ===== FUNÇÃO PARA FORMATAR VALOR EM REAIS (R$) =====
-  function formatarValorBR(valor) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  }
-
-// ===== FORMULÁRIO DE APLICAÇÕES =====
-function mostrarFormularioAplicacao() {
-  document.getElementById("formularioAplicacoes").style.display = "block";
+// ===== FORMATAR DATA PARA BR (DD/MM/AAAA) =====
+function formatarDataBR(dataISO) {
+  if (!dataISO) return "";
+  const [ano, mes, dia] = dataISO.split('-');
+  return `${dia}/${mes}/${ano}`;
 }
 
-function salvarAplicacao() {
-  // Sua lógica de salvar aplicação
-  document.getElementById("formularioAplicacoes").style.display = "none";
+// ===== FORMATAR VALOR PARA REAL (R$) =====
+function formatarValorBR(valor) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor);
 }
-
-function cancelarAplicacao() {
-  document.getElementById("formularioAplicacoes").style.display = "none";
-}
-
-// ===== FORMULÁRIO DE TAREFAS =====
-function mostrarFormularioTarefa() {
-  document.getElementById("formularioTarefas").style.display = "block";
-}
-
-function salvarTarefa() {
-  document.getElementById("formularioTarefas").style.display = "none";
-}
-
-function cancelarTarefa() {
-  document.getElementById("formularioTarefas").style.display = "none";
-}
-
-// ===== FORMULÁRIO DE FINANCEIRO =====
-function mostrarFormularioFinanceiro() {
-  document.getElementById("formularioFinanceiro").style.display = "block";
-}
-
-function salvarFinanceiro() {
-  document.getElementById("formularioFinanceiro").style.display = "none";
-}
-
-function cancelarFinanceiro() {
-  document.getElementById("formularioFinanceiro").style.display = "none";
-}
-
-// ===== FORMULÁRIO DE COLHEITA =====
-function mostrarFormularioColheita() {
-  document.getElementById("formularioColheita").style.display = "block";
-}
-
-function salvarColheita() {
-  document.getElementById("formularioColheita").style.display = "none";
-}
-
-function cancelarColheita() {
-  document.getElementById("formularioColheita").style.display = "none";
-}
-
-// Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);

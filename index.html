@@ -77,13 +77,48 @@
     </div>
 
     <!-- ===== TAREFAS ===== -->
-    <div id="tarefas" class="aba">
-      <h2>Tarefas</h2>
-      <input id="dataTarefa" type="date">
-      <input id="descricaoTarefa" placeholder="Descrição">
-      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-      <div id="listaTarefas"></div>
-    </div>
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+  
+  <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
+  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
+  
+  <select id="prioridadeTarefa">
+    <option value="Alta">Alta</option>
+    <option value="Média">Média</option>
+    <option value="Baixa">Baixa</option>
+  </select>
+  
+  <select id="setorTarefa">
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+    <option value="Setor 03">Setor 03</option>
+  </select>
+  
+  <!-- Checkbox para definir se é uma aplicação -->
+  <label>
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+    É uma Aplicação
+  </label>
+  
+  <!-- Campos de aplicação (aparecem apenas se for uma aplicação) -->
+  <div id="camposAplicacao" style="display: none;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Outro">Outro</option>
+    </select>
+  </div>
+
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none;">Cancelar Edição</button>
+  
+  <div id="listaTarefas"></div>
+  <div id="listaTarefasFeitas"></div>
+</div>
 
     <!-- ===== FINANCEIRO ===== -->
     <div id="financeiro" class="aba">

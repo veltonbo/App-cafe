@@ -268,3 +268,21 @@ body.claro .botao-circular.azul {
   margin-top: 10px;
   display: none;
 }
+
+/* ===== BOTÃO CIRCULAR VERMELHO ===== */
+.botao-circular-vermelho {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.3s;
+  margin-left: 10px;
+}
+
+.botao-circular-vermelho:hover {
+  background-color: #d32f2f;
+}

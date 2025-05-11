@@ -1,21 +1,12 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
+let indiceEdicaoAplicacao = null; // Variável para controlar a edição
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
     const dados = snap.val();
-    if (dados && typeof dados === "object") {
-      aplicacoes = Object.values(dados).map(app => ({
-        data: app.data || '',
-        produto: app.produto || '',
-        dosagem: app.dosagem || '',
-        tipo: app.tipo || 'Adubo',
-        setor: app.setor || 'Setor 01'
-      }));
-    } else {
-      aplicacoes = [];
-    }
+    aplicacoes = dados ? Object.values(dados) : [];
     atualizarAplicacoes();
     atualizarSugestoesProdutoApp();
   });
@@ -39,8 +30,6 @@ function adicionarAplicacao() {
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
     aplicacoes.push(nova);
   }
@@ -53,6 +42,7 @@ function adicionarAplicacao() {
 
   atualizarAplicacoes();
   limparCamposAplicacao();
+  alternarFormularioAplicacao(false); // Oculta o formulário após salvar
 }
 
 // ===== CANCELAR EDIÇÃO =====
@@ -61,6 +51,7 @@ function cancelarEdicaoAplicacao() {
   limparCamposAplicacao();
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
+  alternarFormularioAplicacao(false); // Oculta o formulário ao cancelar
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -110,6 +101,7 @@ function editarAplicacao(index) {
   indiceEdicaoAplicacao = index;
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
+  alternarFormularioAplicacao(true); // Exibe o formulário para edição
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
@@ -148,9 +140,13 @@ function exportarAplicacoesCSV() {
 }
 
 // ===== ALTERNAR FORMULÁRIO APLICAÇÃO =====
-function alternarFormularioAplicacao() {
+function alternarFormularioAplicacao(exibir = null) {
   const form = document.getElementById("formularioAplicacao");
-  form.style.display = form.style.display === "none" ? "block" : "none";
+  if (exibir !== null) {
+    form.style.display = exibir ? "block" : "none";
+  } else {
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  }
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

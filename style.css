@@ -236,3 +236,35 @@ body.claro .botao-circular.vermelho {
 body.claro .botao-circular.azul {
   background-color: #2196f3;
 }
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s;
+  z-index: 1000;
+}
+
+.botao-flutuante:hover {
+  background-color: #45a049;
+}
+
+#formularioAplicacao {
+  padding: 15px;
+  background-color: #2c2c2c;
+  border-radius: 8px;
+  margin-top: 10px;
+  display: none;
+}

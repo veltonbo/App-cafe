@@ -95,25 +95,14 @@ function atualizarAplicacoes() {
 // ===== ALTERNAR OPÇÕES =====
 function alternarOpcoes(index) {
   const botoes = document.getElementById(`botoes-aplicacao-${index}`);
-  const botaoExpandir = botoes.previousElementSibling;
-
-  if (botoes.style.display === "none") {
-    botoes.style.display = "flex";
-    botaoExpandir.classList.add("ativo");
-  } else {
-    botoes.style.display = "none";
-    botaoExpandir.classList.remove("ativo");
-  }
+  botoes.style.display = botoes.style.display === "none" ? "flex" : "none";
 }
 
 // ===== DUPLICAR APLICAÇÃO =====
 function duplicarAplicacao(index) {
   const nova = { ...aplicacoes[index] };
   aplicacoes.push(nova);
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
-    acc[idx] = app;
-    return acc;
-  }, {}));
+  salvarAplicacoesFirebase();
   atualizarAplicacoes();
 }
 
@@ -129,20 +118,13 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
-  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
-    acc[idx] = app;
-    return acc;
-  }, {}));
-
+  salvarAplicacoesFirebase();
   atualizarAplicacoes();
 }
 
@@ -193,23 +175,7 @@ function mostrarFormularioAplicacao() {
 // ===== PESQUISAR APLICAÇÕES =====
 function pesquisarAplicacoes() {
   const termo = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-  const lista = document.getElementById("listaAplicacoes");
-  lista.innerHTML = '';
-
-  aplicacoes
-    .filter(app => app.produto.toLowerCase().includes(termo))
-    .forEach((app, i) => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.innerHTML = `
-        <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <div class="botoes-aplicacao">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+  atualizarAplicacoes();
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

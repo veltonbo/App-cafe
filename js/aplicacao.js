@@ -14,24 +14,32 @@ function carregarAplicacoes() {
 
 // ===== ADICIONAR OU EDITAR APLICAÇÃO =====
 function adicionarAplicacao() {
-  const nova = {
-    data: document.getElementById("dataApp").value,
-    produto: document.getElementById("produtoApp").value.trim(),
-    dosagem: document.getElementById("dosagemApp").value.trim(),
-    tipo: document.getElementById("tipoApp").value,
-    setor: document.getElementById("setorApp").value
-  };
+  const dataApp = document.getElementById("dataApp").value;
+  const produtoApp = document.getElementById("produtoApp").value.trim();
+  const dosagemApp = document.getElementById("dosagemApp").value.trim();
+  const tipoApp = document.getElementById("tipoApp").value;
+  const setorApp = document.getElementById("setorApp").value;
 
-  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
+  if (!dataApp || !produtoApp || !dosagemApp || isNaN(parseFloat(dosagemApp))) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
+  const novaAplicacao = {
+    data: dataApp,
+    produto: produtoApp,
+    dosagem: dosagemApp,
+    tipo: tipoApp,
+    setor: setorApp
+  };
+
   if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
+    // Atualizar aplicação existente
+    aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
     indiceEdicaoAplicacao = null;
   } else {
-    aplicacoes.push(nova);
+    // Adicionar nova aplicação
+    aplicacoes.push(novaAplicacao);
   }
 
   // Salvar no Firebase
@@ -42,7 +50,7 @@ function adicionarAplicacao() {
 
   atualizarAplicacoes();
   limparCamposAplicacao();
-  alternarFormularioAplicacao(false); // Oculta o formulário após salvar
+  alternarFormularioAplicacao(false);
 }
 
 // ===== EDITAR APLICAÇÃO =====
@@ -50,18 +58,17 @@ function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
 
-  // Exibir o formulário de edição e preencher os campos
-  document.getElementById("dataApp").value = app.data;
-  document.getElementById("produtoApp").value = app.produto;
-  document.getElementById("dosagemApp").value = app.dosagem;
-  document.getElementById("tipoApp").value = app.tipo;
-  document.getElementById("setorApp").value = app.setor;
+  // Exibir o formulário e preencher os campos corretamente
+  document.getElementById("formularioAplicacao").style.display = "block";
+  document.getElementById("dataApp").value = app.data || '';
+  document.getElementById("produtoApp").value = app.produto || '';
+  document.getElementById("dosagemApp").value = app.dosagem || '';
+  document.getElementById("tipoApp").value = app.tipo || 'Adubo';
+  document.getElementById("setorApp").value = app.setor || 'Setor 01';
 
   indiceEdicaoAplicacao = index;
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
-  
-  alternarFormularioAplicacao(true); // Exibir o formulário automaticamente
 }
 
 // ===== CANCELAR EDIÇÃO =====
@@ -70,7 +77,7 @@ function cancelarEdicaoAplicacao() {
   limparCamposAplicacao();
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
-  alternarFormularioAplicacao(false); // Oculta o formulário ao cancelar
+  document.getElementById("formularioAplicacao").style.display = "none";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -80,6 +87,8 @@ function limparCamposAplicacao() {
   document.getElementById("dosagemApp").value = '';
   document.getElementById("tipoApp").value = 'Adubo';
   document.getElementById("setorApp").value = 'Setor 01';
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== ATUALIZAR LISTAGEM =====
@@ -142,13 +151,9 @@ function exportarAplicacoesCSV() {
 }
 
 // ===== ALTERNAR FORMULÁRIO APLICAÇÃO =====
-function alternarFormularioAplicacao(exibir = null) {
+function alternarFormularioAplicacao() {
   const form = document.getElementById("formularioAplicacao");
-  if (exibir !== null) {
-    form.style.display = exibir ? "block" : "none";
-  } else {
-    form.style.display = form.style.display === "none" ? "block" : "none";
-  }
+  form.style.display = form.style.display === "none" ? "block" : "none";
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

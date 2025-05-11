@@ -87,5 +87,58 @@ function alternarTema() {
     }).format(valor);
   }
 
+// ===== FORMULÁRIO DE APLICAÇÕES =====
+function mostrarFormularioAplicacao() {
+  document.getElementById("formularioAplicacoes").style.display = "block";
+}
+
+function salvarAplicacao() {
+  // Sua lógica de salvar aplicação
+  document.getElementById("formularioAplicacoes").style.display = "none";
+}
+
+function cancelarAplicacao() {
+  document.getElementById("formularioAplicacoes").style.display = "none";
+}
+
+// ===== FORMULÁRIO DE TAREFAS =====
+function mostrarFormularioTarefa() {
+  document.getElementById("formularioTarefas").style.display = "block";
+}
+
+function salvarTarefa() {
+  document.getElementById("formularioTarefas").style.display = "none";
+}
+
+function cancelarTarefa() {
+  document.getElementById("formularioTarefas").style.display = "none";
+}
+
+// ===== FORMULÁRIO DE FINANCEIRO =====
+function mostrarFormularioFinanceiro() {
+  document.getElementById("formularioFinanceiro").style.display = "block";
+}
+
+function salvarFinanceiro() {
+  document.getElementById("formularioFinanceiro").style.display = "none";
+}
+
+function cancelarFinanceiro() {
+  document.getElementById("formularioFinanceiro").style.display = "none";
+}
+
+// ===== FORMULÁRIO DE COLHEITA =====
+function mostrarFormularioColheita() {
+  document.getElementById("formularioColheita").style.display = "block";
+}
+
+function salvarColheita() {
+  document.getElementById("formularioColheita").style.display = "none";
+}
+
+function cancelarColheita() {
+  document.getElementById("formularioColheita").style.display = "none";
+}
+
 // Executa ao carregar a página
 window.addEventListener('DOMContentLoaded', inicializarApp);

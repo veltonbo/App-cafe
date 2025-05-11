@@ -53,15 +53,29 @@ function atualizarTarefas() {
 
 // ====== ADICIONAR OU SALVAR EDIÇÃO ======
 function adicionarTarefa() {
+  const dataTarefa = document.getElementById('dataTarefa');
+  const descricaoTarefa = document.getElementById('descricaoTarefa');
+  const prioridadeTarefa = document.getElementById('prioridadeTarefa');
+  const setorTarefa = document.getElementById('setorTarefa');
+  const eAplicacaoCheckbox = document.getElementById('eAplicacaoCheckbox');
+  const dosagemAplicacao = document.getElementById('dosagemAplicacao');
+  const tipoAplicacao = document.getElementById('tipoAplicacao');
+
+  // Verificar se todos os campos existem
+  if (!dataTarefa || !descricaoTarefa || !prioridadeTarefa || !setorTarefa) {
+    console.error("Campos do formulário de tarefas não encontrados.");
+    return;
+  }
+
   const nova = {
-    data: document.getElementById('dataTarefa').value,
-    descricao: document.getElementById('descricaoTarefa').value.trim(),
-    prioridade: document.getElementById('prioridadeTarefa').value,
-    setor: document.getElementById('setorTarefa').value,
+    data: dataTarefa.value,
+    descricao: descricaoTarefa.value.trim(),
+    prioridade: prioridadeTarefa.value,
+    setor: setorTarefa.value,
     feita: false,
-    eAplicacao: document.getElementById('eAplicacaoCheckbox').checked,
-    dosagem: document.getElementById('dosagemAplicacao').value.trim(),
-    tipo: document.getElementById('tipoAplicacao').value
+    eAplicacao: eAplicacaoCheckbox ? eAplicacaoCheckbox.checked : false,
+    dosagem: dosagemAplicacao ? dosagemAplicacao.value.trim() : '',
+    tipo: tipoAplicacao ? tipoAplicacao.value : 'Adubo'
   };
 
   if (!nova.data || !nova.descricao) {

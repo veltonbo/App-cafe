@@ -73,5 +73,19 @@ function alternarTema() {
   localStorage.setItem('tema', temaAtual);
 }
 
+// ===== FUNÇÃO PARA FORMATAR DATA (DD/MM/AAAA) =====
+  function formatarDataBR(dataISO) {
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // ===== FUNÇÃO PARA FORMATAR VALOR EM REAIS (R$) =====
+  function formatarValorBR(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
+  }
+
 // Executa ao carregar a página
 window.addEventListener('DOMContentLoaded', inicializarApp);

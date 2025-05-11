@@ -84,19 +84,23 @@ function limparCamposTarefa() {
   mostrarCamposAplicacao();
 }
 
-// ====== ATUALIZAR LISTA DE TAREFAS ======
+// ===== ATUALIZAR LISTA DE TAREFAS =====
 function atualizarTarefas() {
-  const lista = document.getElementById('listaTarefas');
+  const lista = document.getElementById("listaTarefas");
   lista.innerHTML = '';
 
-  tarefas.forEach((t, index) => {
-    const item = document.createElement('div');
-    item.className = 'item';
+  tarefas.forEach((tarefa, index) => {
+    const item = document.createElement("div");
+    item.className = "item";
     item.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <span>${formatarDataBR(tarefa.data)} - ${tarefa.descricao} (${tarefa.prioridade}) - ${tarefa.setor}</span>
       <div class="botoes-tarefa">
-        <button class="botao-circular azul" onclick="editarTarefa(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})"><i class="fas fa-trash"></i></button>
+        <button class="botao-circular azul" onclick="editarTarefa(${index})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
       </div>
     `;
     lista.appendChild(item);

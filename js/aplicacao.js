@@ -91,6 +91,38 @@ function limparCamposAplicacao() {
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
+// ===== FILTRAR APLICAÇÕES =====
+function filtrarAplicacoes() {
+  const termo = document.getElementById("campoPesquisaAplicacoes").value.toLowerCase();
+  const lista = document.getElementById("listaAplicacoes");
+  lista.innerHTML = '';
+
+  aplicacoes
+    .filter(app => 
+      app.data.toLowerCase().includes(termo) ||
+      app.produto.toLowerCase().includes(termo) ||
+      app.dosagem.toLowerCase().includes(termo) ||
+      app.tipo.toLowerCase().includes(termo) ||
+      app.setor.toLowerCase().includes(termo)
+    )
+    .forEach((app, i) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="botoes-aplicacao">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      lista.appendChild(item);
+    });
+}
+
 // ===== ATUALIZAR LISTAGEM =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");

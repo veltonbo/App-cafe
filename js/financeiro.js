@@ -1,47 +1,132 @@
-// ===== CONFIGURAÇÃO DO FIREBASE PARA FINANCEIRO =====
-const dbFinanceiro = firebase.database().ref('Financeiro');
+// ===== VARIÁVEIS GLOBAIS =====
+let gastos = [];
+let indiceEdicaoGasto = null;
 
-// ===== SALVAR GASTO =====
-function salvarFinanceiro() {
-  const data = document.getElementById("dataFin").value;
-  const produto = document.getElementById("produtoFin").value.trim();
-  const valor = parseFloat(document.getElementById("valorFin").value);
+// ===== INICIALIZAR FINANCEIRO =====
+function inicializarFinanceiro() {
+  carregarFinanceiro();
+  document.getElementById("btnCancelarFinanceiro").addEventListener("click", cancelarEdicaoFinanceiro);
+}
 
-  if (!data || !produto || isNaN(valor)) {
+// ===== ALTERNAR FORMULÁRIO FINANCEIRO =====
+function alternarFormularioFinanceiro() {
+  const form = document.getElementById("formularioFinanceiro");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  resetarFormularioFinanceiro();
+}
+
+// ===== MOSTRAR CAMPOS DE PARCELAS =====
+function mostrarCamposParcelas() {
+  const camposParcelas = document.getElementById("camposParcelas");
+  const parcelado = document.getElementById("parceladoFin").checked;
+  camposParcelas.style.display = parcelado ? "block" : "none";
+}
+
+// ===== CARREGAR FINANCEIRO =====
+function carregarFinanceiro() {
+  db.ref("Financeiro").on("value", (snapshot) => {
+    const dados = snapshot.val();
+    gastos = dados ? Object.values(dados) : [];
+    atualizarFinanceiro();
+  });
+}
+
+// ===== ADICIONAR OU EDITAR GASTO =====
+function adicionarFinanceiro() {
+  const data = dataFin.value;
+  const produto = produtoFin.value.trim();
+  const descricao = descricaoFin.value.trim();
+  const valor = parseFloat(valorFin.value);
+  const tipo = tipoFin.value;
+  const parcelado = parceladoFin.checked;
+  const numParcelas = parcelado ? parseInt(parcelasFin.value) || 1 : 1;
+
+  if (!data || !produto || isNaN(valor) || valor <= 0) {
     alert("Preencha todos os campos corretamente!");
     return;
   }
 
-  const novoGasto = { data, produto, valor };
-  dbFinanceiro.push(novoGasto);
-  cancelarFormulario('formularioFinanceiro');
+  if (indiceEdicaoGasto !== null) {
+    // Editar gasto existente
+    gastos[indiceEdicaoGasto] = { data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas };
+    indiceEdicaoGasto = null;
+  } else {
+    // Adicionar novo gasto
+    gastos.push({ data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas });
+  }
+
+  db.ref("Financeiro").set(gastos);
   atualizarFinanceiro();
+  resetarFormularioFinanceiro();
+  alternarFormularioFinanceiro();
 }
 
-// ===== ATUALIZAR LISTA DE GASTOS =====
-function atualizarFinanceiro() {
-  dbFinanceiro.on('value', (snapshot) => {
-    const lista = document.getElementById("listaFinanceiro");
-    lista.innerHTML = '';
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoFinanceiro() {
+  resetarFormularioFinanceiro();
+  alternarFormularioFinanceiro();
+}
 
-    snapshot.forEach((snap) => {
-      const gasto = snap.val();
-      const item = document.createElement("div");
-      item.className = "item";
-      item.innerHTML = `
-        <span>${gasto.data} - ${gasto.produto} - R$ ${gasto.valor.toFixed(2)}</span>
-        <div class="botoes">
-          <button onclick="excluirGasto('${snap.key}')"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+// ===== RESETAR FORMULÁRIO =====
+function resetarFormularioFinanceiro() {
+  dataFin.value = "";
+  produtoFin.value = "";
+  descricaoFin.value = "";
+  valorFin.value = "";
+  tipoFin.value = "Adubo";
+  parcelasFin.value = "";
+  parceladoFin.checked = false;
+  mostrarCamposParcelas();
+  indiceEdicaoGasto = null;
+  document.getElementById("btnCancelarFinanceiro").style.display = "none";
+}
+
+// ===== ATUALIZAR LISTAGEM DE GASTOS =====
+function atualizarFinanceiro() {
+  const lista = document.getElementById("financeiroLista");
+  lista.innerHTML = '';
+
+  gastos.forEach((gasto, i) => {
+    const item = document.createElement("div");
+    item.className = "item";
+    item.innerHTML = `
+      <span>${gasto.data} - ${gasto.produto} - R$ ${gasto.valor.toFixed(2)} (${gasto.tipo})</span>
+      <div class="botoes-financeiro">
+        <button class="botao-circular azul" onclick="editarFinanceiro(${i})"><i class="fas fa-edit"></i></button>
+        <button class="botao-circular vermelho" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
+    lista.appendChild(item);
   });
 }
 
-// ===== EXCLUIR GASTO =====
-function excluirGasto(id) {
-  if (confirm("Deseja excluir este gasto?")) {
-    dbFinanceiro.child(id).remove();
-  }
+// ===== EDITAR GASTO =====
+function editarFinanceiro(index) {
+  const gasto = gastos[index];
+  if (!gasto) return;
+
+  dataFin.value = gasto.data;
+  produtoFin.value = gasto.produto;
+  descricaoFin.value = gasto.descricao || "";
+  valorFin.value = gasto.valor;
+  tipoFin.value = gasto.tipo;
+  parceladoFin.checked = gasto.parcelado;
+  mostrarCamposParcelas();
+  parcelasFin.value = gasto.parcelas || "";
+
+  indiceEdicaoGasto = index;
+  document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
+  document.getElementById("btnSalvarFinanceiro").innerText = "Salvar Edição";
+  document.getElementById("formularioFinanceiro").style.display = "block";
 }
+
+// ===== EXCLUIR GASTO =====
+function excluirFinanceiro(index) {
+  if (!confirm("Deseja excluir este lançamento financeiro?")) return;
+  gastos.splice(index, 1);
+  db.ref("Financeiro").set(gastos);
+  atualizarFinanceiro();
+}
+
+// ===== INICIALIZAR FINANCEIRO =====
+document.addEventListener("dadosCarregados", inicializarFinanceiro);

@@ -29,6 +29,7 @@ function inicializarApp() {
 
   // Eventos customizados para garantir que as funções carreguem corretamente
   document.addEventListener('dadosCarregados', () => {
+    if (typeof carregarInicio === "function") carregarInicio();
     if (typeof carregarAplicacoes === "function") carregarAplicacoes();
     if (typeof carregarTarefas === "function") carregarTarefas();
     if (typeof carregarFinanceiro === "function") carregarFinanceiro();

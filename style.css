@@ -54,6 +54,7 @@ body {
 .aba {
   display: none;
 }
+
 .aba.active {
   display: block;
 }
@@ -102,28 +103,16 @@ button:hover {
   background-color: #4caf50;
 }
 
-.botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-.botao-circular.vermelho:hover {
-  background-color: #d32f2f;
-}
-
 .botao-circular.azul {
   background-color: #2196f3;
 }
 
-.botao-circular.azul:hover {
-  background-color: #1976d2;
+.botao-circular.vermelho {
+  background-color: #f44336;
 }
 
 .botao-circular.laranja {
   background-color: #ff9800;
-}
-
-.botao-circular.laranja:hover {
-  background-color: #fb8c00;
 }
 
 /* ===== LISTAGEM DE ITENS ===== */
@@ -137,6 +126,7 @@ button:hover {
   border-left: 5px solid #4caf50;
   border-radius: 8px;
   transition: background 0.3s;
+  position: relative;
 }
 
 .item:hover {
@@ -147,19 +137,50 @@ button:hover {
   flex: 1;
   color: #fff;
   word-break: break-word;
+  margin-right: 10px;
 }
 
-/* ===== BOTOES ALINHADOS ===== */
-.botoes-tarefa {
-  display: flex;
+/* ===== BOTÕES OCULTOS COM SETA ===== */
+.botoes-aplicacao {
+  display: none;
   gap: 8px;
   align-items: center;
 }
 
-.botoes-tarefa .botao-circular {
+.item .botao-expandir {
+  background: none;
+  border: none;
+  color: #4caf50;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.item .botao-expandir.ativo {
+  transform: rotate(90deg);
+}
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.3s;
+}
+
+.botao-flutuante:hover {
+  background-color: #45a049;
 }
 
 /* ===== CAMPOS DE PESQUISA ===== */
@@ -173,48 +194,23 @@ button:hover {
   font-size: 16px;
 }
 
-/* ===== MODAL ===== */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal .modal-conteudo {
+/* ===== FORMULÁRIO APLICAÇÕES ===== */
+.formulario-aplicacoes {
   background-color: #2c2c2c;
-  padding: 20px;
+  padding: 15px;
   border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
+  margin-bottom: 15px;
 }
 
-.modal button {
+.formulario-aplicacoes input,
+.formulario-aplicacoes select {
+  margin-bottom: 10px;
   width: 100%;
-  background-color: #4caf50;
-  color: white;
-  margin-top: 10px;
   padding: 10px;
-}
-
-/* ===== RESUMO E RELATÓRIO ===== */
-#resumoFinanceiro, #resumoColheita {
-  margin-top: 15px;
-  background: #2c2c2c;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-#relatorio canvas {
-  background: #1e1e1e;
-  border-radius: 8px;
-  margin-top: 15px;
+  border: 1px solid #555;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 5px;
 }
 
 /* ===== MODO CLARO ===== */
@@ -254,143 +250,4 @@ body.claro .botao-circular.vermelho {
 
 body.claro .botao-circular.azul {
   background-color: #2196f3;
-}
-
-/* ===== FORMULÁRIO APLICAÇÕES ===== */
-.formulario-aplicacoes {
-  background-color: #2c2c2c;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.formulario-aplicacoes input,
-.formulario-aplicacoes select {
-  margin-bottom: 10px;
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #555;
-  background-color: #1e1e1e;
-  color: #fff;
-  border-radius: 5px;
-}
-
-.filtros-aplicacoes {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.filtros-aplicacoes input,
-.filtros-aplicacoes select {
-  flex: 1;
-  padding: 10px;
-  background-color: #2c2c2c;
-  border: 1px solid #555;
-  color: #fff;
-  border-radius: 5px;
-}
-
-/* ===== LISTAGEM DE APLICAÇÕES ===== */
-.lista-aplicacoes .item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: #1e1e1e;
-  border-left: 5px solid #4caf50;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.3s;
-}
-
-.lista-aplicacoes .item:hover {
-  background-color: #2c2c2c;
-}
-
-.lista-aplicacoes .item span {
-  flex: 1;
-  word-break: break-word;
-  color: #fff;
-}
-
-.botoes-aplicacao {
-  display: flex;
-  gap: 8px;
-}
-
-.botoes-aplicacao .botao-circular {
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #fff;
-  background-color: #4caf50;
-  transition: background 0.3s;
-}
-
-.botoes-aplicacao .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-.botoes-aplicacao .botao-circular.azul {
-  background-color: #2196f3;
-}
-
-.botoes-aplicacao .botao-circular.verde {
-  background-color: #4caf50;
-}
-
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  transition: background 0.3s;
-}
-
-.botao-flutuante:hover {
-  background-color: #45a049;
-}
-
-
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  transition: background 0.3s;
-}
-
-.botao-flutuante:hover {
-  background-color: #45a049;
 }

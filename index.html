@@ -56,9 +56,8 @@
 
   <!-- ===== CONTEÚDO ===== -->
   <div class="conteudo">
-    
     <!-- ===== TELA DE INÍCIO ===== -->
-    <div id="telaInicio" class="aba" style="display: block;">
+    <div id="telaInicio" class="aba">
       <h2>Manejo Café - Visão Geral</h2>
       <div class="resumo-geral">
         <div><strong>Total de Latas Colhidas:</strong> <span id="totalLatasInicio">0</span></div>
@@ -68,66 +67,42 @@
     </div>
     
     <!-- ===== APLICAÇÕES ===== -->
-<div id="aplicacoes" class="aba" style="display: none;">
-  <h2>Aplicações</h2>
-  <div id="formularioAplicacoes" class="formulario-aplicacoes" style="display: none;">
-    <input id="dataApp" type="date" placeholder="Data da Aplicação">
-    <input id="produtoApp" placeholder="Produto">
-    <input id="dosagemApp" placeholder="Dosagem">
-    <select id="tipoApp">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-    </select>
-    <button onclick="salvarAplicacao()">Salvar</button>
-    <button onclick="cancelarAplicacao()">Cancelar</button>
-  </div>
-  <div id="listaAplicacoes" class="lista-aplicacoes"></div>
-  <button class="botao-flutuante" onclick="mostrarFormularioAplicacao()">+</button>
-</div>
+    <div id="aplicacoes" class="aba" style="display: none;">
+      <h2>Aplicações</h2>
+      <div id="formularioAplicacoes" class="formulario" style="display: none;">
+        <input id="dataApp" type="date" placeholder="Data da Aplicação">
+        <input id="produtoApp" placeholder="Produto">
+        <input id="dosagemApp" placeholder="Dosagem">
+        <select id="tipoApp">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
+        </select>
+        <button onclick="salvarAplicacao()">Salvar</button>
+        <button onclick="cancelarFormulario('formularioAplicacoes')">Cancelar</button>
+      </div>
+      <div id="listaAplicacoes" class="lista"></div>
+      <button class="botao-flutuante" onclick="mostrarFormulario('formularioAplicacoes')">+</button>
+    </div>
 
-    <!-- ===== TAREFAS ===== -->
+    <!-- ===== OUTROS MENUS ===== -->
     <div id="tarefas" class="aba" style="display: none;">
       <h2>Tarefas</h2>
-      <input id="dataTarefa" type="date">
-      <input id="descricaoTarefa" placeholder="Descrição">
-      <button onclick="adicionarTarefa()">Salvar Tarefa</button>
       <div id="listaTarefas"></div>
+      <button class="botao-flutuante" onclick="mostrarFormulario('formularioTarefas')">+</button>
     </div>
-
-    <!-- ===== FINANCEIRO ===== -->
+    
     <div id="financeiro" class="aba" style="display: none;">
       <h2>Financeiro</h2>
-      <button onclick="adicionarFinanceiro()">Novo Gasto</button>
-      <div id="financeiroLista"></div>
+      <div id="listaFinanceiro"></div>
+      <button class="botao-flutuante" onclick="mostrarFormulario('formularioFinanceiro')">+</button>
     </div>
 
-    <!-- ===== COLHEITA ===== -->
     <div id="colheita" class="aba" style="display: none;">
       <h2>Colheita</h2>
-      <input id="dataColheita" type="date">
-      <input id="colhedor" placeholder="Colhedor">
-      <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-      <button onclick="adicionarColheita()">Adicionar Colheita</button>
-      <div id="resumoColheita"></div>
-      <div id="colheitaPendentes"></div>
-      <div id="colheitaPagos"></div>
-    </div>
-
-    <!-- ===== RELATÓRIO ===== -->
-    <div id="relatorio" class="aba" style="display: none;">
-      <h2>Relatório</h2>
-      <button onclick="exportarPDF()">Exportar PDF</button>
-      <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
-    </div>
-
-    <!-- ===== CONFIGURAÇÕES ===== -->
-    <div id="configuracoes" class="aba" style="display: none;">
-      <h2>Configurações</h2>
-      <button onclick="alternarTema()">Alternar Tema</button>
-      <button onclick="fazerBackup()">Fazer Backup</button>
-      <input type="file" id="arquivoBackup" onchange="importarBackup()">
+      <div id="listaColheita"></div>
+      <button class="botao-flutuante" onclick="mostrarFormulario('formularioColheita')">+</button>
     </div>
   </div>
 
@@ -137,13 +112,14 @@
     function mostrarAba(abaId) {
       document.querySelectorAll('.aba').forEach(aba => aba.style.display = 'none');
       document.getElementById(abaId).style.display = 'block';
-      atualizarIconeInicio(abaId);
     }
 
-    function atualizarIconeInicio(abaAtual) {
-      document.querySelectorAll('.menu-superior button').forEach(btn => {
-        btn.innerHTML = btn.id.includes(abaAtual) ? '<i class="fas fa-home"></i>' : btn.innerHTML;
-      });
+    function mostrarFormulario(idFormulario) {
+      document.getElementById(idFormulario).style.display = "block";
+    }
+
+    function cancelarFormulario(idFormulario) {
+      document.getElementById(idFormulario).style.display = "none";
     }
   </script>
 </body>

@@ -156,5 +156,33 @@ function ordenarAplicacoes(criterio) {
   atualizarAplicacoes();
 }
 
+// ===== MOSTRAR FORMULÁRIO DE APLICAÇÃO =====
+function mostrarFormularioAplicacao() {
+  const formulario = document.getElementById("formularioAplicacoes");
+  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
+}
+
+// ===== PESQUISAR APLICAÇÕES =====
+function pesquisarAplicacoes() {
+  const termo = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
+  const lista = document.getElementById("listaAplicacoes");
+  lista.innerHTML = '';
+
+  aplicacoes
+    .filter(app => app.produto.toLowerCase().includes(termo))
+    .forEach((app, i) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <div class="botoes-aplicacao">
+          <button class="botao-circular azul" onclick="editarAplicacao(${i})"><i class="fas fa-edit"></i></button>
+          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      lista.appendChild(item);
+    });
+}
+
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);

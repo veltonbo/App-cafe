@@ -45,6 +45,25 @@ function adicionarAplicacao() {
   alternarFormularioAplicacao(false); // Oculta o formulário após salvar
 }
 
+// ===== EDITAR APLICAÇÃO =====
+function editarAplicacao(index) {
+  const app = aplicacoes[index];
+  if (!app) return;
+
+  // Exibir o formulário de edição e preencher os campos
+  document.getElementById("dataApp").value = app.data;
+  document.getElementById("produtoApp").value = app.produto;
+  document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
+  document.getElementById("setorApp").value = app.setor;
+
+  indiceEdicaoAplicacao = index;
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
+  
+  alternarFormularioAplicacao(true); // Exibir o formulário automaticamente
+}
+
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
@@ -85,23 +104,6 @@ function atualizarAplicacoes() {
     `;
     lista.appendChild(item);
   });
-}
-
-// ===== EDITAR APLICAÇÃO =====
-function editarAplicacao(index) {
-  const app = aplicacoes[index];
-  if (!app) return;
-
-  document.getElementById("dataApp").value = app.data;
-  document.getElementById("produtoApp").value = app.produto;
-  document.getElementById("dosagemApp").value = app.dosagem;
-  document.getElementById("tipoApp").value = app.tipo;
-  document.getElementById("setorApp").value = app.setor;
-
-  indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
-  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
-  alternarFormularioAplicacao(true); // Exibe o formulário para edição
 }
 
 // ===== EXCLUIR APLICAÇÃO =====

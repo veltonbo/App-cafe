@@ -1,7 +1,8 @@
 // ===== CONFIGURAÇÃO DO FIREBASE (CERTIFIQUE-SE DE TER CONFIGURADO) =====
 const db = firebase.database(); // Usando o Firebase já configurado
+let idEdicaoAplicacao = null; // Controla se estamos editando ou adicionando
 
-// ===== SALVAR APLICAÇÃO NO FIREBASE =====
+// ===== SALVAR OU EDITAR APLICAÇÃO NO FIREBASE =====
 function salvarAplicacao() {
   const data = document.getElementById("dataApp").value;
   const produto = document.getElementById("produtoApp").value.trim();
@@ -22,9 +23,16 @@ function salvarAplicacao() {
     setor
   };
 
-  db.ref('Aplicacoes').push(novaAplicacao);
-  document.getElementById("formularioAplicacoes").style.display = "none";
-  document.getElementById("formularioAplicacoes").reset();
+  if (idEdicaoAplicacao) {
+    // Editando aplicação existente
+    db.ref('Aplicacoes/' + idEdicaoAplicacao).set(novaAplicacao);
+    idEdicaoAplicacao = null;
+  } else {
+    // Adicionando nova aplicação
+    db.ref('Aplicacoes').push(novaAplicacao);
+  }
+
+  limparFormularioAplicacao();
   atualizarAplicacoes();
 }
 
@@ -63,8 +71,8 @@ function editarAplicacao(id) {
     document.getElementById("dosagemApp").value = app.dosagem;
     document.getElementById("tipoApp").value = app.tipo;
     document.getElementById("setorApp").value = app.setor;
-    
-    db.ref('Aplicacoes/' + id).remove();
+
+    idEdicaoAplicacao = id;
     document.getElementById("formularioAplicacoes").style.display = "block";
   });
 }
@@ -75,4 +83,15 @@ function excluirAplicacao(id) {
     db.ref('Aplicacoes/' + id).remove();
     atualizarAplicacoes();
   }
+}
+
+// ===== LIMPAR FORMULÁRIO DE APLICAÇÕES =====
+function limparFormularioAplicacao() {
+  document.getElementById("dataApp").value = "";
+  document.getElementById("produtoApp").value = "";
+  document.getElementById("dosagemApp").value = "";
+  document.getElementById("tipoApp").value = "Adubo";
+  document.getElementById("setorApp").value = "Setor 01";
+  document.getElementById("formularioAplicacoes").style.display = "none";
+  idEdicaoAplicacao = null;
 }

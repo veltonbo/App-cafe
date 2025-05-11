@@ -147,5 +147,11 @@ function exportarAplicacoesCSV() {
   a.click();
 }
 
+// ===== ALTERNAR FORMULÁRIO APLICAÇÃO =====
+function alternarFormularioAplicacao() {
+  const form = document.getElementById("formularioAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);

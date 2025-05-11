@@ -36,7 +36,7 @@ body {
   border: none;
   color: #aaa;
   font-size: 22px;
-  margin: 0 6px;
+  margin: 0 8px;
   cursor: pointer;
   transition: color 0.3s;
 }
@@ -50,228 +50,26 @@ body {
   font-size: 24px;
 }
 
-/* Ícone ativo (quando o menu está selecionado) */
-.menu-superior button.active {
-  color: #4caf50;
-}
-
 /* ===== ABAS ===== */
-.aba { 
-  display: none;
-}
-.aba.active {
-  display: block;
-}
-
-/* ===== CAMPOS DE FORMULÁRIO ===== */
-input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #2c2c2c;
-  color: #fff;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-/* ===== BOTÕES PADRÃO ===== */
-button {
-  background-color: #4caf50;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-/* ===== BOTÕES CIRCULARES ===== */
-.botao-circular {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: white;
-  background-color: #4caf50;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-.botao-circular.vermelho:hover {
-  background-color: #d32f2f;
-}
-
-.botao-circular.azul {
-  background-color: #2196f3;
-}
-
-.botao-circular.azul:hover {
-  background-color: #1976d2;
-}
-
-/* ===== LISTAGEM DE ITENS ===== */
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  margin: 8px 0;
-  background-color: #1e1e1e;
-  border-left: 4px solid #4caf50;
-  border-radius: 6px;
-}
-
-.item span {
-  flex: 1;
-  color: #fff;
-  word-break: break-word;
-}
-
-.botoes-aplicacao, .botoes-financeiro {
-  display: flex;
-  gap: 10px;
-}
-
-/* ===== CAMPOS DE PESQUISA ===== */
-.campo-pesquisa {
-  padding: 10px;
-  background: #2c2c2c;
-  border: 1px solid #555;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  color: white;
-  font-size: 16px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal .modal-conteudo {
-  background-color: #2c2c2c;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
-}
-
-.modal button {
-  width: 100%;
-  background-color: #4caf50;
-  color: white;
-  margin-top: 10px;
-  padding: 10px;
-}
-
-/* ===== RESUMO E RELATÓRIO ===== */
-#resumoFinanceiro, #resumoColheita {
-  margin-top: 15px;
-  background: #2c2c2c;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-#relatorio canvas {
-  background: #1e1e1e;
-  border-radius: 8px;
-  margin-top: 15px;
-}
-
-/* ===== MODO CLARO ===== */
-body.claro {
-  background-color: #f5f5f5;
-  color: #222;
-}
-
-body.claro .menu-superior {
-  background-color: #e0e0e0;
-}
-
-body.claro .conteudo {
-  background-color: #fff;
-}
-
-body.claro input, 
-body.claro select, 
-body.claro button {
-  background-color: #f9f9f9;
-  color: #222;
-  border: 1px solid #ccc;
-}
-
-body.claro .item {
-  background-color: #fafafa;
-  border-left: 4px solid #4caf50;
-}
-
-body.claro .botao-circular {
-  background-color: #4caf50;
-}
-
-body.claro .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-body.claro .botao-circular.azul {
-  background-color: #2196f3;
-}
-
 .aba {
   display: none;
 }
 
-#telaInicio {
+.aba.active {
   display: block;
-  text-align: center;
-  padding: 20px;
 }
 
-#botaoMenuInicio {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-/* ===== FORMULÁRIO DE APLICAÇÕES ===== */
-.formulario-aplicacoes {
+/* ===== FORMULÁRIOS ===== */
+.formulario {
   background-color: #1e1e1e;
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  display: none;
 }
 
-.formulario-aplicacoes input,
-.formulario-aplicacoes select {
+.formulario input,
+.formulario select {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
@@ -280,10 +78,9 @@ body.claro .botao-circular.azul {
   background-color: #2c2c2c;
   color: #fff;
   font-size: 16px;
-  box-sizing: border-box;
 }
 
-.formulario-aplicacoes button {
+.formulario button {
   width: 48%;
   padding: 10px;
   margin: 8px 1%;
@@ -291,25 +88,24 @@ body.claro .botao-circular.azul {
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.formulario-aplicacoes button:hover {
+.formulario button:hover {
   background-color: #45a049;
 }
 
-/* ===== LISTA DE APLICAÇÕES ===== */
-.lista-aplicacoes {
+/* ===== LISTAS ===== */
+.lista {
   background-color: #1e1e1e;
   padding: 10px;
   border-radius: 8px;
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
-.lista-aplicacoes .item {
+.lista .item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -320,18 +116,19 @@ body.claro .botao-circular.azul {
   border-radius: 6px;
 }
 
-.lista-aplicacoes .item span {
+.lista .item span {
   flex: 1;
   color: #fff;
   word-break: break-word;
 }
 
-.lista-aplicacoes .botoes-aplicacao {
+/* ===== BOTÕES DE AÇÃO ===== */
+.lista .botoes {
   display: flex;
   gap: 10px;
 }
 
-.lista-aplicacoes button {
+.lista button {
   background: none;
   border: none;
   color: #aaa;
@@ -339,7 +136,7 @@ body.claro .botao-circular.azul {
   font-size: 18px;
 }
 
-.lista-aplicacoes button:hover {
+.lista button:hover {
   color: #4caf50;
 }
 
@@ -367,42 +164,41 @@ body.claro .botao-circular.azul {
   background-color: #45a049;
 }
 
-/* ===== FORMULÁRIOS OCULTOS E VISÍVEIS ===== */
-.formulario-aplicacoes,
-.formulario-tarefas,
-.formulario-financeiro,
-.formulario-colheita {
+/* ===== RESUMO INICIAL ===== */
+.resumo-geral {
   background-color: #1e1e1e;
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
-  display: none;
+  text-align: left;
 }
 
-.formulario-aplicacoes input,
-.formulario-tarefas input,
-.formulario-financeiro input,
-.formulario-colheita input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #2c2c2c;
-  color: #fff;
+.resumo-geral div {
+  margin-bottom: 8px;
 }
 
-.formulario-aplicacoes button,
-.formulario-tarefas button,
-.formulario-financeiro button,
-.formulario-colheita button {
-  width: 48%;
-  padding: 10px;
-  margin: 8px 1%;
+/* ===== MODO CLARO ===== */
+body.claro {
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+body.claro .menu-superior {
+  background-color: #e0e0e0;
+}
+
+body.claro .formulario,
+body.claro .lista {
+  background-color: #f9f9f9;
+  color: #222;
+  border: 1px solid #ddd;
+}
+
+body.claro .botao-flutuante {
   background-color: #4caf50;
   color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
+}
+
+body.claro .botao-flutuante:hover {
+  background-color: #45a049;
 }

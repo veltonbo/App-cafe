@@ -42,5 +42,60 @@ function inicializarApp() {
   document.dispatchEvent(new Event('dadosCarregados'));
 }
 
+// ===== VARIÁVEIS GLOBAIS =====
+let telaAtual = "inicio";
+
+// ===== FUNÇÃO PARA INICIAR A TELA =====
+document.addEventListener("DOMContentLoaded", () => {
+  carregarTelaInicio();
+});
+
+// ===== CARREGAR TELA DE INÍCIO =====
+function carregarTelaInicio() {
+  document.querySelectorAll(".aba").forEach(aba => aba.style.display = "none");
+  document.getElementById("telaInicio").style.display = "block";
+  atualizarResumoInicio();
+  atualizarIconeMenu();
+}
+
+// ===== ATUALIZAR RESUMO DA TELA DE INÍCIO =====
+function atualizarResumoInicio() {
+  const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
+  const totalPago = colheita.reduce((soma, c) => soma + (c.pagoParcial * c.valorLata), 0);
+  const totalPendente = colheita.reduce((soma, c) => soma + ((c.quantidade - c.pagoParcial) * c.valorLata), 0);
+
+  document.getElementById("totalLatasInicio").innerText = totalLatas.toFixed(2);
+  document.getElementById("totalPagoInicio").innerText = totalPago.toFixed(2);
+  document.getElementById("totalPendenteInicio").innerText = totalPendente.toFixed(2);
+}
+
+// ===== ALTERNAR ENTRE MENU E INÍCIO =====
+function alternarMenuInicio() {
+  if (telaAtual === "inicio") {
+    irParaMenu();
+  } else {
+    carregarTelaInicio();
+  }
+}
+
+// ===== IR PARA MENU =====
+function irParaMenu() {
+  document.querySelectorAll(".aba").forEach(aba => aba.style.display = "none");
+  document.getElementById("colheita").style.display = "block";
+  telaAtual = "menu";
+  atualizarIconeMenu();
+}
+
+// ===== ATUALIZAR ÍCONE DO BOTÃO =====
+function atualizarIconeMenu() {
+  const icone = document.getElementById("iconeMenu");
+  if (telaAtual === "inicio") {
+    icone.className = "fas fa-bars";
+  } else {
+    icone.className = "fas fa-home";
+  }
+}
+
 // Executa ao carregar a página
 window.addEventListener('DOMContentLoaded', inicializarApp);
+

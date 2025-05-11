@@ -1,27 +1,8 @@
-// ===== CONFIGURAÇÃO DO FIREBASE PARA APLICAÇÕES =====
+// ===== VARIÁVEIS GLOBAIS =====
 const dbAplicacao = firebase.database().ref('Aplicacoes');
 
-// ===== SALVAR APLICAÇÃO =====
-function salvarAplicacao() {
-  const data = document.getElementById("dataApp").value;
-  const produto = document.getElementById("produtoApp").value.trim();
-  const dosagem = document.getElementById("dosagemApp").value.trim();
-  const tipo = document.getElementById("tipoApp").value;
-  const setor = document.getElementById("setorApp").value;
-
-  if (!data || !produto || !dosagem) {
-    alert("Preencha todos os campos corretamente!");
-    return;
-  }
-
-  const novaAplicacao = { data, produto, dosagem, tipo, setor };
-  dbAplicacao.push(novaAplicacao);
-  cancelarFormulario('formularioAplicacoes');
-  atualizarAplicacoes();
-}
-
-// ===== ATUALIZAR LISTA DE APLICAÇÕES =====
-function atualizarAplicacoes() {
+// ===== CARREGAR APLICAÇÕES =====
+function carregarAplicacoes() {
   dbAplicacao.on('value', (snapshot) => {
     const lista = document.getElementById("listaAplicacoes");
     lista.innerHTML = '';
@@ -31,7 +12,7 @@ function atualizarAplicacoes() {
       const item = document.createElement("div");
       item.className = "item";
       item.innerHTML = `
-        <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem}</span>
         <div class="botoes">
           <button onclick="editarAplicacao('${snap.key}')"><i class="fas fa-edit"></i></button>
           <button onclick="excluirAplicacao('${snap.key}')"><i class="fas fa-trash"></i></button>
@@ -42,6 +23,24 @@ function atualizarAplicacoes() {
   });
 }
 
+// ===== SALVAR APLICAÇÃO =====
+function salvarAplicacao() {
+  const data = document.getElementById("dataApp").value;
+  const produto = document.getElementById("produtoApp").value.trim();
+  const dosagem = document.getElementById("dosagemApp").value.trim();
+  const tipo = document.getElementById("tipoApp").value;
+
+  if (!data || !produto || !dosagem) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
+
+  const novaAplicacao = { data, produto, dosagem, tipo };
+  dbAplicacao.push(novaAplicacao);
+  cancelarFormularioAplicacao();
+  carregarAplicacoes();
+}
+
 // ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(id) {
   dbAplicacao.child(id).once('value').then(snapshot => {
@@ -50,10 +49,9 @@ function editarAplicacao(id) {
     document.getElementById("produtoApp").value = app.produto;
     document.getElementById("dosagemApp").value = app.dosagem;
     document.getElementById("tipoApp").value = app.tipo;
-    document.getElementById("setorApp").value = app.setor;
 
-    excluirAplicacao(id); // Remove o item para ser re-adicionado ao salvar
-    mostrarFormulario('formularioAplicacoes');
+    excluirAplicacao(id); // Remove a aplicação para ser re-adicionada ao salvar
+    mostrarFormularioAplicacao();
   });
 }
 
@@ -64,27 +62,16 @@ function excluirAplicacao(id) {
   }
 }
 
-// ===== PESQUISAR APLICAÇÕES =====
-function pesquisarAplicacoes() {
-  const termo = document.getElementById("pesquisaApp").value.toLowerCase();
-  dbAplicacao.once('value').then(snapshot => {
-    const lista = document.getElementById("listaAplicacoes");
-    lista.innerHTML = '';
+// ===== MOSTRAR FORMULÁRIO =====
+function mostrarFormularioAplicacao() {
+  document.getElementById("formularioAplicacoes").style.display = "block";
+}
 
-    snapshot.forEach((snap) => {
-      const app = snap.val();
-      if (`${app.produto} ${app.tipo} ${app.setor}`.toLowerCase().includes(termo)) {
-        const item = document.createElement("div");
-        item.className = "item";
-        item.innerHTML = `
-          <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-          <div class="botoes">
-            <button onclick="editarAplicacao('${snap.key}')"><i class="fas fa-edit"></i></button>
-            <button onclick="excluirAplicacao('${snap.key}')"><i class="fas fa-trash"></i></button>
-          </div>
-        `;
-        lista.appendChild(item);
-      }
-    });
-  });
+// ===== CANCELAR FORMULÁRIO =====
+function cancelarFormularioAplicacao() {
+  document.getElementById("formularioAplicacoes").style.display = "none";
+  document.getElementById("dataApp").value = '';
+  document.getElementById("produtoApp").value = '';
+  document.getElementById("dosagemApp").value = '';
+  document.getElementById("tipoApp").value = 'Adubo';
 }

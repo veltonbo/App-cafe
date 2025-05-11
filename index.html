@@ -121,26 +121,38 @@
 </div>
 
     <!-- ===== FINANCEIRO ===== -->
-    <div id="financeiro" class="aba">
-      <h2>Financeiro</h2>
-      <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
-      <div id="formularioFinanceiro" style="display: none;">
-        <input id="dataFin" type="date">
-        <input id="produtoFin" placeholder="Produto">
-        <input id="descricaoFin" placeholder="Descrição (opcional)">
-        <input id="valorFin" type="number" placeholder="Valor (R$)">
-        <select id="tipoFin">
-          <option>Adubo</option>
-          <option>Fungicida</option>
-          <option>Inseticida</option>
-          <option>Herbicida</option>
-          <option>Outro</option>
-        </select>
-        <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
-        <button id="btnCancelarFinanceiro" style="display: none;">Cancelar Edição</button>
-      </div>
-      <div id="financeiroLista"></div>
+<div id="financeiro" class="aba">
+  <h2>Financeiro</h2>
+  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
+  
+  <div id="formularioFinanceiro" style="display: none;">
+    <input id="dataFin" type="date" placeholder="Data">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="descricaoFin" placeholder="Descrição (opcional)">
+    <input id="valorFin" type="number" placeholder="Valor (R$)">
+    
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+      <option>Outro</option>
+    </select>
+    
+    <label>
+      <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado
+    </label>
+    
+    <div id="camposParcelas" style="display: none;">
+      <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
     </div>
+    
+    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">Cancelar Edição</button>
+  </div>
+  
+  <div id="financeiroLista"></div>
+</div>
 
     <!-- ===== COLHEITA ===== -->
     <div id="colheita" class="aba">

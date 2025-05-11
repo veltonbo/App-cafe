@@ -132,19 +132,39 @@ function atualizarAplicacoes() {
   aplicacoes.forEach((app, i) => {
     const item = document.createElement('div');
     item.className = 'item';
+
     item.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-      <div class="botoes-aplicacao">
+      <div class="conteudo-item">
+        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <button class="botao-seta" onclick="alternarOpcoes(${i})">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="opcoes-aplicacao" id="opcoesAplicacao-${i}" style="display: none;">
         <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-          <i class="fas fa-edit"></i>
+          <i class="fas fa-edit"></i> Editar
         </button>
         <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-          <i class="fas fa-trash"></i>
+          <i class="fas fa-trash"></i> Excluir
         </button>
       </div>
     `;
     lista.appendChild(item);
   });
+}
+
+// ===== ALTERNAR OPÇÕES (EDITAR/EXCLUIR) =====
+function alternarOpcoes(index) {
+  const opcoes = document.getElementById(`opcoesAplicacao-${index}`);
+  const icone = opcoes.previousElementSibling.querySelector(".botao-seta i");
+  
+  if (opcoes.style.display === "none") {
+    opcoes.style.display = "flex";
+    icone.classList.replace("fa-chevron-down", "fa-chevron-up");
+  } else {
+    opcoes.style.display = "none";
+    icone.classList.replace("fa-chevron-up", "fa-chevron-down");
+  }
 }
 
 // ===== EXCLUIR APLICAÇÃO =====

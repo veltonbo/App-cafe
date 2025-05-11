@@ -1,12 +1,23 @@
 // ===== VARIÁVEIS GLOBAIS =====
-let aplicacoes = Array.isArray(aplicacoes) ? aplicacoes : [];
+let aplicacoes = [];
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
-    aplicacoes = snap.exists() ? snap.val() : [];
-    if (!Array.isArray(aplicacoes)) aplicacoes = [];
+    const dados = snap.val();
+    if (dados && typeof dados === "object") {
+      aplicacoes = Object.values(dados).map(app => ({
+        data: app.data || '',
+        produto: app.produto || '',
+        dosagem: app.dosagem || '',
+        tipo: app.tipo || 'Adubo',
+        setor: app.setor || 'Setor 01'
+      }));
+    } else {
+      aplicacoes = [];
+    }
     atualizarAplicacoes();
+    atualizarSugestoesProdutoApp();
   });
 }
 
@@ -34,7 +45,12 @@ function adicionarAplicacao() {
     aplicacoes.push(nova);
   }
 
-  db.ref('Aplicacoes').set(aplicacoes);
+  // Salvar no Firebase
+  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, index) => {
+    acc[index] = app;
+    return acc;
+  }, {}));
+
   atualizarAplicacoes();
   limparCamposAplicacao();
 }
@@ -56,7 +72,7 @@ function limparCamposAplicacao() {
   document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ====== ATUALIZAR LISTAGEM ======
+// ===== ATUALIZAR LISTAGEM =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   if (!lista) return;
@@ -100,7 +116,12 @@ function editarAplicacao(index) {
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes);
+  
+  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
+    acc[idx] = app;
+    return acc;
+  }, {}));
+
   atualizarAplicacoes();
 }
 

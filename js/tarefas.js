@@ -1,46 +1,39 @@
 // ====== VARIÁVEIS GLOBAIS ======
 let tarefas = [];
-let indiceEdicaoTarefa = null; // Agora está corretamente definida
+let indiceEdicaoTarefa = null;
 
 // ====== ADICIONAR OU SALVAR EDIÇÃO DE TAREFA ======
 function adicionarTarefa() {
-  const dataTarefa = document.getElementById('dataTarefa');
-  const descricaoTarefa = document.getElementById('descricaoTarefa');
-  const prioridadeTarefa = document.getElementById('prioridadeTarefa');
-  const setorTarefa = document.getElementById('setorTarefa');
-  const eAplicacaoCheckbox = document.getElementById('eAplicacaoCheckbox');
-  const dosagemAplicacao = document.getElementById('dosagemAplicacao');
-  const tipoAplicacao = document.getElementById('tipoAplicacao');
+  const dataTarefa = document.getElementById('dataTarefa').value;
+  const descricaoTarefa = document.getElementById('descricaoTarefa').value.trim();
+  const prioridadeTarefa = document.getElementById('prioridadeTarefa').value;
+  const setorTarefa = document.getElementById('setorTarefa').value;
+  const eAplicacao = document.getElementById('eAplicacaoCheckbox').checked;
+  const dosagemAplicacao = document.getElementById('dosagemAplicacao').value.trim();
+  const tipoAplicacao = document.getElementById('tipoAplicacao').value;
 
-  if (!dataTarefa || !descricaoTarefa || !prioridadeTarefa || !setorTarefa) {
-    alert("Preencha todos os campos corretamente.");
-    return;
-  }
-
-  const nova = {
-    data: dataTarefa.value,
-    descricao: descricaoTarefa.value.trim(),
-    prioridade: prioridadeTarefa.value,
-    setor: setorTarefa.value,
-    feita: false,
-    eAplicacao: eAplicacaoCheckbox.checked,
-    dosagem: eAplicacaoCheckbox.checked ? dosagemAplicacao.value.trim() : '',
-    tipo: eAplicacaoCheckbox.checked ? tipoAplicacao.value : ''
-  };
-
-  if (!nova.data || !nova.descricao) {
+  if (!dataTarefa || !descricaoTarefa) {
     alert("Preencha todos os campos obrigatórios!");
     return;
   }
 
+  const novaTarefa = {
+    data: dataTarefa,
+    descricao: descricaoTarefa,
+    prioridade: prioridadeTarefa,
+    setor: setorTarefa,
+    feita: false,
+    eAplicacao,
+    dosagem: eAplicacao ? dosagemAplicacao : '',
+    tipo: eAplicacao ? tipoAplicacao : ''
+  };
+
   if (indiceEdicaoTarefa !== null) {
-    // Edição de tarefa existente
-    tarefas[indiceEdicaoTarefa] = nova;
+    tarefas[indiceEdicaoTarefa] = novaTarefa;
     indiceEdicaoTarefa = null;
     document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
   } else {
-    // Adicionar nova tarefa
-    tarefas.push(nova);
+    tarefas.push(novaTarefa);
   }
 
   db.ref('Tarefas').set(tarefas);
@@ -84,7 +77,7 @@ function limparCamposTarefa() {
   mostrarCamposAplicacao();
 }
 
-// ===== ATUALIZAR LISTA DE TAREFAS =====
+// ====== ATUALIZAR LISTA DE TAREFAS ======
 function atualizarTarefas() {
   const lista = document.getElementById("listaTarefas");
   lista.innerHTML = '';
@@ -115,20 +108,19 @@ function excluirTarefa(index) {
   atualizarTarefas();
 }
 
-// ====== INICIALIZAR TAREFAS ======
-document.addEventListener("dadosCarregados", carregarTarefas);
-
 // ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
 function mostrarCamposAplicacao() {
-  const checkbox = document.getElementById('eAplicacaoCheckbox');
   const campos = document.getElementById('camposAplicacao');
-  campos.style.display = checkbox.checked ? 'block' : 'none';
+  campos.style.display = document.getElementById('eAplicacaoCheckbox').checked ? 'block' : 'none';
 }
 
-// ====== CARREGAR TAREFAS ======
+// ====== CARREGAR TAREFAS DO FIREBASE ======
 function carregarTarefas() {
   db.ref('Tarefas').on('value', (snapshot) => {
     tarefas = snapshot.exists() ? Object.values(snapshot.val()) : [];
     atualizarTarefas();
   });
 }
+
+// ====== INICIALIZAR TAREFAS ======
+document.addEventListener("dadosCarregados", carregarTarefas);

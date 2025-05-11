@@ -191,3 +191,80 @@ body.claro .botao-circular.vermelho {
 body.claro .botao-circular.azul {
   background-color: #2196f3;
 }
+
+/* ===== LISTAGEM DE APLICAÇÕES ===== */
+.lista-aplicacoes .item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 10px 0;
+  background-color: #1e1e1e;
+  border-left: 4px solid #4caf50;
+  border-radius: 8px;
+  transition: background 0.3s;
+  position: relative;
+}
+
+.lista-aplicacoes .item:hover {
+  background-color: #2c2c2c;
+}
+
+.lista-aplicacoes .item span {
+  flex: 1;
+  word-break: break-word;
+  color: #fff;
+  margin-right: 10px;
+}
+
+.lista-aplicacoes .item .botao-expandir {
+  background: none;
+  border: none;
+  color: #4caf50;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.lista-aplicacoes .item .botao-expandir.ativo {
+  transform: rotate(90deg);
+}
+
+.lista-aplicacoes .botoes-aplicacao {
+  display: none;
+  gap: 8px;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  transition: opacity 0.3s;
+}
+
+.lista-aplicacoes .item.expanded .botoes-aplicacao {
+  display: flex;
+}
+
+.botoes-aplicacao .botao-circular {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background-color: #4caf50;
+  transition: background 0.3s;
+}
+
+.botoes-aplicacao .botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botoes-aplicacao .botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botoes-aplicacao .botao-circular.verde {
+  background-color: #4caf50;
+}

@@ -73,10 +73,8 @@
 
   <!-- Formulário de Cadastro de Aplicações -->
   <div class="formulario-aplicacoes">
-    <label for="dataApp"><strong>Data:</strong></label>
-    <input id="dataApp" type="date">
-
-    <label for="produtoApp"><strong>Produto:</strong></label>
+    <input id="dataApp" type="date" placeholder="Data da Aplicação">
+    
     <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
     <datalist id="sugestoesProdutoApp">
       <option value="Adubo">
@@ -84,19 +82,16 @@
       <option value="Inseticida">
       <option value="Herbicida">
     </datalist>
-
-    <label for="dosagemApp"><strong>Dosagem:</strong></label>
+    
     <input id="dosagemApp" type="text" placeholder="Dosagem (ex: 2L/ha)">
-
-    <label for="tipoApp"><strong>Tipo:</strong></label>
+    
     <select id="tipoApp">
       <option>Adubo</option>
       <option>Fungicida</option>
       <option>Inseticida</option>
       <option>Herbicida</option>
     </select>
-
-    <label for="setorApp"><strong>Setor:</strong></label>
+    
     <select id="setorApp">
       <option>Setor 01</option>
       <option>Setor 02</option>
@@ -111,7 +106,7 @@
 
   <!-- Listagem de Aplicações -->
   <div id="listaAplicacoes" class="lista-aplicacoes">
-    <!-- Aplicações serão listadas aqui -->
+    <!-- Aplicações serão listadas aqui dinamicamente -->
   </div>
 </div>
 

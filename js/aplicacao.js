@@ -1,13 +1,12 @@
 // ===== VARIÁVEIS GLOBAIS =====
-let aplicacoes = [];
-let indiceEdicaoAplicacao = null;
+let aplicacoes = Array.isArray(aplicacoes) ? aplicacoes : [];
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
     aplicacoes = snap.exists() ? snap.val() : [];
+    if (!Array.isArray(aplicacoes)) aplicacoes = [];
     atualizarAplicacoes();
-    atualizarSugestoesProdutoApp();
   });
 }
 

@@ -92,10 +92,18 @@ function atualizarAplicacoes() {
   });
 }
 
-// ===== ALTERNAR OPÇÕES =====
+// ===== ALTERNAR OPÇÕES (EXPANDIR) =====
 function alternarOpcoes(index) {
   const botoes = document.getElementById(`botoes-aplicacao-${index}`);
-  botoes.style.display = botoes.style.display === "none" ? "flex" : "none";
+  const item = botoes.closest('.item');
+  
+  if (botoes.style.display === "none") {
+    botoes.style.display = "flex";
+    item.classList.add("expanded");
+  } else {
+    botoes.style.display = "none";
+    item.classList.remove("expanded");
+  }
 }
 
 // ===== DUPLICAR APLICAÇÃO =====
@@ -135,48 +143,11 @@ function atualizarSugestoesProdutoApp() {
   lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
 }
 
-// ===== EXPORTAR CSV DE APLICAÇÕES =====
-function exportarAplicacoesCSV() {
-  let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
-  aplicacoes.forEach(app => {
-    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `aplicacoes_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
-  a.click();
-}
-
-// ===== FILTRAR APLICAÇÕES POR SETOR =====
-function filtrarAplicacoesPorSetor() {
-  const setor = document.getElementById("filtroSetorApp").value;
-  atualizarAplicacoes(setor);
-}
-
-// ===== ORDENAR APLICAÇÕES =====
-function ordenarAplicacoes(criterio) {
-  aplicacoes.sort((a, b) => {
-    if (criterio === "data") return new Date(a.data) - new Date(b.data);
-    if (criterio === "produto") return a.produto.localeCompare(b.produto);
-    if (criterio === "setor") return a.setor.localeCompare(b.setor);
-  });
-  atualizarAplicacoes();
-}
-
-// ===== MOSTRAR FORMULÁRIO DE APLICAÇÃO =====
-function mostrarFormularioAplicacao() {
-  const formulario = document.getElementById("formularioAplicacoes");
-  formulario.style.display = formulario.style.display === "none" ? "block" : "none";
-}
-
-// ===== PESQUISAR APLICAÇÕES =====
-function pesquisarAplicacoes() {
-  const termo = document.getElementById("pesquisaAplicacoes").value.toLowerCase();
-  atualizarAplicacoes();
-}
-
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);
+
+// ===== FORMATO DE DATA BR (DD/MM/AAAA) =====
+function formatarDataBR(dataISO) {
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}

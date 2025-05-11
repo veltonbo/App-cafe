@@ -62,9 +62,10 @@ function limparCamposAplicacao() {
   document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== ATUALIZAR LISTAGEM DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
+  if (!lista) return;
   lista.innerHTML = '';
 
   aplicacoes.forEach((app, i) => {
@@ -72,7 +73,10 @@ function atualizarAplicacoes() {
     item.className = 'item';
     item.innerHTML = `
       <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-      <div class="botoes-aplicacao">
+      <button class="botao-expandir" onclick="alternarOpcoes(${i})">
+        <i class="fas fa-angle-right"></i>
+      </button>
+      <div class="botoes-aplicacao" id="botoes-aplicacao-${i}" style="display: none;">
         <button class="botao-circular verde" onclick="duplicarAplicacao(${i})">
           <i class="fas fa-copy"></i>
         </button>
@@ -88,6 +92,31 @@ function atualizarAplicacoes() {
   });
 }
 
+// ===== ALTERNAR OPÇÕES =====
+function alternarOpcoes(index) {
+  const botoes = document.getElementById(`botoes-aplicacao-${index}`);
+  const botaoExpandir = botoes.previousElementSibling;
+
+  if (botoes.style.display === "none") {
+    botoes.style.display = "flex";
+    botaoExpandir.classList.add("ativo");
+  } else {
+    botoes.style.display = "none";
+    botaoExpandir.classList.remove("ativo");
+  }
+}
+
+// ===== DUPLICAR APLICAÇÃO =====
+function duplicarAplicacao(index) {
+  const nova = { ...aplicacoes[index] };
+  aplicacoes.push(nova);
+  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
+    acc[idx] = app;
+    return acc;
+  }, {}));
+  atualizarAplicacoes();
+}
+
 // ===== EDITAR APLICAÇÃO =====
 function editarAplicacao(index) {
   const app = aplicacoes[index];
@@ -100,21 +129,20 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
+  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  salvarAplicacoesFirebase();
-  atualizarAplicacoes();
-}
+  
+  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
+    acc[idx] = app;
+    return acc;
+  }, {}));
 
-// ===== DUPLICAR APLICAÇÃO =====
-function duplicarAplicacao(index) {
-  const app = { ...aplicacoes[index] };
-  aplicacoes.push(app);
-  salvarAplicacoesFirebase();
   atualizarAplicacoes();
 }
 

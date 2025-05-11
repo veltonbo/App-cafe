@@ -2,6 +2,45 @@
 let tarefas = [];
 let indiceEdicaoTarefa = null;
 
+// ====== INICIALIZAR TAREFAS ======
+document.addEventListener("dadosCarregados", carregarTarefas);
+
+// ====== CARREGAR TAREFAS DO FIREBASE ======
+function carregarTarefas() {
+  db.ref('Tarefas').on('value', (snapshot) => {
+    if (snapshot.exists()) {
+      tarefas = Object.entries(snapshot.val()).map(([id, data]) => ({ id, ...data }));
+      atualizarTarefas();
+    } else {
+      tarefas = [];
+      atualizarTarefas();
+    }
+  });
+}
+
+// ====== ATUALIZAR LISTA DE TAREFAS ======
+function atualizarTarefas() {
+  const lista = document.getElementById("listaTarefas");
+  lista.innerHTML = '';
+
+  tarefas.forEach((tarefa, index) => {
+    const item = document.createElement("div");
+    item.className = "item";
+    item.innerHTML = `
+      <span>${formatarDataBR(tarefa.data)} - ${tarefa.descricao} (${tarefa.prioridade}) - ${tarefa.setor}</span>
+      <div class="botoes-tarefa">
+        <button class="botao-circular azul" onclick="editarTarefa('${tarefa.id}')">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="excluirTarefa('${tarefa.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    lista.appendChild(item);
+  });
+}
+
 // ====== ADICIONAR OU SALVAR EDIÇÃO DE TAREFA ======
 function adicionarTarefa() {
   const dataTarefa = document.getElementById('dataTarefa').value;
@@ -29,33 +68,37 @@ function adicionarTarefa() {
   };
 
   if (indiceEdicaoTarefa !== null) {
-    tarefas[indiceEdicaoTarefa] = novaTarefa;
+    const tarefaID = tarefas[indiceEdicaoTarefa].id;
+    db.ref(`Tarefas/${tarefaID}`).set(novaTarefa);
     indiceEdicaoTarefa = null;
-    document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
   } else {
-    tarefas.push(novaTarefa);
+    db.ref('Tarefas').push(novaTarefa);
   }
 
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
   limparCamposTarefa();
 }
 
 // ====== EDITAR TAREFA ======
-function editarTarefa(index) {
-  const t = tarefas[index];
-  if (!t) return;
+function editarTarefa(id) {
+  const tarefa = tarefas.find(t => t.id === id);
+  if (!tarefa) return;
 
-  document.getElementById('dataTarefa').value = t.data;
-  document.getElementById('descricaoTarefa').value = t.descricao;
-  document.getElementById('prioridadeTarefa').value = t.prioridade;
-  document.getElementById('setorTarefa').value = t.setor;
-  document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
-  document.getElementById('dosagemAplicacao').value = t.dosagem || '';
-  document.getElementById('tipoAplicacao').value = t.tipo || 'Adubo';
+  document.getElementById('dataTarefa').value = tarefa.data;
+  document.getElementById('descricaoTarefa').value = tarefa.descricao;
+  document.getElementById('prioridadeTarefa').value = tarefa.prioridade;
+  document.getElementById('setorTarefa').value = tarefa.setor;
+  document.getElementById('eAplicacaoCheckbox').checked = tarefa.eAplicacao;
+  document.getElementById('dosagemAplicacao').value = tarefa.dosagem || '';
+  document.getElementById('tipoAplicacao').value = tarefa.tipo || 'Adubo';
 
-  indiceEdicaoTarefa = index;
+  indiceEdicaoTarefa = tarefas.findIndex(t => t.id === id);
   document.getElementById("btnCancelarEdicaoTarefa").style.display = "inline-block";
+}
+
+// ====== EXCLUIR TAREFA ======
+function excluirTarefa(id) {
+  if (!confirm("Deseja excluir esta tarefa?")) return;
+  db.ref(`Tarefas/${id}`).remove();
 }
 
 // ====== CANCELAR EDIÇÃO ======
@@ -77,50 +120,14 @@ function limparCamposTarefa() {
   mostrarCamposAplicacao();
 }
 
-// ====== ATUALIZAR LISTA DE TAREFAS ======
-function atualizarTarefas() {
-  const lista = document.getElementById("listaTarefas");
-  lista.innerHTML = '';
-
-  tarefas.forEach((tarefa, index) => {
-    const item = document.createElement("div");
-    item.className = "item";
-    item.innerHTML = `
-      <span>${formatarDataBR(tarefa.data)} - ${tarefa.descricao} (${tarefa.prioridade}) - ${tarefa.setor}</span>
-      <div class="botoes-tarefa">
-        <button class="botao-circular azul" onclick="editarTarefa(${index})">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `;
-    lista.appendChild(item);
-  });
-}
-
-// ====== EXCLUIR TAREFA ======
-function excluirTarefa(index) {
-  if (!confirm("Deseja excluir esta tarefa?")) return;
-  tarefas.splice(index, 1);
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-}
-
 // ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
 function mostrarCamposAplicacao() {
   const campos = document.getElementById('camposAplicacao');
   campos.style.display = document.getElementById('eAplicacaoCheckbox').checked ? 'block' : 'none';
 }
 
-// ====== CARREGAR TAREFAS DO FIREBASE ======
-function carregarTarefas() {
-  db.ref('Tarefas').on('value', (snapshot) => {
-    tarefas = snapshot.exists() ? Object.values(snapshot.val()) : [];
-    atualizarTarefas();
-  });
+// ====== FORMATAR DATA (DD/MM/AAAA) ======
+function formatarDataBR(dataISO) {
+  const [ano, mes, dia] = dataISO.split('-');
+  return `${dia}/${mes}/${ano}`;
 }
-
-// ====== INICIALIZAR TAREFAS ======
-document.addEventListener("dadosCarregados", carregarTarefas);

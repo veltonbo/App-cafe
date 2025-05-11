@@ -1,21 +1,12 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
+let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
     const dados = snap.val();
-    if (dados && typeof dados === "object") {
-      aplicacoes = Object.values(dados).map(app => ({
-        data: app.data || '',
-        produto: app.produto || '',
-        dosagem: app.dosagem || '',
-        tipo: app.tipo || 'Adubo',
-        setor: app.setor || 'Setor 01'
-      }));
-    } else {
-      aplicacoes = [];
-    }
+    aplicacoes = dados ? Object.values(dados) : [];
     atualizarAplicacoes();
     atualizarSugestoesProdutoApp();
   });
@@ -39,28 +30,27 @@ function adicionarAplicacao() {
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = nova;
     indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
   } else {
     aplicacoes.push(nova);
   }
 
-  // Salvar no Firebase
+  salvarAplicacoesFirebase();
+  limparCamposAplicacao();
+  atualizarAplicacoes();
+}
+
+// ===== SALVAR NO FIREBASE =====
+function salvarAplicacoesFirebase() {
   db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, index) => {
     acc[index] = app;
     return acc;
   }, {}));
-
-  atualizarAplicacoes();
-  limparCamposAplicacao();
 }
 
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
   indiceEdicaoAplicacao = null;
   limparCamposAplicacao();
-  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -75,15 +65,17 @@ function limparCamposAplicacao() {
 // ===== ATUALIZAR LISTAGEM =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
-  if (!lista) return;
   lista.innerHTML = '';
 
   aplicacoes.forEach((app, i) => {
     const item = document.createElement('div');
     item.className = 'item';
     item.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
       <div class="botoes-aplicacao">
+        <button class="botao-circular verde" onclick="duplicarAplicacao(${i})">
+          <i class="fas fa-copy"></i>
+        </button>
         <button class="botao-circular azul" onclick="editarAplicacao(${i})">
           <i class="fas fa-edit"></i>
         </button>
@@ -108,20 +100,21 @@ function editarAplicacao(index) {
   document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
-  document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
-    acc[idx] = app;
-    return acc;
-  }, {}));
+  salvarAplicacoesFirebase();
+  atualizarAplicacoes();
+}
 
+// ===== DUPLICAR APLICAÇÃO =====
+function duplicarAplicacao(index) {
+  const app = { ...aplicacoes[index] };
+  aplicacoes.push(app);
+  salvarAplicacoesFirebase();
   atualizarAplicacoes();
 }
 
@@ -145,6 +138,22 @@ function exportarAplicacoesCSV() {
   a.href = url;
   a.download = `aplicacoes_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
+}
+
+// ===== FILTRAR APLICAÇÕES POR SETOR =====
+function filtrarAplicacoesPorSetor() {
+  const setor = document.getElementById("filtroSetorApp").value;
+  atualizarAplicacoes(setor);
+}
+
+// ===== ORDENAR APLICAÇÕES =====
+function ordenarAplicacoes(criterio) {
+  aplicacoes.sort((a, b) => {
+    if (criterio === "data") return new Date(a.data) - new Date(b.data);
+    if (criterio === "produto") return a.produto.localeCompare(b.produto);
+    if (criterio === "setor") return a.setor.localeCompare(b.setor);
+  });
+  atualizarAplicacoes();
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

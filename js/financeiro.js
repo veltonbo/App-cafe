@@ -65,14 +65,18 @@ function editarGastoExistente(data, produto, descricao, valor, tipo, numParcelas
   const gasto = gastos[indiceEdicaoGasto];
   if (!gasto) return;
 
+  gasto.data = data;
+  gasto.produto = produto;
+  gasto.descricao = descricao;
+  gasto.valor = valor;
+  gasto.tipo = tipo;
+
   if (numParcelas > 1) {
-    gasto.parcelasDetalhes = gerarParcelas(data, valor, numParcelas);
+    // Permitir editar todas as parcelas ou apenas uma específica
+    if (editarTodasParcelas || !gasto.parcelasDetalhes.length) {
+      gasto.parcelasDetalhes = gerarParcelas(data, valor, numParcelas);
+    }
   } else {
-    gasto.data = data;
-    gasto.produto = produto;
-    gasto.descricao = descricao;
-    gasto.valor = valor;
-    gasto.tipo = tipo;
     gasto.parcelasDetalhes = [];
   }
 }
@@ -143,6 +147,7 @@ function editarFinanceiro(index) {
   valorFin.value = gasto.valor;
   tipoFin.value = gasto.tipo;
   indiceEdicaoGasto = index;
+  editarTodasParcelas = false;
 
   document.getElementById("btnSalvarFinanceiro").innerText = "Salvar Edição";
   document.getElementById("formularioFinanceiro").style.display = "block";

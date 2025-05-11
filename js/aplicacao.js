@@ -72,17 +72,16 @@ function limparCamposAplicacao() {
   document.getElementById("setorApp").value = 'Setor 01';
 }
 
-// ===== ATUALIZAR LISTAGEM =====
+// ===== ATUALIZAR LISTA DE APLICAÇÕES =====
 function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
-  if (!lista) return;
   lista.innerHTML = '';
 
   aplicacoes.forEach((app, i) => {
     const item = document.createElement('div');
     item.className = 'item';
     item.innerHTML = `
-      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
       <div class="botoes-aplicacao">
         <button class="botao-circular azul" onclick="editarAplicacao(${i})">
           <i class="fas fa-edit"></i>

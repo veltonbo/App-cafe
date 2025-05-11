@@ -56,30 +56,21 @@
   <!-- ===== CONTEÚDO ===== -->
   <div class="conteudo">
     <!-- ===== TELA DE INÍCIO ===== -->
-<div id="telaInicio" class="aba" style="display: block;">
-  <h2>Manejo Café - Visão Geral</h2>
-  <div class="resumo-geral">
-    <div><strong>Total de Latas Colhidas:</strong> <span id="totalLatasInicio">0</span></div>
-    <div><strong>Total Pago:</strong> R$ <span id="totalPagoInicio">0,00</span></div>
-    <div><strong>Total Pendente:</strong> R$ <span id="totalPendenteInicio">0,00</span></div>
-  </div>
-  <button onclick="irParaMenu()">Ir para Menu</button>
-</div>
-
-<!-- ===== BOTÃO MENU/INÍCIO ===== -->
-<button id="botaoMenuInicio" onclick="alternarMenuInicio()">
-  <i id="iconeMenu" class="fas fa-bars"></i>
-</button>
-
-<!-- ===== OUTRAS SEÇÕES ===== -->
-<div id="colheita" class="aba" style="display: none;">
-  <h2>Colheita</h2>
-  <!-- Conteúdo da Colheita -->
-</div>
+    <div id="telaInicio" class="aba" style="display: block;">
+      <h2>Manejo Café - Visão Geral</h2>
+      <div class="resumo-geral">
+        <div><strong>Total de Latas Colhidas:</strong> <span id="totalLatasInicio">0</span></div>
+        <div><strong>Total Pago:</strong> R$ <span id="totalPagoInicio">0,00</span></div>
+        <div><strong>Total Pendente:</strong> R$ <span id="totalPendenteInicio">0,00</span></div>
+      </div>
+    </div>
     
     <!-- ===== APLICAÇÕES ===== -->
-    <div id="aplicacoes" class="aba">
+    <div id="aplicacoes" class="aba" style="display: none;">
       <h2>Aplicações</h2>
+      <button onclick="voltarInicio()">🏠 Início</button>
+      <div id="listaAplicacoes"></div>
+    </div>
       <input id="dataApp" type="date">
       <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
       <datalist id="sugestoesProdutoApp"></datalist>

@@ -236,3 +236,52 @@ body.claro .botao-circular.vermelho {
 body.claro .botao-circular.azul {
   background-color: #2196f3;
 }
+
+/* ===== LISTAGEM DE ITENS ===== */
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 8px 0;
+  background-color: #1e1e1e;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+}
+
+.item span {
+  flex: 1;
+  color: #fff;
+  word-break: break-word;
+}
+
+/* ===== BOTÕES DE AÇÃO ===== */
+.botoes-tarefa {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes-tarefa button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.botoes-tarefa button i {
+  font-size: 20px;
+}
+
+.botoes-tarefa button.azul {
+  color: #4caf50;
+}
+
+.botoes-tarefa button.vermelho {
+  color: #f44336;
+}
+
+.botoes-tarefa button:hover {
+  opacity: 0.8;
+}

@@ -61,8 +61,9 @@
     <i class="fas fa-plus"></i>
   </button>
 
+  <!-- Formulário de Aplicação -->
   <div id="formularioAplicacao" style="display: none;">
-    <input id="dataApp" type="date">
+    <input id="dataApp" type="date" placeholder="Data">
     <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
     <datalist id="sugestoesProdutoApp"></datalist>
     <input id="dosagemApp" placeholder="Dosagem">
@@ -76,15 +77,17 @@
       <option>Setor 01</option>
       <option>Setor 02</option>
     </select>
+    <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+    <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">Cancelar Edição</button>
   </div>
 
   <!-- Campo de Pesquisa -->
   <input id="campoPesquisaAplicacoes" type="text" placeholder="Pesquisar..." oninput="filtrarAplicacoes()">
-  
-  <div id="listaAplicacoes"></div>
-</div>
-  
-  <div id="listaAplicacoes"></div>
+
+  <!-- Lista de Aplicações -->
+  <div id="listaAplicacoes" class="lista-aplicacoes">
+    <!-- Os itens de aplicação serão inseridos aqui dinamicamente -->
+  </div>
 </div>
 
     <!-- ===== TAREFAS ===== -->

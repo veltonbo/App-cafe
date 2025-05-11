@@ -154,16 +154,36 @@
   <div id="financeiroLista"></div>
 </div>
 
-    <!-- ===== COLHEITA ===== -->
-    <div id="colheita" class="aba">
-      <h2>Colheita</h2>
-      <input id="dataColheita" type="date">
-      <input id="colhedor" placeholder="Colhedor">
-      <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-      <button onclick="adicionarColheita()">Adicionar Colheita</button>
-      <div id="colheitaPendentes"></div>
-      <div id="colheitaPagos"></div>
-    </div>
+     <!-- ===== COLHEITA ===== -->
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+  
+  <!-- Controle de Valor da Lata -->
+  <label for="valorLata"><strong>Valor da Lata (R$):</strong></label>
+  <input id="valorLata" type="number" step="0.01" onchange="salvarValorLata()">
+  
+  <div class="formulario-colheita">
+    <input id="dataColheita" type="date" placeholder="Data">
+    <input id="colhedor" placeholder="Nome do Colhedor">
+    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
+    <button onclick="adicionarColheita()">Adicionar Colheita</button>
+  </div>
+
+  <!-- Resumo da Colheita -->
+  <div id="resumoColheita" class="resumo-colheita">
+    <strong>Resumo da Colheita:</strong>
+    <div><strong>Total de Latas:</strong> 0</div>
+    <div><strong>Total Pago:</strong> R$ 0,00</div>
+    <div><strong>Total Pendente:</strong> R$ 0,00</div>
+  </div>
+  
+  <!-- Listagem de Colheita -->
+  <h3>Pendentes</h3>
+  <div id="colheitaPendentes" class="lista-colheita"></div>
+  
+  <h3>Pagos</h3>
+  <div id="colheitaPagos" class="lista-colheita"></div>
+</div>
 
     <!-- ===== RELATÓRIO ===== -->
     <div id="relatorio" class="aba">

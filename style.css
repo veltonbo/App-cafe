@@ -1,3 +1,40 @@
+/* ===== LAYOUT GERAL ===== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+.conteudo {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+/* ===== MENU SUPERIOR ===== */
+.menu-superior {
+  display: flex;
+  justify-content: center;
+  background-color: #1f1f1f;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.menu-superior button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.menu-superior button.active {
+  color: #4caf50;
+}
+
 /* ===== LISTAGEM DE ITENS ===== */
 .item {
   display: flex;
@@ -9,262 +46,32 @@
   border-left: 5px solid #4caf50;
   border-radius: 8px;
   transition: background 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-
-.item:hover {
-  background-color: #2c2c2c;
 }
 
 .item span {
   flex: 1;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-right: 10px;
 }
 
-/* ===== BOTÃO EXPANDIR OPÇÕES ===== */
-.botoes-aplicacao {
+.botoes-opcoes {
   display: none;
   gap: 8px;
-  align-items: center;
 }
 
-.item .botao-expandir {
-  background: none;
-  border: none;
-  color: #4caf50;
-  font-size: 24px;
-  cursor: pointer;
-  transition: transform 0.3s;
+.item.expanded .botoes-opcoes {
+  display: flex;
 }
 
-.item .botao-expandir.ativo {
-  transform: rotate(90deg);
-}
-
-/* ===== BOTÃO FLUTUANTE ===== */
 .botao-flutuante {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
   width: 50px;
   height: 50px;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s;
-}
-
-.botao-flutuante:hover {
-  background-color: #45a049;
-}
-
-/* ===== BOTOES OCULTOS COM SETA ===== */
-.item.expanded .botoes-aplicacao {
-  display: flex;
-}
-
-.item.expanded .botao-expandir {
-  transform: rotate(90deg);
-}
-
-/* ===== AJUSTES DE LISTAGEM ===== */
-.lista-aplicacoes .item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background-color: #1e1e1e;
-  border-left: 5px solid #4caf50;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.3s;
-}
-
-.lista-aplicacoes .item:hover {
-  background-color: #2c2c2c;
-}
-
-.lista-aplicacoes .item span {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ===== BOTOES DE AÇÃO ===== */
-.botoes-aplicacao {
-  display: none;
-  gap: 8px;
-}
-
-.botoes-aplicacao .botao-circular {
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #fff;
   background-color: #4caf50;
-  transition: background 0.3s;
-}
-
-.botoes-aplicacao .botao-circular.verde {
-  background-color: #4caf50;
-}
-
-.botoes-aplicacao .botao-circular.azul {
-  background-color: #2196f3;
-}
-
-.botoes-aplicacao .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-/* ===== FORMULÁRIO APLICAÇÕES ===== */
-.formulario-aplicacoes {
-  background-color: #2c2c2c;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.formulario-aplicacoes input,
-.formulario-aplicacoes select {
-  margin-bottom: 10px;
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #555;
-  background-color: #1e1e1e;
   color: #fff;
-  border-radius: 5px;
-}
-
-/* ===== MODO CLARO ===== */
-body.claro {
-  background-color: #f5f5f5;
-  color: #222;
-}
-
-body.claro .menu-superior {
-  background-color: #e0e0e0;
-}
-
-body.claro .conteudo {
-  background-color: #fff;
-}
-
-body.claro input, 
-body.claro select, 
-body.claro button {
-  background-color: #f9f9f9;
-  color: #222;
-  border: 1px solid #ccc;
-}
-
-body.claro .item {
-  background-color: #fafafa;
-  border-left: 4px solid #4caf50;
-}
-
-body.claro .botao-circular {
-  background-color: #4caf50;
-}
-
-body.claro .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-body.claro .botao-circular.azul {
-  background-color: #2196f3;
-}
-
-/* ===== LISTAGEM DE APLICAÇÕES ===== */
-.lista-aplicacoes .item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  margin: 10px 0;
-  background-color: #1e1e1e;
-  border-left: 4px solid #4caf50;
-  border-radius: 8px;
-  transition: background 0.3s;
-  position: relative;
-}
-
-.lista-aplicacoes .item:hover {
-  background-color: #2c2c2c;
-}
-
-.lista-aplicacoes .item span {
-  flex: 1;
-  word-break: break-word;
-  color: #fff;
-  margin-right: 10px;
-}
-
-.lista-aplicacoes .item .botao-expandir {
-  background: none;
   border: none;
-  color: #4caf50;
+  border-radius: 50%;
   font-size: 24px;
   cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.lista-aplicacoes .item .botao-expandir.ativo {
-  transform: rotate(90deg);
-}
-
-.lista-aplicacoes .botoes-aplicacao {
-  display: none;
-  gap: 8px;
-  align-items: center;
-  position: absolute;
-  right: 10px;
-  transition: opacity 0.3s;
-}
-
-.lista-aplicacoes .item.expanded .botoes-aplicacao {
-  display: flex;
-}
-
-.botoes-aplicacao .botao-circular {
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #fff;
-  background-color: #4caf50;
-  transition: background 0.3s;
-}
-
-.botoes-aplicacao .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-.botoes-aplicacao .botao-circular.azul {
-  background-color: #2196f3;
-}
-
-.botoes-aplicacao .botao-circular.verde {
-  background-color: #4caf50;
 }

@@ -76,7 +76,7 @@ function atualizarAplicacoes() {
       <button class="botao-expandir" onclick="alternarOpcoes(${i})">
         <i class="fas fa-angle-right"></i>
       </button>
-      <div class="botoes-aplicacao" id="botoes-aplicacao-${i}" style="display: none;">
+      <div class="botoes-aplicacao" id="botoes-aplicacao-${i}">
         <button class="botao-circular verde" onclick="duplicarAplicacao(${i})">
           <i class="fas fa-copy"></i>
         </button>
@@ -97,7 +97,7 @@ function alternarOpcoes(index) {
   const botoes = document.getElementById(`botoes-aplicacao-${index}`);
   const item = botoes.closest('.item');
   
-  if (botoes.style.display === "none") {
+  if (botoes.style.display === "none" || !botoes.style.display) {
     botoes.style.display = "flex";
     item.classList.add("expanded");
   } else {

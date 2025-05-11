@@ -22,6 +22,13 @@
   <!-- Scripts -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/main.js"></script>
+  <script defer src="js/inicio.js"></script>
+  <script defer src="js/aplicacao.js"></script>
+  <script defer src="js/tarefas.js"></script>
+  <script defer src="js/financeiro.js"></script>
+  <script defer src="js/colheita.js"></script>
+  <script defer src="js/relatorio.js"></script>
+  <script defer src="js/configuracoes.js"></script>
 </head>
 <body>
 
@@ -39,11 +46,16 @@
     <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita">
       <i class="fas fa-tractor"></i>
     </button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório">
+      <i class="fas fa-chart-line"></i>
+    </button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações">
+      <i class="fas fa-cog"></i>
+    </button>
   </div>
 
   <!-- ===== CONTEÚDO ===== -->
   <div class="conteudo">
-    <!-- ===== TELA DE INÍCIO ===== -->
     <div id="telaInicio" class="aba">
       <h2>Manejo Café - Visão Geral</h2>
       <div class="resumo-geral">
@@ -52,12 +64,12 @@
         <div><strong>Total Pendente:</strong> R$ <span id="totalPendenteInicio">0,00</span></div>
       </div>
     </div>
-    
+
     <!-- ===== APLICAÇÕES ===== -->
     <div id="aplicacoes" class="aba" style="display: none;">
       <h2>Aplicações</h2>
-      <div id="formularioAplicacoes" class="formulario" style="display: none;">
-        <input id="dataApp" type="date">
+      <div id="formularioAplicacoes" style="display: none;">
+        <input id="dataApp" type="date" placeholder="Data da Aplicação">
         <input id="produtoApp" placeholder="Produto">
         <input id="dosagemApp" placeholder="Dosagem">
         <select id="tipoApp">
@@ -67,54 +79,51 @@
           <option>Herbicida</option>
         </select>
         <button onclick="salvarAplicacao()">Salvar</button>
-        <button onclick="cancelarFormulario('formularioAplicacoes')">Cancelar</button>
+        <button onclick="cancelarAplicacao()">Cancelar</button>
       </div>
-      <div id="listaAplicacoes" class="lista"></div>
-      <button class="botao-flutuante" onclick="mostrarFormulario('formularioAplicacoes')">+</button>
+      <div id="listaAplicacoes"></div>
+      <button class="botao-flutuante" onclick="mostrarFormularioAplicacao()">+</button>
     </div>
 
     <!-- ===== TAREFAS ===== -->
     <div id="tarefas" class="aba" style="display: none;">
       <h2>Tarefas</h2>
-      <div id="formularioTarefas" class="formulario" style="display: none;">
-        <input id="dataTarefa" type="date">
-        <input id="descricaoTarefa" placeholder="Descrição">
-        <button onclick="salvarTarefa()">Salvar</button>
-        <button onclick="cancelarFormulario('formularioTarefas')">Cancelar</button>
-      </div>
-      <div id="listaTarefas" class="lista"></div>
-      <button class="botao-flutuante" onclick="mostrarFormulario('formularioTarefas')">+</button>
+      <div id="listaTarefas"></div>
+      <button class="botao-flutuante" onclick="mostrarFormularioTarefa()">+</button>
     </div>
 
     <!-- ===== FINANCEIRO ===== -->
     <div id="financeiro" class="aba" style="display: none;">
       <h2>Financeiro</h2>
-      <div id="formularioFinanceiro" class="formulario" style="display: none;">
-        <input id="dataFin" type="date">
-        <input id="produtoFin" placeholder="Produto">
-        <input id="valorFin" type="number" placeholder="Valor (R$)">
-        <button onclick="salvarFinanceiro()">Salvar</button>
-        <button onclick="cancelarFormulario('formularioFinanceiro')">Cancelar</button>
-      </div>
-      <div id="listaFinanceiro" class="lista"></div>
-      <button class="botao-flutuante" onclick="mostrarFormulario('formularioFinanceiro')">+</button>
+      <div id="financeiroLista"></div>
+      <button class="botao-flutuante" onclick="mostrarFormularioFinanceiro()">+</button>
     </div>
 
     <!-- ===== COLHEITA ===== -->
     <div id="colheita" class="aba" style="display: none;">
       <h2>Colheita</h2>
-      <div id="formularioColheita" class="formulario" style="display: none;">
-        <input id="dataColheita" type="date">
-        <input id="colhedor" placeholder="Colhedor">
-        <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-        <button onclick="salvarColheita()">Salvar</button>
-        <button onclick="cancelarFormulario('formularioColheita')">Cancelar</button>
-      </div>
-      <div id="listaColheita" class="lista"></div>
-      <button class="botao-flutuante" onclick="mostrarFormulario('formularioColheita')">+</button>
+      <div id="resumoColheita"></div>
+      <div id="colheitaPendentes"></div>
+      <div id="colheitaPagos"></div>
+      <button class="botao-flutuante" onclick="mostrarFormularioColheita()">+</button>
+    </div>
+
+    <!-- ===== RELATÓRIO ===== -->
+    <div id="relatorio" class="aba" style="display: none;">
+      <h2>Relatório</h2>
+      <button onclick="exportarPDF()">Exportar PDF</button>
+      <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+      <div id="resumoRelatorio"></div>
+    </div>
+
+    <!-- ===== CONFIGURAÇÕES ===== -->
+    <div id="configuracoes" class="aba" style="display: none;">
+      <h2>Configurações</h2>
+      <button onclick="alternarTema()">Alternar Tema</button>
+      <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
+      <button onclick="fazerBackup()">Fazer Backup</button>
+      <input type="file" id="arquivoBackup" onchange="importarBackup()">
     </div>
   </div>
-
-  <script src="js/main.js"></script>
 </body>
 </html>

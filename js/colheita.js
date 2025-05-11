@@ -1,7 +1,6 @@
 // ====== VARIÁVEIS ======
 let colheita = [];
 let valorLataGlobal = 0;
-let colhedorAtual = null;
 
 // ====== CARREGAMENTO DO VALOR DA LATA ======
 function carregarValorLata() {
@@ -47,7 +46,7 @@ function adicionarColheita() {
 // ====== CARREGAR COLHEITA ======
 function carregarColheita() {
   db.ref('Colheita').on('value', snap => {
-    colheita = snap.exists() ? snap.val() : [];
+    colheita = snap.exists() ? Object.values(snap.val()) : [];
     atualizarColheita();
   });
 }
@@ -65,7 +64,7 @@ function atualizarColheita() {
       if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
       agrupadoPagos[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
     }
-    if (c.pagoParcial < c.quantidade) {
+    if (c.quantidade > c.pagoParcial) {
       if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
       agrupadoPendentes[c.colhedor].push({ ...c, quantidade: c.quantidade - c.pagoParcial, pago: false, i });
     }
@@ -73,8 +72,6 @@ function atualizarColheita() {
 
   montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
   montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
-  gerarGraficoColheita();
-  gerarGraficoColhedor();
   atualizarResumoColheita();
 }
 
@@ -117,8 +114,8 @@ function atualizarResumoColheita() {
   if (!resumo) return;
 
   const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
-  const totalPago = colheita.reduce((soma, c) => c.pago ? c.quantidade * c.valorLata : 0, 0);
-  const totalPendente = colheita.reduce((soma, c) => !c.pago ? c.quantidade * c.valorLata : 0, 0);
+  const totalPago = colheita.reduce((soma, c) => soma + (c.pagoParcial * c.valorLata), 0);
+  const totalPendente = colheita.reduce((soma, c) => soma + ((c.quantidade - c.pagoParcial) * c.valorLata), 0);
 
   resumo.innerHTML = `
     <div><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
@@ -127,11 +124,11 @@ function atualizarResumoColheita() {
   `;
 }
 
-// ====== GRÁFICOS ======
+// ====== GRÁFICOS (PODE SER IMPLEMENTADO DEPOIS) ======
 function gerarGraficoColheita() {
-  // (Seu código para gerar o gráfico)
+  console.log("Gerar Gráfico de Colheita - Em desenvolvimento");
 }
 
 function gerarGraficoColhedor() {
-  // (Seu código para gerar o gráfico)
+  console.log("Gerar Gráfico de Colhedor - Em desenvolvimento");
 }

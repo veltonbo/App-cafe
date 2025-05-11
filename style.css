@@ -255,3 +255,117 @@ body.claro .botao-circular.vermelho {
 body.claro .botao-circular.azul {
   background-color: #2196f3;
 }
+
+/* ===== FORMULÁRIO APLICAÇÕES ===== */
+.formulario-aplicacoes {
+  background-color: #2c2c2c;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.formulario-aplicacoes input,
+.formulario-aplicacoes select {
+  margin-bottom: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #555;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 5px;
+}
+
+.filtros-aplicacoes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.filtros-aplicacoes input,
+.filtros-aplicacoes select {
+  flex: 1;
+  padding: 10px;
+  background-color: #2c2c2c;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 5px;
+}
+
+/* ===== LISTAGEM DE APLICAÇÕES ===== */
+.lista-aplicacoes .item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #1e1e1e;
+  border-left: 5px solid #4caf50;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: background 0.3s;
+}
+
+.lista-aplicacoes .item:hover {
+  background-color: #2c2c2c;
+}
+
+.lista-aplicacoes .item span {
+  flex: 1;
+  word-break: break-word;
+  color: #fff;
+}
+
+.botoes-aplicacao {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes-aplicacao .botao-circular {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background-color: #4caf50;
+  transition: background 0.3s;
+}
+
+.botoes-aplicacao .botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+.botoes-aplicacao .botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botoes-aplicacao .botao-circular.verde {
+  background-color: #4caf50;
+}
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s;
+}
+
+.botao-flutuante:hover {
+  background-color: #45a049;
+}

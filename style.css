@@ -269,20 +269,38 @@ body.claro .botao-circular.azul {
   display: none;
 }
 
-/* ===== BOTÃO CIRCULAR VERMELHO ===== */
-.botao-circular-vermelho {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  display: inline-block;
-  transition: background 0.3s;
-  margin-left: 10px;
+/* ===== ESTILO DOS BOTÕES DE EDIÇÃO ===== */
+.botao-edicao-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.botao-circular-vermelho:hover {
+.botao-edicao {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.botao-salvar {
+  background-color: #4caf50;
+}
+
+.botao-salvar:hover {
+  background-color: #45a049;
+}
+
+.botao-cancelar {
+  background-color: #f44336;
+}
+
+.botao-cancelar:hover {
   background-color: #d32f2f;
 }

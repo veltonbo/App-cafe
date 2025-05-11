@@ -2,7 +2,6 @@
 let gastos = [];
 let indiceEdicaoGasto = null;
 let editarTodasParcelas = false;
-let graficoGastosChart = null;
 
 // ===== INICIALIZAR FINANCEIRO =====
 function inicializarFinanceiro() {
@@ -13,7 +12,8 @@ function inicializarFinanceiro() {
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
   db.ref("Financeiro").on("value", (snapshot) => {
-    gastos = snapshot.exists() ? snapshot.val() : [];
+    const dados = snapshot.val();
+    gastos = dados ? Object.values(dados) : [];
     atualizarFinanceiro();
   });
 }
@@ -54,12 +54,8 @@ function adicionarNovoGasto(data, produto, descricao, valor, tipo, numParcelas) 
     tipo,
     pago: false,
     parcelas: numParcelas,
-    parcelasDetalhes: []
+    parcelasDetalhes: numParcelas > 1 ? gerarParcelas(data, valor, numParcelas) : []
   };
-
-  if (numParcelas > 1) {
-    novoGasto.parcelasDetalhes = gerarParcelas(data, valor, numParcelas);
-  }
 
   gastos.push(novoGasto);
 }
@@ -67,21 +63,17 @@ function adicionarNovoGasto(data, produto, descricao, valor, tipo, numParcelas) 
 // ===== EDITAR GASTO EXISTENTE =====
 function editarGastoExistente(data, produto, descricao, valor, tipo, numParcelas) {
   const gasto = gastos[indiceEdicaoGasto];
+  if (!gasto) return;
 
-  if (editarTodasParcelas && gasto.parcelasDetalhes?.length) {
+  if (numParcelas > 1) {
     gasto.parcelasDetalhes = gerarParcelas(data, valor, numParcelas);
-  } else if (!editarTodasParcelas && gasto.parcelasDetalhes?.length) {
-    const idx = parseInt(parcelasFin.dataset.parcelaIndex);
-    if (!isNaN(idx)) {
-      gasto.parcelasDetalhes[idx].valor = valor;
-      gasto.parcelasDetalhes[idx].vencimento = data;
-    }
   } else {
     gasto.data = data;
     gasto.produto = produto;
     gasto.descricao = descricao;
     gasto.valor = valor;
     gasto.tipo = tipo;
+    gasto.parcelasDetalhes = [];
   }
 }
 

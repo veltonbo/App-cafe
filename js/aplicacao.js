@@ -1,4 +1,4 @@
-// aplicacao.js
+// js/aplicacao.js - Versão Melhorada
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elementos
@@ -13,8 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelar = document.getElementById('btnCancelarEdicaoApp');
   const lista = document.getElementById('listaAplicacoes');
   const filtro = document.getElementById('filtroAplicacoes');
+  const filtroTipo = document.getElementById('filtroTipoAplicacao');
+  const filtroSetor = document.getElementById('filtroSetorAplicacao');
+  const filtroData = document.getElementById('filtroDataAplicacao');
+  const btnLimparFiltro = document.getElementById('btnLimparFiltroAplicacao');
   const sugestoesProduto = document.getElementById('sugestoesProdutoApp');
   const sugestoesSetor = document.getElementById('sugestoesSetor');
+  const resumo = document.getElementById('resumoAplicacoes');
+  const fab = document.getElementById('fab-aplicacao');
 
   // Estado
   let aplicacoesCache = [];
@@ -28,8 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
     idEdit.value = '';
     editando = false;
     btnSalvar.textContent = 'Salvar Aplicação';
+    btnSalvar.disabled = false;
     btnCancelar.classList.add('hidden');
     limparErros();
+    form.classList.add('fade-out');
+    setTimeout(() => {
+      form.classList.add('hidden');
+      form.classList.remove('fade-out');
+      fab.classList.remove('hidden');
+    }, 200);
+  }
+
+  function mostrarForm() {
+    form.classList.remove('hidden');
+    form.classList.add('fade-in');
+    fab.classList.add('hidden');
+    setTimeout(() => form.classList.remove('fade-in'), 200);
     dataApp.focus();
   }
 
@@ -76,6 +96,36 @@ document.addEventListener('DOMContentLoaded', () => {
     return valido;
   }
 
+  // Sugestão dinâmica/autocomplete simples
+  function autocomplete(input, arr) {
+    input.addEventListener("input", function() {
+      let val = this.value;
+      closeAllLists();
+      if (!val) return false;
+      let list = document.createElement("div");
+      list.setAttribute("class", "autocomplete-items");
+      this.parentNode.appendChild(list);
+      let count = 0;
+      arr.forEach(item => {
+        if (item.toLowerCase().includes(val.toLowerCase()) && count < 5) {
+          let itemDiv = document.createElement("div");
+          itemDiv.innerHTML = "<strong>" + item.substr(0, val.length) + "</strong>" + item.substr(val.length);
+          itemDiv.addEventListener("click", () => {
+            input.value = item;
+            closeAllLists();
+          });
+          list.appendChild(itemDiv);
+          count++;
+        }
+      });
+    });
+    function closeAllLists(elmnt) {
+      let items = document.querySelectorAll(".autocomplete-items");
+      items.forEach(item => item.parentNode.removeChild(item));
+    }
+    document.addEventListener("click", function (e) { closeAllLists(e.target); });
+  }
+
   function atualizarSugestoes() {
     const produtosSet = new Set();
     const setoresSet = new Set();
@@ -83,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (app.produto) produtosSet.add(app.produto);
       if (app.setor) setoresSet.add(app.setor);
     });
+    // Datalist para fallback
     sugestoesProduto.innerHTML = '';
     produtosSet.forEach(prod => {
       sugestoesProduto.innerHTML += `<option value="${prod}"></option>`;
@@ -91,32 +142,85 @@ document.addEventListener('DOMContentLoaded', () => {
     setoresSet.forEach(setor => {
       sugestoesSetor.innerHTML += `<option value="${setor}"></option>`;
     });
+    // Autocomplete dinâmico
+    autocomplete(produtoApp, Array.from(produtosSet));
+    autocomplete(setorApp, Array.from(setoresSet));
+    // Filtros dinâmicos
+    if (filtroSetor) {
+      filtroSetor.innerHTML = '<option value="">Setor</option>';
+      setoresSet.forEach(setor => {
+        filtroSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
+      });
+    }
+    if (filtroTipo) {
+      const tipos = new Set(aplicacoesCache.map(a => a.tipo));
+      filtroTipo.innerHTML = '<option value="">Tipo</option>';
+      tipos.forEach(tipo => {
+        filtroTipo.innerHTML += `<option value="${tipo}">${tipo}</option>`;
+      });
+    }
   }
 
-  function renderizarLista(filtroTexto = '') {
+  // Resumo no topo
+  function renderizarResumo() {
+    if (!resumo) return;
+    const total = aplicacoesCache.length;
+    if (total === 0) {
+      resumo.innerHTML = `<div class="resumo-vazio">Nenhuma aplicação registrada.</div>`;
+      return;
+    }
+    const ultima = aplicacoesCache.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
+    // Agrupamento por tipo
+    const porTipo = {};
+    aplicacoesCache.forEach(app => {
+      porTipo[app.tipo] = (porTipo[app.tipo] || 0) + 1;
+    });
+    resumo.innerHTML = `
+      <div><strong>Total de aplicações:</strong> ${total}</div>
+      <div><strong>Última aplicação:</strong> ${ultima.data} (${ultima.produto})</div>
+      <div><strong>Agrupamento por tipo:</strong> ${Object.entries(porTipo).map(([tipo, qtd]) => `${tipo}: ${qtd}`).join(' | ')}</div>
+    `;
+  }
+
+  // Filtro avançado
+  function renderizarLista() {
     lista.innerHTML = '';
     let encontrou = false;
-    const filtroLower = filtroTexto.trim().toLowerCase();
+    const termo = filtro.value.trim().toLowerCase();
+    const tipo = filtroTipo ? filtroTipo.value : '';
+    const setor = filtroSetor ? filtroSetor.value : '';
+    const data = filtroData ? filtroData.value : '';
 
     aplicacoesCache
       .filter(app => {
-        if (!filtroLower) return true;
-        const texto = `${app.data} ${app.produto} ${app.dosagem} ${app.tipo} ${app.setor}`.toLowerCase();
-        return texto.includes(filtroLower);
+        let ok = true;
+        if (termo) {
+          const texto = `${app.data} ${app.produto} ${app.dosagem} ${app.tipo} ${app.setor}`.toLowerCase();
+          ok = ok && texto.includes(termo);
+        }
+        if (tipo) ok = ok && app.tipo === tipo;
+        if (setor) ok = ok && app.setor === setor;
+        if (data) ok = ok && app.data === data;
+        return ok;
       })
       .sort((a, b) => b.timestamp - a.timestamp)
       .forEach(app => {
         encontrou = true;
         const div = document.createElement('div');
-        div.className = 'item';
+        div.className = 'item fade-in';
         div.innerHTML = `
           <span>
             <strong>${app.produto}</strong> (${app.tipo})<br>
             Data: ${app.data} | Dosagem: ${app.dosagem} | Setor: ${app.setor}
           </span>
           <div>
-            <button class="botao-circular azul" aria-label="Editar aplicação" title="Editar" data-id="${app._id}" tabindex="0"><i class="fas fa-edit"></i></button>
-            <button class="botao-circular vermelho" aria-label="Remover aplicação" title="Remover" data-id="${app._id}" tabindex="0"><i class="fas fa-trash"></i></button>
+            <button class="botao-circular menu-opcoes" aria-label="Mais opções" title="Mais opções" data-id="${app._id}" tabindex="0">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="opcoes-lista" style="display:none;">
+              <li><button class="editar" data-id="${app._id}"><i class="fas fa-edit"></i> Editar</button></li>
+              <li><button class="deletar" data-id="${app._id}"><i class="fas fa-trash"></i> Deletar</button></li>
+            </ul>
           </div>
         `;
         lista.appendChild(div);
@@ -129,9 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- CRUD ---
 
-  // Carregar aplicações do Firebase e manter cache
+  function setLoading(loadingState) {
+    loading = loadingState;
+    btnSalvar.disabled = loading;
+    btnSalvar.textContent = loading ? 'Salvando...' : (editando ? 'Atualizar Aplicação' : 'Salvar Aplicação');
+  }
+
   function carregarAplicacoes() {
-    loading = true;
+    setLoading(true);
     lista.innerHTML = '<div class="loading">Carregando...</div>';
     getRef('aplicacoes').orderByChild('timestamp').on('value', snap => {
       aplicacoesCache = [];
@@ -141,16 +250,16 @@ document.addEventListener('DOMContentLoaded', () => {
         aplicacoesCache.push(app);
       });
       atualizarSugestoes();
-      renderizarLista(filtro.value);
-      loading = false;
+      renderizarResumo();
+      renderizarLista();
+      setLoading(false);
     });
   }
 
-  // Adicionar ou atualizar aplicação
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     if (loading) return;
-    btnSalvar.disabled = true;
+    setLoading(true);
     const dados = {
       data: dataApp.value,
       produto: produtoApp.value.trim(),
@@ -160,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timestamp: Date.now()
     };
     if (!validarDados(dados)) {
-      btnSalvar.disabled = false;
+      setLoading(false);
       return;
     }
 
@@ -169,41 +278,61 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => {
           mostrarToast('Aplicação atualizada!', 'sucesso');
           limparForm();
-          btnSalvar.disabled = false;
+          setLoading(false);
         })
         .catch(() => {
           mostrarToast('Erro ao atualizar aplicação!', 'erro');
-          btnSalvar.disabled = false;
+          setLoading(false);
         });
     } else {
       getRef('aplicacoes').push(dados)
         .then(() => {
           mostrarToast('Aplicação salva!', 'sucesso');
           limparForm();
-          btnSalvar.disabled = false;
+          setLoading(false);
         })
         .catch(() => {
           mostrarToast('Erro ao salvar aplicação!', 'erro');
-          btnSalvar.disabled = false;
+          setLoading(false);
         });
     }
   });
 
-  // Cancelar edição
   btnCancelar.addEventListener('click', limparForm);
 
-  // Filtro de aplicações
-  filtro.addEventListener('input', () => {
-    renderizarLista(filtro.value);
+  // Filtros
+  [filtro, filtroTipo, filtroSetor, filtroData].forEach(el => {
+    if (el) el.addEventListener('input', renderizarLista);
   });
+  if (btnLimparFiltro) {
+    btnLimparFiltro.addEventListener('click', () => {
+      filtro.value = '';
+      if (filtroTipo) filtroTipo.value = '';
+      if (filtroSetor) filtroSetor.value = '';
+      if (filtroData) filtroData.value = '';
+      renderizarLista();
+    });
+  }
 
-  // Delegação de eventos para editar/remover (sem onclick inline)
+  // FAB (botão adicionar)
+  if (fab) fab.addEventListener('click', mostrarForm);
+
+  // Delegação de eventos para menu de opções (setinha)
   lista.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    const id = btn.getAttribute('data-id');
-    if (btn.classList.contains('azul')) {
-      // Editar
+    const btn = e.target.closest('.menu-opcoes');
+    if (btn) {
+      // Toggle menu
+      const ul = btn.parentNode.querySelector('.opcoes-lista');
+      document.querySelectorAll('.opcoes-lista').forEach(list => {
+        if (list !== ul) list.style.display = 'none';
+      });
+      ul.style.display = ul.style.display === 'block' ? 'none' : 'block';
+      return;
+    }
+    // Editar
+    const btnEditar = e.target.closest('.editar');
+    if (btnEditar) {
+      const id = btnEditar.getAttribute('data-id');
       const app = aplicacoesCache.find(a => a._id === id);
       if (app) {
         dataApp.value = app.data;
@@ -215,33 +344,70 @@ document.addEventListener('DOMContentLoaded', () => {
         editando = true;
         btnSalvar.textContent = 'Atualizar Aplicação';
         btnCancelar.classList.remove('hidden');
-        dataApp.focus();
+        mostrarForm();
         mostrarToast('Editando aplicação...', 'info');
       }
-    } else if (btn.classList.contains('vermelho')) {
-      // Remover com modal customizável
-      mostrarModalConfirmacao('Deseja remover esta aplicação?', () => {
-        getRef('aplicacoes/' + id).remove()
-          .then(() => {
-            mostrarToast('Aplicação removida!', 'sucesso');
-            if (idEdit.value === id) limparForm();
-          })
-          .catch(() => {
-            mostrarToast('Erro ao remover aplicação!', 'erro');
-          });
-      });
+      e.target.closest('.opcoes-lista').style.display = 'none';
+      return;
+    }
+    // Deletar
+    const btnDeletar = e.target.closest('.deletar');
+    if (btnDeletar) {
+      const id = btnDeletar.getAttribute('data-id');
+      // SweetAlert2 se disponível, senão modal padrão
+      if (window.Swal) {
+        Swal.fire({
+          title: 'Remover aplicação?',
+          text: 'Deseja remover esta aplicação?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sim, remover',
+          cancelButtonText: 'Cancelar'
+        }).then(result => {
+          if (result.isConfirmed) {
+            getRef('aplicacoes/' + id).remove()
+              .then(() => {
+                mostrarToast('Aplicação removida!', 'sucesso');
+                if (idEdit.value === id) limparForm();
+              })
+              .catch(() => {
+                mostrarToast('Erro ao remover aplicação!', 'erro');
+              });
+          }
+        });
+      } else {
+        mostrarModalConfirmacao('Deseja remover esta aplicação?', () => {
+          getRef('aplicacoes/' + id).remove()
+            .then(() => {
+              mostrarToast('Aplicação removida!', 'sucesso');
+              if (idEdit.value === id) limparForm();
+            })
+            .catch(() => {
+              mostrarToast('Erro ao remover aplicação!', 'erro');
+            });
+        });
+      }
+      e.target.closest('.opcoes-lista').style.display = 'none';
+      return;
     }
   });
 
-  // Acessibilidade: permite remover/editar com Enter/Espaço
+  // Fecha menus de opções ao clicar fora
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.menu-opcoes')) {
+      document.querySelectorAll('.opcoes-lista').forEach(list => list.style.display = 'none');
+    }
+  });
+
+  // Acessibilidade: permite abrir menu com Enter/Espaço
   lista.addEventListener('keydown', e => {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('menu-opcoes')) {
       e.preventDefault();
       e.target.click();
     }
   });
 
-  // Modal de confirmação customizável
+  // Modal de confirmação customizável (fallback)
   function mostrarModalConfirmacao(msg, onConfirm) {
     let modal = document.getElementById('modal-confirmacao');
     if (!modal) {
@@ -266,21 +432,21 @@ document.addEventListener('DOMContentLoaded', () => {
       modal.style.display = 'none';
       if (typeof onConfirm === 'function') onConfirm();
     };
-    // Acessibilidade: foco no botão cancelar
     setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
   }
 
-  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
-  if (!document.getElementById('modal-confirmacao-style')) {
+  // CSS para animações fade-in/fade-out (adicione ao seu style.css)
+  if (!document.getElementById('aplicacao-anim-style')) {
     const style = document.createElement('style');
-    style.id = 'modal-confirmacao-style';
+    style.id = 'aplicacao-anim-style';
     style.innerHTML = `
-      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
-      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
-      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
-      #modal-confirmacao .btn-primary { margin-left:8px; }
-      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
-      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
+      .fade-in { animation: fadeIn 0.2s; }
+      .fade-out { animation: fadeOut 0.2s; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+      .autocomplete-items { position: absolute; background: #fff; border: 1px solid #ccc; z-index: 10; max-height: 150px; overflow-y: auto; }
+      .autocomplete-items div { padding: 8px; cursor: pointer; }
+      .autocomplete-items div:hover { background: #f0f0f0; }
     `;
     document.head.appendChild(style);
   }

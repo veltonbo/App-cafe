@@ -1,4 +1,4 @@
-// main.js
+// main.js - Versão Melhorada
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- Alternância de abas ---
@@ -104,6 +104,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Exemplo de uso global:
   window.mostrarMensagem = window.mostrarToast;
+
+  // --- Loader global (opcional, use quando necessário) ---
+  window.mostrarLoader = function(msg = "Carregando...") {
+    let loader = document.getElementById('loader-global');
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'loader-global';
+      loader.innerHTML = `<div class="loader-bg"></div>
+        <div class="loader-box">${msg}</div>`;
+      loader.style.position = 'fixed';
+      loader.style.top = 0;
+      loader.style.left = 0;
+      loader.style.width = '100vw';
+      loader.style.height = '100vh';
+      loader.style.display = 'flex';
+      loader.style.alignItems = 'center';
+      loader.style.justifyContent = 'center';
+      loader.style.zIndex = 99999;
+      document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+  };
+  window.esconderLoader = function() {
+    const loader = document.getElementById('loader-global');
+    if (loader) loader.style.display = 'none';
+  };
+
+  // --- SweetAlert2 para confirmações globais (opcional) ---
+  window.confirmarAcao = function({title, text, confirmButtonText = "Confirmar", cancelButtonText = "Cancelar", onConfirm}) {
+    if (window.Swal) {
+      Swal.fire({
+        title: title || "Confirmar ação?",
+        text: text || "",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText,
+        cancelButtonText
+      }).then(result => {
+        if (result.isConfirmed && typeof onConfirm === "function") onConfirm();
+      });
+    } else {
+      if (confirm(text || title || "Confirmar?")) {
+        if (typeof onConfirm === "function") onConfirm();
+      }
+    }
+  };
 
   // --- Acessibilidade: permite navegação por Tab no menu ---
   menuButtons.forEach(btn => btn.setAttribute('tabindex', '0'));

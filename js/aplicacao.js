@@ -1,136 +1,291 @@
-// js/aplicacao.js
+// aplicacao.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const btnSalvarAplicacao = document.getElementById('btnSalvarAplicacao');
-    const btnCancelarEdicaoApp = document.getElementById('btnCancelarEdicaoApp');
-    const formAplicacao = document.getElementById('formAplicacao'); // Assumindo que você envolveu em um form
+  // Elementos
+  const form = document.getElementById('formAplicacao');
+  const idEdit = document.getElementById('aplicacaoIdEdit');
+  const dataApp = document.getElementById('dataApp');
+  const produtoApp = document.getElementById('produtoApp');
+  const dosagemApp = document.getElementById('dosagemApp');
+  const tipoApp = document.getElementById('tipoApp');
+  const setorApp = document.getElementById('setorApp');
+  const btnSalvar = document.getElementById('btnSalvarAplicacao');
+  const btnCancelar = document.getElementById('btnCancelarEdicaoApp');
+  const lista = document.getElementById('listaAplicacoes');
+  const filtro = document.getElementById('filtroAplicacoes');
+  const sugestoesProduto = document.getElementById('sugestoesProdutoApp');
+  const sugestoesSetor = document.getElementById('sugestoesSetor');
 
-    // Elementos do formulário
-    const dataAppInput = document.getElementById('dataApp');
-    const produtoAppInput = document.getElementById('produtoApp');
-    const dosagemAppInput = document.getElementById('dosagemApp');
-    const tipoAppSelect = document.getElementById('tipoApp');
-    const setorAppSelect = document.getElementById('setorApp');
-    const listaAplicacoesDiv = document.getElementById('listaAplicacoes');
+  // Estado
+  let aplicacoesCache = [];
+  let editando = false;
+  let loading = false;
 
-    let editandoAplicacaoId = null; // Para controlar se está editando
+  // --- Funções auxiliares ---
 
-    // Função para adicionar/salvar aplicação
-    window.adicionarAplicacao = function() {
-        const data = dataAppInput.value;
-        const produto = produtoAppInput.value;
-        const dosagem = dosagemAppInput.value;
-        const tipo = tipoAppSelect.value;
-        const setor = setorAppSelect.value;
+  function limparForm() {
+    form.reset();
+    idEdit.value = '';
+    editando = false;
+    btnSalvar.textContent = 'Salvar Aplicação';
+    btnCancelar.classList.add('hidden');
+    limparErros();
+    dataApp.focus();
+  }
 
-        if (!data || !produto || !dosagem) {
-            alert("Por favor, preencha todos os campos obrigatórios (Data, Produto, Dosagem).");
-            return;
-        }
+  function limparErros() {
+    form.querySelectorAll('.erro-campo').forEach(el => el.classList.remove('erro-campo'));
+    form.querySelectorAll('.msg-erro').forEach(el => el.remove());
+  }
 
-        const aplicacaoData = {
-            data,
-            produto,
-            dosagem,
-            tipo,
-            setor,
-            timestamp: Date.now() // Para ordenação ou referência
-        };
+  function mostrarErroCampo(input, msg) {
+    input.classList.add('erro-campo');
+    let msgEl = document.createElement('div');
+    msgEl.className = 'msg-erro';
+    msgEl.setAttribute('aria-live', 'polite');
+    msgEl.style.color = '#f44336';
+    msgEl.style.fontSize = '0.9em';
+    msgEl.textContent = msg;
+    input.parentNode.insertBefore(msgEl, input.nextSibling);
+    input.focus();
+  }
 
-        if (editandoAplicacaoId) {
-            // Lógica para ATUALIZAR no Firebase
-            database.ref('aplicacoes/' + editandoAplicacaoId).update(aplicacaoData)
-                .then(() => {
-                    console.log("Aplicação atualizada com sucesso!");
-                    cancelarEdicaoAplicacao(); // Reseta o formulário e o estado de edição
-                    carregarAplicacoes(); // Recarrega a lista
-                })
-                .catch(error => console.error("Erro ao atualizar aplicação: ", error));
-        } else {
-            // Lógica para ADICIONAR NOVO no Firebase
-            database.ref('aplicacoes').push(aplicacaoData)
-                .then(() => {
-                    console.log("Aplicação salva com sucesso!");
-                    formAplicacao.reset(); // Limpa o formulário
-                    carregarAplicacoes(); // Recarrega a lista
-                })
-                .catch(error => console.error("Erro ao salvar aplicação: ", error));
-        }
+  function validarDados(dados) {
+    limparErros();
+    let valido = true;
+    if (!dados.data) {
+      mostrarErroCampo(dataApp, 'Informe a data.');
+      valido = false;
+    } else {
+      // Não permite datas futuras
+      const hoje = new Date();
+      const dataSelecionada = new Date(dados.data + "T00:00:00");
+      if (dataSelecionada > hoje) {
+        mostrarErroCampo(dataApp, 'A data não pode ser no futuro.');
+        valido = false;
+      }
+    }
+    if (!dados.produto) {
+      mostrarErroCampo(produtoApp, 'Informe o produto.');
+      valido = false;
+    }
+    if (!dados.dosagem) {
+      mostrarErroCampo(dosagemApp, 'Informe a dosagem.');
+      valido = false;
+    }
+    return valido;
+  }
+
+  function atualizarSugestoes() {
+    const produtosSet = new Set();
+    const setoresSet = new Set();
+    aplicacoesCache.forEach(app => {
+      if (app.produto) produtosSet.add(app.produto);
+      if (app.setor) setoresSet.add(app.setor);
+    });
+    sugestoesProduto.innerHTML = '';
+    produtosSet.forEach(prod => {
+      sugestoesProduto.innerHTML += `<option value="${prod}"></option>`;
+    });
+    sugestoesSetor.innerHTML = '';
+    setoresSet.forEach(setor => {
+      sugestoesSetor.innerHTML += `<option value="${setor}"></option>`;
+    });
+  }
+
+  function renderizarLista(filtroTexto = '') {
+    lista.innerHTML = '';
+    let encontrou = false;
+    const filtroLower = filtroTexto.trim().toLowerCase();
+
+    aplicacoesCache
+      .filter(app => {
+        if (!filtroLower) return true;
+        const texto = `${app.data} ${app.produto} ${app.dosagem} ${app.tipo} ${app.setor}`.toLowerCase();
+        return texto.includes(filtroLower);
+      })
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .forEach(app => {
+        encontrou = true;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>
+            <strong>${app.produto}</strong> (${app.tipo})<br>
+            Data: ${app.data} | Dosagem: ${app.dosagem} | Setor: ${app.setor}
+          </span>
+          <div>
+            <button class="botao-circular azul" aria-label="Editar aplicação" title="Editar" data-id="${app._id}" tabindex="0"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" aria-label="Remover aplicação" title="Remover" data-id="${app._id}" tabindex="0"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        lista.appendChild(div);
+      });
+
+    if (!encontrou) {
+      lista.innerHTML = '<p style="text-align:center;color:#888;">Nenhuma aplicação encontrada.</p>';
+    }
+  }
+
+  // --- CRUD ---
+
+  // Carregar aplicações do Firebase e manter cache
+  function carregarAplicacoes() {
+    loading = true;
+    lista.innerHTML = '<div class="loading">Carregando...</div>';
+    getRef('aplicacoes').orderByChild('timestamp').on('value', snap => {
+      aplicacoesCache = [];
+      snap.forEach(child => {
+        const app = child.val();
+        app._id = child.key;
+        aplicacoesCache.push(app);
+      });
+      atualizarSugestoes();
+      renderizarLista(filtro.value);
+      loading = false;
+    });
+  }
+
+  // Adicionar ou atualizar aplicação
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (loading) return;
+    btnSalvar.disabled = true;
+    const dados = {
+      data: dataApp.value,
+      produto: produtoApp.value.trim(),
+      dosagem: dosagemApp.value.trim(),
+      tipo: tipoApp.value,
+      setor: setorApp.value.trim(),
+      timestamp: Date.now()
+    };
+    if (!validarDados(dados)) {
+      btnSalvar.disabled = false;
+      return;
     }
 
-    // Função para cancelar edição
-    window.cancelarEdicaoAplicacao = function() {
-        editandoAplicacaoId = null;
-        formAplicacao.reset();
-        btnSalvarAplicacao.textContent = 'Salvar Aplicação';
-        btnCancelarEdicaoApp.classList.add('hidden');
-    }
-
-    // Função para carregar aplicações do Firebase e exibir na lista
-    function carregarAplicacoes() {
-        const aplicacoesRef = database.ref('aplicacoes').orderByChild('timestamp'); // Ordenar por timestamp, por exemplo
-        aplicacoesRef.on('value', (snapshot) => {
-            listaAplicacoesDiv.innerHTML = ''; // Limpa a lista atual
-            if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const aplicacao = childSnapshot.val();
-                    const aplicacaoId = childSnapshot.key;
-                    const itemHtml = `
-                        <div class="item" id="app-${aplicacaoId}">
-                            <span>${aplicacao.data} - ${aplicacao.produto} (${aplicacao.tipo}) - ${aplicacao.dosagem} - Setor: ${aplicacao.setor}</span>
-                            <div class="botoes-aplicacao">
-                                <button class="botao-circular azul" onclick="editarAplicacao('${aplicacaoId}')" title="Editar"><i class="fas fa-edit"></i></button>
-                                <button class="botao-circular vermelho" onclick="removerAplicacao('${aplicacaoId}')" title="Remover"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `;
-                    listaAplicacoesDiv.innerHTML += itemHtml;
-                });
-            } else {
-                listaAplicacoesDiv.innerHTML = '<p>Nenhuma aplicação registrada.</p>';
-            }
+    if (editando && idEdit.value) {
+      getRef('aplicacoes/' + idEdit.value).set(dados)
+        .then(() => {
+          mostrarToast('Aplicação atualizada!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao atualizar aplicação!', 'erro');
+          btnSalvar.disabled = false;
+        });
+    } else {
+      getRef('aplicacoes').push(dados)
+        .then(() => {
+          mostrarToast('Aplicação salva!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao salvar aplicação!', 'erro');
+          btnSalvar.disabled = false;
         });
     }
+  });
 
-    // Função para preencher o formulário para edição
-    window.editarAplicacao = function(aplicacaoId) {
-        database.ref('aplicacoes/' + aplicacaoId).once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                const aplicacao = snapshot.val();
-                dataAppInput.value = aplicacao.data;
-                produtoAppInput.value = aplicacao.produto;
-                dosagemAppInput.value = aplicacao.dosagem;
-                tipoAppSelect.value = aplicacao.tipo;
-                setorAppSelect.value = aplicacao.setor;
+  // Cancelar edição
+  btnCancelar.addEventListener('click', limparForm);
 
-                editandoAplicacaoId = aplicacaoId;
-                btnSalvarAplicacao.textContent = 'Atualizar Aplicação';
-                btnCancelarEdicaoApp.classList.remove('hidden');
-                window.scrollTo(0, 0); // Rola para o topo para ver o formulário
-            }
-        });
-    }
+  // Filtro de aplicações
+  filtro.addEventListener('input', () => {
+    renderizarLista(filtro.value);
+  });
 
-    // Função para remover aplicação
-    window.removerAplicacao = function(aplicacaoId) {
-        if (confirm("Tem certeza que deseja remover esta aplicação?")) {
-            database.ref('aplicacoes/' + aplicacaoId).remove()
-                .then(() => {
-                    console.log("Aplicação removida com sucesso!");
-                    // A lista será atualizada automaticamente pelo listener 'on value'
-                })
-                .catch(error => console.error("Erro ao remover aplicação: ", error));
-        }
+  // Delegação de eventos para editar/remover (sem onclick inline)
+  lista.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    if (btn.classList.contains('azul')) {
+      // Editar
+      const app = aplicacoesCache.find(a => a._id === id);
+      if (app) {
+        dataApp.value = app.data;
+        produtoApp.value = app.produto;
+        dosagemApp.value = app.dosagem;
+        tipoApp.value = app.tipo;
+        setorApp.value = app.setor;
+        idEdit.value = id;
+        editando = true;
+        btnSalvar.textContent = 'Atualizar Aplicação';
+        btnCancelar.classList.remove('hidden');
+        dataApp.focus();
+        mostrarToast('Editando aplicação...', 'info');
+      }
+    } else if (btn.classList.contains('vermelho')) {
+      // Remover com modal customizável
+      mostrarModalConfirmacao('Deseja remover esta aplicação?', () => {
+        getRef('aplicacoes/' + id).remove()
+          .then(() => {
+            mostrarToast('Aplicação removida!', 'sucesso');
+            if (idEdit.value === id) limparForm();
+          })
+          .catch(() => {
+            mostrarToast('Erro ao remover aplicação!', 'erro');
+          });
+      });
     }
+  });
 
-    // Event Listeners para os botões (se não usar onclick inline)
-    if (btnSalvarAplicacao) {
-        btnSalvarAplicacao.addEventListener('click', adicionarAplicacao);
+  // Acessibilidade: permite remover/editar com Enter/Espaço
+  lista.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
+      e.preventDefault();
+      e.target.click();
     }
-    if (btnCancelarEdicaoApp) {
-        btnCancelarEdicaoApp.addEventListener('click', cancelarEdicaoAplicacao);
+  });
+
+  // Modal de confirmação customizável
+  function mostrarModalConfirmacao(msg, onConfirm) {
+    let modal = document.getElementById('modal-confirmacao');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-confirmacao';
+      modal.innerHTML = `
+        <div class="modal-bg"></div>
+        <div class="modal-box" role="dialog" aria-modal="true">
+          <p id="modal-msg"></p>
+          <div style="text-align:right;">
+            <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
+            <button id="modal-btn-confirmar" class="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
     }
-    
-    // Carregar aplicações ao iniciar
-    carregarAplicacoes();
+    modal.querySelector('#modal-msg').textContent = msg;
+    modal.style.display = 'flex';
+    modal.querySelector('#modal-btn-cancelar').onclick = () => { modal.style.display = 'none'; };
+    modal.querySelector('#modal-btn-confirmar').onclick = () => {
+      modal.style.display = 'none';
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+    // Acessibilidade: foco no botão cancelar
+    setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
+  }
+
+  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
+  if (!document.getElementById('modal-confirmacao-style')) {
+    const style = document.createElement('style');
+    style.id = 'modal-confirmacao-style';
+    style.innerHTML = `
+      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
+      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
+      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
+      #modal-confirmacao .btn-primary { margin-left:8px; }
+      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
+      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Inicialização
+  carregarAplicacoes();
+  limparForm();
 });

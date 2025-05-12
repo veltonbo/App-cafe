@@ -6,7 +6,7 @@ import { saveDataOffline, loadDataOffline } from './offline-db.js';
 let colheita = [];
 let valorLataGlobal = 0;
 
-// ===== CARREGAR VALOR DA LATA =====
+// ===== CARREGAMENTO DO VALOR DA LATA =====
 async function carregarValorLata() {
   try {
     if (navigator.onLine) {
@@ -14,13 +14,12 @@ async function carregarValorLata() {
         if (snap.exists()) {
           valorLataGlobal = snap.val();
           document.getElementById('valorLata').value = valorLataGlobal;
-          saveDataOffline('valorLata', { value: valorLataGlobal }).catch(console.error);
+          saveDataOffline('valorLata', valorLataGlobal).catch(console.error);
         }
       });
     } else {
       // Modo offline
-      const dados = await loadDataOffline('valorLata');
-      valorLataGlobal = dados?.value || 0;
+      valorLataGlobal = await loadDataOffline('valorLata') || 0;
       document.getElementById('valorLata').value = valorLataGlobal;
       mostrarNotificacao('Você está visualizando o valor da lata offline');
     }
@@ -30,7 +29,6 @@ async function carregarValorLata() {
   }
 }
 
-// ===== SALVAR VALOR DA LATA =====
 async function salvarValorLata() {
   if (!auth.currentUser) {
     mostrarNotificacao('Você precisa estar logado para alterar o valor da lata', 'error');
@@ -44,8 +42,7 @@ async function salvarValorLata() {
       await db.ref('ValorLata').set(valorLataGlobal);
     }
     
-    // Sempre salvar offline para ter o valor mais recente
-    await saveDataOffline('valorLata', { value: valorLataGlobal });
+    await saveDataOffline('valorLata', valorLataGlobal);
     mostrarNotificacao('Valor da lata atualizado', 'success');
   } catch (error) {
     console.error('Erro ao salvar valor da lata:', error);
@@ -53,14 +50,14 @@ async function salvarValorLata() {
   }
 }
 
-// ===== ADICIONAR COLHEITA =====
+// ===== ADIÇÃO DE LANÇAMENTO DE COLHEITA =====
 async function adicionarColheita() {
   if (!auth.currentUser) {
     mostrarNotificacao('Você precisa estar logado para adicionar colheitas', 'error');
     return;
   }
 
-  const nova = {
+  const novaColheita = {
     data: dataColheita.value,
     colhedor: colhedor.value.trim(),
     quantidade: parseFloat(quantidadeLatas.value),
@@ -72,13 +69,13 @@ async function adicionarColheita() {
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
-  if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
+  if (!novaColheita.data || !novaColheita.colhedor || isNaN(novaColheita.quantidade) || novaColheita.quantidade <= 0) {
     mostrarNotificacao("Preencha todos os campos corretamente!", 'error');
     return;
   }
 
   try {
-    colheita.push(nova);
+    colheita.push(novaColheita);
     
     if (navigator.onLine) {
       await db.ref('Colheita').set(colheita);
@@ -94,8 +91,8 @@ async function adicionarColheita() {
     colhedor.value = '';
     quantidadeLatas.value = '';
   } catch (error) {
-    console.error('Erro ao adicionar colheita:', error);
-    mostrarNotificacao('Erro ao adicionar colheita: ' + error.message, 'error');
+    console.error('Erro ao salvar colheita:', error);
+    mostrarNotificacao('Erro ao salvar colheita: ' + error.message, 'error');
   }
 }
 
@@ -114,8 +111,7 @@ async function carregarColheita() {
       });
     } else {
       // Modo offline
-      const dados = await loadDataOffline('colheita');
-      colheita = dados || [];
+      colheita = await loadDataOffline('colheita') || [];
       atualizarColheita();
       mostrarNotificacao('Você está visualizando dados offline da colheita');
     }
@@ -127,16 +123,19 @@ async function carregarColheita() {
 
 // ===== ATUALIZAR LISTA DE COLHEITA =====
 function atualizarColheita() {
-  const pendentes = document.getElementById("colheitaPendentes");
-  const pagos = document.getElementById("colheitaPagos");
+  const colheitaPendentes = document.getElementById("colheitaPendentes");
+  const colheitaPagos = document.getElementById("colheitaPagos");
   
-  pendentes.innerHTML = '';
-  pagos.innerHTML = '';
+  colheitaPendentes.innerHTML = '';
+  colheitaPagos.innerHTML = '';
 
   const agrupadoPendentes = {};
   const agrupadoPagos = {};
 
-  colheita.forEach((c, i) => {
+  // Ordenar colheita por data (mais recente primeiro)
+  const colheitaOrdenada = [...colheita].sort((a, b) => new Date(b.data) - new Date(a.data));
+
+  colheitaOrdenada.forEach((c, i) => {
     if (c.pagoParcial > 0) {
       if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
       agrupadoPagos[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
@@ -147,8 +146,8 @@ function atualizarColheita() {
     }
   });
 
-  montarGrupoColheita(agrupadoPendentes, pendentes, false);
-  montarGrupoColheita(agrupadoPagos, pagos, true);
+  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
+  montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
   atualizarResumoColheita();
 }
 
@@ -157,19 +156,29 @@ function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {
     const bloco = document.createElement('div');
     bloco.className = 'bloco-colhedor';
-    bloco.innerHTML = `<strong>${nome}</strong>`;
+    
+    // Calcular total para este colhedor
+    const totalLatas = grupo[nome].reduce((sum, c) => sum + c.quantidade, 0);
+    const totalValor = totalLatas * (grupo[nome][0].valorLata || valorLataGlobal);
+    
+    bloco.innerHTML = `
+      <div class="colhedor-header">
+        <strong>${nome}</strong>
+        <span>Total: ${totalLatas.toFixed(2)} latas (R$ ${totalValor.toFixed(2)})</span>
+      </div>
+    `;
 
     grupo[nome].forEach(({ data, quantidade, i }) => {
       const div = document.createElement('div');
       div.className = 'item';
       
-      const valor = (quantidade * valorLataGlobal).toFixed(2);
+      const valor = quantidade * (grupo[nome][0].valorLata || valorLataGlobal);
       
       div.innerHTML = `
-        <span>${data} - ${quantidade} latas (R$ ${valor})</span>
+        <span>${data} - ${quantidade} latas (R$ ${valor.toFixed(2)})</span>
         <div class="botoes-colheita">
           ${!pago ? `
-            <button class="botao-circular verde" onclick="marcarComoPago(${i}, ${quantitude})">
+            <button class="botao-circular verde" onclick="marcarColheitaComoPaga(${i}, ${quantitude})">
               <i class="fas fa-check"></i>
             </button>
           ` : ''}
@@ -186,48 +195,56 @@ function montarGrupoColheita(grupo, container, pago) {
 }
 
 // ===== MARCAR COLHEITA COMO PAGA =====
-async function marcarComoPago(index, quantidade) {
+async function marcarColheitaComoPaga(index, quantidade = null) {
   if (!auth.currentUser) {
     mostrarNotificacao('Você precisa estar logado para marcar colheitas como pagas', 'error');
     return;
   }
 
   try {
-    const colheitaItem = colheita[index];
-    const valorPago = quantidade * valorLataGlobal;
+    const valorLata = colheita[index].valorLata || valorLataGlobal;
+    const qtdPagar = quantidade || (colheita[index].quantidade - (colheita[index].pagoParcial || 0));
     
-    colheitaItem.pagoParcial = (colheitaItem.pagoParcial || 0) + quantidade;
-    
-    // Adicionar ao histórico de pagamentos
-    colheitaItem.historicoPagamentos = colheitaItem.historicoPagamentos || [];
-    colheitaItem.historicoPagamentos.push({
-      data: new Date().toISOString().split('T')[0],
-      quantidade,
+    if (qtdPagar <= 0) return;
+
+    const valorPago = qtdPagar * valorLata;
+    const dataPagamento = new Date().toISOString().split('T')[0];
+
+    // Registrar pagamento no histórico
+    const pagamento = {
+      data: dataPagamento,
+      quantidade: qtdPagar,
       valor: valorPago,
       usuario: auth.currentUser.uid
-    });
+    };
 
-    // Verificar se está totalmente pago
-    if (colheitaItem.pagoParcial >= colheitaItem.quantidade) {
-      colheitaItem.pago = true;
-    }
+    colheita[index].historicoPagamentos = colheita[index].historicoPagamentos || [];
+    colheita[index].historicoPagamentos.push(pagamento);
     
+    // Atualizar valores
+    colheita[index].pagoParcial = (colheita[index].pagoParcial || 0) + qtdPagar;
+    if (colheita[index].pagoParcial >= colheita[index].quantidade) {
+      colheita[index].pago = true;
+    }
+
     if (navigator.onLine) {
       await db.ref('Colheita').set(colheita);
     } else {
       await saveDataOffline('colheita', colheita);
-      mostrarNotificacao('Pagamento salvo localmente. Será sincronizado quando online.', 'info');
+      mostrarNotificacao('Pagamento registrado localmente. Será sincronizado quando online.', 'info');
     }
 
-    // Disparar evento de notificação
+    atualizarColheita();
+    
+    // Disparar evento personalizado
     document.dispatchEvent(new CustomEvent('colheitaPaga', {
       detail: {
-        quantidade,
-        colhedor: colheitaItem.colhedor
+        colhedor: colheita[index].colhedor,
+        quantidade: qtdPagar,
+        valor: valorPago,
+        data: dataPagamento
       }
     }));
-
-    atualizarColheita();
   } catch (error) {
     console.error('Erro ao marcar colheita como paga:', error);
     mostrarNotificacao('Erro ao marcar colheita como paga: ' + error.message, 'error');
@@ -247,7 +264,7 @@ async function excluirColheita(index) {
       await saveDataOffline('colheita', colheita);
       mostrarNotificacao('Exclusão salva localmente. Será sincronizada quando online.', 'info');
     }
-    
+
     atualizarColheita();
   } catch (error) {
     console.error('Erro ao excluir colheita:', error);
@@ -261,13 +278,14 @@ function atualizarResumoColheita() {
   if (!resumo) return;
 
   const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
-  const totalPago = colheita.reduce((soma, c) => soma + (c.pagoParcial * c.valorLata), 0);
-  const totalPendente = colheita.reduce((soma, c) => soma + ((c.quantidade - c.pagoParcial) * c.valorLata), 0);
+  const totalPago = colheita.reduce((soma, c) => soma + ((c.pagoParcial || 0) * (c.valorLata || valorLataGlobal)), 0);
+  const totalPendente = colheita.reduce((soma, c) => soma + ((c.quantidade - (c.pagoParcial || 0)) * (c.valorLata || valorLataGlobal)), 0);
 
   resumo.innerHTML = `
     <div><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
     <div><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
     <div><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
+    <div><strong>Valor da Lata Atual:</strong> R$ ${valorLataGlobal.toFixed(2)}</div>
   `;
 }
 
@@ -280,5 +298,5 @@ document.addEventListener("dadosCarregados", () => {
 // Exportar funções para uso no HTML
 window.adicionarColheita = adicionarColheita;
 window.salvarValorLata = salvarValorLata;
+window.marcarColheitaComoPaga = marcarColheitaComoPaga;
 window.excluirColheita = excluirColheita;
-window.marcarComoPago = marcarComoPago;

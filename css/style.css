@@ -632,3 +632,13 @@ body {
     border-color: #444;
   }
 }
+
+.dark-theme {
+    --primary: #81c784;
+    --primary-dark: #4caf50;
+    --light: #121212;
+    --dark: #e0e0e0;
+    --white: #1e1e1e;
+    --gray: #b0b0b0;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}

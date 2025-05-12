@@ -132,7 +132,7 @@ button:hover {
   font-size: 18px;
   cursor: pointer;
   transition: color 0.3s;
-  position: relative;
+  position: 6px;
   z-index: 2;
 }
 

@@ -85,10 +85,3 @@ window.addEventListener('DOMContentLoaded', () => {
     auth.signOut();
   });
 });
-
-// Permissão temporária (remova após resolver o acesso)
-firebase.auth().signInWithEmailAndPassword("admin@temp.com", "senhatemporaria")
-  .catch(error => {
-    console.error("Falha no login temporário:", error);
-    window.location.href = "/login.html"; // Redireciona para tela de login
-  });

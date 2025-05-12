@@ -1,136 +1,339 @@
-// js/aplicacao.js
+// tarefas.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const btnSalvarAplicacao = document.getElementById('btnSalvarAplicacao');
-    const btnCancelarEdicaoApp = document.getElementById('btnCancelarEdicaoApp');
-    const formAplicacao = document.getElementById('formAplicacao'); // Assumindo que você envolveu em um form
+  // Elementos do formulário
+  const form = document.getElementById('formTarefa');
+  const idEdit = document.getElementById('tarefaIdEdit');
+  const dataTarefa = document.getElementById('dataTarefa');
+  const descricaoTarefa = document.getElementById('descricaoTarefa');
+  const prioridadeTarefa = document.getElementById('prioridadeTarefa');
+  const setorTarefa = document.getElementById('setorTarefa');
+  const eAplicacaoCheckbox = document.getElementById('eAplicacaoTarefaCheckbox');
+  const camposAplicacao = document.getElementById('camposAplicacaoTarefa');
+  const produtoAplicacao = document.getElementById('produtoAplicacaoTarefa');
+  const dosagemAplicacao = document.getElementById('dosagemAplicacaoTarefa');
+  const tipoAplicacao = document.getElementById('tipoAplicacaoTarefa');
+  const btnSalvar = document.getElementById('btnSalvarTarefa');
+  const btnCancelar = document.getElementById('btnCancelarEdicaoTarefa');
+  const listaPendentes = document.getElementById('listaTarefasPendentes');
+  const listaConcluidas = document.getElementById('listaTarefasConcluidas');
+  const filtroPendentes = document.getElementById('filtroTarefasPendentes');
+  const filtroConcluidas = document.getElementById('filtroTarefasConcluidas');
+  const sugestoesSetor = document.getElementById('sugestoesSetor');
+  const sugestoesProduto = document.getElementById('sugestoesProdutoApp');
 
-    // Elementos do formulário
-    const dataAppInput = document.getElementById('dataApp');
-    const produtoAppInput = document.getElementById('produtoApp');
-    const dosagemAppInput = document.getElementById('dosagemApp');
-    const tipoAppSelect = document.getElementById('tipoApp');
-    const setorAppSelect = document.getElementById('setorApp');
-    const listaAplicacoesDiv = document.getElementById('listaAplicacoes');
+  // Estado
+  let tarefasCache = [];
+  let editando = false;
+  let loading = false;
 
-    let editandoAplicacaoId = null; // Para controlar se está editando
+  // --- Funções auxiliares ---
 
-    // Função para adicionar/salvar aplicação
-    window.adicionarAplicacao = function() {
-        const data = dataAppInput.value;
-        const produto = produtoAppInput.value;
-        const dosagem = dosagemAppInput.value;
-        const tipo = tipoAppSelect.value;
-        const setor = setorAppSelect.value;
+  function limparForm() {
+    form.reset();
+    idEdit.value = '';
+    editando = false;
+    btnSalvar.textContent = 'Salvar Tarefa';
+    btnCancelar.classList.add('hidden');
+    camposAplicacao.classList.add('hidden');
+    limparErros();
+    dataTarefa.focus();
+  }
 
-        if (!data || !produto || !dosagem) {
-            alert("Por favor, preencha todos os campos obrigatórios (Data, Produto, Dosagem).");
-            return;
+  function limparErros() {
+    form.querySelectorAll('.erro-campo').forEach(el => el.classList.remove('erro-campo'));
+    form.querySelectorAll('.msg-erro').forEach(el => el.remove());
+  }
+
+  function mostrarErroCampo(input, msg) {
+    input.classList.add('erro-campo');
+    let msgEl = document.createElement('div');
+    msgEl.className = 'msg-erro';
+    msgEl.setAttribute('aria-live', 'polite');
+    msgEl.style.color = '#f44336';
+    msgEl.style.fontSize = '0.9em';
+    msgEl.textContent = msg;
+    input.parentNode.insertBefore(msgEl, input.nextSibling);
+    input.focus();
+  }
+
+  function validarDados(dados) {
+    limparErros();
+    let valido = true;
+    if (!dados.data) {
+      mostrarErroCampo(dataTarefa, 'Informe a data.');
+      valido = false;
+    }
+    if (!dados.descricao) {
+      mostrarErroCampo(descricaoTarefa, 'Informe a descrição.');
+      valido = false;
+    }
+    if (dados.eAplicacao) {
+      if (!dados.produtoAplicacao) {
+        mostrarErroCampo(produtoAplicacao, 'Informe o produto.');
+        valido = false;
+      }
+      if (!dados.dosagemAplicacao) {
+        mostrarErroCampo(dosagemAplicacao, 'Informe a dosagem.');
+        valido = false;
+      }
+    }
+    return valido;
+  }
+
+  function atualizarSugestoes() {
+    const setoresSet = new Set();
+    const produtosSet = new Set();
+    tarefasCache.forEach(tarefa => {
+      if (tarefa.setor) setoresSet.add(tarefa.setor);
+      if (tarefa.eAplicacao && tarefa.produtoAplicacao) produtosSet.add(tarefa.produtoAplicacao);
+    });
+    sugestoesSetor.innerHTML = '';
+    setoresSet.forEach(setor => {
+      sugestoesSetor.innerHTML += `<option value="${setor}"></option>`;
+    });
+    sugestoesProduto.innerHTML = '';
+    produtosSet.forEach(prod => {
+      sugestoesProduto.innerHTML += `<option value="${prod}"></option>`;
+    });
+  }
+
+  function renderizarListas() {
+    renderizarLista(listaPendentes, false, filtroPendentes.value);
+    renderizarLista(listaConcluidas, true, filtroConcluidas.value);
+  }
+
+  function renderizarLista(container, feita, filtroTexto = '') {
+    container.innerHTML = '';
+    let encontrou = false;
+    const filtroLower = filtroTexto.trim().toLowerCase();
+
+    tarefasCache
+      .filter(tarefa => tarefa.feita === feita)
+      .filter(tarefa => {
+        if (!filtroLower) return true;
+        const texto = `${tarefa.data} ${tarefa.descricao} ${tarefa.setor} ${tarefa.produtoAplicacao || ''} ${tarefa.dosagemAplicacao || ''}`.toLowerCase();
+        return texto.includes(filtroLower);
+      })
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .forEach(tarefa => {
+        encontrou = true;
+        const div = document.createElement('div');
+        div.className = 'item' + (tarefa.feita ? ' tarefa-feita' : '');
+        let detalhesAplicacao = '';
+        if (tarefa.eAplicacao) {
+          detalhesAplicacao = `<br><em>Aplicação: ${tarefa.produtoAplicacao || ''} (${tarefa.tipoAplicacao || ''}) - Dosagem: ${tarefa.dosagemAplicacao || ''}</em>`;
         }
+        div.innerHTML = `
+          <span>
+            <strong>${tarefa.descricao}</strong> (${tarefa.prioridade})<br>
+            Data: ${tarefa.data} | Setor: ${tarefa.setor || '-'}
+            ${detalhesAplicacao}
+          </span>
+          <div>
+            <button class="botao-circular" aria-label="${tarefa.feita ? 'Marcar como pendente' : 'Marcar como feita'}" title="${tarefa.feita ? 'Marcar como pendente' : 'Marcar como feita'}" data-id="${tarefa._id}" data-action="toggle"><i class="fas fa-${tarefa.feita ? 'undo' : 'check'}"></i></button>
+            <button class="botao-circular azul" aria-label="Editar tarefa" title="Editar" data-id="${tarefa._id}" data-action="edit"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" aria-label="Remover tarefa" title="Remover" data-id="${tarefa._id}" data-action="remove"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
 
-        const aplicacaoData = {
-            data,
-            produto,
-            dosagem,
-            tipo,
-            setor,
-            timestamp: Date.now() // Para ordenação ou referência
-        };
+    if (!encontrou) {
+      container.innerHTML = `<p style="text-align:center;color:#888;">Nenhuma tarefa ${feita ? 'concluída' : 'pendente'} encontrada.</p>`;
+    }
+  }
 
-        if (editandoAplicacaoId) {
-            // Lógica para ATUALIZAR no Firebase
-            database.ref('aplicacoes/' + editandoAplicacaoId).update(aplicacaoData)
-                .then(() => {
-                    console.log("Aplicação atualizada com sucesso!");
-                    cancelarEdicaoAplicacao(); // Reseta o formulário e o estado de edição
-                    carregarAplicacoes(); // Recarrega a lista
-                })
-                .catch(error => console.error("Erro ao atualizar aplicação: ", error));
-        } else {
-            // Lógica para ADICIONAR NOVO no Firebase
-            database.ref('aplicacoes').push(aplicacaoData)
-                .then(() => {
-                    console.log("Aplicação salva com sucesso!");
-                    formAplicacao.reset(); // Limpa o formulário
-                    carregarAplicacoes(); // Recarrega a lista
-                })
-                .catch(error => console.error("Erro ao salvar aplicação: ", error));
-        }
+  // --- CRUD ---
+
+  function carregarTarefas() {
+    loading = true;
+    listaPendentes.innerHTML = '<div class="loading">Carregando...</div>';
+    listaConcluidas.innerHTML = '<div class="loading">Carregando...</div>';
+    getRef('tarefas').orderByChild('timestamp').on('value', snap => {
+      tarefasCache = [];
+      snap.forEach(child => {
+        const tarefa = child.val();
+        tarefa._id = child.key;
+        tarefasCache.push(tarefa);
+      });
+      atualizarSugestoes();
+      renderizarListas();
+      loading = false;
+    });
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (loading) return;
+    btnSalvar.disabled = true;
+    const dados = {
+      data: dataTarefa.value,
+      descricao: descricaoTarefa.value.trim(),
+      prioridade: prioridadeTarefa.value,
+      setor: setorTarefa.value.trim(),
+      eAplicacao: eAplicacaoCheckbox.checked,
+      feita: false,
+      timestamp: Date.now()
+    };
+    if (dados.eAplicacao) {
+      dados.produtoAplicacao = produtoAplicacao.value.trim();
+      dados.dosagemAplicacao = dosagemAplicacao.value.trim();
+      dados.tipoAplicacao = tipoAplicacao.value;
+    }
+    if (!validarDados(dados)) {
+      btnSalvar.disabled = false;
+      return;
     }
 
-    // Função para cancelar edição
-    window.cancelarEdicaoAplicacao = function() {
-        editandoAplicacaoId = null;
-        formAplicacao.reset();
-        btnSalvarAplicacao.textContent = 'Salvar Aplicação';
-        btnCancelarEdicaoApp.classList.add('hidden');
-    }
-
-    // Função para carregar aplicações do Firebase e exibir na lista
-    function carregarAplicacoes() {
-        const aplicacoesRef = database.ref('aplicacoes').orderByChild('timestamp'); // Ordenar por timestamp, por exemplo
-        aplicacoesRef.on('value', (snapshot) => {
-            listaAplicacoesDiv.innerHTML = ''; // Limpa a lista atual
-            if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const aplicacao = childSnapshot.val();
-                    const aplicacaoId = childSnapshot.key;
-                    const itemHtml = `
-                        <div class="item" id="app-${aplicacaoId}">
-                            <span>${aplicacao.data} - ${aplicacao.produto} (${aplicacao.tipo}) - ${aplicacao.dosagem} - Setor: ${aplicacao.setor}</span>
-                            <div class="botoes-aplicacao">
-                                <button class="botao-circular azul" onclick="editarAplicacao('${aplicacaoId}')" title="Editar"><i class="fas fa-edit"></i></button>
-                                <button class="botao-circular vermelho" onclick="removerAplicacao('${aplicacaoId}')" title="Remover"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `;
-                    listaAplicacoesDiv.innerHTML += itemHtml;
-                });
-            } else {
-                listaAplicacoesDiv.innerHTML = '<p>Nenhuma aplicação registrada.</p>';
-            }
+    if (editando && idEdit.value) {
+      getRef('tarefas/' + idEdit.value).set(dados)
+        .then(() => {
+          mostrarToast('Tarefa atualizada!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao atualizar tarefa!', 'erro');
+          btnSalvar.disabled = false;
+        });
+    } else {
+      getRef('tarefas').push(dados)
+        .then(() => {
+          mostrarToast('Tarefa salva!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao salvar tarefa!', 'erro');
+          btnSalvar.disabled = false;
         });
     }
+  });
 
-    // Função para preencher o formulário para edição
-    window.editarAplicacao = function(aplicacaoId) {
-        database.ref('aplicacoes/' + aplicacaoId).once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                const aplicacao = snapshot.val();
-                dataAppInput.value = aplicacao.data;
-                produtoAppInput.value = aplicacao.produto;
-                dosagemAppInput.value = aplicacao.dosagem;
-                tipoAppSelect.value = aplicacao.tipo;
-                setorAppSelect.value = aplicacao.setor;
+  btnCancelar.addEventListener('click', limparForm);
 
-                editandoAplicacaoId = aplicacaoId;
-                btnSalvarAplicacao.textContent = 'Atualizar Aplicação';
-                btnCancelarEdicaoApp.classList.remove('hidden');
-                window.scrollTo(0, 0); // Rola para o topo para ver o formulário
-            }
-        });
+  // Mostrar/ocultar campos de aplicação
+  eAplicacaoCheckbox.addEventListener('change', () => {
+    if (eAplicacaoCheckbox.checked) {
+      camposAplicacao.classList.remove('hidden');
+      produtoAplicacao.focus();
+    } else {
+      camposAplicacao.classList.add('hidden');
     }
+  });
 
-    // Função para remover aplicação
-    window.removerAplicacao = function(aplicacaoId) {
-        if (confirm("Tem certeza que deseja remover esta aplicação?")) {
-            database.ref('aplicacoes/' + aplicacaoId).remove()
-                .then(() => {
-                    console.log("Aplicação removida com sucesso!");
-                    // A lista será atualizada automaticamente pelo listener 'on value'
-                })
-                .catch(error => console.error("Erro ao remover aplicação: ", error));
+  // Filtros
+  filtroPendentes.addEventListener('input', () => renderizarLista(listaPendentes, false, filtroPendentes.value));
+  filtroConcluidas.addEventListener('input', () => renderizarLista(listaConcluidas, true, filtroConcluidas.value));
+
+  // Delegação de eventos para ações nas listas
+  [listaPendentes, listaConcluidas].forEach(container => {
+    container.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (action === 'edit') {
+        const tarefa = tarefasCache.find(t => t._id === id);
+        if (tarefa) {
+          dataTarefa.value = tarefa.data;
+          descricaoTarefa.value = tarefa.descricao;
+          prioridadeTarefa.value = tarefa.prioridade;
+          setorTarefa.value = tarefa.setor;
+          eAplicacaoCheckbox.checked = !!tarefa.eAplicacao;
+          if (tarefa.eAplicacao) {
+            camposAplicacao.classList.remove('hidden');
+            produtoAplicacao.value = tarefa.produtoAplicacao || '';
+            dosagemAplicacao.value = tarefa.dosagemAplicacao || '';
+            tipoAplicacao.value = tarefa.tipoAplicacao || 'Adubo';
+          } else {
+            camposAplicacao.classList.add('hidden');
+          }
+          idEdit.value = id;
+          editando = true;
+          btnSalvar.textContent = 'Atualizar Tarefa';
+          btnCancelar.classList.remove('hidden');
+          dataTarefa.focus();
+          mostrarToast('Editando tarefa...', 'info');
         }
-    }
+      } else if (action === 'remove') {
+        mostrarModalConfirmacao('Deseja remover esta tarefa?', () => {
+          getRef('tarefas/' + id).remove()
+            .then(() => {
+              mostrarToast('Tarefa removida!', 'sucesso');
+              if (idEdit.value === id) limparForm();
+            })
+            .catch(() => {
+              mostrarToast('Erro ao remover tarefa!', 'erro');
+            });
+        });
+      } else if (action === 'toggle') {
+        const tarefa = tarefasCache.find(t => t._id === id);
+        if (tarefa) {
+          getRef('tarefas/' + id).update({ feita: !tarefa.feita })
+            .then(() => {
+              mostrarToast(tarefa.feita ? 'Tarefa marcada como pendente.' : 'Tarefa concluída!', 'sucesso');
+            })
+            .catch(() => {
+              mostrarToast('Erro ao atualizar tarefa!', 'erro');
+            });
+        }
+      }
+    });
+    // Acessibilidade: permite remover/editar/toggle com Enter/Espaço
+    container.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+  });
 
-    // Event Listeners para os botões (se não usar onclick inline)
-    if (btnSalvarAplicacao) {
-        btnSalvarAplicacao.addEventListener('click', adicionarAplicacao);
+  // Modal de confirmação (igual ao do aplicacao.js)
+  function mostrarModalConfirmacao(msg, onConfirm) {
+    let modal = document.getElementById('modal-confirmacao');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-confirmacao';
+      modal.innerHTML = `
+        <div class="modal-bg"></div>
+        <div class="modal-box" role="dialog" aria-modal="true">
+          <p id="modal-msg"></p>
+          <div style="text-align:right;">
+            <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
+            <button id="modal-btn-confirmar" class="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
     }
-    if (btnCancelarEdicaoApp) {
-        btnCancelarEdicaoApp.addEventListener('click', cancelarEdicaoAplicacao);
-    }
-    
-    // Carregar aplicações ao iniciar
-    carregarAplicacoes();
+    modal.querySelector('#modal-msg').textContent = msg;
+    modal.style.display = 'flex';
+    modal.querySelector('#modal-btn-cancelar').onclick = () => { modal.style.display = 'none'; };
+    modal.querySelector('#modal-btn-confirmar').onclick = () => {
+      modal.style.display = 'none';
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+    setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
+  }
+
+  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
+  if (!document.getElementById('modal-confirmacao-style')) {
+    const style = document.createElement('style');
+    style.id = 'modal-confirmacao-style';
+    style.innerHTML = `
+      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
+      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
+      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
+      #modal-confirmacao .btn-primary { margin-left:8px; }
+      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
+      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Inicialização
+  carregarTarefas();
+  limparForm();
 });

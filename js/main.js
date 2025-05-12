@@ -1,3 +1,20 @@
+// main.js - versão atualizada
+import { auth } from './firebase-config.js';
+import './notificacoes.js';
+import { initDB } from './offline-db.js';
+
+// Inicializações
+initDB().catch(console.error);
+
+// Verificar autenticação antes de inicializar o app
+auth.onAuthStateChanged(user => {
+  if (user) {
+    inicializarApp();
+  }
+});
+
+// Restante do código permanece o mesmo...
+
 // ===== FUNÇÃO PARA TROCAR ABAS =====
 function mostrarAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => {

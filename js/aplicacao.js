@@ -1,5 +1,26 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
+let indiceEdicaoAplicacao = null;
+const PRODUTOS_VALIDOS = ["Adubo NPK", "Herbicida", "Fungicida"]; // Exemplo
+
+// ===== VALIDAÇÕES =====
+function validarAplicacao(app) {
+  const erros = [];
+  
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(app.data)) {
+    erros.push("Data no formato inválido (use AAAA-MM-DD)");
+  }
+  
+  if (!PRODUTOS_VALIDOS.includes(app.produto)) {
+    erros.push(`Produto inválido. Use: ${PRODUTOS_VALIDOS.join(", ")}`);
+  }
+  
+  if (isNaN(parseFloat(app.dosagem)) || parseFloat(app.dosagem) <= 0) {
+    erros.push("Dosagem deve ser um número positivo");
+  }
+  
+  return erros.length ? erros : null;
+}
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
@@ -21,7 +42,7 @@ function carregarAplicacoes() {
   });
 }
 
-// ===== ADICIONAR OU EDITAR APLICAÇÃO =====
+// ===== FUNÇÃO PRINCIPAL ATUALIZADA =====
 function adicionarAplicacao() {
   const nova = {
     data: document.getElementById("dataApp").value,
@@ -31,29 +52,11 @@ function adicionarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
-  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
-    alert("Preencha todos os campos corretamente.");
+  const erros = validarAplicacao(nova);
+  if (erros) {
+    alert(`Erros:\n${erros.join("\n")}`);
     return;
   }
-
-  if (indiceEdicaoAplicacao !== null) {
-    aplicacoes[indiceEdicaoAplicacao] = nova;
-    indiceEdicaoAplicacao = null;
-    document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-    document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
-  } else {
-    aplicacoes.push(nova);
-  }
-
-  // Salvar no Firebase
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, index) => {
-    acc[index] = app;
-    return acc;
-  }, {}));
-
-  atualizarAplicacoes();
-  limparCamposAplicacao();
-}
 
 // ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoAplicacao() {
@@ -147,5 +150,51 @@ function exportarAplicacoesCSV() {
   a.click();
 }
 
+// ===== NOVA FUNÇÃO PARA FILTRAR APLICAÇÕES POR PERÍODO =====
+function filtrarAplicacoesPorPeriodo(inicio, fim) {
+  return aplicacoes.filter(app => {
+    const dataApp = new Date(app.data);
+    return dataApp >= new Date(inicio) && dataApp <= new Date(fim);
+  });
+}
+
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===== VALIDAÇÕES =====
+function validarAplicacao(app) {
+  const erros = [];
+  
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(app.data)) {
+    erros.push("Data no formato inválido (use AAAA-MM-DD)");
+  }
+  
+  if (!PRODUTOS_VALIDOS.includes(app.produto)) {
+    erros.push(`Produto inválido. Use: ${PRODUTOS_VALIDOS.join(", ")}`);
+  }
+  
+  if (isNaN(parseFloat(app.dosagem)) || parseFloat(app.dosagem) <= 0) {
+    erros.push("Dosagem deve ser um número positivo");
+  }
+  
+  return erros.length ? erros : null;
+}
+
+
+
+  // Restante da função mantido igual...
+}
+

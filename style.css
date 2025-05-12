@@ -1,403 +1,353 @@
-/* ===== VARIÁVEIS CSS (CUSTOM PROPERTIES) ===== */
-:root {
-  /* Tema Escuro (Padrão) */
-  --bg-color-dark: #121212;
-  --text-color-dark: #e0e0e0;
-  --menu-bg-dark: #1f1f1f;
-  --menu-icon-color-dark: #aaa;
-  --input-bg-dark: #2c2c2c;
-  --input-border-dark: #555;
-  --item-bg-dark: #1e1e1e;
-  --item-border-left-dark: #4caf50; /* Mantendo o verde como cor de destaque */
-  --modal-bg-overlay-dark: rgba(0, 0, 0, 0.8);
-  --modal-content-bg-dark: #2c2c2c;
-  --canvas-bg-dark: #1e1e1e;
-
-  /* Tema Claro */
-  --bg-color-light: #f5f5f5;
-  --text-color-light: #222;
-  --menu-bg-light: #e0e0e0;
-  --menu-icon-color-light: #555; /* Ajustado para melhor contraste no claro */
-  --input-bg-light: #f9f9f9;
-  --input-border-light: #ccc;
-  --item-bg-light: #fafafa;
-  --item-border-left-light: #4caf50; /* Mantendo o verde como cor de destaque */
-  --modal-bg-overlay-light: rgba(0, 0, 0, 0.6); /* Levemente mais claro */
-  --modal-content-bg-light: #ffffff;
-  --canvas-bg-light: #f0f0f0;
-
-  /* Cores Comuns */
-  --primary-color: #4caf50;
-  --primary-color-hover: #45a049;
-  --danger-color: #f44336;
-  --danger-color-hover: #d32f2f;
-  --info-color: #2196f3;
-  --info-color-hover: #1976d2;
-  --text-color-on-primary: #fff;
-  --text-color-on-dark-input: #fff;
-  --text-color-on-light-input: #222;
-
-  /* Outras */
-  --border-radius-std: 8px;
-  --border-radius-small: 6px;
-}
-
-/* ===== LAYOUT GERAL ===== */
-body {
+/* ===== RESET E BASE ===== */
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: var(--bg-color-dark);
-  color: var(--text-color-dark);
-  overflow-x: hidden;
-  transition: background-color 0.3s, color 0.3s; /* Para transição suave de tema */
+  padding: 0;
 }
-
-.conteudo {
-  padding: 20px;
-  max-width: 800px;
-  margin: auto;
-  animation: fadeIn 0.5s ease;
+html, body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f7f7f7;
+  color: #222;
+  min-height: 100vh;
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+body.claro {
+  background: #fff;
+  color: #222;
 }
+a { color: #2196f3; text-decoration: none; }
+a:hover { text-decoration: underline; }
 
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
+  gap: 8px;
+  background: #2196f3;
+  padding: 8px 0;
   justify-content: center;
-  background-color: var(--menu-bg-dark);
-  padding: 10px 0;
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  align-items: center;
+  flex-wrap: wrap;
 }
-
 .menu-superior button {
   background: none;
   border: none;
-  color: var(--menu-icon-color-dark);
-  font-size: 22px;
-  margin: 0 6px;
-  padding: 8px 12px; /* Adicionado padding para melhor área de clique */
+  color: #fff;
+  font-size: 1.1em;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: color 0.3s;
-  border-radius: var(--border-radius-small); /* Para feedback visual no foco */
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-
-.menu-superior button:hover {
-  color: var(--primary-color);
+.menu-superior button.active,
+.menu-superior button:focus {
+  background: #1565c0;
+  outline: none;
 }
-
-.menu-superior button i {
-  pointer-events: none;
-  font-size: 24px;
-}
-
-.menu-superior button.active {
-  color: var(--primary-color);
+.menu-superior button[aria-current="page"] {
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 /* ===== ABAS ===== */
-.aba { 
-  display: none;
+main {
+  max-width: 900px;
+  margin: 24px auto 32px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  padding: 24px 18px 32px 18px;
 }
-.aba.active {
-  display: block;
-}
-
-/* Classe para esconder elementos via JS */
-.hidden {
-  display: none !important; /* Usar !important com cautela, mas útil para classes de utilidade */
-}
-
-/* ===== CAMPOS DE FORMULÁRIO ===== */
-label {
-  display: block; /* Faz com que o label ocupe a linha inteira */
-  margin-top: 12px;
-  margin-bottom: 4px;
-  font-weight: bold;
-  font-size: 0.9em;
-}
-
-input, select, button {
-  width: 100%;
-  padding: 12px; /* Aumentado padding para melhor toque/clique */
-  margin: 8px 0;
-  border-radius: var(--border-radius-std);
-  border: 1px solid var(--input-border-dark);
-  background-color: var(--input-bg-dark);
-  color: var(--text-color-on-dark-input);
-  font-size: 16px;
-  box-sizing: border-box;
-  transition: border-color 0.3s, background-color 0.3s;
-}
-
-input[type="checkbox"] {
-  width: auto; /* Checkboxes não devem ocupar 100% da largura */
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-/* Estilo de foco para acessibilidade */
-input:focus, select:focus, button:focus, .menu-superior button:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-  border-color: var(--primary-color); /* Adicional para inputs */
-}
-/* Remover outline padrão se estiver usando um customizado forte */
-input:focus-visible, select:focus-visible, button:focus-visible, .menu-superior button:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-
-/* ===== BOTÕES PADRÃO ===== */
-button {
-  background-color: var(--primary-color);
-  color: var(--text-color-on-primary);
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: var(--primary-color-hover);
-}
-
-/* Botões de Cancelar/Secundários (Exemplo) */
-button.secondary,
-#btnCancelarEdicaoApp,
-#btnCancelarEdicaoTarefa,
-#btnCancelarFinanceiro {
-  background-color: var(--input-bg-dark); /* Cor de fundo similar aos inputs */
-  color: var(--text-color-dark);
-  border: 1px solid var(--input-border-dark);
-}
-button.secondary:hover,
-#btnCancelarEdicaoApp:hover,
-#btnCancelarEdicaoTarefa:hover,
-#btnCancelarFinanceiro:hover {
-  background-color: #3a3a3a; /* Um pouco mais escuro no hover */
-  border-color: #666;
-}
-
-
-/* ===== BOTÕES CIRCULARES ===== */
-.botao-circular {
-  width: 38px;
-  height: 38px;
-  padding: 0; /* Remover padding padrão de botão */
-  border-radius: 50%;
+.aba { display: none; }
+.aba[style*="block"], .aba:not([style]) { display: block; }
+.aba h2 { margin-bottom: 12px; }
+.resumo-topo {
+  background: #e3f2fd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
   display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
   align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: var(--text-color-on-primary);
-  background-color: var(--primary-color);
+}
+.resumo-topo > div { min-width: 120px; }
+
+/* ===== FILTROS ===== */
+.filtros {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.filtros input, .filtros select, .filtros button {
+  padding: 7px 10px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 1em;
+  background: #f9f9f9;
+}
+.filtros button {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.2s;
 }
+.filtros button:hover { background: #bbdefb; }
 
-.botao-circular.vermelho {
-  background-color: var(--danger-color);
-}
-
-.botao-circular.vermelho:hover {
-  background-color: var(--danger-color-hover);
-}
-
-.botao-circular.azul {
-  background-color: var(--info-color);
-}
-
-.botao-circular.azul:hover {
-  background-color: var(--info-color-hover);
-}
-
-/* ===== LISTAGEM DE ITENS ===== */
+/* ===== LISTAS E ITENS ===== */
 .item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px; /* Ajustado padding */
-  margin: 10px 0; /* Aumentado margin */
-  background-color: var(--item-bg-dark);
-  border-left: 5px solid var(--item-border-left-dark); /* Aumentada espessura da borda */
-  border-radius: var(--border-radius-small);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3); /* Sombra sutil */
+  padding: 10px 6px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: background 0.2s;
 }
-
-.item span {
-  flex: 1;
-  color: var(--text-color-dark); /* Usar variável para consistência */
-  word-break: break-word;
-  margin-right: 10px; /* Espaço antes dos botões */
-}
-
-.botoes-acao-item, /* Nome mais genérico */
-.botoes-aplicacao, 
-.botoes-financeiro {
+.item:hover { background: #f1f8ff; }
+.item .menu-opcoes { margin-left: 8px; }
+.item .botao-circular {
+  border: none;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1em;
   display: flex;
-  gap: 8px; /* Reduzido gap */
-}
-
-/* ===== CAMPOS DE PESQUISA ===== */
-.campo-pesquisa {
-  padding: 12px;
-  background: var(--input-bg-dark);
-  border: 1px solid var(--input-border-dark);
-  border-radius: var(--border-radius-std);
-  margin-bottom: 15px;
-  color: var(--text-color-on-dark-input);
-  font-size: 16px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-  /* display: none;  Controlado por JS, mas se precisar de uma classe para mostrar: .modal.is-active */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--modal-bg-overlay-dark);
-  display: flex; /* Alterado para flex para centralizar */
   align-items: center;
   justify-content: center;
-  z-index: 1000; /* Acima do menu sticky */
-  opacity: 0; /* Para animação */
-  visibility: hidden; /* Para animação */
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  cursor: pointer;
+  transition: background 0.2s;
 }
+.item .botao-circular:hover { background: #bbdefb; }
+.item .botao-circular.vermelho { background: #ffcdd2; color: #b71c1c; }
+.item .botao-circular.vermelho:hover { background: #e57373; }
+.item .botao-circular.azul { background: #bbdefb; color: #1565c0; }
+.item .botao-circular.azul:hover { background: #90caf9; }
+.item .botao-circular.menu-opcoes { background: #e3f2fd; color: #1565c0; }
+.item .botao-circular.menu-opcoes:hover { background: #bbdefb; }
 
-.modal.is-active { /* Classe para ativar o modal */
-  opacity: 1;
-  visibility: visible;
+.opcoes-lista {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  position: absolute;
+  right: 0;
+  top: 38px;
+  min-width: 120px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 0;
+  list-style: none;
 }
-
-.modal .modal-conteudo {
-  background-color: var(--modal-content-bg-dark);
-  padding: 25px; /* Aumentado padding */
-  border-radius: var(--border-radius-std);
-  max-width: 450px; /* Aumentado max-width */
-  width: 90%;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  transform: scale(0.95); /* Para animação */
-  transition: transform 0.3s ease;
-}
-
-.modal.is-active .modal-conteudo {
-  transform: scale(1);
-}
-
-.modal button { /* Estilo para botões dentro do modal */
+.opcoes-lista li { list-style: none; }
+.opcoes-lista button {
   width: 100%;
-  background-color: var(--primary-color);
-  color: var(--text-color-on-primary);
-  margin-top: 15px; /* Aumentado margin-top */
-  padding: 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 1em;
+  color: #222;
+  border-radius: 0;
+  transition: background 0.2s;
+}
+.opcoes-lista button:hover { background: #e3f2fd; }
+
+.bloco-colhedor {
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
 }
 
-/* ===== RESUMO E RELATÓRIO ===== */
-#resumoFinanceiro, #resumoColheita {
-  margin-top: 20px; /* Aumentado margin */
-  background: var(--input-bg-dark); /* Usando cor de input para consistência */
-  padding: 15px;
-  border-radius: var(--border-radius-std);
-  border: 1px solid var(--input-border-dark);
+/* ===== FORMULÁRIOS ===== */
+form {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 18px 16px;
+  margin: 18px 0;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-direction: column;
+  position: relative;
+}
+form input, form select, form button {
+  padding: 8px 10px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 1em;
+}
+form button[type="submit"] {
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+form button[type="submit"]:hover { background: #1565c0; }
+form button[type="button"] {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+form button[type="button"]:hover { background: #bbdefb; }
+form .hidden { display: none !important; }
+.erro-campo { border-color: #f44336 !important; }
+.msg-erro { color: #f44336; font-size: 0.95em; margin-top: 2px; }
+
+/* ===== BOTÃO FLUTUANTE (FAB) ===== */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #2196f3;
+  color: #fff;
+  font-size: 32px;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.fab:hover { background: #1565c0; }
+.fab.hidden { display: none !important; }
+
+/* ===== TOASTS ===== */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+.toast {
+  font-size: 1rem;
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  margin-top: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.toast-sucesso { background: #4caf50; }
+.toast-erro { background: #f44336; }
+.toast-info { background: #2196f3; }
+
+/* ===== LOADER GLOBAL ===== */
+#loader-global {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  align-items: center; justify-content: center;
+  z-index: 99999;
+}
+#loader-global .loader-bg {
+  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.3);
+}
+#loader-global .loader-box {
+  position: relative;
+  background: #fff;
+  color: #222;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 180px;
+  max-width: 90vw;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  font-size: 1.2em;
+}
+body.claro #loader-global .loader-box { background: #fff; color: #222; }
+body:not(.claro) #loader-global .loader-box { background: #222; color: #fff; }
+
+/* ===== MODAL DE CONFIRMAÇÃO ===== */
+#modal-confirmacao {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+}
+#modal-confirmacao .modal-bg {
+  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5);
+}
+#modal-confirmacao .modal-box {
+  position: relative;
+  background: #fff;
+  color: #222;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 260px;
+  max-width: 90vw;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+#modal-confirmacao .btn-primary { margin-left: 8px; }
+body.claro #modal-confirmacao .modal-box { background: #fff; color: #222; }
+body:not(.claro) #modal-confirmacao .modal-box { background: #222; color: #fff; }
+
+/* ===== AUTOCOMPLETE ===== */
+.autocomplete-items {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  z-index: 10;
+  max-height: 150px;
+  overflow-y: auto;
+  left: 0; right: 0;
+}
+.autocomplete-items div {
+  padding: 8px;
+  cursor: pointer;
+}
+.autocomplete-items div:hover {
+  background: #f0f0f0;
 }
 
-#resumoFinanceiro div, #resumoColheita div {
-  margin-bottom: 8px;
-}
-#resumoFinanceiro strong, #resumoColheita strong {
-  color: var(--primary-color); /* Destacar os títulos */
-}
+/* ===== ANIMAÇÕES ===== */
+.fade-in { animation: fadeIn 0.3s; }
+.fade-out { animation: fadeOut 0.3s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-#relatorio canvas {
-  background: var(--canvas-bg-dark);
-  border-radius: var(--border-radius-std);
-  margin-top: 15px;
-  padding: 10px; /* Adicionar padding ao redor do canvas */
-  border: 1px solid var(--input-border-dark);
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 700px) {
+  main { padding: 10px 2vw 24px 2vw; }
+  .resumo-topo { flex-direction: column; gap: 8px; }
+  .fab { right: 12px; bottom: 12px; width: 48px; height: 48px; font-size: 26px; }
+  .menu-superior { flex-wrap: wrap; }
 }
-
-/* ===== MODO CLARO ===== */
-body.claro {
-  background-color: var(--bg-color-light);
-  color: var(--text-color-light);
+@media (max-width: 480px) {
+  .menu-superior button { font-size: 0.98em; padding: 7px 8px; }
+  .fab { width: 44px; height: 44px; font-size: 22px; }
+  .resumo-topo { padding: 8px 4px; }
 }
 
-body.claro .menu-superior {
-  background-color: var(--menu-bg-light);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15); /* Sombra mais suave para tema claro */
+/* ===== ACESSIBILIDADE ===== */
+.menu-superior button:focus-visible,
+form input:focus-visible,
+form select:focus-visible,
+form button:focus-visible {
+  outline: 2px solid #2196f3;
+  outline-offset: 2px;
 }
-
-body.claro .menu-superior button {
-  color: var(--menu-icon-color-light);
-}
-
-body.claro .menu-superior button:hover,
-body.claro .menu-superior button.active {
-  color: var(--primary-color);
-}
-
-/* body.claro .conteudo {
-  background-color: #fff;  Pode ser desnecessário se o body já tem a cor de fundo certa
-} */
-
-body.claro input, 
-body.claro select,
-body.claro .campo-pesquisa {
-  background-color: var(--input-bg-light);
-  color: var(--text-color-on-light-input);
-  border: 1px solid var(--input-border-light);
-}
-
-body.claro button { /* Botões primários no tema claro */
-  /* Mantém o verde, mas pode-se ajustar se necessário */
-  /* background-color: var(--primary-color); */
-  /* color: var(--text-color-on-primary); */
-}
-
-body.claro button.secondary,
-body.claro #btnCancelarEdicaoApp,
-body.claro #btnCancelarEdicaoTarefa,
-body.claro #btnCancelarFinanceiro {
-  background-color: #e9e9e9; /* Cor de fundo mais clara para secundários */
-  color: var(--text-color-light);
-  border: 1px solid var(--input-border-light);
-}
-body.claro button.secondary:hover,
-body.claro #btnCancelarEdicaoApp:hover,
-body.claro #btnCancelarEdicaoTarefa:hover,
-body.claro #btnCancelarFinanceiro:hover {
-  background-color: #dcdcdc;
-}
-
-
-body.claro .item {
-  background-color: var(--item-bg-light);
-  border-left: 5px solid var(--item-border-left-light);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Sombra mais suave */
-}
-
-body.claro .item span {
-  color: var(--text-color-light);
-}
-
-body.claro .
-
-/* Em style.css */
-    .item.tarefa-feita span {
-        text-decoration: line-through;
-        color: #888; /* Cor mais clara para texto de tarefa feita */
-    }
-    body.claro .item.tarefa-feita span {
-        color: #777;
-    }

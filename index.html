@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- Scripts -->
+  <!-- Nota: É uma boa prática mover os event handlers (onclick, onchange) do HTML para estes scripts usando addEventListener -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/main.js"></script>
   <script defer src="js/aplicacao.js"></script>
@@ -30,195 +31,179 @@
   <script defer src="js/configuracoes.js"></script>
 </head>
 <body>
-  
   <!-- ===== MENU SUPERIOR ===== -->
-<div class="menu-superior">
-  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
-    <i class="fas fa-flask"></i>
-  </button>
-  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas">
-    <i class="fas fa-tasks"></i>
-  </button>
-  <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro">
-    <i class="fas fa-dollar-sign"></i>
-  </button>
-  <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita">
-    <i class="fas fa-tractor"></i>
-  </button>
-  <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório">
-    <i class="fas fa-chart-line"></i>
-  </button>
-  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações">
-    <i class="fas fa-cog"></i>
-  </button>
-</div>
+  <div class="menu-superior">
+    <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações" aria-label="Aplicações">
+      <i class="fas fa-flask"></i>
+    </button>
+    <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas" aria-label="Tarefas">
+      <i class="fas fa-tasks"></i>
+    </button>
+    <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro" aria-label="Financeiro">
+      <i class="fas fa-dollar-sign"></i>
+    </button>
+    <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita" aria-label="Colheita">
+      <i class="fas fa-tractor"></i>
+    </button>
+    <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório" aria-label="Relatório">
+      <i class="fas fa-chart-line"></i>
+    </button>
+    <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações" aria-label="Configurações">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
 
   <!-- ===== CONTEÚDO ===== -->
   <div class="conteudo">
     <!-- ===== APLICAÇÕES ===== -->
     <div id="aplicacoes" class="aba">
       <h2>Aplicações</h2>
-      <input id="dataApp" type="date">
-      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
-      <datalist id="sugestoesProdutoApp"></datalist>
-      <input id="dosagemApp" placeholder="Dosagem">
-      <select id="tipoApp">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
-      </select>
-      <select id="setorApp">
-        <option>Setor 01</option>
-        <option>Setor 02</option>
-      </select>
-      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">Cancelar Edição</button>
+      <form id="formAplicacao">
+        <label for="dataApp">Data da Aplicação:</label>
+        <input id="dataApp" type="date" required>
+        
+        <label for="produtoApp">Produto:</label>
+        <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto" required>
+        <datalist id="sugestoesProdutoApp"></datalist>
+        
+        <label for="dosagemApp">Dosagem:</label>
+        <input id="dosagemApp" placeholder="Dosagem" required>
+        
+        <label for="tipoApp">Tipo de Aplicação:</label>
+        <select id="tipoApp">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
+        </select>
+        
+        <label for="setorApp">Setor:</label>
+        <select id="setorApp">
+          <option>Setor 01</option>
+          <option>Setor 02</option>
+        </select>
+        
+        <button type="button" id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+        <button type="button" id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" class="hidden">Cancelar Edição</button>
+      </form>
       <div id="listaAplicacoes"></div>
     </div>
 
     <!-- ===== TAREFAS ===== -->
-<div id="tarefas" class="aba">
-  <h2>Tarefas</h2>
-  
-  <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
-  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
-  
-  <select id="prioridadeTarefa">
-    <option value="Alta">Alta</option>
-    <option value="Média">Média</option>
-    <option value="Baixa">Baixa</option>
-  </select>
-  
-  <select id="setorTarefa">
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-    <option value="Setor 03">Setor 03</option>
-  </select>
-  
-  <!-- Checkbox para definir se é uma aplicação -->
-  <label>
-    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-    É uma Aplicação
-  </label>
-  
-  <!-- Campos de aplicação (aparecem apenas se for uma aplicação) -->
-  <div id="camposAplicacao" style="display: none;">
-    <input id="dosagemAplicacao" placeholder="Dosagem">
-    <select id="tipoAplicacao">
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-  </div>
+    <div id="tarefas" class="aba">
+      <h2>Tarefas</h2>
+      <form id="formTarefa">
+        <label for="dataTarefa">Data da Tarefa:</label>
+        <input id="dataTarefa" type="date" placeholder="Data da Tarefa" required>
+        
+        <label for="descricaoTarefa">Descrição da Tarefa:</label>
+        <input id="descricaoTarefa" placeholder="Descrição da Tarefa" required>
+        
+        <label for="prioridadeTarefa">Prioridade:</label>
+        <select id="prioridadeTarefa">
+          <option value="Alta">Alta</option>
+          <option value="Média">Média</option>
+          <option value="Baixa">Baixa</option>
+        </select>
+        
+        <label for="setorTarefa">Setor:</label>
+        <select id="setorTarefa">
+          <option value="Setor 01">Setor 01</option>
+          <option value="Setor 02">Setor 02</option>
+          <option value="Setor 03">Setor 03</option>
+        </select>
+        
+        <label for="eAplicacaoCheckbox">
+          <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+          É uma Aplicação
+        </label>
+        
+        <div id="camposAplicacao" class="hidden">
+          <label for="dosagemAplicacao">Dosagem:</label>
+          <input id="dosagemAplicacao" placeholder="Dosagem">
+          
+          <label for="tipoAplicacao">Tipo de Aplicação (Tarefa):</label>
+          <select id="tipoAplicacao">
+            <option value="Adubo">Adubo</option>
+            <option value="Fungicida">Fungicida</option>
+            <option value="Inseticida">Inseticida</option>
+            <option value="Herbicida">Herbicida</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
 
-  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none;">Cancelar Edição</button>
-  
-  <div id="listaTarefas"></div>
-  <div id="listaTarefasFeitas"></div>
-</div>
+        <button type="button" onclick="adicionarTarefa()">Salvar Tarefa</button>
+        <button type="button" id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" class="hidden">Cancelar Edição</button>
+      </form>
+      <div id="listaTarefas"></div>
+      <div id="listaTarefasFeitas"></div>
+    </div>
 
     <!-- ===== FINANCEIRO ===== -->
-<div id="financeiro" class="aba">
-  <h2>Financeiro</h2>
-  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
-  
-  <div id="formularioFinanceiro" style="display: none;">
-    <input id="dataFin" type="date" placeholder="Data">
-    <input id="produtoFin" placeholder="Produto">
-    <input id="descricaoFin" placeholder="Descrição (opcional)">
-    <input id="valorFin" type="number" placeholder="Valor (R$)">
-    
-    <select id="tipoFin">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-      <option>Outro</option>
-    </select>
-    
-    <label>
-      <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado
-    </label>
-    
-    <div id="camposParcelas" style="display: none;">
-      <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
+    <div id="financeiro" class="aba">
+      <h2>Financeiro</h2>
+      <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
+      
+      <form id="formularioFinanceiro" class="hidden">
+        <label for="dataFin">Data:</label>
+        <input id="dataFin" type="date" placeholder="Data" required>
+        
+        <label for="produtoFin">Produto/Serviço:</label>
+        <input id="produtoFin" placeholder="Produto/Serviço" required>
+        
+        <label for="descricaoFin">Descrição (opcional):</label>
+        <input id="descricaoFin" placeholder="Descrição (opcional)">
+        
+        <label for="valorFin">Valor (R$):</label>
+        <input id="valorFin" type="number" placeholder="Valor (R$)" required>
+        
+        <label for="tipoFin">Tipo de Gasto:</label>
+        <select id="tipoFin">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
+          <option>Outro</option>
+        </select>
+        
+        <label for="parceladoFin">
+          <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado
+        </label>
+        
+        <div id="camposParcelas" class="hidden">
+          <label for="parcelasFin">Número de Parcelas:</label>
+          <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
+        </div>
+        
+        <button type="button" onclick="adicionarFinanceiro()">Salvar Gasto</button>
+        <button type="button" id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" class="hidden">Cancelar Edição</button>
+      </form>
+      
+      <div id="financeiroLista"></div>
     </div>
-    
-    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
-    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">Cancelar Edição</button>
-  </div>
-  
-  <div id="financeiroLista"></div>
-</div>
 
      <!-- ===== COLHEITA ===== -->
-<div id="colheita" class="aba">
-  <h2>Colheita</h2>
-  
-  <!-- Controle de Valor da Lata -->
-  <label for="valorLata"><strong>Valor da Lata (R$):</strong></label>
-  <input id="valorLata" type="number" step="0.01" onchange="salvarValorLata()">
-  
-  <div class="formulario-colheita">
-    <input id="dataColheita" type="date" placeholder="Data">
-    <input id="colhedor" placeholder="Nome do Colhedor">
-    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-    <button onclick="adicionarColheita()">Adicionar Colheita</button>
-  </div>
+    <div id="colheita" class="aba">
+      <h2>Colheita</h2>
+      
+      <div>
+        <label for="valorLata"><strong>Valor da Lata (R$):</strong></label>
+        <input id="valorLata" type="number" step="0.01" onchange="salvarValorLata()">
+      </div>
+      
+      <form class="formulario-colheita">
+        <label for="dataColheita">Data:</label>
+        <input id="dataColheita" type="date" placeholder="Data" required>
+        
+        <label for="colhedor">Nome do Colhedor:</label>
+        <input id="colhedor" placeholder="Nome do Colhedor" required>
+        
+        <label for="quantidadeLatas">Quantidade de Latas:</label>
+        <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas" required>
+        
+        <button type="button" onclick="adicionarColheita()">Adicionar Colheita</button>
+      </form>
 
-  <!-- Resumo da Colheita -->
-  <div id="resumoColheita" class="resumo-colheita">
-    <strong>Resumo da Colheita:</strong>
-    <div><strong>Total de Latas:</strong> 0</div>
-    <div><strong>Total Pago:</strong> R$ 0,00</div>
-    <div><strong>Total Pendente:</strong> R$ 0,00</div>
-  </div>
-  
-  <!-- Listagem de Colheita -->
-  <h3>Pendentes</h3>
-  <div id="colheitaPendentes" class="lista-colheita"></div>
-  
-  <h3>Pagos</h3>
-  <div id="colheitaPagos" class="lista-colheita"></div>
-</div>
-
-    <div id="relatorio" class="aba">
-  <h2>Relatório</h2>
-  <button onclick="exportarPDF()">Exportar PDF</button>
-  <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
-  
-  <div class="graficos-container">
-    <div class="grafico">
-      <canvas id="graficoAplicacoes"></canvas>
-    </div>
-    <div class="grafico">
-      <canvas id="graficoFinanceiro"></canvas>
-    </div>
-    <div class="grafico">
-      <canvas id="graficoColheita"></canvas>
-    </div>
-  </div>
-</div>
-
-  <!-- Adicionar no aba configurações -->
-  <div id="configuracoes" class="aba">
-  <h2>Configurações</h2>
-  <button onclick="alternarTema()">Alternar Tema</button>
-  <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
-  
-  <!-- Elementos adicionados -->
-  <select id="safraSelecionada"></select>
-  <button onclick="restaurarSafra()">Restaurar Safra</button>
-  <button onclick="deletarSafra()">Deletar Safra</button>
-  <button onclick="fecharSafraAtual()">Fechar Safra Atual</button>
-  
-  <button onclick="fazerBackup()">Fazer Backup</button>
-  <input type="file" id="arquivoBackup" onchange="importarBackup()">
-</div>
-
-</body>
-</html>
+      <div id="resumoColheita" class="resumo-colheita">
+        <strong>Resumo da Colheita:</strong>
+        <div><strong>Total de Latas:</strong> <span id="

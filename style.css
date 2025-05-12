@@ -1,210 +1,238 @@
-/* ===== BASE ===== */
+/* ===== LAYOUT GERAL ===== */
 body {
-  font-family: Arial, sans-serif;
-  background-color: var(--fundo-escuro);
-  color: var(--texto-claro);
   margin: 0;
-  padding: 0;
-  transition: background-color 0.3s, color 0.3s;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: #e0e0e0;
+  overflow-x: hidden;
 }
 
-.container {
+.conteudo {
+  padding: 20px;
   max-width: 800px;
   margin: auto;
-  padding: 20px;
+  animation: fadeIn 0.5s ease;
 }
 
-h1, h2 {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-input, select, button {
-  display: block;
-  width: calc(100% - 20px);
-  margin: 10px auto;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  outline: none;
-}
-
-input[type="date"],
-input[type="number"],
-input[type="text"],
-select {
-  background-color: var(--fundo-claro);
-  color: var(--texto-escuro);
-  border: 1px solid var(--borda);
-}
-
-button {
-  background-color: var(--cor-primaria);
-  color: #fff;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: var(--cor-primaria-hover);
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
-  background-color: var(--fundo-medio);
-  padding: 10px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  background-color: #1f1f1f;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 .menu-superior button {
   background: none;
   border: none;
-  color: var(--texto-claro);
-  font-size: 16px;
+  color: #aaa;
+  font-size: 22px;
+  margin: 0 6px;
   cursor: pointer;
-  padding: 8px 15px;
-  border-radius: 5px;
+  transition: color 0.3s;
+}
+
+.menu-superior button:hover {
+  color: #4caf50;
+}
+
+.menu-superior button i {
+  pointer-events: none;
+  font-size: 24px;
+}
+
+/* Ícone ativo (quando o menu está selecionado) */
+.menu-superior button.active {
+  color: #4caf50;
+}
+
+/* ===== ABAS ===== */
+.aba { 
+  display: none;
+}
+.aba.active {
+  display: block;
+}
+
+/* ===== CAMPOS DE FORMULÁRIO ===== */
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: #2c2c2c;
+  color: #fff;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* ===== BOTÕES PADRÃO ===== */
+button {
+  background-color: #4caf50;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
   transition: background 0.3s;
 }
 
-.menu-superior button:hover,
-.menu-superior button.active {
-  background-color: var(--cor-primaria);
-  color: #fff;
-}
-
-/* ===== FORMULÁRIOS ===== */
-.formulario {
-  background-color: var(--fundo-claro);
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-}
-
-.formulario input,
-.formulario select,
-.formulario button {
-  width: 100%;
-}
-
-/* ===== LISTAS ===== */
-.lista-aplicacoes,
-#listaTarefas,
-#financeiroLista,
-#colheitaPendentes,
-#colheitaPagos {
-  background-color: var(--fundo-medio);
-  padding: 15px;
-  border-radius: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid var(--borda);
-}
-
-.item:last-child {
-  border-bottom: none;
+button:hover {
+  background-color: #45a049;
 }
 
 /* ===== BOTÕES CIRCULARES ===== */
 .botao-circular {
-  width: 35px;
-  height: 35px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 16px;
+  color: white;
+  background-color: #4caf50;
   cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.botao-circular.azul {
-  background-color: var(--cor-primaria);
-  color: #fff;
+  transition: background 0.3s;
 }
 
 .botao-circular.vermelho {
-  background-color: #e74c3c;
-  color: #fff;
-}
-
-.botao-circular.azul:hover {
-  background-color: var(--cor-primaria-hover);
+  background-color: #f44336;
 }
 
 .botao-circular.vermelho:hover {
-  background-color: #c0392b;
+  background-color: #d32f2f;
 }
 
-/* ===== RELATÓRIO ===== */
-.filtros-relatorio {
+.botao-circular.azul {
+  background-color: #2196f3;
+}
+
+.botao-circular.azul:hover {
+  background-color: #1976d2;
+}
+
+/* ===== LISTAGEM DE ITENS ===== */
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 8px 0;
+  background-color: #1e1e1e;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+}
+
+.item span {
+  flex: 1;
+  color: #fff;
+  word-break: break-word;
+}
+
+.botoes-aplicacao, .botoes-financeiro {
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
 }
 
-#resumoRelAplicacoes,
-#resumoRelFinanceiro,
-#resumoRelColheita {
-  background-color: var(--fundo-claro);
+/* ===== CAMPOS DE PESQUISA ===== */
+.campo-pesquisa {
+  padding: 10px;
+  background: #2c2c2c;
+  border: 1px solid #555;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  color: white;
+  font-size: 16px;
+}
+
+/* ===== MODAL ===== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal .modal-conteudo {
+  background-color: #2c2c2c;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal button {
+  width: 100%;
+  background-color: #4caf50;
+  color: white;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+/* ===== RESUMO E RELATÓRIO ===== */
+#resumoFinanceiro, #resumoColheita {
+  margin-top: 15px;
+  background: #2c2c2c;
   padding: 10px;
   border-radius: 8px;
-  font-size: 14px;
 }
 
-/* ===== RESUMO COLHEITA ===== */
-#resumoColheita {
-  background-color: var(--fundo-claro);
-  padding: 10px;
+#relatorio canvas {
+  background: #1e1e1e;
   border-radius: 8px;
   margin-top: 15px;
-  font-size: 14px;
 }
 
-/* ===== CONFIGURAÇÕES ===== */
-#configuracoes {
-  padding: 15px;
-}
-
-#configuracoes button {
-  margin-top: 10px;
-  background-color: var(--cor-primaria);
-}
-
-/* ===== TEMA CLARO E ESCURO ===== */
-:root {
-  --fundo-escuro: #121212;
-  --fundo-claro: #f5f5f5;
-  --fundo-medio: #2c2c2c;
-  --texto-claro: #ffffff;
-  --texto-escuro: #333333;
-  --cor-primaria: #4caf50;
-  --cor-primaria-hover: #45a045;
-  --borda: #444;
-}
-
+/* ===== MODO CLARO ===== */
 body.claro {
-  --fundo-escuro: #f5f5f5;
-  --fundo-claro: #ffffff;
-  --fundo-medio: #e0e0e0;
-  --texto-claro: #333333;
-  --texto-escuro: #000000;
-  --cor-primaria: #4caf50;
-  --cor-primaria-hover: #45a045;
-  --borda: #ccc;
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+body.claro .menu-superior {
+  background-color: #e0e0e0;
+}
+
+body.claro .conteudo {
+  background-color: #fff;
+}
+
+body.claro input, 
+body.claro select, 
+body.claro button {
+  background-color: #f9f9f9;
+  color: #222;
+  border: 1px solid #ccc;
+}
+
+body.claro .item {
+  background-color: #fafafa;
+  border-left: 4px solid #4caf50;
+}
+
+body.claro .botao-circular {
+  background-color: #4caf50;
+}
+
+body.claro .botao-circular.vermelho {
+  background-color: #f44336;
+}
+
+body.claro .botao-circular.azul {
+  background-color: #2196f3;
 }

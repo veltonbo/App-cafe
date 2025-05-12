@@ -30,6 +30,21 @@
   <script defer src="js/configuracoes.js"></script>
 </head>
 <body>
+  <!-- Adicionar no body, antes do conteúdo principal -->
+<div id="authContainer">
+  <form id="loginForm">
+    <h2>Login</h2>
+    <input type="email" id="emailInput" placeholder="E-mail" required>
+    <input type="password" id="passwordInput" placeholder="Senha" required>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="appContainer" style="display:none;">
+  <!-- Todo o conteúdo existente vai aqui -->
+  <button id="logoutButton" style="position: fixed; top: 10px; right: 10px;">Sair</button>
+</div>
+  
   <!-- ===== MENU SUPERIOR ===== -->
 <div class="menu-superior">
   <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
@@ -208,20 +223,5 @@
   <input type="file" id="arquivoBackup" onchange="importarBackup()">
 </div>
 
-    <!-- Adicionar no body, antes do conteúdo principal -->
-<div id="authContainer">
-  <form id="loginForm">
-    <h2>Login</h2>
-    <input type="email" id="emailInput" placeholder="E-mail" required>
-    <input type="password" id="passwordInput" placeholder="Senha" required>
-    <button type="submit">Entrar</button>
-  </form>
-</div>
-
-<div id="appContainer" style="display:none;">
-  <!-- Todo o conteúdo existente vai aqui -->
-  <button id="logoutButton" style="position: fixed; top: 10px; right: 10px;">Sair</button>
-</div>
-    
 </body>
 </html>

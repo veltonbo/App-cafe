@@ -1,19 +1,6 @@
-// main.js - versão atualizada
+// ===== IMPORTAÇÕES =====
 import { auth } from './firebase-config.js';
-import './notificacoes.js';
 import { initDB } from './offline-db.js';
-
-// Inicializações
-initDB().catch(console.error);
-
-// Verificar autenticação antes de inicializar o app
-auth.onAuthStateChanged(user => {
-  if (user) {
-    inicializarApp();
-  }
-});
-
-// Restante do código permanece o mesmo...
 
 // ===== FUNÇÃO PARA TROCAR ABAS =====
 function mostrarAba(abaId) {
@@ -33,6 +20,11 @@ function mostrarAba(abaId) {
   if (btn) btn.classList.add('active');
 
   localStorage.setItem('aba', abaId);
+
+  // Disparar evento para atualizar gráficos se for a aba de relatório
+  if (abaId === 'relatorio') {
+    document.dispatchEvent(new CustomEvent('abaRelatorioAberta'));
+  }
 }
 
 // ===== INICIALIZAR O APLICATIVO =====
@@ -59,5 +51,40 @@ function inicializarApp() {
   document.dispatchEvent(new Event('dadosCarregados'));
 }
 
+// ===== VERIFICAR AUTENTICAÇÃO =====
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Usuário autenticado - inicializar app
+    inicializarApp();
+    document.getElementById('appContainer').style.display = 'block';
+    document.getElementById('authContainer').style.display = 'none';
+  } else {
+    // Usuário não autenticado - mostrar tela de login
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('authContainer').style.display = 'block';
+  }
+});
+
+// ===== INICIALIZAR BANCO DE DADOS OFFLINE =====
+initDB().catch(error => {
+  console.error('Erro ao inicializar banco de dados offline:', error);
+});
+
 // Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);
+window.addEventListener('DOMContentLoaded', () => {
+  // Inicialização básica mesmo sem auth para carregar elementos do login
+  document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('emailInput').value;
+    const password = document.getElementById('passwordInput').value;
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+      alert('Erro no login: ' + error.message);
+    }
+  });
+
+  document.getElementById('logoutButton')?.addEventListener('click', () => {
+    auth.signOut();
+  });
+});

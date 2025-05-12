@@ -1,130 +1,136 @@
-// ====== VARIÁVEIS GLOBAIS ======
-let tarefas = [];
-let indiceEdicaoTarefa = null; // Agora está corretamente definida
+// js/aplicacao.js
 
-// ====== ADICIONAR OU SALVAR EDIÇÃO DE TAREFA ======
-function adicionarTarefa() {
-  const dataTarefa = document.getElementById('dataTarefa');
-  const descricaoTarefa = document.getElementById('descricaoTarefa');
-  const prioridadeTarefa = document.getElementById('prioridadeTarefa');
-  const setorTarefa = document.getElementById('setorTarefa');
-  const eAplicacaoCheckbox = document.getElementById('eAplicacaoCheckbox');
-  const dosagemAplicacao = document.getElementById('dosagemAplicacao');
-  const tipoAplicacao = document.getElementById('tipoAplicacao');
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSalvarAplicacao = document.getElementById('btnSalvarAplicacao');
+    const btnCancelarEdicaoApp = document.getElementById('btnCancelarEdicaoApp');
+    const formAplicacao = document.getElementById('formAplicacao'); // Assumindo que você envolveu em um form
 
-  if (!dataTarefa || !descricaoTarefa || !prioridadeTarefa || !setorTarefa) {
-    alert("Preencha todos os campos corretamente.");
-    return;
-  }
+    // Elementos do formulário
+    const dataAppInput = document.getElementById('dataApp');
+    const produtoAppInput = document.getElementById('produtoApp');
+    const dosagemAppInput = document.getElementById('dosagemApp');
+    const tipoAppSelect = document.getElementById('tipoApp');
+    const setorAppSelect = document.getElementById('setorApp');
+    const listaAplicacoesDiv = document.getElementById('listaAplicacoes');
 
-  const nova = {
-    data: dataTarefa.value,
-    descricao: descricaoTarefa.value.trim(),
-    prioridade: prioridadeTarefa.value,
-    setor: setorTarefa.value,
-    feita: false,
-    eAplicacao: eAplicacaoCheckbox.checked,
-    dosagem: eAplicacaoCheckbox.checked ? dosagemAplicacao.value.trim() : '',
-    tipo: eAplicacaoCheckbox.checked ? tipoAplicacao.value : ''
-  };
+    let editandoAplicacaoId = null; // Para controlar se está editando
 
-  if (!nova.data || !nova.descricao) {
-    alert("Preencha todos os campos obrigatórios!");
-    return;
-  }
+    // Função para adicionar/salvar aplicação
+    window.adicionarAplicacao = function() {
+        const data = dataAppInput.value;
+        const produto = produtoAppInput.value;
+        const dosagem = dosagemAppInput.value;
+        const tipo = tipoAppSelect.value;
+        const setor = setorAppSelect.value;
 
-  if (indiceEdicaoTarefa !== null) {
-    // Edição de tarefa existente
-    tarefas[indiceEdicaoTarefa] = nova;
-    indiceEdicaoTarefa = null;
-    document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
-  } else {
-    // Adicionar nova tarefa
-    tarefas.push(nova);
-  }
+        if (!data || !produto || !dosagem) {
+            alert("Por favor, preencha todos os campos obrigatórios (Data, Produto, Dosagem).");
+            return;
+        }
 
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-  limparCamposTarefa();
-}
+        const aplicacaoData = {
+            data,
+            produto,
+            dosagem,
+            tipo,
+            setor,
+            timestamp: Date.now() // Para ordenação ou referência
+        };
 
-// ====== EDITAR TAREFA ======
-function editarTarefa(index) {
-  const t = tarefas[index];
-  if (!t) return;
+        if (editandoAplicacaoId) {
+            // Lógica para ATUALIZAR no Firebase
+            database.ref('aplicacoes/' + editandoAplicacaoId).update(aplicacaoData)
+                .then(() => {
+                    console.log("Aplicação atualizada com sucesso!");
+                    cancelarEdicaoAplicacao(); // Reseta o formulário e o estado de edição
+                    carregarAplicacoes(); // Recarrega a lista
+                })
+                .catch(error => console.error("Erro ao atualizar aplicação: ", error));
+        } else {
+            // Lógica para ADICIONAR NOVO no Firebase
+            database.ref('aplicacoes').push(aplicacaoData)
+                .then(() => {
+                    console.log("Aplicação salva com sucesso!");
+                    formAplicacao.reset(); // Limpa o formulário
+                    carregarAplicacoes(); // Recarrega a lista
+                })
+                .catch(error => console.error("Erro ao salvar aplicação: ", error));
+        }
+    }
 
-  document.getElementById('dataTarefa').value = t.data;
-  document.getElementById('descricaoTarefa').value = t.descricao;
-  document.getElementById('prioridadeTarefa').value = t.prioridade;
-  document.getElementById('setorTarefa').value = t.setor;
-  document.getElementById('eAplicacaoCheckbox').checked = t.eAplicacao;
-  document.getElementById('dosagemAplicacao').value = t.dosagem || '';
-  document.getElementById('tipoAplicacao').value = t.tipo || 'Adubo';
+    // Função para cancelar edição
+    window.cancelarEdicaoAplicacao = function() {
+        editandoAplicacaoId = null;
+        formAplicacao.reset();
+        btnSalvarAplicacao.textContent = 'Salvar Aplicação';
+        btnCancelarEdicaoApp.classList.add('hidden');
+    }
 
-  indiceEdicaoTarefa = index;
-  document.getElementById("btnCancelarEdicaoTarefa").style.display = "inline-block";
-}
+    // Função para carregar aplicações do Firebase e exibir na lista
+    function carregarAplicacoes() {
+        const aplicacoesRef = database.ref('aplicacoes').orderByChild('timestamp'); // Ordenar por timestamp, por exemplo
+        aplicacoesRef.on('value', (snapshot) => {
+            listaAplicacoesDiv.innerHTML = ''; // Limpa a lista atual
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const aplicacao = childSnapshot.val();
+                    const aplicacaoId = childSnapshot.key;
+                    const itemHtml = `
+                        <div class="item" id="app-${aplicacaoId}">
+                            <span>${aplicacao.data} - ${aplicacao.produto} (${aplicacao.tipo}) - ${aplicacao.dosagem} - Setor: ${aplicacao.setor}</span>
+                            <div class="botoes-aplicacao">
+                                <button class="botao-circular azul" onclick="editarAplicacao('${aplicacaoId}')" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button class="botao-circular vermelho" onclick="removerAplicacao('${aplicacaoId}')" title="Remover"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    listaAplicacoesDiv.innerHTML += itemHtml;
+                });
+            } else {
+                listaAplicacoesDiv.innerHTML = '<p>Nenhuma aplicação registrada.</p>';
+            }
+        });
+    }
 
-// ====== CANCELAR EDIÇÃO ======
-function cancelarEdicaoTarefa() {
-  limparCamposTarefa();
-  indiceEdicaoTarefa = null;
-  document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
-}
+    // Função para preencher o formulário para edição
+    window.editarAplicacao = function(aplicacaoId) {
+        database.ref('aplicacoes/' + aplicacaoId).once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                const aplicacao = snapshot.val();
+                dataAppInput.value = aplicacao.data;
+                produtoAppInput.value = aplicacao.produto;
+                dosagemAppInput.value = aplicacao.dosagem;
+                tipoAppSelect.value = aplicacao.tipo;
+                setorAppSelect.value = aplicacao.setor;
 
-// ====== LIMPAR CAMPOS DE TAREFA ======
-function limparCamposTarefa() {
-  document.getElementById('dataTarefa').value = '';
-  document.getElementById('descricaoTarefa').value = '';
-  document.getElementById('prioridadeTarefa').value = 'Alta';
-  document.getElementById('setorTarefa').value = 'Setor 01';
-  document.getElementById('eAplicacaoCheckbox').checked = false;
-  document.getElementById('dosagemAplicacao').value = '';
-  document.getElementById('tipoAplicacao').value = 'Adubo';
-  mostrarCamposAplicacao();
-}
+                editandoAplicacaoId = aplicacaoId;
+                btnSalvarAplicacao.textContent = 'Atualizar Aplicação';
+                btnCancelarEdicaoApp.classList.remove('hidden');
+                window.scrollTo(0, 0); // Rola para o topo para ver o formulário
+            }
+        });
+    }
 
-// ====== ATUALIZAR LISTA DE TAREFAS ======
-function atualizarTarefas() {
-  const lista = document.getElementById('listaTarefas');
-  lista.innerHTML = '';
+    // Função para remover aplicação
+    window.removerAplicacao = function(aplicacaoId) {
+        if (confirm("Tem certeza que deseja remover esta aplicação?")) {
+            database.ref('aplicacoes/' + aplicacaoId).remove()
+                .then(() => {
+                    console.log("Aplicação removida com sucesso!");
+                    // A lista será atualizada automaticamente pelo listener 'on value'
+                })
+                .catch(error => console.error("Erro ao remover aplicação: ", error));
+        }
+    }
 
-  tarefas.forEach((t, index) => {
-    const item = document.createElement('div');
-    item.className = 'item';
-    item.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
-      <div class="botoes-tarefa">
-        <button class="botao-circular azul" onclick="editarTarefa(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})"><i class="fas fa-trash"></i></button>
-      </div>
-    `;
-    lista.appendChild(item);
-  });
-}
-
-// ====== EXCLUIR TAREFA ======
-function excluirTarefa(index) {
-  if (!confirm("Deseja excluir esta tarefa?")) return;
-  tarefas.splice(index, 1);
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-}
-
-// ====== INICIALIZAR TAREFAS ======
-document.addEventListener("dadosCarregados", carregarTarefas);
-
-// ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
-function mostrarCamposAplicacao() {
-  const checkbox = document.getElementById('eAplicacaoCheckbox');
-  const campos = document.getElementById('camposAplicacao');
-  campos.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-// ====== CARREGAR TAREFAS ======
-function carregarTarefas() {
-  db.ref('Tarefas').on('value', (snapshot) => {
-    tarefas = snapshot.exists() ? Object.values(snapshot.val()) : [];
-    atualizarTarefas();
-  });
-}
+    // Event Listeners para os botões (se não usar onclick inline)
+    if (btnSalvarAplicacao) {
+        btnSalvarAplicacao.addEventListener('click', adicionarAplicacao);
+    }
+    if (btnCancelarEdicaoApp) {
+        btnCancelarEdicaoApp.addEventListener('click', cancelarEdicaoAplicacao);
+    }
+    
+    // Carregar aplicações ao iniciar
+    carregarAplicacoes();
+});

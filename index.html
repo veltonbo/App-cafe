@@ -1,72 +1,205 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manejo de Café</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <!-- Adicione o CSS do Firebase UI -->
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café</title>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+  <!-- Chart.js e jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Scripts -->
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/aplicacao.js"></script>
+  <script defer src="js/tarefas.js"></script>
+  <script defer src="js/financeiro.js"></script>
+  <script defer src="js/colheita.js"></script>
+  <script defer src="js/relatorio.js"></script>
+  <script defer src="js/configuracoes.js"></script>
 </head>
 <body>
-    <!-- Adicionar no body, antes do conteúdo principal -->
-<div id="authContainer">
-  <form id="loginForm">
-    <h2>Login</h2>
-    <input type="email" id="emailInput" placeholder="E-mail" required>
-    <input type="password" id="passwordInput" placeholder="Senha" required>
-    <button type="submit">Entrar</button>
-  </form>
+  <!-- ===== MENU SUPERIOR ===== -->
+<div class="menu-superior">
+  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
+    <i class="fas fa-flask"></i>
+  </button>
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas">
+    <i class="fas fa-tasks"></i>
+  </button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro">
+    <i class="fas fa-dollar-sign"></i>
+  </button>
+  <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita">
+    <i class="fas fa-tractor"></i>
+  </button>
+  <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório">
+    <i class="fas fa-chart-line"></i>
+  </button>
+  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações">
+    <i class="fas fa-cog"></i>
+  </button>
 </div>
 
-<div id="appContainer" style="display:none;">
-  <!-- Todo o conteúdo existente vai aqui -->
-  <button id="logoutButton" style="position: fixed; top: 10px; right: 10px;">Sair</button>
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="conteudo">
+    <!-- ===== APLICAÇÕES ===== -->
+    <div id="aplicacoes" class="aba">
+      <h2>Aplicações</h2>
+      <input id="dataApp" type="date">
+      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
+      <datalist id="sugestoesProdutoApp"></datalist>
+      <input id="dosagemApp" placeholder="Dosagem">
+      <select id="tipoApp">
+        <option>Adubo</option>
+        <option>Fungicida</option>
+        <option>Inseticida</option>
+        <option>Herbicida</option>
+      </select>
+      <select id="setorApp">
+        <option>Setor 01</option>
+        <option>Setor 02</option>
+      </select>
+      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
+      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">Cancelar Edição</button>
+      <div id="listaAplicacoes"></div>
+    </div>
+
+    <!-- ===== TAREFAS ===== -->
+<div id="tarefas" class="aba">
+  <h2>Tarefas</h2>
+  
+  <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
+  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
+  
+  <select id="prioridadeTarefa">
+    <option value="Alta">Alta</option>
+    <option value="Média">Média</option>
+    <option value="Baixa">Baixa</option>
+  </select>
+  
+  <select id="setorTarefa">
+    <option value="Setor 01">Setor 01</option>
+    <option value="Setor 02">Setor 02</option>
+    <option value="Setor 03">Setor 03</option>
+  </select>
+  
+  <!-- Checkbox para definir se é uma aplicação -->
+  <label>
+    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
+    É uma Aplicação
+  </label>
+  
+  <!-- Campos de aplicação (aparecem apenas se for uma aplicação) -->
+  <div id="camposAplicacao" style="display: none;">
+    <input id="dosagemAplicacao" placeholder="Dosagem">
+    <select id="tipoAplicacao">
+      <option value="Adubo">Adubo</option>
+      <option value="Fungicida">Fungicida</option>
+      <option value="Inseticida">Inseticida</option>
+      <option value="Herbicida">Herbicida</option>
+      <option value="Outro">Outro</option>
+    </select>
+  </div>
+
+  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
+  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none;">Cancelar Edição</button>
+  
+  <div id="listaTarefas"></div>
+  <div id="listaTarefasFeitas"></div>
 </div>
+
+    <!-- ===== FINANCEIRO ===== -->
+<div id="financeiro" class="aba">
+  <h2>Financeiro</h2>
+  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
+  
+  <div id="formularioFinanceiro" style="display: none;">
+    <input id="dataFin" type="date" placeholder="Data">
+    <input id="produtoFin" placeholder="Produto">
+    <input id="descricaoFin" placeholder="Descrição (opcional)">
+    <input id="valorFin" type="number" placeholder="Valor (R$)">
     
-    <div id="app">
-        <!-- Cabeçalho -->
-        <header>
-            <h1>Manejo de Café</h1>
-            <div id="user-info"></div>
-        </header>
-        
-        <!-- Menu de Navegação -->
-        <nav id="main-menu">
-            <ul>
-                <li><a href="#" data-section="aplicacao">Aplicação</a></li>
-                <li><a href="#" data-section="tarefas">Tarefas</a></li>
-                <li><a href="#" data-section="financeiro">Financeiro</a></li>
-                <li><a href="#" data-section="colheita">Colheita</a></li>
-                <li><a href="#" data-section="relatorio">Relatório</a></li>
-                <li><a href="#" data-section="configuracao">Configuração</a></li>
-            </ul>
-        </nav>
-        
-        <!-- Conteúdo Principal -->
-        <main id="content">
-            <!-- As seções serão carregadas aqui dinamicamente -->
-            <section id="welcome">
-                <h2>Bem-vindo ao Sistema de Manejo de Café</h2>
-                <p>Selecione uma opção no menu para começar.</p>
-            </section>
-        </main>
-        
-        <!-- Rodapé -->
-        <footer>
-            <p>Sistema de Manejo de Café &copy; 2023</p>
-        </footer>
+    <select id="tipoFin">
+      <option>Adubo</option>
+      <option>Fungicida</option>
+      <option>Inseticida</option>
+      <option>Herbicida</option>
+      <option>Outro</option>
+    </select>
+    
+    <label>
+      <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado
+    </label>
+    
+    <div id="camposParcelas" style="display: none;">
+      <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
     </div>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    
-    <!-- Seus scripts -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/database.js"></script>
-    <script src="js/app.js"></script>
+    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
+    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">Cancelar Edição</button>
+  </div>
+  
+  <div id="financeiroLista"></div>
+</div>
+
+     <!-- ===== COLHEITA ===== -->
+<div id="colheita" class="aba">
+  <h2>Colheita</h2>
+  
+  <!-- Controle de Valor da Lata -->
+  <label for="valorLata"><strong>Valor da Lata (R$):</strong></label>
+  <input id="valorLata" type="number" step="0.01" onchange="salvarValorLata()">
+  
+  <div class="formulario-colheita">
+    <input id="dataColheita" type="date" placeholder="Data">
+    <input id="colhedor" placeholder="Nome do Colhedor">
+    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
+    <button onclick="adicionarColheita()">Adicionar Colheita</button>
+  </div>
+
+  <!-- Resumo da Colheita -->
+  <div id="resumoColheita" class="resumo-colheita">
+    <strong>Resumo da Colheita:</strong>
+    <div><strong>Total de Latas:</strong> 0</div>
+    <div><strong>Total Pago:</strong> R$ 0,00</div>
+    <div><strong>Total Pendente:</strong> R$ 0,00</div>
+  </div>
+  
+  <!-- Listagem de Colheita -->
+  <h3>Pendentes</h3>
+  <div id="colheitaPendentes" class="lista-colheita"></div>
+  
+  <h3>Pagos</h3>
+  <div id="colheitaPagos" class="lista-colheita"></div>
+</div>
+
+    <!-- ===== RELATÓRIO ===== -->
+    <div id="relatorio" class="aba">
+      <h2>Relatório</h2>
+      <button onclick="exportarPDF()">Exportar PDF</button>
+      <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+    </div>
+
+    <!-- ===== CONFIGURAÇÕES ===== -->
+    <div id="configuracoes" class="aba">
+      <h2>Configurações</h2>
+      <button onclick="alternarTema()">Alternar Tema</button>
+      <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
+      <button onclick="fazerBackup()">Fazer Backup</button>
+      <input type="file" id="arquivoBackup" onchange="importarBackup()">
+    </div>
+  </div>
 </body>
 </html>

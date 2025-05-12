@@ -1,134 +1,163 @@
-// ====== VARIÁVEIS ======
+// ===== VARIÁVEIS GLOBAIS =====
 let colheita = [];
 let valorLataGlobal = 0;
 
-// ====== CARREGAMENTO DO VALOR DA LATA ======
-function carregarValorLata() {
-  db.ref('ValorLata').on('value', snap => {
-    if (snap.exists()) {
-      valorLataGlobal = snap.val();
-      document.getElementById('valorLata').value = valorLataGlobal;
-    }
-  });
+// ===== CARREGAR COLHEITA E VALOR DA LATA =====
+async function carregarColheita() {
+  const cache = localStorage.getItem('colheita');
+  if (cache) {
+    colheita = JSON.parse(cache);
+    atualizarColheita();
+  }
+
+  const snapshot = await db.ref('Colheita').once('value');
+  colheita = snapshot.val() ? Object.values(snapshot.val()) : [];
+  localStorage.setItem('colheita', JSON.stringify(colheita));
+  atualizarColheita();
 }
 
+async function carregarValorLata() {
+  const snapshot = await db.ref('ValorLata').once('value');
+  if (snapshot.exists()) {
+    valorLataGlobal = snapshot.val();
+    document.getElementById('valorLata').value = valorLataGlobal;
+  }
+}
+
+// ===== SALVAR VALOR DA LATA =====
 function salvarValorLata() {
   valorLataGlobal = parseFloat(document.getElementById('valorLata').value) || 0;
   db.ref('ValorLata').set(valorLataGlobal);
+  mostrarSucesso("Valor da lata atualizado com sucesso!");
 }
 
-// ====== ADIÇÃO DE LANÇAMENTO DE COLHEITA ======
+// ===== ADICIONAR COLHEITA =====
 function adicionarColheita() {
   const nova = {
-    data: dataColheita.value,
-    colhedor: colhedor.value.trim(),
-    quantidade: parseFloat(quantidadeLatas.value),
+    data: document.getElementById('dataColheita').value,
+    colhedor: document.getElementById('colhedor').value.trim(),
+    quantidade: parseFloat(document.getElementById('quantidadeLatas').value),
     valorLata: valorLataGlobal,
     pago: false,
-    pagoParcial: 0,
-    historicoPagamentos: []
+    pagoParcial: 0
   };
 
   if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
-    alert("Preencha todos os campos corretamente!");
+    mostrarErro("Preencha todos os campos corretamente.");
     return;
   }
 
   colheita.push(nova);
   db.ref('Colheita').set(colheita);
   atualizarColheita();
-
-  dataColheita.value = '';
-  colhedor.value = '';
-  quantidadeLatas.value = '';
+  limparCamposColheita();
+  mostrarSucesso("Colheita adicionada com sucesso!");
 }
 
-// ====== CARREGAR COLHEITA ======
-function carregarColheita() {
-  db.ref('Colheita').on('value', snap => {
-    colheita = snap.exists() ? Object.values(snap.val()) : [];
-    atualizarColheita();
-  });
+// ===== LIMPAR CAMPOS =====
+function limparCamposColheita() {
+  document.getElementById('dataColheita').value = '';
+  document.getElementById('colhedor').value = '';
+  document.getElementById('quantidadeLatas').value = '';
 }
 
-// ====== ATUALIZAR LISTA DE COLHEITA ======
+// ===== ATUALIZAR LISTAGEM =====
 function atualizarColheita() {
-  colheitaPendentes.innerHTML = '';
-  colheitaPagos.innerHTML = '';
+  const listaPendentes = document.getElementById("colheitaPendentes");
+  const listaPagos = document.getElementById("colheitaPagos");
+  listaPendentes.innerHTML = '';
+  listaPagos.innerHTML = '';
 
-  const agrupadoPendentes = {};
-  const agrupadoPagos = {};
-
-  colheita.forEach((c, i) => {
-    if (c.pagoParcial > 0) {
-      if (!agrupadoPagos[c.colhedor]) agrupadoPagos[c.colhedor] = [];
-      agrupadoPagos[c.colhedor].push({ ...c, quantidade: c.pagoParcial, pago: true, i });
-    }
-    if (c.quantidade > c.pagoParcial) {
-      if (!agrupadoPendentes[c.colhedor]) agrupadoPendentes[c.colhedor] = [];
-      agrupadoPendentes[c.colhedor].push({ ...c, quantidade: c.quantidade - c.pagoParcial, pago: false, i });
-    }
+  colheita.forEach((c, index) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `
+      <span>${c.data} - ${c.colhedor} - ${c.quantidade} latas</span>
+      <div class="botoes-colheita">
+        <button class="botao-circular azul" onclick="marcarComoPago(${index})">
+          <i class="fas fa-check"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="confirmarExclusaoColheita(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    (c.pago ? listaPagos : listaPendentes).appendChild(item);
   });
 
-  montarGrupoColheita(agrupadoPendentes, colheitaPendentes, false);
-  montarGrupoColheita(agrupadoPagos, colheitaPagos, true);
   atualizarResumoColheita();
 }
 
-// ====== MONTAR LISTAGEM AGRUPADA ======
-function montarGrupoColheita(grupo, container, pago) {
-  container.innerHTML = '';
-  for (const nome in grupo) {
-    const bloco = document.createElement('div');
-    bloco.className = 'bloco-colhedor';
-    bloco.innerHTML = `<strong>${nome}</strong>`;
-
-    grupo[nome].forEach(({ data, quantidade, i }) => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <span>${data} - ${quantidade} latas</span>
-        <button class="botao-circular vermelho" onclick="excluirColheita(${i})">
-          <i class="fas fa-trash"></i>
-        </button>
-      `;
-      bloco.appendChild(div);
-    });
-
-    container.appendChild(bloco);
-  }
+// ===== MARCAR COMO PAGO =====
+function marcarComoPago(index) {
+  colheita[index].pago = true;
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+  mostrarSucesso("Pagamento confirmado!");
 }
 
-// ====== EXCLUIR COLHEITA ======
+// ===== CONFIRMAR EXCLUSÃO =====
+function confirmarExclusaoColheita(index) {
+  Swal.fire({
+    title: 'Você tem certeza?',
+    text: "Esta ação não pode ser desfeita!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sim, excluir!',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      excluirColheita(index);
+    }
+  });
+}
+
+// ===== EXCLUIR COLHEITA =====
 function excluirColheita(index) {
-  if (confirm("Deseja excluir esse lançamento de colheita?")) {
-    colheita.splice(index, 1);
-    db.ref('Colheita').set(colheita);
-    atualizarColheita();
-  }
+  colheita.splice(index, 1);
+  db.ref('Colheita').set(colheita);
+  atualizarColheita();
+  mostrarSucesso("Registro de colheita excluído com sucesso!");
 }
 
-// ====== ATUALIZAR RESUMO COLHEITA ======
+// ===== ATUALIZAR RESUMO =====
 function atualizarResumoColheita() {
-  const resumo = document.getElementById("resumoColheita");
-  if (!resumo) return;
-
   const totalLatas = colheita.reduce((soma, c) => soma + c.quantidade, 0);
-  const totalPago = colheita.reduce((soma, c) => soma + (c.pagoParcial * c.valorLata), 0);
-  const totalPendente = colheita.reduce((soma, c) => soma + ((c.quantidade - c.pagoParcial) * c.valorLata), 0);
+  const totalPago = colheita.filter(c => c.pago).reduce((soma, c) => soma + (c.quantidade * c.valorLata), 0);
+  const totalPendente = colheita.filter(c => !c.pago).reduce((soma, c) => soma + (c.quantidade * c.valorLata), 0);
 
-  resumo.innerHTML = `
+  document.getElementById("resumoColheita").innerHTML = `
     <div><strong>Total de Latas:</strong> ${totalLatas.toFixed(2)}</div>
     <div><strong>Total Pago:</strong> R$ ${totalPago.toFixed(2)}</div>
     <div><strong>Total Pendente:</strong> R$ ${totalPendente.toFixed(2)}</div>
   `;
 }
 
-// ====== GRÁFICOS (PODE SER IMPLEMENTADO DEPOIS) ======
-function gerarGraficoColheita() {
-  console.log("Gerar Gráfico de Colheita - Em desenvolvimento");
+// ===== FEEDBACK VISUAL (SWEETALERT) =====
+function mostrarSucesso(mensagem) {
+  Swal.fire({
+    icon: 'success',
+    title: 'Sucesso!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
 }
 
-function gerarGraficoColhedor() {
-  console.log("Gerar Gráfico de Colhedor - Em desenvolvimento");
+function mostrarErro(mensagem) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Erro!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
 }
+
+// ===== INICIALIZAR COLHEITA =====
+document.addEventListener("dadosCarregados", () => {
+  carregarColheita();
+  carregarValorLata();
+});

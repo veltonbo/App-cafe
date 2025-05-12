@@ -19,3 +19,13 @@ const auth = firebase.auth();
 
 // Exportar para uso em outros arquivos
 export { db, auth };
+
+// Código temporário para criar primeiro usuário (executar apenas uma vez)
+auth.createUserWithEmailAndPassword('eliveltonoliveiranbo@gmail.com', 'Se@100217')
+  .then(() => {
+    console.log('Usuário admin criado com sucesso');
+    // Remova este código após usar!
+  })
+  .catch(error => {
+    console.error('Erro ao criar usuário:', error);
+  });

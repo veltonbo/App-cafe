@@ -1,205 +1,359 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manejo Café</title>
-  
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
-  <!-- Chart.js e jsPDF -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Scripts -->
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/main.js"></script>
-  <script defer src="js/aplicacao.js"></script>
-  <script defer src="js/tarefas.js"></script>
-  <script defer src="js/financeiro.js"></script>
-  <script defer src="js/colheita.js"></script>
-  <script defer src="js/relatorio.js"></script>
-  <script defer src="js/configuracoes.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manejo Café - Gestão Agrícola</title>
+    
+    <!-- Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Bibliotecas JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body>
-  <!-- ===== MENU SUPERIOR ===== -->
-<div class="menu-superior">
-  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
-    <i class="fas fa-flask"></i>
-  </button>
-  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas">
-    <i class="fas fa-tasks"></i>
-  </button>
-  <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro">
-    <i class="fas fa-dollar-sign"></i>
-  </button>
-  <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita">
-    <i class="fas fa-tractor"></i>
-  </button>
-  <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório">
-    <i class="fas fa-chart-line"></i>
-  </button>
-  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações">
-    <i class="fas fa-cog"></i>
-  </button>
-</div>
+    <div class="app-container">
+        <!-- ===== HEADER ===== -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-coffee"></i>
+                <span>Manejo Café</span>
+            </div>
+            
+            <div class="header-actions">
+                <button id="themeToggle" class="btn btn-icon">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-menu">
+                    <img src="https://ui-avatars.com/api/?name=Usuario&background=2e7d32&color=fff" 
+                         alt="Usuário" class="user-avatar">
+                    <span class="user-name">Usuário</span>
+                </div>
+            </div>
+        </header>
 
-  <!-- ===== CONTEÚDO ===== -->
-  <div class="conteudo">
-    <!-- ===== APLICAÇÕES ===== -->
-    <div id="aplicacoes" class="aba">
-      <h2>Aplicações</h2>
-      <input id="dataApp" type="date">
-      <input id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto">
-      <datalist id="sugestoesProdutoApp"></datalist>
-      <input id="dosagemApp" placeholder="Dosagem">
-      <select id="tipoApp">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
-      </select>
-      <select id="setorApp">
-        <option>Setor 01</option>
-        <option>Setor 02</option>
-      </select>
-      <button id="btnSalvarAplicacao" onclick="adicionarAplicacao()">Salvar Aplicação</button>
-      <button id="btnCancelarEdicaoApp" onclick="cancelarEdicaoAplicacao()" style="display: none;">Cancelar Edição</button>
-      <div id="listaAplicacoes"></div>
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar">
+            <nav>
+                <div class="menu-title">GERAL</div>
+                <a href="#" class="menu-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="menu-title">ATIVIDADES</div>
+                <a href="#" class="menu-item" data-page="aplicacoes">
+                    <i class="fas fa-spray-can"></i>
+                    <span>Aplicações</span>
+                </a>
+                <a href="#" class="menu-item" data-page="tarefas">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tarefas</span>
+                </a>
+                <a href="#" class="menu-item" data-page="colheita">
+                    <i class="fas fa-apple-alt"></i>
+                    <span>Colheita</span>
+                </a>
+                
+                <div class="menu-title">FINANCEIRO</div>
+                <a href="#" class="menu-item" data-page="financeiro">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Lançamentos</span>
+                </a>
+                <a href="#" class="menu-item" data-page="relatorios">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Relatórios</span>
+                </a>
+                
+                <div class="menu-title">CONFIGURAÇÕES</div>
+                <a href="#" class="menu-item" data-page="safras">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Gestão de Safras</span>
+                </a>
+                <a href="#" class="menu-item" data-page="configuracoes">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+            <!-- Dashboard Page (Default) -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </h1>
+                    <div class="d-flex">
+                        <select id="safra-select" class="form-control mr-2">
+                            <option value="2023">Safra 2023/2024</option>
+                            <option value="2022">Safra 2022/2023</option>
+                        </select>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards Resumo -->
+                <div class="grid-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-spray-can text-primary"></i> Aplicações Recentes
+                            </h2>
+                            <a href="#" class="btn btn-sm btn-outline">Ver Todas</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-item">
+                                    <div class="list-item-icon">
+                                        <i class="fas fa-tint text-primary"></i>
+                                    </div>
+                                    <div class="list-item-content">
+                                        <div class="list-item-title">Adubo NPK 10-10-10</div>
+                                        <div class="list-item-subtitle">Setor 01 - 15/05/2023</div>
+                                    </div>
+                                    <span class="badge badge-primary">50kg/ha</span>
+                                </div>
+                                <!-- Mais itens... -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-apple-alt text-warning"></i> Resumo da Colheita
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <h3 class="text-muted">Total Colhido</h3>
+                                    <h2>1,245 <small class="text-muted">latas</small></h2>
+                                </div>
+                                <div class="icon-circle">
+                                    <i class="fas fa-basket-shopping"></i>
+                                </div>
+                            </div>
+                            <canvas id="colheitaChart" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Gráficos -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-line"></i> Produtividade por Setor
+                        </h2>
+                        <div class="tabs">
+                            <div class="tab active" data-tab="mensal">Mensal</div>
+                            <div class="tab" data-tab="anual">Anual</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="produtividadeChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aplicações Page (Hidden by default) -->
+            <div id="aplicacoes-page" class="page">
+                <!-- Conteúdo será carregado dinamicamente -->
+            </div>
+
+            <!-- Outras páginas... -->
+        </main>
     </div>
 
-    <!-- ===== TAREFAS ===== -->
-<div id="tarefas" class="aba">
-  <h2>Tarefas</h2>
-  
-  <input id="dataTarefa" type="date" placeholder="Data da Tarefa">
-  <input id="descricaoTarefa" placeholder="Descrição da Tarefa">
-  
-  <select id="prioridadeTarefa">
-    <option value="Alta">Alta</option>
-    <option value="Média">Média</option>
-    <option value="Baixa">Baixa</option>
-  </select>
-  
-  <select id="setorTarefa">
-    <option value="Setor 01">Setor 01</option>
-    <option value="Setor 02">Setor 02</option>
-    <option value="Setor 03">Setor 03</option>
-  </select>
-  
-  <!-- Checkbox para definir se é uma aplicação -->
-  <label>
-    <input type="checkbox" id="eAplicacaoCheckbox" onchange="mostrarCamposAplicacao()">
-    É uma Aplicação
-  </label>
-  
-  <!-- Campos de aplicação (aparecem apenas se for uma aplicação) -->
-  <div id="camposAplicacao" style="display: none;">
-    <input id="dosagemAplicacao" placeholder="Dosagem">
-    <select id="tipoAplicacao">
-      <option value="Adubo">Adubo</option>
-      <option value="Fungicida">Fungicida</option>
-      <option value="Inseticida">Inseticida</option>
-      <option value="Herbicida">Herbicida</option>
-      <option value="Outro">Outro</option>
-    </select>
-  </div>
-
-  <button onclick="adicionarTarefa()">Salvar Tarefa</button>
-  <button id="btnCancelarEdicaoTarefa" onclick="cancelarEdicaoTarefa()" style="display: none;">Cancelar Edição</button>
-  
-  <div id="listaTarefas"></div>
-  <div id="listaTarefasFeitas"></div>
-</div>
-
-    <!-- ===== FINANCEIRO ===== -->
-<div id="financeiro" class="aba">
-  <h2>Financeiro</h2>
-  <button id="btnMostrarFormularioFinanceiro" onclick="alternarFormularioFinanceiro()">Novo Gasto</button>
-  
-  <div id="formularioFinanceiro" style="display: none;">
-    <input id="dataFin" type="date" placeholder="Data">
-    <input id="produtoFin" placeholder="Produto">
-    <input id="descricaoFin" placeholder="Descrição (opcional)">
-    <input id="valorFin" type="number" placeholder="Valor (R$)">
-    
-    <select id="tipoFin">
-      <option>Adubo</option>
-      <option>Fungicida</option>
-      <option>Inseticida</option>
-      <option>Herbicida</option>
-      <option>Outro</option>
-    </select>
-    
-    <label>
-      <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado
-    </label>
-    
-    <div id="camposParcelas" style="display: none;">
-      <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
-    </div>
-    
-    <button onclick="adicionarFinanceiro()">Salvar Gasto</button>
-    <button id="btnCancelarFinanceiro" onclick="cancelarEdicaoFinanceiro()" style="display: none;">Cancelar Edição</button>
-  </div>
-  
-  <div id="financeiroLista"></div>
-</div>
-
-     <!-- ===== COLHEITA ===== -->
-<div id="colheita" class="aba">
-  <h2>Colheita</h2>
-  
-  <!-- Controle de Valor da Lata -->
-  <label for="valorLata"><strong>Valor da Lata (R$):</strong></label>
-  <input id="valorLata" type="number" step="0.01" onchange="salvarValorLata()">
-  
-  <div class="formulario-colheita">
-    <input id="dataColheita" type="date" placeholder="Data">
-    <input id="colhedor" placeholder="Nome do Colhedor">
-    <input id="quantidadeLatas" type="number" placeholder="Quantidade de Latas">
-    <button onclick="adicionarColheita()">Adicionar Colheita</button>
-  </div>
-
-  <!-- Resumo da Colheita -->
-  <div id="resumoColheita" class="resumo-colheita">
-    <strong>Resumo da Colheita:</strong>
-    <div><strong>Total de Latas:</strong> 0</div>
-    <div><strong>Total Pago:</strong> R$ 0,00</div>
-    <div><strong>Total Pendente:</strong> R$ 0,00</div>
-  </div>
-  
-  <!-- Listagem de Colheita -->
-  <h3>Pendentes</h3>
-  <div id="colheitaPendentes" class="lista-colheita"></div>
-  
-  <h3>Pagos</h3>
-  <div id="colheitaPagos" class="lista-colheita"></div>
-</div>
-
-    <!-- ===== RELATÓRIO ===== -->
-    <div id="relatorio" class="aba">
-      <h2>Relatório</h2>
-      <button onclick="exportarPDF()">Exportar PDF</button>
-      <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+    <!-- ===== MODAL DE NOVA APLICAÇÃO ===== -->
+    <div id="modal-aplicacao" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-plus-circle"></i> Nova Aplicação
+                </h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-aplicacao">
+                    <div class="form-group">
+                        <label for="aplicacao-data">Data</label>
+                        <input type="date" id="aplicacao-data" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aplicacao-produto">Produto</label>
+                        <input type="text" id="aplicacao-produto" class="form-control" list="produtos-list" required>
+                        <datalist id="produtos-list"></datalist>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="aplicacao-dosagem">Dosagem (kg/ha)</label>
+                            <input type="number" id="aplicacao-dosagem" class="form-control" step="0.01" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="aplicacao-tipo">Tipo</label>
+                            <select id="aplicacao-tipo" class="form-control form-select" required>
+                                <option value="Adubo">Adubo</option>
+                                <option value="Defensivo">Defensivo</option>
+                                <option value="Corretivo">Corretivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aplicacao-setor">Setor</label>
+                        <select id="aplicacao-setor" class="form-control form-select" required>
+                            <option value="Setor 01">Setor 01</option>
+                            <option value="Setor 02">Setor 02</option>
+                            <option value="Setor 03">Setor 03</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aplicacao-obs">Observações</label>
+                        <textarea id="aplicacao-obs" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">Cancelar</button>
+                <button class="btn btn-primary" id="salvar-aplicacao">Salvar</button>
+            </div>
+        </div>
     </div>
 
-    <!-- ===== CONFIGURAÇÕES ===== -->
-    <div id="configuracoes" class="aba">
-      <h2>Configurações</h2>
-      <button onclick="alternarTema()">Alternar Tema</button>
-      <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
-      <button onclick="fazerBackup()">Fazer Backup</button>
-      <input type="file" id="arquivoBackup" onchange="importarBackup()">
-    </div>
-  </div>
+    <!-- ===== SCRIPTS ===== -->
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- Toastify -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <!-- Scripts do App -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/aplicacoes.js"></script>
+    <script src="js/tarefas.js"></script>
+    <script src="js/colheita.js"></script>
+    <script src="js/financeiro.js"></script>
+    <script src="js/relatorios.js"></script>
+    
+    <script>
+        // Inicialização do Chart.js
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de Colheita
+            const colheitaCtx = document.getElementById('colheitaChart').getContext('2d');
+            new Chart(colheitaCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [{
+                        label: 'Latas Colhidas',
+                        data: [120, 190, 170, 220, 300, 245],
+                        backgroundColor: '#81c784',
+                        borderColor: '#2e7d32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Produtividade
+            const prodCtx = document.getElementById('produtividadeChart').getContext('2d');
+            new Chart(prodCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Setor 01', 'Setor 02', 'Setor 03', 'Setor 04'],
+                    datasets: [{
+                        label: 'Produtividade (sacas/ha)',
+                        data: [45, 38, 42, 50],
+                        fill: false,
+                        backgroundColor: '#2e7d32',
+                        borderColor: '#2e7d32',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            // Navegação entre páginas
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.getAttribute('data-page') + '-page';
+                    
+                    // Esconde todas as páginas
+                    document.querySelectorAll('.page').forEach(page => {
+                        page.classList.remove('active');
+                    });
+                    
+                    // Mostra a página selecionada
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // Atualiza menu ativo
+                    document.querySelectorAll('.menu-item').forEach(menuItem => {
+                        menuItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Atualiza título da página
+                    document.title = this.querySelector('span').textContent + ' | Manejo Café';
+                });
+            });
+
+            // Toggle do tema
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                document.body.classList.toggle('dark-theme');
+                const icon = this.querySelector('i');
+                if (document.body.classList.contains('dark-theme')) {
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                }
+            });
+
+            // Modal de aplicação
+            const modal = document.getElementById('modal-aplicacao');
+            document.querySelectorAll('[data-action="nova-aplicacao"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.classList.add('active');
+                });
+            });
+
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

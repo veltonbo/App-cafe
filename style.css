@@ -108,11 +108,16 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 10px 15px;
   margin: 8px 0;
   background-color: #1e1e1e;
   border-left: 4px solid #4caf50;
   border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.item:hover {
+  background-color: #2c2c2c;
 }
 
 .item span {
@@ -121,54 +126,69 @@ button:hover {
   word-break: break-word;
 }
 
-.botoes-aplicacao {
-  display: flex;
-  gap: 10px;
-}
-
-/* ===== MENU DE AÇÕES (OCULTO) ===== */
+/* ===== MENU DE AÇÕES (3 PONTINHOS) ===== */
 .item-aplicacao {
-  background-color: #4caf50;
-  color: #fff;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 15px;
+  background-color: #1e1e1e;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
   position: relative;
+  transition: background 0.3s;
 }
 
+.item-aplicacao .conteudo-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-aplicacao .botao-acao {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.item-aplicacao .botao-acao:hover {
+  color: #fff;
+}
+
+/* ===== MENU DE AÇÕES OCULTO ===== */
 .item-aplicacao .menu-acoes {
   display: none;
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
   background: #333;
   border-radius: 8px;
-  overflow: hidden;
-  transition: opacity 0.3s;
-  z-index: 100;
+  flex-direction: column;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .item-aplicacao:hover .menu-acoes {
-  display: block;
+  display: flex;
 }
 
 .menu-acoes button {
-  display: block;
   background: none;
   border: none;
   color: #fff;
-  padding: 10px 15px;
+  padding: 8px 12px;
   text-align: left;
   cursor: pointer;
   transition: background 0.3s;
-  width: 150px;
+  font-size: 14px;
 }
 
 .menu-acoes button:hover {
-  background: #555;
+  background: #4caf50;
 }
 
 /* ===== CAMPO DE PESQUISA ===== */
@@ -180,70 +200,6 @@ button:hover {
   margin-bottom: 15px;
   color: white;
   font-size: 16px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal .modal-conteudo {
-  background-color: #2c2c2c;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
-}
-
-.modal button {
-  width: 100%;
-  background-color: #4caf50;
-  color: white;
-  margin-top: 10px;
-  padding: 10px;
-}
-
-/* ===== RESUMO E RELATÓRIO ===== */
-#resumoFinanceiro, #resumoColheita {
-  margin-top: 15px;
-  background: #2c2c2c;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-/* ===== MODO CLARO ===== */
-body.claro {
-  background-color: #f5f5f5;
-  color: #222;
-}
-
-body.claro .menu-superior {
-  background-color: #e0e0e0;
-}
-
-body.claro input, 
-body.claro select, 
-body.claro button {
-  background-color: #f9f9f9;
-  color: #222;
-  border: 1px solid #ccc;
-}
-
-body.claro .item-aplicacao {
-  background-color: #fafafa;
-}
-
-body.claro .menu-acoes {
-  background: #e0e0e0;
 }
 
 /* ===== BOTÃO FLUTUANTE ===== */
@@ -262,10 +218,33 @@ body.claro .menu-acoes {
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
   transition: background 0.3s;
+  z-index: 1000;
 }
 
 .botao-flutuante:hover {
   background-color: #45a049;
+}
+
+/* ===== MODO CLARO ===== */
+body.claro {
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+body.claro .item-aplicacao {
+  background-color: #fafafa;
+}
+
+body.claro .menu-acoes {
+  background: #e0e0e0;
+}
+
+body.claro .menu-acoes button {
+  color: #333;
+}
+
+body.claro .menu-acoes button:hover {
+  background: #4caf50;
+  color: #fff;
 }

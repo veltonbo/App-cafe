@@ -1,9 +1,48 @@
-// ====== VARIÁVEIS GLOBAIS ======
-let tarefas = [];
-let indiceEdicaoTarefa = null; // Agora está corretamente definida
+// ===== IMPORTAÇÕES =====
+import { db, auth } from './firebase-config.js';
+import { saveDataOffline, loadDataOffline } from './offline-db.js';
 
-// ====== ADICIONAR OU SALVAR EDIÇÃO DE TAREFA ======
-function adicionarTarefa() {
+// ===== VARIÁVEIS GLOBAIS =====
+let tarefas = [];
+let tarefasFeitas = [];
+let indiceEdicaoTarefa = null;
+
+// ===== CARREGAR TAREFAS =====
+async function carregarTarefas() {
+  try {
+    if (navigator.onLine) {
+      db.ref('Tarefas').on('value', (snapshot) => {
+        const dados = snapshot.val() || [];
+        tarefas = dados.filter(t => !t.feita);
+        tarefasFeitas = dados.filter(t => t.feita);
+        atualizarTarefas();
+        
+        // Salvar offline
+        if (dados.length > 0) {
+          saveDataOffline('tarefas', dados).catch(console.error);
+        }
+      });
+    } else {
+      // Modo offline
+      const dados = await loadDataOffline('tarefas');
+      tarefas = dados.filter(t => !t.feita) || [];
+      tarefasFeitas = dados.filter(t => t.feita) || [];
+      atualizarTarefas();
+      mostrarNotificacao('Você está visualizando dados offline das tarefas');
+    }
+  } catch (error) {
+    console.error('Erro ao carregar tarefas:', error);
+    mostrarNotificacao('Erro ao carregar tarefas', 'error');
+  }
+}
+
+// ===== ADICIONAR OU EDITAR TAREFA =====
+async function adicionarTarefa() {
+  if (!auth.currentUser) {
+    mostrarNotificacao('Você precisa estar logado para adicionar tarefas', 'error');
+    return;
+  }
+
   const dataTarefa = document.getElementById('dataTarefa');
   const descricaoTarefa = document.getElementById('descricaoTarefa');
   const prioridadeTarefa = document.getElementById('prioridadeTarefa');
@@ -13,11 +52,11 @@ function adicionarTarefa() {
   const tipoAplicacao = document.getElementById('tipoAplicacao');
 
   if (!dataTarefa || !descricaoTarefa || !prioridadeTarefa || !setorTarefa) {
-    alert("Preencha todos os campos corretamente.");
+    mostrarNotificacao("Preencha todos os campos corretamente.", 'error');
     return;
   }
 
-  const nova = {
+  const novaTarefa = {
     data: dataTarefa.value,
     descricao: descricaoTarefa.value.trim(),
     prioridade: prioridadeTarefa.value,
@@ -25,31 +64,51 @@ function adicionarTarefa() {
     feita: false,
     eAplicacao: eAplicacaoCheckbox.checked,
     dosagem: eAplicacaoCheckbox.checked ? dosagemAplicacao.value.trim() : '',
-    tipo: eAplicacaoCheckbox.checked ? tipoAplicacao.value : ''
+    tipo: eAplicacaoCheckbox.checked ? tipoAplicacao.value : '',
+    usuario: auth.currentUser.uid,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
-  if (!nova.data || !nova.descricao) {
-    alert("Preencha todos os campos obrigatórios!");
+  if (!novaTarefa.data || !novaTarefa.descricao) {
+    mostrarNotificacao("Preencha todos os campos obrigatórios!", 'error');
     return;
   }
 
-  if (indiceEdicaoTarefa !== null) {
-    // Edição de tarefa existente
-    tarefas[indiceEdicaoTarefa] = nova;
-    indiceEdicaoTarefa = null;
-    document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
-  } else {
-    // Adicionar nova tarefa
-    tarefas.push(nova);
-  }
+  try {
+    if (indiceEdicaoTarefa !== null) {
+      // Edição de tarefa existente
+      tarefas[indiceEdicaoTarefa] = novaTarefa;
+      indiceEdicaoTarefa = null;
+      document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
+    } else {
+      // Adicionar nova tarefa
+      tarefas.push(novaTarefa);
+    }
 
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
-  limparCamposTarefa();
+    const todasTarefas = [...tarefas, ...tarefasFeitas];
+    
+    if (navigator.onLine) {
+      await db.ref('Tarefas').set(todasTarefas);
+    } else {
+      await saveDataOffline('tarefas', todasTarefas);
+      mostrarNotificacao('Tarefa salva localmente. Será sincronizada quando online.', 'info');
+    }
+
+    atualizarTarefas();
+    limparCamposTarefa();
+  } catch (error) {
+    console.error('Erro ao salvar tarefa:', error);
+    mostrarNotificacao('Erro ao salvar tarefa: ' + error.message, 'error');
+  }
 }
 
-// ====== EDITAR TAREFA ======
+// ===== EDITAR TAREFA =====
 function editarTarefa(index) {
+  if (!auth.currentUser) {
+    mostrarNotificacao('Você precisa estar logado para editar tarefas', 'error');
+    return;
+  }
+
   const t = tarefas[index];
   if (!t) return;
 
@@ -65,14 +124,52 @@ function editarTarefa(index) {
   document.getElementById("btnCancelarEdicaoTarefa").style.display = "inline-block";
 }
 
-// ====== CANCELAR EDIÇÃO ======
+// ===== MARCAR TAREFA COMO CONCLUÍDA =====
+async function marcarTarefaComoConcluida(index) {
+  if (!auth.currentUser) {
+    mostrarNotificacao('Você precisa estar logado para marcar tarefas', 'error');
+    return;
+  }
+
+  try {
+    const tarefa = tarefas[index];
+    tarefa.feita = true;
+    tarefa.dataConclusao = new Date().toISOString().split('T')[0];
+    
+    tarefasFeitas.push(tarefa);
+    tarefas.splice(index, 1);
+
+    const todasTarefas = [...tarefas, ...tarefasFeitas];
+    
+    if (navigator.onLine) {
+      await db.ref('Tarefas').set(todasTarefas);
+    } else {
+      await saveDataOffline('tarefas', todasTarefas);
+      mostrarNotificacao('Tarefa concluída salva localmente. Será sincronizada quando online.', 'info');
+    }
+
+    // Disparar evento de notificação
+    document.dispatchEvent(new CustomEvent('tarefaConcluida', {
+      detail: {
+        descricao: tarefa.descricao
+      }
+    }));
+
+    atualizarTarefas();
+  } catch (error) {
+    console.error('Erro ao marcar tarefa como concluída:', error);
+    mostrarNotificacao('Erro ao marcar tarefa como concluída: ' + error.message, 'error');
+  }
+}
+
+// ===== CANCELAR EDIÇÃO =====
 function cancelarEdicaoTarefa() {
   limparCamposTarefa();
   indiceEdicaoTarefa = null;
   document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
 }
 
-// ====== LIMPAR CAMPOS DE TAREFA ======
+// ===== LIMPAR CAMPOS =====
 function limparCamposTarefa() {
   document.getElementById('dataTarefa').value = '';
   document.getElementById('descricaoTarefa').value = '';
@@ -84,47 +181,104 @@ function limparCamposTarefa() {
   mostrarCamposAplicacao();
 }
 
-// ====== ATUALIZAR LISTA DE TAREFAS ======
+// ===== ATUALIZAR LISTA DE TAREFAS =====
 function atualizarTarefas() {
   const lista = document.getElementById('listaTarefas');
+  const listaFeitas = document.getElementById('listaTarefasFeitas');
+  
   lista.innerHTML = '';
+  listaFeitas.innerHTML = '';
 
-  tarefas.forEach((t, index) => {
+  // Ordenar tarefas por prioridade e data
+  const tarefasOrdenadas = [...tarefas].sort((a, b) => {
+    const prioridades = { 'Alta': 1, 'Média': 2, 'Baixa': 3 };
+    return prioridades[a.prioridade] - prioridades[b.prioridade] || 
+           new Date(a.data) - new Date(b.data);
+  });
+
+  // Ordenar tarefas feitas por data de conclusão (mais recente primeiro)
+  const feitasOrdenadas = [...tarefasFeitas].sort((a, b) => 
+    new Date(b.dataConclusao || b.data) - new Date(a.dataConclusao || a.data)
+  );
+
+  // Tarefas pendentes
+  tarefasOrdenadas.forEach((t, index) => {
     const item = document.createElement('div');
     item.className = 'item';
     item.innerHTML = `
       <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
       <div class="botoes-tarefa">
-        <button class="botao-circular azul" onclick="editarTarefa(${index})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})"><i class="fas fa-trash"></i></button>
+        <button class="botao-circular verde" onclick="marcarTarefaComoConcluida(${index})">
+          <i class="fas fa-check"></i>
+        </button>
+        <button class="botao-circular azul" onclick="editarTarefa(${index})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="excluirTarefa(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
       </div>
     `;
     lista.appendChild(item);
   });
+
+  // Tarefas concluídas
+  feitasOrdenadas.forEach((t, index) => {
+    const item = document.createElement('div');
+    item.className = 'item concluida';
+    item.innerHTML = `
+      <span><s>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</s></span>
+      <div class="botoes-tarefa">
+        <button class="botao-circular vermelho" onclick="excluirTarefa(${index}, true)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    listaFeitas.appendChild(item);
+  });
 }
 
-// ====== EXCLUIR TAREFA ======
-function excluirTarefa(index) {
+// ===== EXCLUIR TAREFA =====
+async function excluirTarefa(index, isFeita = false) {
   if (!confirm("Deseja excluir esta tarefa?")) return;
-  tarefas.splice(index, 1);
-  db.ref('Tarefas').set(tarefas);
-  atualizarTarefas();
+  
+  try {
+    if (isFeita) {
+      tarefasFeitas.splice(index, 1);
+    } else {
+      tarefas.splice(index, 1);
+    }
+
+    const todasTarefas = [...tarefas, ...tarefasFeitas];
+    
+    if (navigator.onLine) {
+      await db.ref('Tarefas').set(todasTarefas);
+    } else {
+      await saveDataOffline('tarefas', todasTarefas);
+      mostrarNotificacao('Exclusão salva localmente. Será sincronizada quando online.', 'info');
+    }
+    
+    atualizarTarefas();
+  } catch (error) {
+    console.error('Erro ao excluir tarefa:', error);
+    mostrarNotificacao('Erro ao excluir tarefa: ' + error.message, 'error');
+  }
 }
 
-// ====== INICIALIZAR TAREFAS ======
-document.addEventListener("dadosCarregados", carregarTarefas);
-
-// ====== MOSTRAR CAMPOS DE APLICAÇÃO ======
+// ===== MOSTRAR CAMPOS DE APLICAÇÃO =====
 function mostrarCamposAplicacao() {
   const checkbox = document.getElementById('eAplicacaoCheckbox');
   const campos = document.getElementById('camposAplicacao');
   campos.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-// ====== CARREGAR TAREFAS ======
-function carregarTarefas() {
-  db.ref('Tarefas').on('value', (snapshot) => {
-    tarefas = snapshot.exists() ? Object.values(snapshot.val()) : [];
-    atualizarTarefas();
-  });
-}
+// ===== INICIALIZAR TAREFAS =====
+document.addEventListener("dadosCarregados", carregarTarefas);
+
+// Exportar funções para uso no HTML
+window.adicionarTarefa = adicionarTarefa;
+window.editarTarefa = editarTarefa;
+window.excluirTarefa = excluirTarefa;
+window.cancelarEdicaoTarefa = cancelarEdicaoTarefa;
+window.marcarTarefaComoConcluida = marcarTarefaComoConcluida;
+window.mostrarCamposAplicacao = mostrarCamposAplicacao;

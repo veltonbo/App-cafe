@@ -27,14 +27,11 @@ function mostrarAba(abaId) {
   }
 }
 
-// ===== INICIALIZAR O APLICATIVO =====
+// No arquivo main.js, substitua o código de inicialização por:
 function inicializarApp() {
-  const abaInicial = localStorage.getItem('aba') || 'aplicacoes';
-  mostrarAba(abaInicial);
-
-  if (localStorage.getItem('tema') === 'claro') {
-    document.body.classList.add('claro');
-  }
+  mostrarAba('aplicacoes'); // Ignora login
+  document.body.style.display = 'block'; // Mostra todo o app
+}
 
   // Eventos customizados para garantir que as funções carreguem corretamente
   document.addEventListener('dadosCarregados', () => {

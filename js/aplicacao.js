@@ -2,6 +2,9 @@
 let aplicacoes = [];
 let indiceEdicaoAplicacao = null;
 
+// ===== INICIALIZAR APLICAÇÕES =====
+document.addEventListener("DOMContentLoaded", carregarAplicacoes);
+
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
   db.ref('Aplicacoes').on('value', snap => {
@@ -36,6 +39,7 @@ function adicionarAplicacao() {
 
   salvarAplicacoes();
   limparCamposAplicacao();
+  alternarFormularioAplicacao(false);
 }
 
 // ===== SALVAR NO FIREBASE =====
@@ -165,5 +169,8 @@ function exportarAplicacoesCSV() {
   a.click();
 }
 
-// ===== INICIALIZAR APLICAÇÕES =====
-document.addEventListener("DOMContentLoaded", carregarAplicacoes);
+// ===== ALTERNAR FORMULÁRIO =====
+function alternarFormularioAplicacao() {
+  const form = document.getElementById("formularioAplicacao");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}

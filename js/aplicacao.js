@@ -207,5 +207,25 @@ function alternarFormularioAplicacao() {
   form.style.display = form.style.display === "none" ? "block" : "none";
 }
 
+// Função para alternar a exibição do menu de ações
+function toggleMenu(button) {
+  const menu = button.nextElementSibling;
+  const isVisible = menu.style.display === 'block';
+  // Fechar todos os menus abertos
+  document.querySelectorAll('.menu-acoes').forEach(m => m.style.display = 'none');
+  // Alternar visibilidade do menu atual
+  menu.style.display = isVisible ? 'none' : 'block';
+}
+
+// Função para filtrar as aplicações com base na pesquisa
+function filtrarAplicacoes() {
+  const termo = document.getElementById('campoPesquisaAplicacoes').value.toLowerCase();
+  const itens = document.querySelectorAll('.item-aplicacao');
+  itens.forEach(item => {
+    const texto = item.querySelector('.conteudo').innerText.toLowerCase();
+    item.style.display = texto.includes(termo) ? '' : 'none';
+  });
+}
+
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);

@@ -1,132 +1,328 @@
-// ===== VARIÁVEIS GLOBAIS =====
-let gastos = [];
-let indiceEdicaoGasto = null;
+// financeiro.js
 
-// ===== INICIALIZAR FINANCEIRO =====
-function inicializarFinanceiro() {
-  carregarFinanceiro();
-  document.getElementById("btnCancelarFinanceiro").addEventListener("click", cancelarEdicaoFinanceiro);
-}
+document.addEventListener('DOMContentLoaded', () => {
+  // Elementos do formulário
+  const form = document.getElementById('formFinanceiro');
+  const idEdit = document.getElementById('financeiroIdEdit');
+  const tipoLancamento = document.getElementById('tipoLancamentoFin');
+  const dataFin = document.getElementById('dataFin');
+  const descricaoFin = document.getElementById('descricaoFin');
+  const valorFin = document.getElementById('valorFin');
+  const categoriaFin = document.getElementById('categoriaFin');
+  const parceladoFin = document.getElementById('parceladoFin');
+  const camposParcelas = document.getElementById('camposParcelasFin');
+  const numParcelasFin = document.getElementById('numParcelasFin');
+  const btnSalvar = document.getElementById('btnSalvarFinanceiro');
+  const btnCancelar = document.getElementById('btnCancelarEdicaoFin');
+  const btnToggleForm = document.getElementById('btnToggleFormFinanceiro');
+  const lista = document.getElementById('listaFinanceiro');
+  const filtro = document.getElementById('filtroFinanceiro');
+  const sugestoesCategoria = document.getElementById('sugestoesCategoriaFin');
+  const resumo = document.getElementById('resumoFinanceiro');
 
-// ===== ALTERNAR FORMULÁRIO FINANCEIRO =====
-function alternarFormularioFinanceiro() {
-  const form = document.getElementById("formularioFinanceiro");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-  resetarFormularioFinanceiro();
-}
+  // Estado
+  let financeiroCache = [];
+  let editando = false;
+  let loading = false;
 
-// ===== MOSTRAR CAMPOS DE PARCELAS =====
-function mostrarCamposParcelas() {
-  const camposParcelas = document.getElementById("camposParcelas");
-  const parcelado = document.getElementById("parceladoFin").checked;
-  camposParcelas.style.display = parcelado ? "block" : "none";
-}
+  // --- Funções auxiliares ---
 
-// ===== CARREGAR FINANCEIRO =====
-function carregarFinanceiro() {
-  db.ref("Financeiro").on("value", (snapshot) => {
-    const dados = snapshot.val();
-    gastos = dados ? Object.values(dados) : [];
-    atualizarFinanceiro();
-  });
-}
-
-// ===== ADICIONAR OU EDITAR GASTO =====
-function adicionarFinanceiro() {
-  const data = dataFin.value;
-  const produto = produtoFin.value.trim();
-  const descricao = descricaoFin.value.trim();
-  const valor = parseFloat(valorFin.value);
-  const tipo = tipoFin.value;
-  const parcelado = parceladoFin.checked;
-  const numParcelas = parcelado ? parseInt(parcelasFin.value) || 1 : 1;
-
-  if (!data || !produto || isNaN(valor) || valor <= 0) {
-    alert("Preencha todos os campos corretamente!");
-    return;
+  function limparForm() {
+    form.reset();
+    idEdit.value = '';
+    editando = false;
+    btnSalvar.textContent = 'Salvar Lançamento';
+    btnCancelar.classList.add('hidden');
+    form.classList.add('hidden');
+    limparErros();
+    btnToggleForm.focus();
   }
 
-  if (indiceEdicaoGasto !== null) {
-    // Editar gasto existente
-    gastos[indiceEdicaoGasto] = { data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas };
-    indiceEdicaoGasto = null;
-  } else {
-    // Adicionar novo gasto
-    gastos.push({ data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas });
+  function limparErros() {
+    form.querySelectorAll('.erro-campo').forEach(el => el.classList.remove('erro-campo'));
+    form.querySelectorAll('.msg-erro').forEach(el => el.remove());
   }
 
-  db.ref("Financeiro").set(gastos);
-  atualizarFinanceiro();
-  resetarFormularioFinanceiro();
-  alternarFormularioFinanceiro();
-}
+  function mostrarErroCampo(input, msg) {
+    input.classList.add('erro-campo');
+    let msgEl = document.createElement('div');
+    msgEl.className = 'msg-erro';
+    msgEl.setAttribute('aria-live', 'polite');
+    msgEl.style.color = '#f44336';
+    msgEl.style.fontSize = '0.9em';
+    msgEl.textContent = msg;
+    input.parentNode.insertBefore(msgEl, input.nextSibling);
+    input.focus();
+  }
 
-// ===== CANCELAR EDIÇÃO =====
-function cancelarEdicaoFinanceiro() {
-  resetarFormularioFinanceiro();
-  alternarFormularioFinanceiro();
-}
+  function validarDados(dados) {
+    limparErros();
+    let valido = true;
+    if (!dados.data) {
+      mostrarErroCampo(dataFin, 'Informe a data.');
+      valido = false;
+    }
+    if (!dados.descricao) {
+      mostrarErroCampo(descricaoFin, 'Informe a descrição.');
+      valido = false;
+    }
+    if (!dados.valor || isNaN(dados.valor) || Number(dados.valor) <= 0) {
+      mostrarErroCampo(valorFin, 'Informe um valor válido.');
+      valido = false;
+    }
+    if (dados.parcelado) {
+      if (!dados.numParcelas || isNaN(dados.numParcelas) || Number(dados.numParcelas) < 2) {
+        mostrarErroCampo(numParcelasFin, 'Informe o número de parcelas (mínimo 2).');
+        valido = false;
+      }
+    }
+    return valido;
+  }
 
-// ===== RESETAR FORMULÁRIO =====
-function resetarFormularioFinanceiro() {
-  dataFin.value = "";
-  produtoFin.value = "";
-  descricaoFin.value = "";
-  valorFin.value = "";
-  tipoFin.value = "Adubo";
-  parcelasFin.value = "";
-  parceladoFin.checked = false;
-  mostrarCamposParcelas();
-  indiceEdicaoGasto = null;
-  document.getElementById("btnCancelarFinanceiro").style.display = "none";
-}
+  function atualizarSugestoes() {
+    const categoriasSet = new Set();
+    financeiroCache.forEach(lanc => {
+      if (lanc.categoria) categoriasSet.add(lanc.categoria);
+    });
+    sugestoesCategoria.innerHTML = '';
+    categoriasSet.forEach(cat => {
+      sugestoesCategoria.innerHTML += `<option value="${cat}"></option>`;
+    });
+  }
 
-// ===== ATUALIZAR LISTAGEM DE GASTOS =====
-function atualizarFinanceiro() {
-  const lista = document.getElementById("financeiroLista");
-  lista.innerHTML = '';
+  function renderizarLista(filtroTexto = '') {
+    lista.innerHTML = '';
+    let encontrou = false;
+    const filtroLower = filtroTexto.trim().toLowerCase();
 
-  gastos.forEach((gasto, i) => {
-    const item = document.createElement("div");
-    item.className = "item";
-    item.innerHTML = `
-      <span>${gasto.data} - ${gasto.produto} - R$ ${gasto.valor.toFixed(2)} (${gasto.tipo})</span>
-      <div class="botoes-financeiro">
-        <button class="botao-circular azul" onclick="editarFinanceiro(${i})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
-      </div>
+    financeiroCache
+      .filter(lanc => {
+        if (!filtroLower) return true;
+        const texto = `${lanc.data} ${lanc.descricao} ${lanc.categoria || ''}`.toLowerCase();
+        return texto.includes(filtroLower);
+      })
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .forEach(lanc => {
+        encontrou = true;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>
+            <strong>${lanc.descricao}</strong> (${lanc.tipo === 'receita' ? 'Receita' : 'Gasto'})<br>
+            Data: ${lanc.data} | Valor: R$ ${Number(lanc.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})} | Categoria: ${lanc.categoria || '-'}
+            ${lanc.parcelado ? `<br><em>Parcelado em ${lanc.numParcelas}x</em>` : ''}
+          </span>
+          <div>
+            <button class="botao-circular azul" aria-label="Editar lançamento" title="Editar" data-id="${lanc._id}"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" aria-label="Remover lançamento" title="Remover" data-id="${lanc._id}"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        lista.appendChild(div);
+      });
+
+    if (!encontrou) {
+      lista.innerHTML = '<p style="text-align:center;color:#888;">Nenhum lançamento encontrado.</p>';
+    }
+  }
+
+  function renderizarResumo() {
+    let totalReceitas = 0, totalGastos = 0;
+    financeiroCache.forEach(lanc => {
+      if (lanc.tipo === 'receita') totalReceitas += Number(lanc.valor);
+      else totalGastos += Number(lanc.valor);
+    });
+    const saldo = totalReceitas - totalGastos;
+    resumo.innerHTML = `
+      <h3>Resumo Financeiro</h3>
+      <p><strong>Total de Receitas:</strong> <span id="totalReceitasFin">R$ ${totalReceitas.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span></p>
+      <p><strong>Total de Gastos:</strong> <span id="totalGastosFin">R$ ${totalGastos.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span></p>
+      <p><strong>Saldo:</strong> <span id="saldoFin" style="color:${saldo>=0?'#4caf50':'#f44336'}">R$ ${saldo.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span></p>
     `;
-    lista.appendChild(item);
+  }
+
+  // --- CRUD ---
+
+  function carregarFinanceiro() {
+    loading = true;
+    lista.innerHTML = '<div class="loading">Carregando...</div>';
+    getRef('financeiro').orderByChild('timestamp').on('value', snap => {
+      financeiroCache = [];
+      snap.forEach(child => {
+        const lanc = child.val();
+        lanc._id = child.key;
+        financeiroCache.push(lanc);
+      });
+      atualizarSugestoes();
+      renderizarLista(filtro.value);
+      renderizarResumo();
+      loading = false;
+    });
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (loading) return;
+    btnSalvar.disabled = true;
+    const dados = {
+      tipo: tipoLancamento.value,
+      data: dataFin.value,
+      descricao: descricaoFin.value.trim(),
+      valor: Number(valorFin.value),
+      categoria: categoriaFin.value.trim(),
+      parcelado: parceladoFin.checked,
+      numParcelas: parceladoFin.checked ? Number(numParcelasFin.value) : null,
+      timestamp: Date.now()
+    };
+    if (!validarDados(dados)) {
+      btnSalvar.disabled = false;
+      return;
+    }
+
+    if (editando && idEdit.value) {
+      getRef('financeiro/' + idEdit.value).set(dados)
+        .then(() => {
+          mostrarToast('Lançamento atualizado!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao atualizar lançamento!', 'erro');
+          btnSalvar.disabled = false;
+        });
+    } else {
+      getRef('financeiro').push(dados)
+        .then(() => {
+          mostrarToast('Lançamento salvo!', 'sucesso');
+          limparForm();
+          btnSalvar.disabled = false;
+        })
+        .catch(() => {
+          mostrarToast('Erro ao salvar lançamento!', 'erro');
+          btnSalvar.disabled = false;
+        });
+    }
   });
-}
 
-// ===== EDITAR GASTO =====
-function editarFinanceiro(index) {
-  const gasto = gastos[index];
-  if (!gasto) return;
+  btnCancelar.addEventListener('click', limparForm);
 
-  dataFin.value = gasto.data;
-  produtoFin.value = gasto.produto;
-  descricaoFin.value = gasto.descricao || "";
-  valorFin.value = gasto.valor;
-  tipoFin.value = gasto.tipo;
-  parceladoFin.checked = gasto.parcelado;
-  mostrarCamposParcelas();
-  parcelasFin.value = gasto.parcelas || "";
+  // Mostrar/ocultar campos de parcelas
+  parceladoFin.addEventListener('change', () => {
+    if (parceladoFin.checked) {
+      camposParcelas.classList.remove('hidden');
+      numParcelasFin.focus();
+    } else {
+      camposParcelas.classList.add('hidden');
+    }
+  });
 
-  indiceEdicaoGasto = index;
-  document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
-  document.getElementById("btnSalvarFinanceiro").innerText = "Salvar Edição";
-  document.getElementById("formularioFinanceiro").style.display = "block";
-}
+  // Filtro
+  filtro.addEventListener('input', () => renderizarLista(filtro.value));
 
-// ===== EXCLUIR GASTO =====
-function excluirFinanceiro(index) {
-  if (!confirm("Deseja excluir este lançamento financeiro?")) return;
-  gastos.splice(index, 1);
-  db.ref("Financeiro").set(gastos);
-  atualizarFinanceiro();
-}
+  // Alternar formulário
+  btnToggleForm.addEventListener('click', () => {
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+      dataFin.focus();
+    }
+    limparForm();
+    form.classList.remove('hidden');
+  });
 
-// ===== INICIALIZAR FINANCEIRO =====
-document.addEventListener("dadosCarregados", inicializarFinanceiro);
+  // Delegação de eventos para editar/remover
+  lista.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    if (btn.classList.contains('azul')) {
+      // Editar
+      const lanc = financeiroCache.find(l => l._id === id);
+      if (lanc) {
+        tipoLancamento.value = lanc.tipo;
+        dataFin.value = lanc.data;
+        descricaoFin.value = lanc.descricao;
+        valorFin.value = lanc.valor;
+        categoriaFin.value = lanc.categoria;
+        parceladoFin.checked = !!lanc.parcelado;
+        if (lanc.parcelado) {
+          camposParcelas.classList.remove('hidden');
+          numParcelasFin.value = lanc.numParcelas || 2;
+        } else {
+          camposParcelas.classList.add('hidden');
+        }
+        idEdit.value = id;
+        editando = true;
+        btnSalvar.textContent = 'Atualizar Lançamento';
+        btnCancelar.classList.remove('hidden');
+        form.classList.remove('hidden');
+        dataFin.focus();
+        mostrarToast('Editando lançamento...', 'info');
+      }
+    } else if (btn.classList.contains('vermelho')) {
+      mostrarModalConfirmacao('Deseja remover este lançamento?', () => {
+        getRef('financeiro/' + id).remove()
+          .then(() => {
+            mostrarToast('Lançamento removido!', 'sucesso');
+            if (idEdit.value === id) limparForm();
+          })
+          .catch(() => {
+            mostrarToast('Erro ao remover lançamento!', 'erro');
+          });
+      });
+    }
+  });
+
+  // Acessibilidade: permite remover/editar com Enter/Espaço
+  lista.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
+  // Modal de confirmação (igual ao dos outros módulos)
+  function mostrarModalConfirmacao(msg, onConfirm) {
+    let modal = document.getElementById('modal-confirmacao');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-confirmacao';
+      modal.innerHTML = `
+        <div class="modal-bg"></div>
+        <div class="modal-box" role="dialog" aria-modal="true">
+          <p id="modal-msg"></p>
+          <div style="text-align:right;">
+            <button id="modal-btn-cancelar" class="btn-secondary">Cancelar</button>
+            <button id="modal-btn-confirmar" class="btn-primary">Confirmar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    modal.querySelector('#modal-msg').textContent = msg;
+    modal.style.display = 'flex';
+    modal.querySelector('#modal-btn-cancelar').onclick = () => { modal.style.display = 'none'; };
+    modal.querySelector('#modal-btn-confirmar').onclick = () => {
+      modal.style.display = 'none';
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+    setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
+  }
+
+  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
+  if (!document.getElementById('modal-confirmacao-style')) {
+    const style = document.createElement('style');
+    style.id = 'modal-confirmacao-style';
+    style.innerHTML = `
+      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
+      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
+      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
+      #modal-confirmacao .btn-primary { margin-left:8px; }
+      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
+      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Inicialização
+  carregarFinanceiro();
+  limparForm();
+});

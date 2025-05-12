@@ -62,3 +62,14 @@ function recuperarSenha() {
       .catch(error => alert("Erro: " + error.message));
   }
 }
+
+// Código de recuperação temporário (insira no console do navegador)
+function resetAccess() {
+  const email = "admin@temp.com"; // substitua pelo email admin
+  const newPassword = "senhatemporaria"; // defina uma nova senha
+  
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(() => console.log("E-mail de redefinição enviado!"))
+    .catch(error => console.error("Erro:", error));
+}
+resetAccess();

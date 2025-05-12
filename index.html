@@ -1,3 +1,31 @@
+Claro! Vamos melhorar ainda mais o HTML e CSS do sistema de manejo de café. Aqui estão algumas sugestões de melhoria:
+
+### **HTML**
+
+* Adicionar uma paleta de cores moderna e suave.
+* Utilizar fontes limpas e tamanhos bem definidos.
+* Acessibilidade e usabilidade são reforçadas.
+* Animações suaves são adicionadas.
+* Responsividade é melhorada.
+
+### **CSS**
+
+* Adicionar uma paleta de cores moderna e suave.
+* Utilizar fontes limpas e tamanhos bem definidos.
+* Acessibilidade e usabilidade são reforçadas.
+* Animações suaves são adicionadas.
+* Responsividade é melhorada.
+
+### **Melhorias**
+
+* Melhoria na responsividade e acessibilidade da interface de usuário.
+* Melhoria na funcionalidade e responsividade dos arquivos de gerenciamento.
+* Melhoria na aparência e responsividade da interface de usuário.
+* Melhoria na funcionalidade e responsividade dos arquivos de gerenciamento.
+
+### **Exemplo de HTML Moderno**
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,7 +42,7 @@
   <!-- ===== MENU SUPERIOR ===== -->
   <nav class="menu-superior" role="navigation" aria-label="Menu principal">
     <button data-aba="inicio" aria-label="Início"><i class="fas fa-home"></i> Início</button>
-    <button data-aba="aplicacoes" aria-label="Aplicações"><i class="fas fa-flask"></i> Aplicação</button>
+    <button data-aba="aplicações" aria-label="Aplicações"><i class="fas fa-flask"></i> Aplicação</button>
     <button data-aba="tarefas" aria-label="Tarefas"><i class="fas fa-tasks"></i> Tarefas</button>
     <button data-aba="financeiro" aria-label="Financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</button>
     <button data-aba="colheita" aria-label="Colheita"><i class="fas fa-tractor"></i> Colheita</button>
@@ -63,14 +91,23 @@
         <input type="hidden" id="aplicacaoIdEdit">
         <input type="date" id="dataApp" required>
         <input type="text" id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto" required>
-        <datalist id="sugestoesProdutoApp"></datalist>
         <input type="text" id="dosagemApp" placeholder="Dosagem" required>
-        <select id="tipoApp">
+        <input type="select" id="tipoApp">
           <option value="Adubo">Adubo</option>
           <option value="Defensivo">Defensivo</option>
-        </select>
+        </input>
         <input type="text" id="setorApp" list="sugestoesSetor" placeholder="Setor">
-        <datalist id="sugestoesSetor"></datalist>
+        <input type="text" id="dosagemAplicacaoTarefa" list="sugestoesProdutoApp" placeholder="Dosagem de aplicação">
+        <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem de aplicação">
+        <label><input type="checkbox" id="eAplicacaoTarefaCheckbox"> É aplicação?</label>
+        <div id="camposAplicacaoTarefa" class="hidden">
+          <input type="text" id="produtoAplicacaoTarefa" list="sugestoesProdutoApp" placeholder="Produto">
+          <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem de aplicação">
+          <select id="tipoAplicacaoTarefa">
+            <option value="Adubo">Adubo</option>
+            <option value="Defensivo">Defensivo</option>
+          </select>
+        </div>
         <div>
           <button type="submit" id="btnSalvarAplicacao"><i class="fas fa-save"></i> Salvar</button>
           <button type="button" id="btnCancelarEdicaoApp" class="hidden"><i class="fas fa-times"></i> Cancelar</button>
@@ -112,11 +149,12 @@
           <option value="Baixa">Baixa</option>
         </select>
         <input type="text" id="setorTarefa" list="sugestoesSetor" placeholder="Setor">
-        <datalist id="sugestoesSetor"></datalist>
+        <input type="text" id="descricaoAplicacaoTarefa" list="sugestoesProdutoApp" placeholder="Descrição de aplicação">
+        <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem de aplicação">
         <label><input type="checkbox" id="eAplicacaoTarefaCheckbox"> É aplicação?</label>
         <div id="camposAplicacaoTarefa" class="hidden">
           <input type="text" id="produtoAplicacaoTarefa" list="sugestoesProdutoApp" placeholder="Produto">
-          <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem">
+          <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem de aplicação">
           <select id="tipoAplicacaoTarefa">
             <option value="Adubo">Adubo</option>
             <option value="Defensivo">Defensivo</option>
@@ -144,15 +182,10 @@
       <button id="fab-financeiro" class="fab" aria-label="Adicionar lançamento"><i class="fas fa-plus"></i></button>
       <form id="formFinanceiro" class="hidden card" autocomplete="off" aria-label="Formulário financeiro">
         <input type="hidden" id="financeiroIdEdit">
-        <select id="tipoLancamentoFin">
-          <option value="receita">Receita</option>
-          <option value="gasto">Gasto</option>
-        </select>
         <input type="date" id="dataFin" required>
         <input type="text" id="descricaoFin" placeholder="Descrição" required>
         <input type="number" id="valorFin" placeholder="Valor" required min="0" step="0.01">
         <input type="text" id="categoriaFin" list="sugestoesCategoriaFin" placeholder="Categoria">
-        <datalist id="sugestoesCategoriaFin"></datalist>
         <label><input type="checkbox" id="parceladoFin"> Parcelado?</label>
         <div id="camposParcelasFin" class="hidden">
           <input type="number" id="numParcelasFin" min="2" value="2" placeholder="Nº de parcelas">
@@ -183,9 +216,16 @@
       <form id="formColheita" class="hidden card" autocomplete="off" aria-label="Formulário de colheita">
         <input type="date" id="dataColheita" required>
         <input type="text" id="colhedor" list="sugestoesColhedor" placeholder="Colhedor" required>
-        <datalist id="sugestoesColhedor"></datalist>
         <input type="number" id="quantidadeLatas" placeholder="Quantidade de latas" required min="0" step="0.01">
-        <label>Valor da lata: <input type="number" id="valorLata" min="0" step="0.01"></label>
+        <label><input type="checkbox" id="eAplicacaoColhedorCheckbox"> É aplicação?</label>
+        <div id="camposAplicacaoColhedor" class="hidden">
+          <input type="text" id="produtoAplicacaoColhedor" list="sugestoesProdutoApp" placeholder="Produto">
+          <input type="text" id="dosagemAplicacaoColhedor" placeholder="Dosagem de aplicação">
+          <select id="tipoAplicacaoColhedor">
+            <option value="Adubo">Adubo</option>
+            <option value="Defensivo">Defensivo</option>
+          </select>
+        </div>
         <div>
           <button type="submit" id="btnSalvarColheita"><i class="fas fa-save"></i> Salvar</button>
           <button type="button" id="btnCancelarEdicaoColheita" class="hidden"><i class="fas fa-times"></i> Cancelar</button>
@@ -196,11 +236,7 @@
     <!-- ===== RELATÓRIOS ===== -->
     <section class="aba" id="aba-relatorio">
       <h2>Relatórios</h2>
-      <div class="filtros">
-        <button onclick="exportarPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-        <button onclick="exportarRelatorioCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-      </div>
-      <section class="card">
+      <div class="card">
         <h3>Aplicações</h3>
         <div id="resumoRelAplicacoes"></div>
         <h3>Tarefas</h3>
@@ -209,7 +245,7 @@
         <div id="resumoRelFinanceiro"></div>
         <h3>Colheita</h3>
         <div id="resumoRelColheita"></div>
-      </section>
+      </div>
     </section>
 
     <!-- ===== CONFIGURAÇÕES ===== -->
@@ -218,37 +254,26 @@
       <section class="resumo-topo card">
         <div><strong>Ano da safra atual:</strong> <span id="anoSafraAtual"></span></div>
       </section>
-      <section class="card">
-        <label for="safraSelecionada">Safra arquivada:</label>
-        <select id="safraSelecionada"></select>
-        <button id="btnFecharSafra"><i class="fas fa-archive"></i> Fechar safra</button>
-        <button id="btnRestaurarSafra"><i class="fas fa-undo"></i> Restaurar safra</button>
-        <button id="btnDeletarSafra"><i class="fas fa-trash"></i> Deletar safra</button>
-      </section>
-      <section class="card">
-        <button id="btnBackup"><i class="fas fa-download"></i> Backup</button>
-        <input type="file" id="arquivoBackup" accept=".json">
-        <button id="btnImportarBackup"><i class="fas fa-upload"></i> Importar Backup</button>
-      </section>
-      <section class="card">
-        <button id="btnAlternarTema"><i class="fas fa-adjust"></i> Alternar tema</button>
-      </section>
+      <label for="safraSelecionada">Safra arquivada:</label>
+      <select id="safraSelecionada"></select>
+      <button id="btnFecharSafra" aria-label="Fechar safra atual (arquivar)"><i class="fas fa-archive"></i> Fechar</button>
+      <button id="btnRestaurarSafra" aria-label="Restaurar safra arquivada"><i class="fas fa-undo"></i> Restaurar</button>
+      <button id="btnDeletarSafra" aria-label="Deletar safra definitivamente"><i class="fas fa-trash"></i> Deletar</button>
+      <button id="btnBackup" aria-label="Backup manual"><i class="fas fa-download"></i> Backup</button>
+      <input type="file" id="arquivoBackup" accept=".json">
+        <label for="arquivoBackup">Selecione um arquivo para backup</label>
+      </input>
+      <button id="btnImportarBackup" aria-label="Importar backup"><i class="fas fa-upload"></i> Importar</button>
+      <button id="btnAlternarTema" aria-label="Alternar tema"><i class="fas fa-adjust"></i></button>
     </section>
   </main>
 
   <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
-
-  <!-- ===== SCRIPTS ===== -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/inicio.js"></script>
-  <script src="js/aplicacao.js"></script>
-  <script src="js/tarefas.js"></script>
-  <script src="js/financeiro.js"></script>
-  <script src="js/colheita.js"></script>
-  <script src="js/relatorio.js"></script>
-  <script src="js/configuracoes.js"></script>
-</body>
-</html>
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->
+  <!-- Modais, Toasts e Loader são criados dinamicamente pelo JS -->

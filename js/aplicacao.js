@@ -34,11 +34,9 @@ function adicionarAplicacao() {
   };
 
   if (indiceEdicaoAplicacao !== null) {
-    // Atualizar aplicação existente
     aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
     indiceEdicaoAplicacao = null;
   } else {
-    // Adicionar nova aplicação
     aplicacoes.push(novaAplicacao);
   }
 
@@ -58,13 +56,12 @@ function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
 
-  // Exibir o formulário e preencher os campos corretamente
   document.getElementById("formularioAplicacao").style.display = "block";
-  document.getElementById("dataApp").value = app.data || '';
-  document.getElementById("produtoApp").value = app.produto || '';
-  document.getElementById("dosagemApp").value = app.dosagem || '';
-  document.getElementById("tipoApp").value = app.tipo || 'Adubo';
-  document.getElementById("setorApp").value = app.setor || 'Setor 01';
+  document.getElementById("dataApp").value = app.data;
+  document.getElementById("produtoApp").value = app.produto;
+  document.getElementById("dosagemApp").value = app.dosagem;
+  document.getElementById("tipoApp").value = app.tipo;
+  document.getElementById("setorApp").value = app.setor;
 
   indiceEdicaoAplicacao = index;
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Edição";
@@ -87,8 +84,6 @@ function limparCamposAplicacao() {
   document.getElementById("dosagemApp").value = '';
   document.getElementById("tipoApp").value = 'Adubo';
   document.getElementById("setorApp").value = 'Setor 01';
-  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
-  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== FILTRAR APLICAÇÕES =====
@@ -105,22 +100,7 @@ function filtrarAplicacoes() {
       app.tipo.toLowerCase().includes(termo) ||
       app.setor.toLowerCase().includes(termo)
     )
-    .forEach((app, i) => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.innerHTML = `
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <div class="botoes-aplicacao">
-          <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
-      lista.appendChild(item);
-    });
+    .forEach((app, i) => adicionarItemAplicacao(app, i));
 }
 
 // ===== ATUALIZAR LISTAGEM =====
@@ -128,54 +108,45 @@ function atualizarAplicacoes() {
   const lista = document.getElementById("listaAplicacoes");
   if (!lista) return;
   lista.innerHTML = '';
-
-  aplicacoes.forEach((app, i) => {
-    const item = document.createElement('div');
-    item.className = 'item-aplicacao';
-    item.innerHTML = `
-      <div class="conteudo-item">
-        <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
-        <button class="botao-seta" onclick="alternarOpcoes(${i})">
-          <i class="fas fa-chevron-down"></i>
-        </button>
-      </div>
-      <div class="opcoes-aplicacao" id="opcoesAplicacao-${i}">
-        <button class="botao-circular azul" onclick="editarAplicacao(${i})">
-          <i class="fas fa-edit"></i> Editar
-        </button>
-        <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
-          <i class="fas fa-trash"></i> Excluir
-        </button>
-      </div>
-    `;
-    lista.appendChild(item);
-  });
+  aplicacoes.forEach((app, i) => adicionarItemAplicacao(app, i));
 }
 
-// ===== ALTERNAR OPÇÕES (EDITAR/EXCLUIR) =====
-function alternarOpcoes(index) {
-  const opcoes = document.getElementById(`opcoesAplicacao-${index}`);
-  const icone = opcoes.previousElementSibling.querySelector(".botao-seta i");
-  
-  if (opcoes.style.display === "flex") {
-    opcoes.style.display = "none";
-    icone.classList.replace("fa-chevron-up", "fa-chevron-down");
-  } else {
-    opcoes.style.display = "flex";
-    icone.classList.replace("fa-chevron-down", "fa-chevron-up");
-  }
+// ===== ADICIONAR ITEM NA LISTA =====
+function adicionarItemAplicacao(app, index) {
+  const lista = document.getElementById("listaAplicacoes");
+  const item = document.createElement('div');
+  item.className = 'item-aplicacao';
+  item.innerHTML = `
+    <div class="conteudo-item">
+      <span>${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+      <button class="botao-acao" onclick="toggleMenu(this)">
+        <i class="fas fa-ellipsis-v"></i>
+      </button>
+    </div>
+    <div class="menu-acoes">
+      <button onclick="editarAplicacao(${index})">Editar</button>
+      <button onclick="excluirAplicacao(${index})">Excluir</button>
+    </div>
+  `;
+  lista.appendChild(item);
+}
+
+// ===== ALTERNAR MENU DE AÇÕES =====
+function toggleMenu(button) {
+  const menu = button.nextElementSibling;
+  const isVisible = menu.style.display === 'block';
+  document.querySelectorAll('.menu-acoes').forEach(m => m.style.display = 'none');
+  menu.style.display = isVisible ? 'none' : 'block';
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  
   db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
     acc[idx] = app;
     return acc;
   }, {}));
-
   atualizarAplicacoes();
 }
 
@@ -199,32 +170,6 @@ function exportarAplicacoesCSV() {
   a.href = url;
   a.download = `aplicacoes_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
-}
-
-// ===== ALTERNAR FORMULÁRIO APLICAÇÃO =====
-function alternarFormularioAplicacao() {
-  const form = document.getElementById("formularioAplicacao");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-}
-
-// Função para alternar a exibição do menu de ações
-function toggleMenu(button) {
-  const menu = button.nextElementSibling;
-  const isVisible = menu.style.display === 'block';
-  // Fechar todos os menus abertos
-  document.querySelectorAll('.menu-acoes').forEach(m => m.style.display = 'none');
-  // Alternar visibilidade do menu atual
-  menu.style.display = isVisible ? 'none' : 'block';
-}
-
-// Função para filtrar as aplicações com base na pesquisa
-function filtrarAplicacoes() {
-  const termo = document.getElementById('campoPesquisaAplicacoes').value.toLowerCase();
-  const itens = document.querySelectorAll('.item-aplicacao');
-  itens.forEach(item => {
-    const texto = item.querySelector('.conteudo').innerText.toLowerCase();
-    item.style.display = texto.includes(termo) ? '' : 'none';
-  });
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

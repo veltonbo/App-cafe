@@ -200,12 +200,23 @@
   <div id="colheitaPagos" class="lista-colheita"></div>
 </div>
 
-    <!-- ===== RELATÓRIO ===== -->
     <div id="relatorio" class="aba">
-      <h2>Relatório</h2>
-      <button onclick="exportarPDF()">Exportar PDF</button>
-      <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+  <h2>Relatório</h2>
+  <button onclick="exportarPDF()">Exportar PDF</button>
+  <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
+  
+  <div class="graficos-container">
+    <div class="grafico">
+      <canvas id="graficoAplicacoes"></canvas>
     </div>
+    <div class="grafico">
+      <canvas id="graficoFinanceiro"></canvas>
+    </div>
+    <div class="grafico">
+      <canvas id="graficoColheita"></canvas>
+    </div>
+  </div>
+</div>
 
   <!-- Adicionar no aba configurações -->
   <div id="configuracoes" class="aba">

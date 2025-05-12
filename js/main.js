@@ -12,7 +12,7 @@ function mostrarAba(abaId) {
   });
 
   const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
+  const btn = document.querySelector(`.menu-superior button[onclick="mostrarAba('${abaId}')"]`);
   if (btn) btn.classList.add('active');
 
   localStorage.setItem('aba', abaId);
@@ -42,5 +42,68 @@ function inicializarApp() {
   document.dispatchEvent(new Event('dadosCarregados'));
 }
 
-// Executa ao carregar a página
-window.addEventListener('DOMContentLoaded', inicializarApp);
+// ===== TRANSIÇÃO SUAVE ENTRE ABAS =====
+document.querySelectorAll('.menu-superior button').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.aba').forEach(aba => {
+      aba.style.opacity = 0;
+      setTimeout(() => {
+        aba.style.opacity = 1;
+      }, 100);
+    });
+  });
+});
+
+// ===== MODO CLARO/ESCURO DINÂMICO =====
+function alternarTema() {
+  document.body.classList.toggle('claro');
+  const temaAtual = document.body.classList.contains('claro') ? 'claro' : 'escuro';
+  localStorage.setItem('tema', temaAtual);
+}
+
+// ===== MONITORAR O TEMA PREFERIDO =====
+document.addEventListener('DOMContentLoaded', () => {
+  inicializarApp();
+});
+
+// ===== VERIFICAR AUTENTICAÇÃO (OPCIONAL) =====
+function verificarAutenticacao() {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      console.log("Usuário autenticado:", user.email);
+    } else {
+      console.log("Usuário não autenticado.");
+    }
+  });
+}
+
+// ===== DESLOGAR USUÁRIO (OPCIONAL) =====
+function deslogar() {
+  firebase.auth().signOut().then(() => {
+    mostrarSucesso("Você foi deslogado com sucesso.");
+    window.location.reload();
+  }).catch((error) => {
+    mostrarErro("Erro ao deslogar: " + error.message);
+  });
+}
+
+// ===== FEEDBACK VISUAL (SWEETALERT) =====
+function mostrarSucesso(mensagem) {
+  Swal.fire({
+    icon: 'success',
+    title: 'Sucesso!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
+}
+
+function mostrarErro(mensagem) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Erro!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
+}

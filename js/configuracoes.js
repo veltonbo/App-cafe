@@ -4,18 +4,7 @@ let anoAtual = new Date().getFullYear();
 // ===== TEMA CLARO/ESCURO =====
 function alternarTema() {
   document.body.classList.toggle('claro');
-  const temaAtual = document.body.classList.contains('claro') ? 'claro' : 'escuro';
-  localStorage.setItem('tema', temaAtual);
-}
-
-// ===== CARREGAR TEMA PREFERIDO =====
-function carregarTema() {
-  const temaSalvo = localStorage.getItem('tema') || 'escuro';
-  if (temaSalvo === 'claro') {
-    document.body.classList.add('claro');
-  } else {
-    document.body.classList.remove('claro');
-  }
+  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
 }
 
 // ===== CARREGAR ANO DA SAFRA ATUAL =====
@@ -23,7 +12,7 @@ function carregarAnoSafra() {
   document.getElementById("anoSafraAtual").innerText = anoAtual;
 }
 
-// ====== GERENCIAR SAFRAS ======
+// ====== CARREGAR SAFRAS DISPONÍVEIS ======
 function carregarSafrasDisponiveis() {
   const select = document.getElementById("safraSelecionada");
   if (!select) return;
@@ -46,22 +35,30 @@ function carregarSafrasDisponiveis() {
 function fecharSafraAtual() {
   if (!confirm(`Deseja fechar a safra ${anoAtual}? Isso arquivará os dados atuais.`)) return;
 
-  const dadosAtuais = {
-    Aplicacoes: aplicacoes || [],
-    Tarefas: tarefas || [],
-    Financeiro: gastos || [],
-    Colheita: colheita || [],
-    ValorLata: valorLataGlobal || 0
-  };
-
-  db.ref(anoAtual.toString()).set(dadosAtuais).then(() => {
-    db.ref("Aplicacoes").remove();
-    db.ref("Tarefas").remove();
-    db.ref("Financeiro").remove();
-    db.ref("Colheita").remove();
-    db.ref("ValorLata").remove();
-    mostrarSucesso(`Safra ${anoAtual} fechada com sucesso.`);
-    location.reload();
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    const dados = {
+      Aplicacoes: app.val() || [],
+      Tarefas: tar.val() || [],
+      Financeiro: fin.val() || [],
+      Colheita: col.val() || [],
+      ValorLata: lata.val() || 0
+    };
+    return db.ref(anoAtual.toString()).set(dados).then(() => {
+      // Limpar dados da safra atual
+      db.ref("Aplicacoes").remove();
+      db.ref("Tarefas").remove();
+      db.ref("Financeiro").remove();
+      db.ref("Colheita").remove();
+      db.ref("ValorLata").remove();
+      alert(`Safra ${anoAtual} fechada com sucesso.`);
+      location.reload();
+    });
   });
 }
 
@@ -69,14 +66,16 @@ function fecharSafraAtual() {
 function restaurarSafra() {
   const safra = document.getElementById("safraSelecionada").value;
   if (!safra) {
-    mostrarErro("Selecione uma safra para restaurar.");
+    alert("Selecione uma safra para restaurar.");
     return;
   }
+
+  if (!confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`)) return;
 
   db.ref(safra).once("value").then(snap => {
     const dados = snap.val();
     if (!dados) {
-      mostrarErro("Dados da safra não encontrados.");
+      alert("Dados da safra não encontrados.");
       return;
     }
 
@@ -86,7 +85,7 @@ function restaurarSafra() {
     db.ref("Colheita").set(dados.Colheita || []);
     db.ref("ValorLata").set(dados.ValorLata || 0);
     
-    mostrarSucesso(`Safra ${safra} restaurada com sucesso.`);
+    alert(`Safra ${safra} restaurada com sucesso.`);
     location.reload();
   });
 }
@@ -95,42 +94,48 @@ function restaurarSafra() {
 function deletarSafra() {
   const safra = document.getElementById("safraSelecionada").value;
   if (!safra) {
-    mostrarErro("Selecione uma safra para deletar.");
+    alert("Selecione uma safra para deletar.");
     return;
   }
 
   if (!confirm(`Deseja excluir permanentemente a safra ${safra}? Esta ação não poderá ser desfeita.`)) return;
 
   db.ref(safra).remove().then(() => {
-    mostrarSucesso(`Safra ${safra} deletada com sucesso.`);
+    alert(`Safra ${safra} deletada com sucesso.`);
     carregarSafrasDisponiveis();
   });
 }
 
 // ===== BACKUP MANUAL =====
 function fazerBackup() {
-  const backup = {
-    Aplicacoes: aplicacoes || [],
-    Tarefas: tarefas || [],
-    Financeiro: gastos || [],
-    Colheita: colheita || [],
-    ValorLata: valorLataGlobal || 0
-  };
+  const backup = {};
+  Promise.all([
+    db.ref("Aplicacoes").once("value"),
+    db.ref("Tarefas").once("value"),
+    db.ref("Financeiro").once("value"),
+    db.ref("Colheita").once("value"),
+    db.ref("ValorLata").once("value")
+  ]).then(([app, tar, fin, col, lata]) => {
+    backup.Aplicacoes = app.val() || [];
+    backup.Tarefas = tar.val() || [];
+    backup.Financeiro = fin.val() || [];
+    backup.Colheita = col.val() || [];
+    backup.ValorLata = lata.val() || 0;
 
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `backup_manejo_cafe_${new Date().toISOString().split("T")[0]}.json`;
-  a.click();
-  mostrarSucesso("Backup realizado com sucesso.");
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
 }
 
 // ===== IMPORTAR BACKUP =====
 function importarBackup() {
   const input = document.getElementById("arquivoBackup");
   const file = input.files[0];
-  if (!file) return mostrarErro("Nenhum arquivo selecionado.");
+  if (!file) return alert("Nenhum arquivo selecionado.");
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -142,39 +147,18 @@ function importarBackup() {
       db.ref("Colheita").set(dados.Colheita || []);
       db.ref("ValorLata").set(dados.ValorLata || 0);
       
-      mostrarSucesso("Backup importado com sucesso.");
+      alert("Backup importado com sucesso.");
       location.reload();
-    } catch {
-      mostrarErro("Erro ao importar o backup. Verifique o arquivo.");
+    } catch (error) {
+      alert("Erro ao importar o backup. Verifique o arquivo.");
     }
   };
+
   reader.readAsText(file);
-}
-
-// ===== FEEDBACK VISUAL (SWEETALERT) =====
-function mostrarSucesso(mensagem) {
-  Swal.fire({
-    icon: 'success',
-    title: 'Sucesso!',
-    text: mensagem,
-    timer: 2000,
-    showConfirmButton: false
-  });
-}
-
-function mostrarErro(mensagem) {
-  Swal.fire({
-    icon: 'error',
-    title: 'Erro!',
-    text: mensagem,
-    timer: 2000,
-    showConfirmButton: false
-  });
 }
 
 // ===== INICIALIZAR CONFIGURAÇÕES =====
 document.addEventListener("dadosCarregados", () => {
-  carregarTema();
   carregarAnoSafra();
   carregarSafrasDisponiveis();
 });

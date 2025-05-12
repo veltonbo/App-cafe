@@ -1,19 +1,24 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
-let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
-async function carregarAplicacoes() {
-  const cache = localStorage.getItem('aplicacoes');
-  if (cache) {
-    aplicacoes = JSON.parse(cache);
+function carregarAplicacoes() {
+  db.ref('Aplicacoes').on('value', snap => {
+    const dados = snap.val();
+    if (dados && typeof dados === "object") {
+      aplicacoes = Object.values(dados).map(app => ({
+        data: app.data || '',
+        produto: app.produto || '',
+        dosagem: app.dosagem || '',
+        tipo: app.tipo || 'Adubo',
+        setor: app.setor || 'Setor 01'
+      }));
+    } else {
+      aplicacoes = [];
+    }
     atualizarAplicacoes();
-  }
-
-  const snapshot = await db.ref('Aplicacoes').once('value');
-  aplicacoes = snapshot.val() ? Object.values(snapshot.val()) : [];
-  localStorage.setItem('aplicacoes', JSON.stringify(aplicacoes));
-  atualizarAplicacoes();
+    atualizarSugestoesProdutoApp();
+  });
 }
 
 // ===== ADICIONAR OU EDITAR APLICAÇÃO =====
@@ -27,7 +32,7 @@ function adicionarAplicacao() {
   };
 
   if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
-    mostrarErro("Preencha todos os campos corretamente.");
+    alert("Preencha todos os campos corretamente.");
     return;
   }
 
@@ -40,6 +45,7 @@ function adicionarAplicacao() {
     aplicacoes.push(nova);
   }
 
+  // Salvar no Firebase
   db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, index) => {
     acc[index] = app;
     return acc;
@@ -47,7 +53,14 @@ function adicionarAplicacao() {
 
   atualizarAplicacoes();
   limparCamposAplicacao();
-  mostrarSucesso("Aplicação salva com sucesso!");
+}
+
+// ===== CANCELAR EDIÇÃO =====
+function cancelarEdicaoAplicacao() {
+  indiceEdicaoAplicacao = null;
+  limparCamposAplicacao();
+  document.getElementById("btnCancelarEdicaoApp").style.display = "none";
+  document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -74,7 +87,7 @@ function atualizarAplicacoes() {
         <button class="botao-circular azul" onclick="editarAplicacao(${i})">
           <i class="fas fa-edit"></i>
         </button>
-        <button class="botao-circular vermelho" onclick="confirmarExclusaoAplicacao(${i})">
+        <button class="botao-circular vermelho" onclick="excluirAplicacao(${i})">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -99,55 +112,39 @@ function editarAplicacao(index) {
   document.getElementById("btnCancelarEdicaoApp").style.display = "inline-block";
 }
 
-// ===== CONFIRMAR EXCLUSÃO =====
-function confirmarExclusaoAplicacao(index) {
-  Swal.fire({
-    title: 'Você tem certeza?',
-    text: "Esta ação não pode ser desfeita!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sim, excluir!',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      excluirAplicacao(index);
-    }
-  });
-}
-
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
+  if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
+  
   db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
     acc[idx] = app;
     return acc;
   }, {}));
 
   atualizarAplicacoes();
-  mostrarSucesso("Aplicação excluída com sucesso!");
 }
 
-// ===== FEEDBACK VISUAL (SWEETALERT) =====
-function mostrarSucesso(mensagem) {
-  Swal.fire({
-    icon: 'success',
-    title: 'Sucesso!',
-    text: mensagem,
-    timer: 2000,
-    showConfirmButton: false
-  });
+// ===== SUGESTÕES DE PRODUTO =====
+function atualizarSugestoesProdutoApp() {
+  const lista = document.getElementById("sugestoesProdutoApp");
+  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
+  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
 }
 
-function mostrarErro(mensagem) {
-  Swal.fire({
-    icon: 'error',
-    title: 'Erro!',
-    text: mensagem,
-    timer: 2000,
-    showConfirmButton: false
+// ===== EXPORTAR CSV DE APLICAÇÕES =====
+function exportarAplicacoesCSV() {
+  let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
+  aplicacoes.forEach(app => {
+    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
   });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `aplicacoes_manejo_cafe_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
 }
 
 // ===== INICIALIZAR APLICAÇÕES =====

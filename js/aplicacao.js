@@ -1,5 +1,6 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
+let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {

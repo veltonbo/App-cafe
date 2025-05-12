@@ -1,61 +1,103 @@
-// notificacoes.js
+// ===== IMPORTAÇÕES =====
 import { db } from './firebase-config.js';
 
-// Verificar tarefas pendentes
+// ===== VERIFICAR TAREFAS PENDENTES =====
 function verificarTarefasPendentes() {
   db.ref('Tarefas').once('value').then(snapshot => {
     const tarefas = snapshot.val() || [];
     const pendentes = tarefas.filter(t => !t.feita);
     
     if (pendentes.length > 0) {
-      mostrarNotificacao(`Você tem ${pendentes.length} tarefas pendentes!`);
+      mostrarNotificacao(`Você tem ${pendentes.length} tarefa(s) pendente(s)!`, 'tarefas');
+    }
+  }).catch(() => {
+    // Caso offline, tentar carregar do IndexedDB
+    if (typeof loadDataOffline === 'function') {
+      loadDataOffline('tarefas').then(tarefas => {
+        const pendentes = tarefas.filter(t => !t.feita);
+        if (pendentes.length > 0) {
+          mostrarNotificacao(`Você tem ${pendentes.length} tarefa(s) pendente(s) (offline)!`, 'tarefas');
+        }
+      });
     }
   });
 }
 
-// Verificar colheitas não pagas
+// ===== VERIFICAR COLHEITAS NÃO PAGAS =====
 function verificarColheitasNaoPagas() {
   db.ref('Colheita').once('value').then(snapshot => {
     const colheitas = snapshot.val() || [];
-    const naoPagas = colheitas.filter(c => !c.pago);
+    const naoPagas = colheitas.filter(c => !c.pago && c.pagoParcial < c.quantidade);
     
     if (naoPagas.length > 0) {
-      mostrarNotificacao(`Existem ${naoPagas.length} colheitas não pagas!`);
+      const totalLatas = naoPagas.reduce((sum, c) => sum + (c.quantidade - (c.pagoParcial || 0)), 0);
+      mostrarNotificacao(`Existem ${naoPagas.length} colheita(s) não paga(s) (${totalLatas.toFixed(2)} latas)!`, 'colheita');
+    }
+  }).catch(() => {
+    // Caso offline
+    if (typeof loadDataOffline === 'function') {
+      loadDataOffline('colheita').then(colheitas => {
+        const naoPagas = colheitas.filter(c => !c.pago && c.pagoParcial < c.quantidade);
+        if (naoPagas.length > 0) {
+          const totalLatas = naoPagas.reduce((sum, c) => sum + (c.quantidade - (c.pagoParcial || 0)), 0);
+          mostrarNotificacao(`Existem ${naoPagas.length} colheita(s) não paga(s) (${totalLatas.toFixed(2)} latas - offline)!`, 'colheita');
+        }
+      });
     }
   });
 }
 
-// Mostrar notificação
-function mostrarNotificacao(mensagem) {
-  if (!("Notification" in window)) return;
-
-  if (Notification.permission === "granted") {
-    new Notification("Manejo Café", { body: mensagem });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(permission => {
-      if (permission === "granted") {
-        new Notification("Manejo Café", { body: mensagem });
-      }
-    });
+// ===== MOSTRAR NOTIFICAÇÃO =====
+function mostrarNotificacao(mensagem, tipo = 'info') {
+  // Notificação do sistema
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification("Manejo Café", { body: mensagem });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification("Manejo Café", { body: mensagem });
+        }
+      });
+    }
   }
   
-  // Mostrar também como toast na página
+  // Toast na página
   const toast = document.createElement('div');
-  toast.className = 'toast-notification';
+  toast.className = `toast-notification ${tipo}`;
   toast.textContent = mensagem;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.onclick = () => toast.remove();
+  
+  toast.appendChild(closeBtn);
   document.body.appendChild(toast);
   
-  setTimeout(() => toast.remove(), 5000);
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => toast.remove(), 500);
+  }, 5000);
 }
 
-// Verificar periodicamente
+// ===== VERIFICAÇÃO PERIÓDICA =====
 setInterval(() => {
   verificarTarefasPendentes();
   verificarColheitasNaoPagas();
 }, 3600000); // A cada hora
 
-// Verificar na inicialização
+// ===== INICIALIZAÇÃO =====
 document.addEventListener('dadosCarregados', () => {
   verificarTarefasPendentes();
   verificarColheitasNaoPagas();
+});
+
+// ===== EVENTO DE TAREFA CONCLUÍDA =====
+document.addEventListener('tarefaConcluida', (e) => {
+  mostrarNotificacao(`Tarefa "${e.detail.descricao}" marcada como concluída!`, 'success');
+});
+
+// ===== EVENTO DE COLHEITA PAGA =====
+document.addEventListener('colheitaPaga', (e) => {
+  mostrarNotificacao(`Colheita de ${e.detail.quantidade} latas paga para ${e.detail.colhedor}!`, 'success');
 });

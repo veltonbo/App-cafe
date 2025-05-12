@@ -1,123 +1,117 @@
-// ====== VARIÁVEIS GLOBAIS ======
-const relatorios = {
-  aplicacoes: [],
-  tarefas: [],
-  financeiro: [],
-  colheita: []
-};
+// relatorio.js - versão atualizada
+// ====== GERAR GRÁFICOS ======
+function gerarGraficos() {
+  gerarGraficoAplicacoes();
+  gerarGraficoFinanceiro();
+  gerarGraficoColheita();
+}
 
-// ====== ATUALIZAR RELATÓRIO COMPLETO (Versão unificada) ======
-function atualizarRelatorioCompleto() {
-  const elementos = {
-    aplicacoes: "resumoRelAplicacoes",
-    tarefas: "resumoRelTarefas",
-    financeiro: "resumoRelFinanceiro",
-    colheita: "resumoRelColheita"
-  };
+function gerarGraficoAplicacoes() {
+  const ctx = document.getElementById('graficoAplicacoes').getContext('2d');
+  const tipos = [...new Set(relatorioAplicacoes.map(a => a.tipo))];
+  const dados = tipos.map(tipo => 
+    relatorioAplicacoes.filter(a => a.tipo === tipo).length
+  );
 
-  Object.keys(elementos).forEach(tipo => {
-    if (document.getElementById(elementos[tipo])) {
-      atualizarRelatorio(tipo);
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: tipos,
+      datasets: [{
+        data: dados,
+        backgroundColor: [
+          '#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Distribuição de Aplicações por Tipo'
+        }
+      }
     }
   });
 }
 
-// ====== FUNÇÃO GENÉRICA PARA ATUALIZAR RELATÓRIOS ======
-function atualizarRelatorio(tipo) {
-  const mapeamento = {
-    aplicacoes: dados => dados.map(app => 
-      `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`),
-    tarefas: dados => dados.map(t => 
-      `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`),
-    financeiro: dados => dados.map(g => 
-      `${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`),
-    colheita: dados => dados.map(c => 
-      `${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`)
-  };
+function gerarGraficoFinanceiro() {
+  const ctx = document.getElementById('graficoFinanceiro').getContext('2d');
+  const meses = [...Array(12).keys()].map(i => {
+    const date = new Date();
+    date.setMonth(i);
+    return date.toLocaleString('default', { month: 'short' });
+  });
 
-  const dados = window[tipo] || [];
-  relatorios[tipo] = dados;
-  const elemento = document.getElementById(`resumoRel${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-  
-  if (elemento) {
-    elemento.innerHTML = dados.length 
-      ? mapeamento[tipo](dados).join('<br>')
-      : `Nenhum ${tipo === 'colheita' ? 'registro de colheita' : tipo + ' registrada'}.`;
-  }
-}
+  const dados = meses.map((_, i) => {
+    return relatorioFinanceiro
+      .filter(g => new Date(g.data).getMonth() === i)
+      .reduce((sum, g) => sum + g.valor, 0);
+  });
 
-// ====== EXPORTAÇÃO DE RELATÓRIOS ======
-function exportarRelatorio(formato) {
-  const hoje = new Date().toISOString().split("T")[0];
-  
-  if (formato === 'pdf') {
-    exportarPDF();
-  } else {
-    exportarCSV();
-  }
-
-  // Funções internas
-  function exportarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let y = 20;
-
-    doc.setFontSize(16);
-    doc.text("Relatório Geral - Manejo Café", 20, y);
-    y += 10;
-
-    Object.keys(relatorios).forEach(tipo => {
-      if (relatorios[tipo].length) {
-        doc.setFontSize(12);
-        doc.text(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)}:`, 20, y);
-        y += 8;
-        
-        relatorios[tipo].forEach(item => {
-          const texto = mapeamentoPDF[tipo](item);
-          doc.text(texto, 20, y);
-          y += 6;
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-        });
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Gastos por Mês (R$)',
+        data: dados,
+        backgroundColor: '#4CAF50'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
       }
-    });
-
-    doc.save(`relatorio_manejo_cafe_${hoje}.pdf`);
-  }
-
-  function exportarCSV() {
-    let csv = "Tipo,Data,Descrição,Setor,Valor\n";
-    
-    // Mapeamento genérico para CSV
-    const processadores = {
-      aplicacoes: a => `Aplicação,${a.data},"${a.produto} (${a.dosagem})",${a.setor},`,
-      tarefas: t => `Tarefa,${t.data},"${t.descricao} (${t.prioridade})",${t.setor},`,
-      financeiro: g => `Financeiro,${g.data},"${g.produto}",,${g.valor.toFixed(2)}`,
-      colheita: c => `Colheita,${c.data},${c.colhedor},,${(c.quantidade * c.valorLata).toFixed(2)}`
-    };
-
-    Object.keys(relatorios).forEach(tipo => {
-      relatorios[tipo].forEach(item => {
-        csv += processadores[tipo](item) + "\n";
-      });
-    });
-
-    downloadArquivo(csv, `relatorio_manejo_cafe_${hoje}.csv`, "text/csv");
-  }
+    }
+  });
 }
 
-// Função auxiliar para download
-function downloadArquivo(conteudo, nome, tipo) {
-  const blob = new Blob([conteudo], { type: `${tipo};charset=utf-8;` });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nome;
-  a.click();
-  URL.revokeObjectURL(url);
+function gerarGraficoColheita() {
+  const ctx = document.getElementById('graficoColheita').getContext('2d');
+  const colhedores = [...new Set(relatorioColheita.map(c => c.colhedor))];
+  const dados = colhedores.map(colhedor =>
+    relatorioColheita
+      .filter(c => c.colhedor === colhedor)
+      .reduce((sum, c) => sum + c.quantidade, 0)
+  );
+
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: colhedores,
+      datasets: [{
+        data: dados,
+        backgroundColor: colhedores.map((_, i) => 
+          `hsl(${(i * 360 / colhedores.length)}, 70%, 50%)`
+        )
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Colheita por Colhedor'
+        }
+      }
+    }
+  });
 }
 
-// Inicialização
-document.addEventListener("dadosCarregados", atualizarRelatorioCompleto);
+// Atualizar função atualizarRelatorioCompleto
+function atualizarRelatorioCompleto() {
+  if (document.getElementById("resumoRelAplicacoes")) atualizarRelatorioAplicacoes();
+  if (document.getElementById("resumoRelTarefas")) atualizarRelatorioTarefas();
+  if (document.getElementById("resumoRelFinanceiro")) atualizarRelatorioFinanceiro();
+  if (document.getElementById("resumoRelColheita")) atualizarRelatorioColheita();
+  
+  // Gerar gráficos se a aba de relatório estiver visível
+  if (document.getElementById('relatorio').style.display === 'block') {
+    gerarGraficos();
+  }
+}

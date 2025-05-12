@@ -102,6 +102,48 @@ async function adicionarTarefa() {
   }
 }
 
+// ===== MARCAR TAREFA COMO CONCLUÍDA =====
+async function marcarTarefaComoConcluida(index, concluida = true) {
+  try {
+    const tarefa = tarefas[index];
+    if (!tarefa) return;
+
+    tarefa.feita = concluida;
+    tarefa.dataConclusao = concluida ? new Date().toISOString().split('T')[0] : null;
+
+    if (concluida) {
+      tarefasFeitas.push(tarefa);
+      tarefas.splice(index, 1);
+      
+      // Disparar evento personalizado
+      document.dispatchEvent(new CustomEvent('tarefaConcluida', {
+        detail: {
+          descricao: tarefa.descricao,
+          data: tarefa.data,
+          setor: tarefa.setor
+        }
+      }));
+    } else {
+      tarefas.push(tarefa);
+      tarefasFeitas = tarefasFeitas.filter(t => t !== tarefa);
+    }
+
+    const todasTarefas = [...tarefas, ...tarefasFeitas];
+    
+    if (navigator.onLine) {
+      await db.ref('Tarefas').set(todasTarefas);
+    } else {
+      await saveDataOffline('tarefas', todasTarefas);
+      mostrarNotificacao('Alteração salva localmente. Será sincronizada quando online.', 'info');
+    }
+
+    atualizarTarefas();
+  } catch (error) {
+    console.error('Erro ao atualizar tarefa:', error);
+    mostrarNotificacao('Erro ao atualizar tarefa: ' + error.message, 'error');
+  }
+}
+
 // ===== EDITAR TAREFA =====
 function editarTarefa(index) {
   if (!auth.currentUser) {
@@ -122,44 +164,7 @@ function editarTarefa(index) {
 
   indiceEdicaoTarefa = index;
   document.getElementById("btnCancelarEdicaoTarefa").style.display = "inline-block";
-}
-
-// ===== MARCAR TAREFA COMO CONCLUÍDA =====
-async function marcarTarefaComoConcluida(index) {
-  if (!auth.currentUser) {
-    mostrarNotificacao('Você precisa estar logado para marcar tarefas', 'error');
-    return;
-  }
-
-  try {
-    const tarefa = tarefas[index];
-    tarefa.feita = true;
-    tarefa.dataConclusao = new Date().toISOString().split('T')[0];
-    
-    tarefasFeitas.push(tarefa);
-    tarefas.splice(index, 1);
-
-    const todasTarefas = [...tarefas, ...tarefasFeitas];
-    
-    if (navigator.onLine) {
-      await db.ref('Tarefas').set(todasTarefas);
-    } else {
-      await saveDataOffline('tarefas', todasTarefas);
-      mostrarNotificacao('Tarefa concluída salva localmente. Será sincronizada quando online.', 'info');
-    }
-
-    // Disparar evento de notificação
-    document.dispatchEvent(new CustomEvent('tarefaConcluida', {
-      detail: {
-        descricao: tarefa.descricao
-      }
-    }));
-
-    atualizarTarefas();
-  } catch (error) {
-    console.error('Erro ao marcar tarefa como concluída:', error);
-    mostrarNotificacao('Erro ao marcar tarefa como concluída: ' + error.message, 'error');
-  }
+  mostrarCamposAplicacao();
 }
 
 // ===== CANCELAR EDIÇÃO =====
@@ -169,7 +174,7 @@ function cancelarEdicaoTarefa() {
   document.getElementById("btnCancelarEdicaoTarefa").style.display = "none";
 }
 
-// ===== LIMPAR CAMPOS =====
+// ===== LIMPAR CAMPOS DE TAREFA =====
 function limparCamposTarefa() {
   document.getElementById('dataTarefa').value = '';
   document.getElementById('descricaoTarefa').value = '';
@@ -190,23 +195,24 @@ function atualizarTarefas() {
   listaFeitas.innerHTML = '';
 
   // Ordenar tarefas por prioridade e data
-  const tarefasOrdenadas = [...tarefas].sort((a, b) => {
+  tarefas.sort((a, b) => {
     const prioridades = { 'Alta': 1, 'Média': 2, 'Baixa': 3 };
     return prioridades[a.prioridade] - prioridades[b.prioridade] || 
            new Date(a.data) - new Date(b.data);
   });
 
   // Ordenar tarefas feitas por data de conclusão (mais recente primeiro)
-  const feitasOrdenadas = [...tarefasFeitas].sort((a, b) => 
-    new Date(b.dataConclusao || b.data) - new Date(a.dataConclusao || a.data)
-  );
+  tarefasFeitas.sort((a, b) => new Date(b.dataConclusao || b.data) - new Date(a.dataConclusao || a.data));
 
   // Tarefas pendentes
-  tarefasOrdenadas.forEach((t, index) => {
+  tarefas.forEach((t, index) => {
     const item = document.createElement('div');
     item.className = 'item';
     item.innerHTML = `
-      <span>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</span>
+      <span>
+        <strong>${t.prioridade}</strong> - ${t.data} - ${t.descricao} - ${t.setor}
+        ${t.eAplicacao ? ` (${t.tipo}: ${t.dosagem})` : ''}
+      </span>
       <div class="botoes-tarefa">
         <button class="botao-circular verde" onclick="marcarTarefaComoConcluida(${index})">
           <i class="fas fa-check"></i>
@@ -223,12 +229,19 @@ function atualizarTarefas() {
   });
 
   // Tarefas concluídas
-  feitasOrdenadas.forEach((t, index) => {
+  tarefasFeitas.forEach((t, index) => {
     const item = document.createElement('div');
     item.className = 'item concluida';
     item.innerHTML = `
-      <span><s>${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}</s></span>
+      <span>
+        <s>${t.prioridade} - ${t.data} - ${t.descricao} - ${t.setor}
+        ${t.eAplicacao ? ` (${t.tipo}: ${t.dosagem})` : ''}</s>
+        ${t.dataConclusao ? `<br><small>Concluída em: ${t.dataConclusao}</small>` : ''}
+      </span>
       <div class="botoes-tarefa">
+        <button class="botao-circular amarelo" onclick="marcarTarefaComoConcluida(${index}, false)">
+          <i class="fas fa-undo"></i>
+        </button>
         <button class="botao-circular vermelho" onclick="excluirTarefa(${index}, true)">
           <i class="fas fa-trash"></i>
         </button>
@@ -257,7 +270,7 @@ async function excluirTarefa(index, isFeita = false) {
       await saveDataOffline('tarefas', todasTarefas);
       mostrarNotificacao('Exclusão salva localmente. Será sincronizada quando online.', 'info');
     }
-    
+
     atualizarTarefas();
   } catch (error) {
     console.error('Erro ao excluir tarefa:', error);

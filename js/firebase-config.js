@@ -1,29 +1,20 @@
-// ===== Firebase Config =====
-// IMPORTANTE: Configure essas variáveis no seu ambiente de deploy
+// firebase-config.js - versão atualizada
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "manej-cafe.firebaseapp.com",
-  databaseURL: process.env.FIREBASE_DB_URL || "https://manej-cafe-default-rtdb.firebaseio.com",
-  projectId: process.env.FIREBASE_PROJECT_ID || "manej-cafe",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "manej-cafe.appspot.com",
-  messagingSenderId: process.env.FIREBASE_SENDER_ID || "808931200634",
-  appId: process.env.FIREBASE_APP_ID || "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+  authDomain: "manej-cafe.firebaseapp.com",
+  databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+  projectId: "manej-cafe",
+  storageBucket: "manej-cafe.appspot.com",
+  messagingSenderId: "808931200634",
+  appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
 };
 
-// Inicialização segura
 if (!firebase.apps.length) {
-  try {
-    firebase.initializeApp(firebaseConfig);
-    // Ativa persistência offline (opcional)
-    firebase.database().enablePersistence()
-      .catch(err => console.error("Persistência offline falhou: ", err));
-  } catch (error) {
-    console.error("Erro na inicialização do Firebase: ", error);
-  }
+  firebase.initializeApp(firebaseConfig);
 }
-const db = firebase.database();
 
-// Função segura para desconectar
-function desconectarFirebase() {
-  firebase.database().goOffline();
-}
+const db = firebase.database();
+const auth = firebase.auth(); // Adicionado
+
+// Exportar auth para uso em outros arquivos
+export { db, auth };

@@ -392,3 +392,12 @@ body.claro .item span {
 }
 
 body.claro .
+
+/* Em style.css */
+    .item.tarefa-feita span {
+        text-decoration: line-through;
+        color: #888; /* Cor mais clara para texto de tarefa feita */
+    }
+    body.claro .item.tarefa-feita span {
+        color: #777;
+    }

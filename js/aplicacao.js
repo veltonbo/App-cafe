@@ -1,6 +1,6 @@
 // ===== VARIÁVEIS GLOBAIS =====
 let aplicacoes = [];
-let indiceEdicaoAplicacao = null; // Variável para controlar a edição
+let indiceEdicaoAplicacao = null;
 
 // ===== CARREGAR APLICAÇÕES =====
 function carregarAplicacoes() {
@@ -25,13 +25,7 @@ function adicionarAplicacao() {
     return;
   }
 
-  const novaAplicacao = {
-    data: dataApp,
-    produto: produtoApp,
-    dosagem: dosagemApp,
-    tipo: tipoApp,
-    setor: setorApp
-  };
+  const novaAplicacao = { data: dataApp, produto: produtoApp, dosagem: dosagemApp, tipo: tipoApp, setor: setorApp };
 
   if (indiceEdicaoAplicacao !== null) {
     aplicacoes[indiceEdicaoAplicacao] = novaAplicacao;
@@ -40,15 +34,19 @@ function adicionarAplicacao() {
     aplicacoes.push(novaAplicacao);
   }
 
-  // Salvar no Firebase
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, index) => {
-    acc[index] = app;
-    return acc;
-  }, {}));
-
-  atualizarAplicacoes();
+  salvarAplicacoes();
   limparCamposAplicacao();
-  alternarFormularioAplicacao(false);
+}
+
+// ===== SALVAR NO FIREBASE =====
+function salvarAplicacoes() {
+  db.ref('Aplicacoes').set(
+    aplicacoes.reduce((acc, app, index) => {
+      acc[index] = app;
+      return acc;
+    }, {})
+  );
+  atualizarAplicacoes();
 }
 
 // ===== EDITAR APLICAÇÃO =====
@@ -56,7 +54,6 @@ function editarAplicacao(index) {
   const app = aplicacoes[index];
   if (!app) return;
 
-  document.getElementById("formularioAplicacao").style.display = "block";
   document.getElementById("dataApp").value = app.data;
   document.getElementById("produtoApp").value = app.produto;
   document.getElementById("dosagemApp").value = app.dosagem;
@@ -74,7 +71,6 @@ function cancelarEdicaoAplicacao() {
   limparCamposAplicacao();
   document.getElementById("btnCancelarEdicaoApp").style.display = "none";
   document.getElementById("btnSalvarAplicacao").innerText = "Salvar Aplicação";
-  document.getElementById("formularioAplicacao").style.display = "none";
 }
 
 // ===== LIMPAR CAMPOS =====
@@ -89,26 +85,25 @@ function limparCamposAplicacao() {
 // ===== FILTRAR APLICAÇÕES =====
 function filtrarAplicacoes() {
   const termo = document.getElementById("campoPesquisaAplicacoes").value.toLowerCase();
+  atualizarAplicacoes(termo);
+}
+
+// ===== ATUALIZAR LISTAGEM =====
+function atualizarAplicacoes(filtro = "") {
   const lista = document.getElementById("listaAplicacoes");
   lista.innerHTML = '';
 
   aplicacoes
-    .filter(app => 
-      app.data.toLowerCase().includes(termo) ||
-      app.produto.toLowerCase().includes(termo) ||
-      app.dosagem.toLowerCase().includes(termo) ||
-      app.tipo.toLowerCase().includes(termo) ||
-      app.setor.toLowerCase().includes(termo)
-    )
+    .filter(app => {
+      return (
+        app.data.toLowerCase().includes(filtro) ||
+        app.produto.toLowerCase().includes(filtro) ||
+        app.dosagem.toLowerCase().includes(filtro) ||
+        app.tipo.toLowerCase().includes(filtro) ||
+        app.setor.toLowerCase().includes(filtro)
+      );
+    })
     .forEach((app, i) => adicionarItemAplicacao(app, i));
-}
-
-// ===== ATUALIZAR LISTAGEM =====
-function atualizarAplicacoes() {
-  const lista = document.getElementById("listaAplicacoes");
-  if (!lista) return;
-  lista.innerHTML = '';
-  aplicacoes.forEach((app, i) => adicionarItemAplicacao(app, i));
 }
 
 // ===== ADICIONAR ITEM NA LISTA =====
@@ -122,32 +117,30 @@ function adicionarItemAplicacao(app, index) {
       <button class="botao-acao" onclick="toggleMenu(this)">
         <i class="fas fa-ellipsis-v"></i>
       </button>
-    </div>
-    <div class="menu-acoes">
-      <button onclick="editarAplicacao(${index})">Editar</button>
-      <button onclick="excluirAplicacao(${index})">Excluir</button>
+      <div class="menu-acoes">
+        <button onclick="editarAplicacao(${index})">Editar</button>
+        <button onclick="excluirAplicacao(${index})">Excluir</button>
+      </div>
     </div>
   `;
   lista.appendChild(item);
 }
 
-// ===== ALTERNAR MENU DE AÇÕES =====
+// ===== TOGGLE MENU DE AÇÕES =====
 function toggleMenu(button) {
+  document.querySelectorAll('.menu-acoes').forEach(menu => {
+    if (menu !== button.nextElementSibling) menu.style.display = 'none';
+  });
+
   const menu = button.nextElementSibling;
-  const isVisible = menu.style.display === 'block';
-  document.querySelectorAll('.menu-acoes').forEach(m => m.style.display = 'none');
-  menu.style.display = isVisible ? 'none' : 'block';
+  menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
 }
 
 // ===== EXCLUIR APLICAÇÃO =====
 function excluirAplicacao(index) {
   if (!confirm("Deseja excluir esta aplicação?")) return;
   aplicacoes.splice(index, 1);
-  db.ref('Aplicacoes').set(aplicacoes.reduce((acc, app, idx) => {
-    acc[idx] = app;
-    return acc;
-  }, {}));
-  atualizarAplicacoes();
+  salvarAplicacoes();
 }
 
 // ===== SUGESTÕES DE PRODUTO =====
@@ -172,16 +165,5 @@ function exportarAplicacoesCSV() {
   a.click();
 }
 
-// ===== TOGGLE MENU DE AÇÕES =====
-function toggleMenu(button) {
-  // Fechar todos os menus abertos
-  document.querySelectorAll(".botao-acao").forEach(btn => {
-    if (btn !== button) btn.classList.remove("active");
-  });
-
-  // Alternar o menu do botão clicado
-  button.classList.toggle("active");
-}
-
 // ===== INICIALIZAR APLICAÇÕES =====
-document.addEventListener("dadosCarregados", carregarAplicacoes);
+document.addEventListener("DOMContentLoaded", carregarAplicacoes);

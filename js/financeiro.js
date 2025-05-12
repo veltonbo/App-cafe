@@ -2,98 +2,80 @@
 let gastos = [];
 let indiceEdicaoGasto = null;
 
-// ===== INICIALIZAR FINANCEIRO =====
-function inicializarFinanceiro() {
-  carregarFinanceiro();
-  document.getElementById("btnCancelarFinanceiro").addEventListener("click", cancelarEdicaoFinanceiro);
-}
-
-// ===== ALTERNAR FORMULÁRIO FINANCEIRO =====
-function alternarFormularioFinanceiro() {
-  const form = document.getElementById("formularioFinanceiro");
-  form.style.display = form.style.display === "none" ? "block" : "none";
-  resetarFormularioFinanceiro();
-}
-
-// ===== MOSTRAR CAMPOS DE PARCELAS =====
-function mostrarCamposParcelas() {
-  const camposParcelas = document.getElementById("camposParcelas");
-  const parcelado = document.getElementById("parceladoFin").checked;
-  camposParcelas.style.display = parcelado ? "block" : "none";
-}
-
 // ===== CARREGAR FINANCEIRO =====
-function carregarFinanceiro() {
-  db.ref("Financeiro").on("value", (snapshot) => {
-    const dados = snapshot.val();
-    gastos = dados ? Object.values(dados) : [];
+async function carregarFinanceiro() {
+  const cache = localStorage.getItem('financeiro');
+  if (cache) {
+    gastos = JSON.parse(cache);
     atualizarFinanceiro();
-  });
+  }
+
+  const snapshot = await db.ref('Financeiro').once('value');
+  gastos = snapshot.val() ? Object.values(snapshot.val()) : [];
+  localStorage.setItem('financeiro', JSON.stringify(gastos));
+  atualizarFinanceiro();
 }
 
 // ===== ADICIONAR OU EDITAR GASTO =====
 function adicionarFinanceiro() {
-  const data = dataFin.value;
-  const produto = produtoFin.value.trim();
-  const descricao = descricaoFin.value.trim();
-  const valor = parseFloat(valorFin.value);
-  const tipo = tipoFin.value;
-  const parcelado = parceladoFin.checked;
-  const numParcelas = parcelado ? parseInt(parcelasFin.value) || 1 : 1;
+  const novoGasto = {
+    data: document.getElementById("dataFin").value,
+    produto: document.getElementById("produtoFin").value.trim(),
+    descricao: document.getElementById("descricaoFin").value.trim(),
+    valor: parseFloat(document.getElementById("valorFin").value),
+    tipo: document.getElementById("tipoFin").value,
+    parcelado: document.getElementById("parceladoFin").checked,
+    parcelas: document.getElementById("parceladoFin").checked ? parseInt(document.getElementById("parcelasFin").value) || 1 : 1
+  };
 
-  if (!data || !produto || isNaN(valor) || valor <= 0) {
-    alert("Preencha todos os campos corretamente!");
+  if (!novoGasto.data || !novoGasto.produto || isNaN(novoGasto.valor) || novoGasto.valor <= 0) {
+    mostrarErro("Preencha todos os campos corretamente.");
     return;
   }
 
   if (indiceEdicaoGasto !== null) {
-    // Editar gasto existente
-    gastos[indiceEdicaoGasto] = { data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas };
+    gastos[indiceEdicaoGasto] = novoGasto;
     indiceEdicaoGasto = null;
+    document.getElementById("btnCancelarFinanceiro").style.display = "none";
   } else {
-    // Adicionar novo gasto
-    gastos.push({ data, produto, descricao, valor, tipo, parcelado, parcelas: numParcelas });
+    gastos.push(novoGasto);
   }
 
-  db.ref("Financeiro").set(gastos);
+  db.ref('Financeiro').set(gastos);
   atualizarFinanceiro();
-  resetarFormularioFinanceiro();
-  alternarFormularioFinanceiro();
+  limparCamposFinanceiro();
+  mostrarSucesso("Gasto salvo com sucesso!");
 }
 
-// ===== CANCELAR EDIÇÃO =====
-function cancelarEdicaoFinanceiro() {
-  resetarFormularioFinanceiro();
-  alternarFormularioFinanceiro();
+// ===== LIMPAR CAMPOS =====
+function limparCamposFinanceiro() {
+  document.getElementById("dataFin").value = '';
+  document.getElementById("produtoFin").value = '';
+  document.getElementById("descricaoFin").value = '';
+  document.getElementById("valorFin").value = '';
+  document.getElementById("tipoFin").value = 'Adubo';
+  document.getElementById("parceladoFin").checked = false;
+  document.getElementById("parcelasFin").value = '';
+  document.getElementById("camposParcelas").style.display = 'none';
 }
 
-// ===== RESETAR FORMULÁRIO =====
-function resetarFormularioFinanceiro() {
-  dataFin.value = "";
-  produtoFin.value = "";
-  descricaoFin.value = "";
-  valorFin.value = "";
-  tipoFin.value = "Adubo";
-  parcelasFin.value = "";
-  parceladoFin.checked = false;
-  mostrarCamposParcelas();
-  indiceEdicaoGasto = null;
-  document.getElementById("btnCancelarFinanceiro").style.display = "none";
-}
-
-// ===== ATUALIZAR LISTAGEM DE GASTOS =====
+// ===== ATUALIZAR LISTAGEM =====
 function atualizarFinanceiro() {
   const lista = document.getElementById("financeiroLista");
   lista.innerHTML = '';
 
-  gastos.forEach((gasto, i) => {
+  gastos.forEach((g, index) => {
     const item = document.createElement("div");
     item.className = "item";
     item.innerHTML = `
-      <span>${gasto.data} - ${gasto.produto} - R$ ${gasto.valor.toFixed(2)} (${gasto.tipo})</span>
+      <span>${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})</span>
       <div class="botoes-financeiro">
-        <button class="botao-circular azul" onclick="editarFinanceiro(${i})"><i class="fas fa-edit"></i></button>
-        <button class="botao-circular vermelho" onclick="excluirFinanceiro(${i})"><i class="fas fa-trash"></i></button>
+        <button class="botao-circular azul" onclick="editarFinanceiro(${index})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="botao-circular vermelho" onclick="confirmarExclusaoGasto(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
       </div>
     `;
     lista.appendChild(item);
@@ -105,28 +87,65 @@ function editarFinanceiro(index) {
   const gasto = gastos[index];
   if (!gasto) return;
 
-  dataFin.value = gasto.data;
-  produtoFin.value = gasto.produto;
-  descricaoFin.value = gasto.descricao || "";
-  valorFin.value = gasto.valor;
-  tipoFin.value = gasto.tipo;
-  parceladoFin.checked = gasto.parcelado;
-  mostrarCamposParcelas();
-  parcelasFin.value = gasto.parcelas || "";
+  document.getElementById("dataFin").value = gasto.data;
+  document.getElementById("produtoFin").value = gasto.produto;
+  document.getElementById("descricaoFin").value = gasto.descricao;
+  document.getElementById("valorFin").value = gasto.valor;
+  document.getElementById("tipoFin").value = gasto.tipo;
+  document.getElementById("parceladoFin").checked = gasto.parcelado;
+  document.getElementById("parcelasFin").value = gasto.parcelas;
+  document.getElementById("camposParcelas").style.display = gasto.parcelado ? 'block' : 'none';
 
   indiceEdicaoGasto = index;
   document.getElementById("btnCancelarFinanceiro").style.display = "inline-block";
-  document.getElementById("btnSalvarFinanceiro").innerText = "Salvar Edição";
-  document.getElementById("formularioFinanceiro").style.display = "block";
+}
+
+// ===== CONFIRMAR EXCLUSÃO =====
+function confirmarExclusaoGasto(index) {
+  Swal.fire({
+    title: 'Você tem certeza?',
+    text: "Esta ação não pode ser desfeita!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sim, excluir!',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      excluirFinanceiro(index);
+    }
+  });
 }
 
 // ===== EXCLUIR GASTO =====
 function excluirFinanceiro(index) {
-  if (!confirm("Deseja excluir este lançamento financeiro?")) return;
   gastos.splice(index, 1);
-  db.ref("Financeiro").set(gastos);
+  db.ref('Financeiro').set(gastos);
   atualizarFinanceiro();
+  mostrarSucesso("Gasto excluído com sucesso!");
+}
+
+// ===== FEEDBACK VISUAL (SWEETALERT) =====
+function mostrarSucesso(mensagem) {
+  Swal.fire({
+    icon: 'success',
+    title: 'Sucesso!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
+}
+
+function mostrarErro(mensagem) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Erro!',
+    text: mensagem,
+    timer: 2000,
+    showConfirmButton: false
+  });
 }
 
 // ===== INICIALIZAR FINANCEIRO =====
-document.addEventListener("dadosCarregados", inicializarFinanceiro);
+document.addEventListener("dadosCarregados", carregarFinanceiro);

@@ -172,5 +172,16 @@ function exportarAplicacoesCSV() {
   a.click();
 }
 
+// ===== TOGGLE MENU DE AÇÕES =====
+function toggleMenu(button) {
+  // Fechar todos os menus abertos
+  document.querySelectorAll(".botao-acao").forEach(btn => {
+    if (btn !== button) btn.classList.remove("active");
+  });
+
+  // Alternar o menu do botão clicado
+  button.classList.toggle("active");
+}
+
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);

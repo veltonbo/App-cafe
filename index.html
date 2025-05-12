@@ -192,14 +192,20 @@
       <button onclick="exportarRelatorioCSV()">Exportar CSV</button>
     </div>
 
-    <!-- ===== CONFIGURAÇÕES ===== -->
-    <div id="configuracoes" class="aba">
-      <h2>Configurações</h2>
-      <button onclick="alternarTema()">Alternar Tema</button>
-      <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
-      <button onclick="fazerBackup()">Fazer Backup</button>
-      <input type="file" id="arquivoBackup" onchange="importarBackup()">
-    </div>
-  </div>
+  <!-- Adicionar no aba configurações -->
+  <div id="configuracoes" class="aba">
+  <h2>Configurações</h2>
+  <button onclick="alternarTema()">Alternar Tema</button>
+  <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
+  
+  <!-- Elementos adicionados -->
+  <select id="safraSelecionada"></select>
+  <button onclick="restaurarSafra()">Restaurar Safra</button>
+  <button onclick="deletarSafra()">Deletar Safra</button>
+  <button onclick="fecharSafraAtual()">Fechar Safra Atual</button>
+  
+  <button onclick="fazerBackup()">Fazer Backup</button>
+  <input type="file" id="arquivoBackup" onchange="importarBackup()">
+</div>
 </body>
 </html>

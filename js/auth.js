@@ -53,3 +53,12 @@ if (logoutButton) {
 
 // Exportar funções
 export { login, logout };
+
+function recuperarSenha() {
+  const email = prompt("Digite seu e-mail para recuperação:");
+  if (email) {
+    auth.sendPasswordResetEmail(email)
+      .then(() => alert("E-mail de recuperação enviado!"))
+      .catch(error => alert("Erro: " + error.message));
+  }
+}

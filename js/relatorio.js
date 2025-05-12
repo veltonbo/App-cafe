@@ -6,14 +6,6 @@ let relatorioColheita = [];
 
 // ====== ATUALIZAR RELATÓRIO COMPLETO ======
 function atualizarRelatorioCompleto() {
-  atualizarRelatorioAplicacoes();
-  atualizarRelatorioTarefas();
-  atualizarRelatorioFinanceiro();
-  atualizarRelatorioColheita();
-}
-
-// ====== ATUALIZAR RELATÓRIO COMPLETO ======
-function atualizarRelatorioCompleto() {
   if (document.getElementById("resumoRelAplicacoes")) atualizarRelatorioAplicacoes();
   if (document.getElementById("resumoRelTarefas")) atualizarRelatorioTarefas();
   if (document.getElementById("resumoRelFinanceiro")) atualizarRelatorioFinanceiro();

@@ -145,7 +145,7 @@ body.claro .menu-superior button:focus {
   transform: scale(1.08);
 }
 
-/* ===== FORMULÁRIOS ===== */
+/* ===== FORMULÁRIOS COM FLOATING LABEL ===== */
 form {
   background: var(--item-bg-dark);
   padding: 32px 28px 22px 28px;
@@ -162,20 +162,15 @@ body.claro form {
   background: var(--item-bg-light);
 }
 
-form label {
-  display: block;
-  margin-top: 18px;
-  margin-bottom: 4px;
-  font-weight: 500;
-  font-size: 1.08em;
-  color: inherit;
-  letter-spacing: 0.01em;
+.input-float {
+  position: relative;
+  margin-bottom: 18px;
 }
-
-input, select, textarea {
+.input-float input,
+.input-float select,
+.input-float textarea {
   width: 100%;
-  padding: 14px 12px;
-  margin-bottom: 8px;
+  padding: 18px 12px 8px 12px;
   border-radius: 10px;
   border: 1.5px solid var(--input-border-dark);
   background: var(--input-bg-dark);
@@ -186,20 +181,52 @@ input, select, textarea {
   outline: none;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
-
-input:focus, select:focus, textarea:focus {
+.input-float input:focus,
+.input-float select:focus,
+.input-float textarea:focus {
   border-color: var(--primary);
   background: #232f2b;
   box-shadow: 0 0 0 2px rgba(67,160,71,0.13);
 }
-
-body.claro input, body.claro select, body.claro textarea {
+body.claro .input-float input,
+body.claro .input-float select,
+body.claro .input-float textarea {
   background: var(--input-bg-light);
   color: var(--text-light);
   border: 1.5px solid var(--input-border-light);
 }
-body.claro input:focus, body.claro select:focus, body.claro textarea:focus {
+body.claro .input-float input:focus,
+body.claro .input-float select:focus,
+body.claro .input-float textarea:focus {
   background: #f0f4f8;
+}
+
+.input-float label {
+  position: absolute;
+  left: 14px;
+  top: 18px;
+  color: #888;
+  font-size: 1em;
+  pointer-events: none;
+  transition: 0.18s;
+  background: transparent;
+  z-index: 2;
+}
+.input-float input:focus + label,
+.input-float input:not(:placeholder-shown):not([value=""]) + label,
+.input-float select:focus + label,
+.input-float select:not([value=""]) + label,
+.input-float textarea:focus + label,
+.input-float textarea:not(:placeholder-shown):not([value=""]) + label {
+  top: 2px;
+  left: 10px;
+  font-size: 0.85em;
+  color: var(--primary);
+  background: var(--item-bg-light);
+  padding: 0 4px;
+}
+body:not(.claro) .input-float label {
+  background: var(--item-bg-dark);
 }
 
 input[type="checkbox"] {
@@ -254,10 +281,9 @@ body.claro .btn-secondary:hover {
   background: #ccc;
 }
 
-/* ===== LISTAGEM DE ITENS ===== */
+/* ===== LISTAGEM DE ITENS EM CARD ===== */
 .item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
   margin: 16px 0;
@@ -279,6 +305,17 @@ body.claro .item:hover {
   background: #f0f4f8;
 }
 
+.item .avatar-inicial {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 1.1em;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
 .item span {
   flex: 1;
   color: inherit;
@@ -294,6 +331,18 @@ body.claro .item:hover {
 body.claro .tarefa-feita span, body.claro .item.tarefa-feita span {
   color: #aaa;
 }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.92em;
+  font-weight: 500;
+  margin-left: 8px;
+}
+.badge-pago { background: #e8f5e9; color: #388e3c; }
+.badge-pendente { background: #fff3e0; color: #ffa000; }
 
 /* ===== BOTÕES DE AÇÃO NA LISTA ===== */
 .item .botao-circular {
@@ -477,26 +526,4 @@ body.claro .erro-campo {
   }
   .item {
     flex-direction: column;
-    align-items: flex-start;
-    padding: 10px 6px;
-  }
-  .form-actions {
-    flex-direction: column;
-    gap: 6px;
-  }
-  .menu-superior {
-    flex-wrap: wrap;
-    gap: 2px;
-  }
-  .botao-flutuante {
-    right: 16px;
-    bottom: 16px;
-    width: 54px;
-    height: 54px;
-    font-size: 26px;
-  }
-}
-
-/* ===== ANIMAÇÃO FADE-IN PARA ABAS ===== */
-.fade-in { animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+   

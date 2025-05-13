@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function carregarAplicacoes() {
     loading = true;
     lista.innerHTML = '<div class="loading">Carregando...</div>';
-    getRef('aplicacoes').orderByChild('timestamp').on('value', snap => {
+    db.ref('aplicacoes').orderByChild('timestamp').on('value', snap => {
       aplicacoesCache = [];
       snap.forEach(child => {
         const app = child.val();
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      getRef('aplicacoes/' + idEdit.value).set(dados)
+      db.ref('aplicacoes/' + idEdit.value).set(dados)
         .then(() => {
           mostrarToast('Aplicação atualizada!', 'sucesso');
           limparForm();
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      getRef('aplicacoes').push(dados)
+      db.ref('aplicacoes').push(dados)
         .then(() => {
           mostrarToast('Aplicação salva!', 'sucesso');
           limparForm();
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (btn.classList.contains('vermelho')) {
       // Remover com modal customizável
       mostrarModalConfirmacao('Deseja remover esta aplicação?', () => {
-        getRef('aplicacoes/' + id).remove()
+        db.ref('aplicacoes/' + id).remove()
           .then(() => {
             mostrarToast('Aplicação removida!', 'sucesso');
             if (idEdit.value === id) limparForm();
@@ -268,21 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // Acessibilidade: foco no botão cancelar
     setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
-  }
-
-  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
-  if (!document.getElementById('modal-confirmacao-style')) {
-    const style = document.createElement('style');
-    style.id = 'modal-confirmacao-style';
-    style.innerHTML = `
-      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
-      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
-      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
-      #modal-confirmacao .btn-primary { margin-left:8px; }
-      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
-      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
-    `;
-    document.head.appendChild(style);
   }
 
   // Inicialização

@@ -167,58 +167,25 @@ input[type="checkbox"] {
 /* ===== BOTÃO FLUTUANTE ===== */
 .botao-flutuante {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
+  background: var(--primary, #4caf50);
+  color: #fff;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  font-size: 28px;
   cursor: pointer;
-  transition: background-color var(--transition);
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s;
 }
-
 .botao-flutuante:hover {
-  background-color: var(--primary-hover);
-}
-
-/* ===== BOTÕES DE EDITAR E DELETAR AO LADO DO INPUT ===== */
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn-editar, .btn-deletar {
-  display: inline-block;
-  background-color: var(--info);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background-color var(--transition);
-  font-size: 16px;
-  margin-left: 2px;
-}
-
-.btn-editar:hover {
-  background-color: var(--info-hover);
-}
-
-.btn-deletar {
-  background-color: var(--danger);
-}
-
-.btn-deletar:hover {
-  background-color: var(--danger-hover);
+  background: var(--primary-hover, #388e3c);
 }
 
 /* ===== BOTÕES PADRÃO ===== */

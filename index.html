@@ -31,29 +31,55 @@
       </button>
       <form id="formAplicacao" class="hidden" autocomplete="off">
         <input type="hidden" id="aplicacaoIdEdit">
-        <label for="dataApp">Data:</label>
-        <input id="dataApp" type="date" required>
-        <label for="produtoApp">Produto:</label>
-        <input id="produtoApp" required>
-        <label for="dosagemApp">Dosagem:</label>
-        <input id="dosagemApp" required>
-        <label for="tipoApp">Tipo:</label>
-        <select id="tipoApp">
-          <option value="Adubo">Adubo</option>
-          <option value="Fungicida">Fungicida</option>
-          <option value="Inseticida">Inseticida</option>
-          <option value="Herbicida">Herbicida</option>
-          <option value="Outro">Outro</option>
-        </select>
-        <label for="setorApp">Setor/Talhão:</label>
-        <input id="setorApp">
+        <div class="input-float">
+          <input id="dataApp" type="date" required placeholder=" ">
+          <label for="dataApp">Data</label>
+        </div>
+        <div class="input-float">
+          <input id="produtoApp" required placeholder=" ">
+          <label for="produtoApp">Produto</label>
+        </div>
+        <div class="input-float">
+          <input id="dosagemApp" required placeholder=" ">
+          <label for="dosagemApp">Dosagem</label>
+        </div>
+        <div class="input-float">
+          <select id="tipoApp" required>
+            <option value="" disabled selected hidden></option>
+            <option value="Adubo">Adubo</option>
+            <option value="Fungicida">Fungicida</option>
+            <option value="Inseticida">Inseticida</option>
+            <option value="Herbicida">Herbicida</option>
+            <option value="Outro">Outro</option>
+          </select>
+          <label for="tipoApp">Tipo</label>
+        </div>
+        <div class="input-float">
+          <input id="setorApp" placeholder=" ">
+          <label for="setorApp">Setor/Talhão</label>
+        </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarAplicacao" class="btn-primary">Salvar Aplicação</button>
           <button type="button" id="btnCancelarEdicaoApp" class="btn-secondary hidden">Cancelar</button>
         </div>
       </form>
       <input type="text" id="filtroAplicacoes" class="filtro-lista" placeholder="Filtrar aplicações...">
-      <div id="listaAplicacoes"></div>
+      <div id="listaAplicacoes">
+        <!-- Exemplo de item -->
+        <!--
+        <div class="item">
+          <div class="avatar-inicial">P</div>
+          <span>
+            <strong>Produto X</strong> (Adubo)<br>
+            Data: 2024-06-01 | Dosagem: 10kg | Setor: A
+          </span>
+          <div>
+            <button class="botao-circular azul" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" title="Remover"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        -->
+      </div>
     </section>
 
     <!-- ===== TAREFAS ===== -->
@@ -64,18 +90,27 @@
       </button>
       <form id="formTarefa" class="hidden" autocomplete="off">
         <input type="hidden" id="tarefaIdEdit">
-        <label for="dataTarefa">Data:</label>
-        <input id="dataTarefa" type="date" required>
-        <label for="descricaoTarefa">Descrição:</label>
-        <input id="descricaoTarefa" required>
-        <label for="prioridadeTarefa">Prioridade:</label>
-        <select id="prioridadeTarefa">
-          <option value="Alta">Alta</option>
-          <option value="Média" selected>Média</option>
-          <option value="Baixa">Baixa</option>
-        </select>
-        <label for="setorTarefa">Setor/Talhão:</label>
-        <input id="setorTarefa">
+        <div class="input-float">
+          <input id="dataTarefa" type="date" required placeholder=" ">
+          <label for="dataTarefa">Data</label>
+        </div>
+        <div class="input-float">
+          <input id="descricaoTarefa" required placeholder=" ">
+          <label for="descricaoTarefa">Descrição</label>
+        </div>
+        <div class="input-float">
+          <select id="prioridadeTarefa" required>
+            <option value="" disabled selected hidden></option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+          <label for="prioridadeTarefa">Prioridade</label>
+        </div>
+        <div class="input-float">
+          <input id="setorTarefa" placeholder=" ">
+          <label for="setorTarefa">Setor/Talhão</label>
+        </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarTarefa" class="btn-primary">Salvar Tarefa</button>
           <button type="button" id="btnCancelarEdicaoTarefa" class="btn-secondary hidden">Cancelar</button>
@@ -95,19 +130,30 @@
       </button>
       <form id="formFinanceiro" class="hidden" autocomplete="off">
         <input type="hidden" id="financeiroIdEdit">
-        <label for="tipoLancamentoFin">Tipo:</label>
-        <select id="tipoLancamentoFin">
-          <option value="gasto" selected>Gasto</option>
-          <option value="receita">Receita</option>
-        </select>
-        <label for="dataFin">Data:</label>
-        <input id="dataFin" type="date" required>
-        <label for="descricaoFin">Descrição:</label>
-        <input id="descricaoFin" required>
-        <label for="valorFin">Valor (R$):</label>
-        <input id="valorFin" type="number" step="0.01" required>
-        <label for="categoriaFin">Categoria:</label>
-        <input id="categoriaFin">
+        <div class="input-float">
+          <select id="tipoLancamentoFin" required>
+            <option value="" disabled selected hidden></option>
+            <option value="gasto">Gasto</option>
+            <option value="receita">Receita</option>
+          </select>
+          <label for="tipoLancamentoFin">Tipo</label>
+        </div>
+        <div class="input-float">
+          <input id="dataFin" type="date" required placeholder=" ">
+          <label for="dataFin">Data</label>
+        </div>
+        <div class="input-float">
+          <input id="descricaoFin" required placeholder=" ">
+          <label for="descricaoFin">Descrição</label>
+        </div>
+        <div class="input-float">
+          <input id="valorFin" type="number" step="0.01" required placeholder=" ">
+          <label for="valorFin">Valor (R$)</label>
+        </div>
+        <div class="input-float">
+          <input id="categoriaFin" placeholder=" ">
+          <label for="categoriaFin">Categoria</label>
+        </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarFinanceiro" class="btn-primary">Salvar Lançamento</button>
           <button type="button" id="btnCancelarEdicaoFin" class="btn-secondary hidden">Cancelar</button>
@@ -125,18 +171,26 @@
         <i class="fas fa-plus"></i>
       </button>
       <div>
-        <label for="valorLataColheita">Valor da Lata (R$):</label>
-        <input id="valorLataColheita" type="number" step="0.01">
+        <div class="input-float" style="max-width:200px;display:inline-block;">
+          <input id="valorLataColheita" type="number" step="0.01" placeholder=" ">
+          <label for="valorLataColheita">Valor da Lata (R$)</label>
+        </div>
         <button type="button" id="btnSalvarValorLata" class="btn-secondary">Salvar Valor</button>
       </div>
       <form id="formColheita" class="hidden" autocomplete="off">
         <input type="hidden" id="colheitaIdEdit">
-        <label for="dataColheita">Data:</label>
-        <input id="dataColheita" type="date" required>
-        <label for="colhedorColheita">Colhedor:</label>
-        <input id="colhedorColheita" required>
-        <label for="quantidadeLatasColheita">Quantidade de Latas:</label>
-        <input id="quantidadeLatasColheita" type="number" step="0.5" required>
+        <div class="input-float">
+          <input id="dataColheita" type="date" required placeholder=" ">
+          <label for="dataColheita">Data</label>
+        </div>
+        <div class="input-float">
+          <input id="colhedorColheita" required placeholder=" ">
+          <label for="colhedorColheita">Colhedor</label>
+        </div>
+        <div class="input-float">
+          <input id="quantidadeLatasColheita" type="number" step="0.5" required placeholder=" ">
+          <label for="quantidadeLatasColheita">Quantidade de Latas</label>
+        </div>
         <div>
           <input type="checkbox" id="pagoColheita" checked>
           <label for="pagoColheita">Pago na Data?</label>
@@ -148,9 +202,41 @@
       </form>
       <div id="resumoColheita"></div>
       <input type="text" id="filtroColheitaPendentes" class="filtro-lista" placeholder="Filtrar pendentes...">
-      <div id="listaColheitaPendentes"></div>
+      <div id="listaColheitaPendentes">
+        <!-- Exemplo de item -->
+        <!--
+        <div class="item">
+          <div class="avatar-inicial">J</div>
+          <span>
+            <strong>João</strong><br>
+            Data: 2024-06-01 | Latas: 12 | Valor: R$ 120,00
+            <span class="badge badge-pendente">Pendente</span>
+          </span>
+          <div>
+            <button class="botao-circular azul" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" title="Remover"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        -->
+      </div>
       <input type="text" id="filtroColheitaPagos" class="filtro-lista" placeholder="Filtrar pagos...">
-      <div id="listaColheitaPagos"></div>
+      <div id="listaColheitaPagos">
+        <!-- Exemplo de item pago -->
+        <!--
+        <div class="item">
+          <div class="avatar-inicial">M</div>
+          <span>
+            <strong>Maria</strong><br>
+            Data: 2024-06-01 | Latas: 8 | Valor: R$ 80,00
+            <span class="badge badge-pago">Pago</span>
+          </span>
+          <div>
+            <button class="botao-circular azul" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" title="Remover"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        -->
+      </div>
     </section>
 
     <!-- ===== RELATÓRIO ===== -->
@@ -178,6 +264,6 @@
       <label for="arquivoBackup" class="btn-secondary">Importar Backup</label>
     </section>
   </main>
-  <script src="js/main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

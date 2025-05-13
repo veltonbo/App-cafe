@@ -45,13 +45,20 @@
     <!-- ===== APLICAÇÕES ===== -->
     <section id="aba-aplicacoes" class="aba" aria-labelledby="titulo-aplicacoes">
       <h2 id="titulo-aplicacoes"><i class="fas fa-flask"></i> Aplicações</h2>
-      <form id="formAplicacao" autocomplete="off">
+      <button id="btnAdicionarAplicacao" class="botao-flutuante" aria-label="Adicionar Aplicação" style="display:none;">
+        <i class="fas fa-plus"></i>
+      </button>
+      <form id="formAplicacao" class="hidden" autocomplete="off">
         <input type="hidden" id="aplicacaoIdEdit">
         <label for="dataApp">Data:</label>
         <input id="dataApp" type="date" required>
         <label for="produtoApp">Produto:</label>
-        <input id="produtoApp" list="sugestoesProdutoApp" required>
-        <datalist id="sugestoesProdutoApp"></datalist>
+        <div class="input-group">
+          <input id="produtoApp" list="sugestoesProdutoApp" required>
+          <datalist id="sugestoesProdutoApp"></datalist>
+          <button type="button" id="btnEditarAplicacao" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" id="btnDeletarAplicacao" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
+        </div>
         <label for="dosagemApp">Dosagem:</label>
         <input id="dosagemApp" required>
         <label for="tipoApp">Tipo:</label>
@@ -67,7 +74,7 @@
         <datalist id="sugestoesSetor"></datalist>
         <div class="form-actions">
           <button type="submit" id="btnSalvarAplicacao" class="btn-primary">Salvar Aplicação</button>
-          <button type="button" id="btnCancelarEdicaoApp" class="btn-secondary hidden">Cancelar Edição</button>
+          <button type="button" id="btnCancelarEdicaoApp" class="btn-secondary hidden">Cancelar</button>
         </div>
       </form>
       <input type="text" id="filtroAplicacoes" class="filtro-lista" placeholder="Filtrar aplicações...">
@@ -77,12 +84,19 @@
     <!-- ===== TAREFAS ===== -->
     <section id="aba-tarefas" class="aba" aria-labelledby="titulo-tarefas">
       <h2 id="titulo-tarefas"><i class="fas fa-tasks"></i> Tarefas</h2>
-      <form id="formTarefa" autocomplete="off">
+      <button id="btnAdicionarTarefa" class="botao-flutuante" aria-label="Adicionar Tarefa" style="display:none;">
+        <i class="fas fa-plus"></i>
+      </button>
+      <form id="formTarefa" class="hidden" autocomplete="off">
         <input type="hidden" id="tarefaIdEdit">
         <label for="dataTarefa">Data:</label>
         <input id="dataTarefa" type="date" required>
         <label for="descricaoTarefa">Descrição:</label>
-        <input id="descricaoTarefa" required>
+        <div class="input-group">
+          <input id="descricaoTarefa" required>
+          <button type="button" id="btnEditarTarefa" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" id="btnDeletarTarefa" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
+        </div>
         <label for="prioridadeTarefa">Prioridade:</label>
         <select id="prioridadeTarefa">
           <option value="Alta">Alta</option>
@@ -111,7 +125,7 @@
         </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarTarefa" class="btn-primary">Salvar Tarefa</button>
-          <button type="button" id="btnCancelarEdicaoTarefa" class="btn-secondary hidden">Cancelar Edição</button>
+          <button type="button" id="btnCancelarEdicaoTarefa" class="btn-secondary hidden">Cancelar</button>
         </div>
       </form>
       <input type="text" id="filtroTarefasPendentes" class="filtro-lista" placeholder="Filtrar tarefas pendentes...">
@@ -123,7 +137,9 @@
     <!-- ===== FINANCEIRO ===== -->
     <section id="aba-financeiro" class="aba" aria-labelledby="titulo-financeiro">
       <h2 id="titulo-financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</h2>
-      <button type="button" id="btnToggleFormFinanceiro" class="btn-primary btn-toggle-form">Adicionar Novo Gasto/Receita</button>
+      <button id="btnAdicionarFinanceiro" class="botao-flutuante" aria-label="Adicionar Lançamento" style="display:none;">
+        <i class="fas fa-plus"></i>
+      </button>
       <form id="formFinanceiro" class="hidden" autocomplete="off">
         <input type="hidden" id="financeiroIdEdit">
         <label for="tipoLancamentoFin">Tipo:</label>
@@ -134,7 +150,11 @@
         <label for="dataFin">Data:</label>
         <input id="dataFin" type="date" required>
         <label for="descricaoFin">Descrição:</label>
-        <input id="descricaoFin" required>
+        <div class="input-group">
+          <input id="descricaoFin" required>
+          <button type="button" id="btnEditarFinanceiro" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" id="btnDeletarFinanceiro" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
+        </div>
         <label for="valorFin">Valor (R$):</label>
         <input id="valorFin" type="number" step="0.01" required>
         <label for="categoriaFin">Categoria:</label>
@@ -158,7 +178,7 @@
         </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarFinanceiro" class="btn-primary">Salvar Lançamento</button>
-          <button type="button" id="btnCancelarEdicaoFin" class="btn-secondary hidden">Cancelar Edição</button>
+          <button type="button" id="btnCancelarEdicaoFin" class="btn-secondary hidden">Cancelar</button>
         </div>
       </form>
       <div id="resumoFinanceiro"></div>
@@ -169,18 +189,25 @@
     <!-- ===== COLHEITA ===== -->
     <section id="aba-colheita" class="aba" aria-labelledby="titulo-colheita">
       <h2 id="titulo-colheita"><i class="fas fa-tractor"></i> Colheita</h2>
+      <button id="btnAdicionarColheita" class="botao-flutuante" aria-label="Adicionar Colheita" style="display:none;">
+        <i class="fas fa-plus"></i>
+      </button>
       <div>
         <label for="valorLataColheita">Valor da Lata (R$):</label>
         <input id="valorLataColheita" type="number" step="0.01">
         <button type="button" id="btnSalvarValorLata" class="btn-secondary">Salvar Valor</button>
       </div>
-      <form id="formColheita" autocomplete="off">
+      <form id="formColheita" class="hidden" autocomplete="off">
         <input type="hidden" id="colheitaIdEdit">
         <label for="dataColheita">Data:</label>
         <input id="dataColheita" type="date" required>
         <label for="colhedorColheita">Colhedor:</label>
-        <input id="colhedorColheita" list="sugestoesColhedor" required>
-        <datalist id="sugestoesColhedor"></datalist>
+        <div class="input-group">
+          <input id="colhedorColheita" list="sugestoesColhedor" required>
+          <datalist id="sugestoesColhedor"></datalist>
+          <button type="button" id="btnEditarColheita" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" id="btnDeletarColheita" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
+        </div>
         <label for="quantidadeLatasColheita">Quantidade de Latas:</label>
         <input id="quantidadeLatasColheita" type="number" step="0.5" required>
         <div>
@@ -189,7 +216,7 @@
         </div>
         <div class="form-actions">
           <button type="submit" id="btnSalvarColheita" class="btn-primary">Salvar Registro</button>
-          <button type="button" id="btnCancelarEdicaoColheita" class="btn-secondary hidden">Cancelar Edição</button>
+          <button type="button" id="btnCancelarEdicaoColheita" class="btn-secondary hidden">Cancelar</button>
         </div>
       </form>
       <div id="resumoColheita"></div>

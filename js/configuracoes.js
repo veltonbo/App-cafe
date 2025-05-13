@@ -103,6 +103,7 @@ function deletarSafra() {
   db.ref(safra).remove().then(() => {
     alert(`Safra ${safra} deletada com sucesso.`);
     carregarSafrasDisponiveis();
+    localStorage.removeItem('safraSelecionada'); // Limpar o localStorage
   });
 }
 
@@ -158,7 +159,10 @@ function importarBackup() {
 }
 
 // ===== INICIALIZAR CONFIGURAÇÕES =====
-document.addEventListener("dadosCarregados", () => {
+document.addEventListener("DOMContentLoaded", () => {
   carregarAnoSafra();
   carregarSafrasDisponiveis();
+  document.getElementById('btnAlternarTema').addEventListener('click', alternarTema);
+  document.getElementById('btnFazerBackup').addEventListener('click', fazerBackup);
+  document.getElementById('arquivoBackup').addEventListener('change', importarBackup);
 });

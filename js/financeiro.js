@@ -1,7 +1,7 @@
-// js/financeiro.js - Versão Melhorada
+// financeiro.js
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Elementos
+  // Elementos do formulário
   const form = document.getElementById('formFinanceiro');
   const idEdit = document.getElementById('financeiroIdEdit');
   const tipoLancamento = document.getElementById('tipoLancamentoFin');
@@ -14,15 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const numParcelasFin = document.getElementById('numParcelasFin');
   const btnSalvar = document.getElementById('btnSalvarFinanceiro');
   const btnCancelar = document.getElementById('btnCancelarEdicaoFin');
+  const btnToggleForm = document.getElementById('btnToggleFormFinanceiro');
   const lista = document.getElementById('listaFinanceiro');
-  const filtroDescricao = document.getElementById('filtroFinanceiroDescricao');
-  const filtroData = document.getElementById('filtroFinanceiroData');
-  const filtroCategoria = document.getElementById('filtroFinanceiroCategoria');
-  const filtroTipo = document.getElementById('filtroFinanceiroTipo');
-  const btnLimparFiltro = document.getElementById('btnLimparFiltroFinanceiro');
+  const filtro = document.getElementById('filtroFinanceiro');
   const sugestoesCategoria = document.getElementById('sugestoesCategoriaFin');
   const resumo = document.getElementById('resumoFinanceiro');
-  const fab = document.getElementById('fab-financeiro');
 
   // Estado
   let financeiroCache = [];
@@ -36,24 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     idEdit.value = '';
     editando = false;
     btnSalvar.textContent = 'Salvar Lançamento';
-    btnSalvar.disabled = false;
     btnCancelar.classList.add('hidden');
-    camposParcelas.classList.add('hidden');
+    form.classList.add('hidden');
     limparErros();
-    form.classList.add('fade-out');
-    setTimeout(() => {
-      form.classList.add('hidden');
-      form.classList.remove('fade-out');
-      fab.classList.remove('hidden');
-    }, 200);
-  }
-
-  function mostrarForm() {
-    form.classList.remove('hidden');
-    form.classList.add('fade-in');
-    fab.classList.add('hidden');
-    setTimeout(() => form.classList.remove('fade-in'), 200);
-    dataFin.focus();
+    btnToggleForm.focus();
   }
 
   function limparErros() {
@@ -97,36 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return valido;
   }
 
-  // Sugestão dinâmica/autocomplete simples
-  function autocomplete(input, arr) {
-    input.addEventListener("input", function() {
-      let val = this.value;
-      closeAllLists();
-      if (!val) return false;
-      let list = document.createElement("div");
-      list.setAttribute("class", "autocomplete-items");
-      this.parentNode.appendChild(list);
-      let count = 0;
-      arr.forEach(item => {
-        if (item.toLowerCase().includes(val.toLowerCase()) && count < 5) {
-          let itemDiv = document.createElement("div");
-          itemDiv.innerHTML = "<strong>" + item.substr(0, val.length) + "</strong>" + item.substr(val.length);
-          itemDiv.addEventListener("click", () => {
-            input.value = item;
-            closeAllLists();
-          });
-          list.appendChild(itemDiv);
-          count++;
-        }
-      });
-    });
-    function closeAllLists(elmnt) {
-      let items = document.querySelectorAll(".autocomplete-items");
-      items.forEach(item => item.parentNode.removeChild(item));
-    }
-    document.addEventListener("click", function (e) { closeAllLists(e.target); });
-  }
-
   function atualizarSugestoes() {
     const categoriasSet = new Set();
     financeiroCache.forEach(lanc => {
@@ -136,25 +88,44 @@ document.addEventListener('DOMContentLoaded', () => {
     categoriasSet.forEach(cat => {
       sugestoesCategoria.innerHTML += `<option value="${cat}"></option>`;
     });
-    // Autocomplete dinâmico
-    autocomplete(categoriaFin, Array.from(categoriasSet));
-    // Filtros dinâmicos
-    if (filtroCategoria) {
-      filtroCategoria.innerHTML = '<option value="">Categoria</option>';
-      categoriasSet.forEach(cat => {
-        filtroCategoria.innerHTML += `<option value="${cat}">${cat}</option>`;
+  }
+
+  function renderizarLista(filtroTexto = '') {
+    lista.innerHTML = '';
+    let encontrou = false;
+    const filtroLower = filtroTexto.trim().toLowerCase();
+
+    financeiroCache
+      .filter(lanc => {
+        if (!filtroLower) return true;
+        const texto = `${lanc.data} ${lanc.descricao} ${lanc.categoria || ''}`.toLowerCase();
+        return texto.includes(filtroLower);
+      })
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .forEach(lanc => {
+        encontrou = true;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>
+            <strong>${lanc.descricao}</strong> (${lanc.tipo === 'receita' ? 'Receita' : 'Gasto'})<br>
+            Data: ${lanc.data} | Valor: R$ ${Number(lanc.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})} | Categoria: ${lanc.categoria || '-'}
+            ${lanc.parcelado ? `<br><em>Parcelado em ${lanc.numParcelas}x</em>` : ''}
+          </span>
+          <div>
+            <button class="botao-circular azul" aria-label="Editar lançamento" title="Editar" data-id="${lanc._id}"><i class="fas fa-edit"></i></button>
+            <button class="botao-circular vermelho" aria-label="Remover lançamento" title="Remover" data-id="${lanc._id}"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        lista.appendChild(div);
       });
-    }
-    if (filtroTipo) {
-      filtroTipo.innerHTML = '<option value="">Tipo</option>';
-      filtroTipo.innerHTML += '<option value="receita">Receita</option>';
-      filtroTipo.innerHTML += '<option value="gasto">Gasto</option>';
+
+    if (!encontrou) {
+      lista.innerHTML = '<p style="text-align:center;color:#888;">Nenhum lançamento encontrado.</p>';
     }
   }
 
-  // Resumo no topo
   function renderizarResumo() {
-    if (!resumo) return;
     let totalReceitas = 0, totalGastos = 0;
     financeiroCache.forEach(lanc => {
       if (lanc.tipo === 'receita') totalReceitas += Number(lanc.valor);
@@ -169,66 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  // Filtro avançado
-  function renderizarLista() {
-    lista.innerHTML = '';
-    let encontrou = false;
-    const termo = filtroDescricao ? filtroDescricao.value.trim().toLowerCase() : '';
-    const data = filtroData ? filtroData.value : '';
-    const categoria = filtroCategoria ? filtroCategoria.value : '';
-    const tipo = filtroTipo ? filtroTipo.value : '';
-
-    financeiroCache
-      .filter(lanc => {
-        let ok = true;
-        if (termo) {
-          const texto = `${lanc.data} ${lanc.descricao} ${lanc.categoria || ''}`.toLowerCase();
-          ok = ok && texto.includes(termo);
-        }
-        if (data) ok = ok && lanc.data === data;
-        if (categoria) ok = ok && lanc.categoria === categoria;
-        if (tipo) ok = ok && lanc.tipo === tipo;
-        return ok;
-      })
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .forEach(lanc => {
-        encontrou = true;
-        const div = document.createElement('div');
-        div.className = 'item fade-in';
-        div.innerHTML = `
-          <span>
-            <strong>${lanc.descricao}</strong> (${lanc.tipo === 'receita' ? 'Receita' : 'Gasto'})<br>
-            Data: ${lanc.data} | Valor: R$ ${Number(lanc.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})} | Categoria: ${lanc.categoria || '-'}
-            ${lanc.parcelado ? `<br><em>Parcelado em ${lanc.numParcelas}x</em>` : ''}
-          </span>
-          <div>
-            <button class="botao-circular menu-opcoes" aria-label="Mais opções" title="Mais opções" data-id="${lanc._id}" tabindex="0">
-              <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <ul class="opcoes-lista" style="display:none;">
-              <li><button class="editar" data-id="${lanc._id}"><i class="fas fa-edit"></i> Editar</button></li>
-              <li><button class="deletar" data-id="${lanc._id}"><i class="fas fa-trash"></i> Deletar</button></li>
-            </ul>
-          </div>
-        `;
-        lista.appendChild(div);
-      });
-
-    if (!encontrou) {
-      lista.innerHTML = '<p style="text-align:center;color:#888;">Nenhum lançamento encontrado.</p>';
-    }
-  }
-
   // --- CRUD ---
 
-  function setLoading(loadingState) {
-    loading = loadingState;
-    btnSalvar.disabled = loading;
-    btnSalvar.textContent = loading ? 'Salvando...' : (editando ? 'Atualizar Lançamento' : 'Salvar Lançamento');
-  }
-
   function carregarFinanceiro() {
-    setLoading(true);
+    loading = true;
     lista.innerHTML = '<div class="loading">Carregando...</div>';
     getRef('financeiro').orderByChild('timestamp').on('value', snap => {
       financeiroCache = [];
@@ -238,16 +153,16 @@ document.addEventListener('DOMContentLoaded', () => {
         financeiroCache.push(lanc);
       });
       atualizarSugestoes();
-      renderizarLista();
+      renderizarLista(filtro.value);
       renderizarResumo();
-      setLoading(false);
+      loading = false;
     });
   }
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     if (loading) return;
-    setLoading(true);
+    btnSalvar.disabled = true;
     const dados = {
       tipo: tipoLancamento.value,
       data: dataFin.value,
@@ -259,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timestamp: Date.now()
     };
     if (!validarDados(dados)) {
-      setLoading(false);
+      btnSalvar.disabled = false;
       return;
     }
 
@@ -268,22 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => {
           mostrarToast('Lançamento atualizado!', 'sucesso');
           limparForm();
-          setLoading(false);
+          btnSalvar.disabled = false;
         })
         .catch(() => {
           mostrarToast('Erro ao atualizar lançamento!', 'erro');
-          setLoading(false);
+          btnSalvar.disabled = false;
         });
     } else {
       getRef('financeiro').push(dados)
         .then(() => {
           mostrarToast('Lançamento salvo!', 'sucesso');
           limparForm();
-          setLoading(false);
+          btnSalvar.disabled = false;
         })
         .catch(() => {
           mostrarToast('Erro ao salvar lançamento!', 'erro');
-          setLoading(false);
+          btnSalvar.disabled = false;
         });
     }
   });
@@ -300,39 +215,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Filtros
-  [filtroDescricao, filtroData, filtroCategoria, filtroTipo].forEach(el => {
-    if (el) el.addEventListener('input', renderizarLista);
-  });
-  if (btnLimparFiltro) {
-    btnLimparFiltro.addEventListener('click', () => {
-      if (filtroDescricao) filtroDescricao.value = '';
-      if (filtroData) filtroData.value = '';
-      if (filtroCategoria) filtroCategoria.value = '';
-      if (filtroTipo) filtroTipo.value = '';
-      renderizarLista();
-    });
-  }
+  // Filtro
+  filtro.addEventListener('input', () => renderizarLista(filtro.value));
 
-  // FAB (botão adicionar)
-  if (fab) fab.addEventListener('click', mostrarForm);
-
-  // Delegação de eventos para menu de opções (setinha)
-  lista.addEventListener('click', e => {
-    const btn = e.target.closest('.menu-opcoes');
-    if (btn) {
-      // Toggle menu
-      const ul = btn.parentNode.querySelector('.opcoes-lista');
-      document.querySelectorAll('.opcoes-lista').forEach(list => {
-        if (list !== ul) list.style.display = 'none';
-      });
-      ul.style.display = ul.style.display === 'block' ? 'none' : 'block';
-      return;
+  // Alternar formulário
+  btnToggleForm.addEventListener('click', () => {
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+      dataFin.focus();
     }
-    // Editar
-    const btnEditar = e.target.closest('.editar');
-    if (btnEditar) {
-      const id = btnEditar.getAttribute('data-id');
+    limparForm();
+    form.classList.remove('hidden');
+  });
+
+  // Delegação de eventos para editar/remover
+  lista.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    if (btn.classList.contains('azul')) {
+      // Editar
       const lanc = financeiroCache.find(l => l._id === id);
       if (lanc) {
         tipoLancamento.value = lanc.tipo;
@@ -351,70 +253,33 @@ document.addEventListener('DOMContentLoaded', () => {
         editando = true;
         btnSalvar.textContent = 'Atualizar Lançamento';
         btnCancelar.classList.remove('hidden');
-        mostrarForm();
+        form.classList.remove('hidden');
+        dataFin.focus();
         mostrarToast('Editando lançamento...', 'info');
       }
-      e.target.closest('.opcoes-lista').style.display = 'none';
-      return;
-    }
-    // Deletar
-    const btnDeletar = e.target.closest('.deletar');
-    if (btnDeletar) {
-      const id = btnDeletar.getAttribute('data-id');
-      // SweetAlert2 se disponível, senão modal padrão
-      if (window.Swal) {
-        Swal.fire({
-          title: 'Remover lançamento?',
-          text: 'Deseja remover este lançamento?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sim, remover',
-          cancelButtonText: 'Cancelar'
-        }).then(result => {
-          if (result.isConfirmed) {
-            getRef('financeiro/' + id).remove()
-              .then(() => {
-                mostrarToast('Lançamento removido!', 'sucesso');
-                if (idEdit.value === id) limparForm();
-              })
-              .catch(() => {
-                mostrarToast('Erro ao remover lançamento!', 'erro');
-              });
-          }
-        });
-      } else {
-        mostrarModalConfirmacao('Deseja remover este lançamento?', () => {
-          getRef('financeiro/' + id).remove()
-            .then(() => {
-              mostrarToast('Lançamento removido!', 'sucesso');
-              if (idEdit.value === id) limparForm();
-            })
-            .catch(() => {
-              mostrarToast('Erro ao remover lançamento!', 'erro');
-            });
-        });
-      }
-      e.target.closest('.opcoes-lista').style.display = 'none';
-      return;
+    } else if (btn.classList.contains('vermelho')) {
+      mostrarModalConfirmacao('Deseja remover este lançamento?', () => {
+        getRef('financeiro/' + id).remove()
+          .then(() => {
+            mostrarToast('Lançamento removido!', 'sucesso');
+            if (idEdit.value === id) limparForm();
+          })
+          .catch(() => {
+            mostrarToast('Erro ao remover lançamento!', 'erro');
+          });
+      });
     }
   });
 
-  // Fecha menus de opções ao clicar fora
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.menu-opcoes')) {
-      document.querySelectorAll('.opcoes-lista').forEach(list => list.style.display = 'none');
-    }
-  });
-
-  // Acessibilidade: permite abrir menu com Enter/Espaço
+  // Acessibilidade: permite remover/editar com Enter/Espaço
   lista.addEventListener('keydown', e => {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('menu-opcoes')) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
       e.preventDefault();
       e.target.click();
     }
   });
 
-  // Modal de confirmação customizável (fallback)
+  // Modal de confirmação (igual ao dos outros módulos)
   function mostrarModalConfirmacao(msg, onConfirm) {
     let modal = document.getElementById('modal-confirmacao');
     if (!modal) {
@@ -442,18 +307,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
   }
 
-  // CSS para animações fade-in/fade-out (adicione ao seu style.css)
-  if (!document.getElementById('financeiro-anim-style')) {
+  // CSS básico para modal (adicione ao seu style.css se ainda não tiver)
+  if (!document.getElementById('modal-confirmacao-style')) {
     const style = document.createElement('style');
-    style.id = 'financeiro-anim-style';
+    style.id = 'modal-confirmacao-style';
     style.innerHTML = `
-      .fade-in { animation: fadeIn 0.2s; }
-      .fade-out { animation: fadeOut 0.2s; }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-      .autocomplete-items { position: absolute; background: #fff; border: 1px solid #ccc; z-index: 10; max-height: 150px; overflow-y: auto; }
-      .autocomplete-items div { padding: 8px; cursor: pointer; }
-      .autocomplete-items div:hover { background: #f0f0f0; }
+      #modal-confirmacao { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; align-items:center; justify-content:center; z-index:9999; }
+      #modal-confirmacao .modal-bg { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);}
+      #modal-confirmacao .modal-box { position:relative; background:#fff; color:#222; border-radius:8px; padding:24px; min-width:260px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.2);}
+      #modal-confirmacao .btn-primary { margin-left:8px; }
+      body.claro #modal-confirmacao .modal-box { background:#fff; color:#222; }
+      body:not(.claro) #modal-confirmacao .modal-box { background:#222; color:#fff; }
     `;
     document.head.appendChild(style);
   }

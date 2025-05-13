@@ -7,13 +7,13 @@ function carregarValorLata() {
   db.ref('ValorLata').on('value', snap => {
     if (snap.exists()) {
       valorLataGlobal = snap.val();
-      document.getElementById('valorLata').value = valorLataGlobal;
+      document.getElementById('valorLataColheita').value = valorLataGlobal;
     }
   });
 }
 
 function salvarValorLata() {
-  valorLataGlobal = parseFloat(document.getElementById('valorLata').value) || 0;
+  valorLataGlobal = parseFloat(document.getElementById('valorLataColheita').value) || 0;
   db.ref('ValorLata').set(valorLataGlobal);
 }
 
@@ -21,8 +21,8 @@ function salvarValorLata() {
 function adicionarColheita() {
   const nova = {
     data: dataColheita.value,
-    colhedor: colhedor.value.trim(),
-    quantidade: parseFloat(quantidadeLatas.value),
+    colhedor: colhedorColheita.value.trim(),
+    quantidade: parseFloat(quantidadeLatasColheita.value),
     valorLata: valorLataGlobal,
     pago: false,
     pagoParcial: 0,
@@ -39,8 +39,8 @@ function adicionarColheita() {
   atualizarColheita();
 
   dataColheita.value = '';
-  colhedor.value = '';
-  quantidadeLatas.value = '';
+  colhedorColheita.value = '';
+  quantidadeLatasColheita.value = '';
 }
 
 // ====== CARREGAR COLHEITA ======
@@ -53,6 +53,11 @@ function carregarColheita() {
 
 // ====== ATUALIZAR LISTA DE COLHEITA ======
 function atualizarColheita() {
+  const colheitaPendentes = document.getElementById('listaColheitaPendentes');
+  const colheitaPagos = document.getElementById('listaColheitaPagos');
+
+  if (!colheitaPendentes || !colheitaPagos) return;
+
   colheitaPendentes.innerHTML = '';
   colheitaPagos.innerHTML = '';
 
@@ -132,3 +137,10 @@ function gerarGraficoColheita() {
 function gerarGraficoColhedor() {
   console.log("Gerar Gráfico de Colhedor - Em desenvolvimento");
 }
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+  carregarValorLata();
+  carregarColheita();
+  document.getElementById('formColheita').addEventListener('submit', adicionarColheita);
+});

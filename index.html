@@ -2,583 +2,233 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Sistema de gerenciamento para manejo de café">
-  <title>Manejo Café - Sistema de Gerenciamento</title>
-  
-  <!-- Estilos e bibliotecas externas -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manejo Café Pro</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <!-- Firebase, Chart.js, jsPDF, etc. -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+  <!-- Scripts -->
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/aplicacao.js"></script>
+  <script defer src="js/tarefas.js"></script>
+  <script defer src="js/financeiro.js"></script>
+  <script defer src="js/colheita.js"></script>
+  <script defer src="js/relatorio.js"></script>
+  <script defer src="js/configuracoes.js"></script>
 </head>
-
 <body>
-  <!-- ===== MENU SUPERIOR ===== -->
-  <header>
-    <nav class="menu-superior" role="navigation" aria-label="Menu principal">
-      <button data-aba="inicio" aria-label="Início"><i class="fas fa-home"></i> Início</button>
-      <button data-aba="aplicacoes" aria-label="Aplicações"><i class="fas fa-flask"></i> Aplicação</button>
-      <button data-aba="tarefas" aria-label="Tarefas"><i class="fas fa-tasks"></i> Tarefas</button>
-      <button data-aba="financeiro" aria-label="Financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</button>
-      <button data-aba="colheita" aria-label="Colheita"><i class="fas fa-tractor"></i> Colheita</button>
-      <button data-aba="relatorio" aria-label="Relatórios"><i class="fas fa-chart-bar"></i> Relatórios</button>
-      <button data-aba="configuracoes" aria-label="Configurações"><i class="fas fa-cog"></i> Configurações</button>
-      <button id="btnAlternarTema" aria-label="Alternar tema"><i class="fas fa-adjust"></i></button>
-    </nav>
-  </header>
+  <nav class="menu-superior" aria-label="Menu principal">
+    <button data-aba="aplicacoes" aria-label="Aplicações"><i class="fas fa-flask"></i></button>
+    <button data-aba="tarefas" aria-label="Tarefas"><i class="fas fa-tasks"></i></button>
+    <button data-aba="financeiro" aria-label="Financeiro"><i class="fas fa-dollar-sign"></i></button>
+    <button data-aba="colheita" aria-label="Colheita"><i class="fas fa-tractor"></i></button>
+    <button data-aba="relatorio" aria-label="Relatório"><i class="fas fa-chart-line"></i></button>
+    <button data-aba="configuracoes" aria-label="Configurações"><i class="fas fa-cog"></i></button>
+  </nav>
 
-  <!-- ===== CONTEÚDO PRINCIPAL ===== -->
-  <main>
-    <!-- ===== INÍCIO ===== -->
-    <section class="aba" id="aba-inicio">
-      <h2>Início</h2>
-      
-      <!-- Resumo da safra -->
-      <section class="resumo-topo card" aria-labelledby="resumo-safra-titulo">
-        <h3 id="resumo-safra-titulo" class="sr-only">Resumo da safra</h3>
-        <div class="resumo-item">
-          <strong>Total de Latas:</strong> 
-          <span id="totalLatasInicio">0</span>
-        </div>
-        <div class="resumo-item">
-          <strong>Total Pago:</strong> 
-          <span id="totalPagoInicio">R$ 0,00</span>
-        </div>
-        <div class="resumo-item">
-          <strong>Total Pendente:</strong> 
-          <span id="totalPendenteInicio">R$ 0,00</span>
-        </div>
-        <div class="resumo-item">
-          <strong>Total de Receitas:</strong> 
-          <span id="totalReceitasInicio">R$ 0,00</span>
-        </div>
-        <div class="resumo-item">
-          <strong>Total de Gastos:</strong> 
-          <span id="totalGastosInicio">R$ 0,00</span>
-        </div>
-        <div class="resumo-item">
-          <strong>Saldo:</strong> 
-          <span id="saldoInicio">R$ 0,00</span>
-        </div>
-      </section>
-      
-      <!-- Últimas atividades -->
-      <section class="card" aria-labelledby="ultimas-acoes-titulo">
-        <h3 id="ultimas-acoes-titulo" class="sr-only">Últimas ações</h3>
-        
-        <div class="atividade-grupo">
-          <h4>Últimas Aplicações</h4>
-          <ul id="ultimasAplicacoesInicio" class="lista-atividades"></ul>
-        </div>
-        
-        <div class="atividade-grupo">
-          <h4>Últimas Tarefas</h4>
-          <ul id="ultimasTarefasInicio" class="lista-atividades"></ul>
-        </div>
-        
-        <div class="atividade-grupo">
-          <h4>Últimas Colheitas</h4>
-          <ul id="ultimasColheitasInicio" class="lista-atividades"></ul>
-        </div>
+  <main class="conteudo">
+    <!-- Aplicações -->
+    <section id="aba-aplicacoes" class="aba" aria-labelledby="titulo-aplicacoes">
+      <h2 id="titulo-aplicacoes"><i class="fas fa-flask"></i> Aplicações</h2>
+      <form id="formAplicacao" autocomplete="off">
+        <fieldset>
+          <legend>Nova Aplicação</legend>
+          <label for="dataApp">Data:</label>
+          <input id="dataApp" type="date" required>
+          <label for="produtoApp">Produto:</label>
+          <input id="produtoApp" list="sugestoesProdutoApp" required>
+          <datalist id="sugestoesProdutoApp"></datalist>
+          <label for="dosagemApp">Dosagem:</label>
+          <input id="dosagemApp" required>
+          <label for="tipoApp">Tipo:</label>
+          <select id="tipoApp">
+            <option value="Adubo">Adubo</option>
+            <option value="Fungicida">Fungicida</option>
+            <option value="Inseticida">Inseticida</option>
+            <option value="Herbicida">Herbicida</option>
+            <option value="Outro">Outro</option>
+          </select>
+          <label for="setorApp">Setor/Talhão:</label>
+          <input id="setorApp" list="sugestoesSetor">
+          <datalist id="sugestoesSetor"></datalist>
+          <div class="form-actions">
+            <button type="submit" id="btnSalvarAplicacao">Salvar</button>
+            <button type="button" id="btnCancelarEdicaoApp" class="hidden">Cancelar</button>
+          </div>
+        </fieldset>
+      </form>
+      <section aria-label="Lista de aplicações">
+        <input type="search" id="filtroAplicacoes" placeholder="Filtrar aplicações...">
+        <div id="listaAplicacoes"></div>
       </section>
     </section>
 
-    <!-- ===== APLICAÇÕES ===== -->
-    <section class="aba" id="aba-aplicacoes">
-      <h2>Aplicações</h2>
-      
-      <!-- Resumo de aplicações -->
-      <section id="resumoAplicacoes" class="resumo-topo card"></section>
-      
-      <!-- Filtros de aplicações -->
-      <section class="filtros-container">
-        <form class="filtros" autocomplete="off" aria-labelledby="filtros-aplicacoes-titulo">
-          <h3 id="filtros-aplicacoes-titulo" class="sr-only">Filtros de aplicações</h3>
-          
-          <div class="filtro-grupo">
-            <input type="text" id="filtroAplicacoes" placeholder="Pesquisar...">
+    <!-- Tarefas -->
+    <section id="aba-tarefas" class="aba" aria-labelledby="titulo-tarefas">
+      <h2 id="titulo-tarefas"><i class="fas fa-tasks"></i> Tarefas</h2>
+      <form id="formTarefa" autocomplete="off">
+        <fieldset>
+          <legend>Nova Tarefa</legend>
+          <label for="dataTarefa">Data:</label>
+          <input id="dataTarefa" type="date" required>
+          <label for="descricaoTarefa">Descrição:</label>
+          <input id="descricaoTarefa" required>
+          <label for="prioridadeTarefa">Prioridade:</label>
+          <select id="prioridadeTarefa">
+            <option value="Alta">Alta</option>
+            <option value="Média" selected>Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+          <label for="setorTarefa">Setor/Talhão:</label>
+          <input id="setorTarefa" list="sugestoesSetor">
+          <div>
+            <input type="checkbox" id="eAplicacaoTarefaCheckbox">
+            <label for="eAplicacaoTarefaCheckbox">É uma Aplicação?</label>
           </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroTipoAplicacao" aria-label="Filtrar por tipo"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroSetorAplicacao" aria-label="Filtrar por setor"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <input type="date" id="filtroDataAplicacao" aria-label="Filtrar por data">
-          </div>
-          
-          <div class="filtro-grupo">
-            <button id="btnLimparFiltroAplicacao" type="button">
-              <i class="fas fa-times"></i> Limpar
-            </button>
-          </div>
-        </form>
-      </section>
-      
-      <!-- Lista de aplicações -->
-      <section class="lista-container">
-        <div id="listaAplicacoes" class="lista-itens"></div>
-      </section>
-      
-      <!-- Botão de adicionar -->
-      <button id="fab-aplicacao" class="fab" aria-label="Adicionar aplicação">
-        <i class="fas fa-plus"></i>
-      </button>
-      
-      <!-- Formulário de aplicação -->
-      <section class="form-container">
-        <form id="formAplicacao" class="hidden card" autocomplete="off" aria-labelledby="form-aplicacao-titulo">
-          <h3 id="form-aplicacao-titulo">Nova Aplicação</h3>
-          
-          <input type="hidden" id="aplicacaoIdEdit">
-          
-          <div class="form-grupo">
-            <label for="dataApp">Data</label>
-            <input type="date" id="dataApp" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="produtoApp">Produto</label>
-            <input type="text" id="produtoApp" list="sugestoesProdutoApp" placeholder="Produto" required>
-            <datalist id="sugestoesProdutoApp"></datalist>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="dosagemApp">Dosagem</label>
-            <input type="text" id="dosagemApp" placeholder="Dosagem" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="tipoApp">Tipo</label>
-            <select id="tipoApp">
-              <option value="Adubo">Adubo</option>
-              <option value="Defensivo">Defensivo</option>
-            </select>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="setorApp">Setor</label>
-            <input type="text" id="setorApp" list="sugestoesSetor" placeholder="Setor">
-            <datalist id="sugestoesSetor"></datalist>
-          </div>
-          
-          <div class="form-acoes">
-            <button type="submit" id="btnSalvarAplicacao" class="btn-primario">
-              <i class="fas fa-save"></i> Salvar
-            </button>
-            <button type="button" id="btnCancelarEdicaoApp" class="btn-secundario hidden">
-              <i class="fas fa-times"></i> Cancelar
-            </button>
-          </div>
-        </form>
-      </section>
-    </section>
-
-    <!-- ===== TAREFAS ===== -->
-    <section class="aba" id="aba-tarefas">
-      <h2>Tarefas</h2>
-      
-      <!-- Resumo de tarefas -->
-      <section id="resumoTarefas" class="resumo-topo card"></section>
-      
-      <!-- Filtros de tarefas -->
-      <section class="filtros-container">
-        <form class="filtros" autocomplete="off" aria-labelledby="filtros-tarefas-titulo">
-          <h3 id="filtros-tarefas-titulo" class="sr-only">Filtros de tarefas</h3>
-          
-          <div class="filtro-grupo">
-            <input type="text" id="filtroTarefasDescricao" placeholder="Pesquisar...">
-          </div>
-          
-          <div class="filtro-grupo">
-            <input type="date" id="filtroTarefasData" aria-label="Filtrar por data">
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroTarefasSetor" aria-label="Filtrar por setor"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroTarefasPrioridade" aria-label="Filtrar por prioridade">
-              <option value="">Prioridade</option>
-              <option value="Alta">Alta</option>
-              <option value="Média">Média</option>
-              <option value="Baixa">Baixa</option>
-            </select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroTarefasProduto" aria-label="Filtrar por produto"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <button id="btnLimparFiltroTarefas" type="button">
-              <i class="fas fa-times"></i> Limpar
-            </button>
-          </div>
-        </form>
-      </section>
-      
-      <!-- Listas de tarefas -->
-      <section class="tarefas-container">
-        <div class="tarefas-grupo">
-          <h3>Pendentes</h3>
-          <div id="listaTarefasPendentes" class="lista-itens"></div>
-        </div>
-        
-        <div class="tarefas-grupo">
-          <h3>Concluídas</h3>
-          <div id="listaTarefasConcluidas" class="lista-itens"></div>
-        </div>
-      </section>
-      
-      <!-- Botão de adicionar -->
-      <button id="fab-tarefa" class="fab" aria-label="Adicionar tarefa">
-        <i class="fas fa-plus"></i>
-      </button>
-      
-      <!-- Formulário de tarefa -->
-      <section class="form-container">
-        <form id="formTarefa" class="hidden card" autocomplete="off" aria-labelledby="form-tarefa-titulo">
-          <h3 id="form-tarefa-titulo">Nova Tarefa</h3>
-          
-          <input type="hidden" id="tarefaIdEdit">
-          
-          <div class="form-grupo">
-            <label for="dataTarefa">Data</label>
-            <input type="date" id="dataTarefa" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="descricaoTarefa">Descrição</label>
-            <input type="text" id="descricaoTarefa" placeholder="Descrição" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="prioridadeTarefa">Prioridade</label>
-            <select id="prioridadeTarefa">
-              <option value="Alta">Alta</option>
-              <option value="Média">Média</option>
-              <option value="Baixa">Baixa</option>
-            </select>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="setorTarefa">Setor</label>
-            <input type="text" id="setorTarefa" list="sugestoesSetor" placeholder="Setor">
-            <datalist id="sugestoesSetor"></datalist>
-          </div>
-          
-          <div class="form-grupo checkbox-grupo">
-            <input type="checkbox" id="eAplicacaoTarefaCheckbox" class="checkbox">
-            <label for="eAplicacaoTarefaCheckbox">É aplicação?</label>
-          </div>
-          
           <div id="camposAplicacaoTarefa" class="hidden">
-            <div class="form-grupo">
-              <label for="produtoAplicacaoTarefa">Produto</label>
-              <input type="text" id="produtoAplicacaoTarefa" list="sugestoesProdutoApp" placeholder="Produto">
-            </div>
-            
-            <div class="form-grupo">
-              <label for="dosagemAplicacaoTarefa">Dosagem</label>
-              <input type="text" id="dosagemAplicacaoTarefa" placeholder="Dosagem">
-            </div>
-            
-            <div class="form-grupo">
-              <label for="tipoAplicacaoTarefa">Tipo</label>
-              <select id="tipoAplicacaoTarefa">
-                <option value="Adubo">Adubo</option>
-                <option value="Defensivo">Defensivo</option>
-              </select>
-            </div>
+            <label for="produtoAplicacaoTarefa">Produto:</label>
+            <input id="produtoAplicacaoTarefa" list="sugestoesProdutoApp">
+            <label for="dosagemAplicacaoTarefa">Dosagem:</label>
+            <input id="dosagemAplicacaoTarefa">
+            <label for="tipoAplicacaoTarefa">Tipo:</label>
+            <select id="tipoAplicacaoTarefa">
+              <option value="Adubo">Adubo</option>
+              <option value="Fungicida">Fungicida</option>
+              <option value="Inseticida">Inseticida</option>
+              <option value="Herbicida">Herbicida</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
-          
-          <div class="form-acoes">
-            <button type="submit" id="btnSalvarTarefa" class="btn-primario">
-              <i class="fas fa-save"></i> Salvar
-            </button>
-            <button type="button" id="btnCancelarEdicaoTarefa" class="btn-secundario hidden">
-              <i class="fas fa-times"></i> Cancelar
-            </button>
+          <div class="form-actions">
+            <button type="submit" id="btnSalvarTarefa">Salvar</button>
+            <button type="button" id="btnCancelarEdicaoTarefa" class="hidden">Cancelar</button>
           </div>
-        </form>
+        </fieldset>
+      </form>
+      <section aria-label="Tarefas pendentes">
+        <input type="search" id="filtroTarefasPendentes" placeholder="Filtrar pendentes...">
+        <div id="listaTarefasPendentes"></div>
+      </section>
+      <section aria-label="Tarefas concluídas">
+        <input type="search" id="filtroTarefasConcluidas" placeholder="Filtrar concluídas...">
+        <div id="listaTarefasConcluidas"></div>
       </section>
     </section>
 
-    <!-- ===== FINANCEIRO ===== -->
-    <section class="aba" id="aba-financeiro">
-      <h2>Financeiro</h2>
-      
-      <!-- Resumo financeiro -->
-      <section id="resumoFinanceiro" class="resumo-topo card"></section>
-      
-      <!-- Filtros financeiros -->
-      <section class="filtros-container">
-        <form class="filtros" autocomplete="off" aria-labelledby="filtros-financeiro-titulo">
-          <h3 id="filtros-financeiro-titulo" class="sr-only">Filtros financeiros</h3>
-          
-          <div class="filtro-grupo">
-            <input type="text" id="filtroFinanceiroDescricao" placeholder="Pesquisar...">
-          </div>
-          
-          <div class="filtro-grupo">
-            <input type="date" id="filtroFinanceiroData" aria-label="Filtrar por data">
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroFinanceiroCategoria" aria-label="Filtrar por categoria"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <select id="filtroFinanceiroTipo" aria-label="Filtrar por tipo"></select>
-          </div>
-          
-          <div class="filtro-grupo">
-            <button id="btnLimparFiltroFinanceiro" type="button">
-              <i class="fas fa-times"></i> Limpar
-            </button>
-          </div>
-        </form>
-      </section>
-      
-      <!-- Lista financeira -->
-      <section class="lista-container">
-        <div id="listaFinanceiro" class="lista-itens"></div>
-      </section>
-      
-      <!-- Botão de adicionar -->
-      <button id="fab-financeiro" class="fab" aria-label="Adicionar lançamento">
-        <i class="fas fa-plus"></i>
-      </button>
-      
-      <!-- Formulário financeiro -->
-      <section class="form-container">
-        <form id="formFinanceiro" class="hidden card" autocomplete="off" aria-labelledby="form-financeiro-titulo">
-          <h3 id="form-financeiro-titulo">Novo Lançamento</h3>
-          
-          <input type="hidden" id="financeiroIdEdit">
-          
-          <div class="form-grupo">
-            <label for="dataFin">Data</label>
-            <input type="date" id="dataFin" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="descricaoFin">Descrição</label>
-            <input type="text" id="descricaoFin" placeholder="Descrição" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="valorFin">Valor (R$)</label>
-            <input type="number" id="valorFin" placeholder="Valor" required min="0" step="0.01">
-          </div>
-          
-          <div class="form-grupo">
-            <label for="categoriaFin">Categoria</label>
-            <input type="text" id="categoriaFin" list="sugestoesCategoriaFin" placeholder="Categoria">
-            <datalist id="sugestoesCategoriaFin"></datalist>
-          </div>
-          
-          <div class="form-grupo checkbox-grupo">
-            <input type="checkbox" id="parceladoFin" class="checkbox">
+    <!-- Financeiro -->
+    <section id="aba-financeiro" class="aba" aria-labelledby="titulo-financeiro">
+      <h2 id="titulo-financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</h2>
+      <button type="button" id="btnToggleFormFinanceiro">Adicionar Lançamento</button>
+      <form id="formFinanceiro" class="hidden" autocomplete="off">
+        <fieldset>
+          <legend>Novo Lançamento</legend>
+          <label for="tipoLancamentoFin">Tipo:</label>
+          <select id="tipoLancamentoFin">
+            <option value="gasto" selected>Gasto</option>
+            <option value="receita">Receita</option>
+          </select>
+          <label for="dataFin">Data:</label>
+          <input id="dataFin" type="date" required>
+          <label for="descricaoFin">Descrição:</label>
+          <input id="descricaoFin" required>
+          <label for="valorFin">Valor (R$):</label>
+          <input id="valorFin" type="number" step="0.01" required>
+          <label for="categoriaFin">Categoria:</label>
+          <input id="categoriaFin" list="sugestoesCategoriaFin">
+          <datalist id="sugestoesCategoriaFin">
+            <option value="Insumos Agrícolas"></option>
+            <option value="Mão de Obra"></option>
+            <option value="Manutenção"></option>
+            <option value="Combustível"></option>
+            <option value="Venda de Café"></option>
+            <option value="Outros Gastos"></option>
+            <option value="Outras Receitas"></option>
+          </datalist>
+          <div>
+            <input type="checkbox" id="parceladoFin">
             <label for="parceladoFin">Parcelado?</label>
           </div>
-          
           <div id="camposParcelasFin" class="hidden">
-            <div class="form-grupo">
-              <label for="numParcelasFin">Número de parcelas</label>
-              <input type="number" id="numParcelasFin" min="2" value="2" placeholder="Nº de parcelas">
-            </div>
+            <label for="numParcelasFin">Número de Parcelas:</label>
+            <input id="numParcelasFin" type="number" min="2">
           </div>
-          
-          <div class="form-acoes">
-            <button type="submit" id="btnSalvarFinanceiro" class="btn-primario">
-              <i class="fas fa-save"></i> Salvar
-            </button>
-            <button type="button" id="btnCancelarEdicaoFin" class="btn-secundario hidden">
-              <i class="fas fa-times"></i> Cancelar
-            </button>
+          <div class="form-actions">
+            <button type="submit" id="btnSalvarFinanceiro">Salvar</button>
+            <button type="button" id="btnCancelarEdicaoFin" class="hidden">Cancelar</button>
           </div>
-        </form>
+        </fieldset>
+      </form>
+      <section aria-label="Resumo financeiro">
+        <div id="resumoFinanceiro"></div>
+      </section>
+      <section aria-label="Lançamentos financeiros">
+        <input type="search" id="filtroFinanceiro" placeholder="Filtrar lançamentos...">
+        <div id="listaFinanceiro"></div>
       </section>
     </section>
 
-    <!-- ===== COLHEITA ===== -->
-    <section class="aba" id="aba-colheita">
-      <h2>Colheita</h2>
-      
-      <!-- Resumo de colheita -->
-      <section id="resumoColheita" class="resumo-topo card"></section>
-      
-      <!-- Filtros de colheita -->
-      <section class="filtros-container">
-        <form class="filtros" autocomplete="off" aria-labelledby="filtros-colheita-titulo">
-          <h3 id="filtros-colheita-titulo" class="sr-only">Filtros de colheita</h3>
-          
-          <div class="filtro-grupo">
-            <select id="filtroColheitaColhedor" aria-label="Filtrar por colhedor"></select>
+    <!-- Colheita -->
+    <section id="aba-colheita" class="aba" aria-labelledby="titulo-colheita">
+      <h2 id="titulo-colheita"><i class="fas fa-tractor"></i> Colheita</h2>
+      <form id="formColheita" autocomplete="off">
+        <fieldset>
+          <legend>Novo Registro de Colheita</legend>
+          <label for="valorLataColheita">Valor da Lata (R$):</label>
+          <input id="valorLataColheita" type="number" step="0.01">
+          <label for="dataColheita">Data:</label>
+          <input id="dataColheita" type="date" required>
+          <label for="colhedorColheita">Colhedor:</label>
+          <input id="colhedorColheita" list="sugestoesColhedor" required>
+          <datalist id="sugestoesColhedor"></datalist>
+          <label for="quantidadeLatasColheita">Quantidade de Latas:</label>
+          <input id="quantidadeLatasColheita" type="number" step="0.5" required>
+          <div>
+            <input type="checkbox" id="pagoColheita" checked>
+            <label for="pagoColheita">Pago na Data?</label>
           </div>
-          
-          <div class="filtro-grupo">
-            <input type="date" id="filtroColheitaData" aria-label="Filtrar por data">
+          <div class="form-actions">
+            <button type="submit" id="btnSalvarColheita">Salvar</button>
+            <button type="button" id="btnCancelarEdicaoColheita" class="hidden">Cancelar</button>
           </div>
-          
-          <div class="filtro-grupo">
-            <button id="btnLimparFiltroColheita" type="button">
-              <i class="fas fa-times"></i> Limpar
-            </button>
-          </div>
-        </form>
+        </fieldset>
+      </form>
+      <section aria-label="Resumo da colheita">
+        <div id="resumoColheita"></div>
       </section>
-      
-      <!-- Listas de colheita -->
-      <section class="colheita-container">
-        <div class="colheita-grupo">
-          <h3>Pendentes</h3>
-          <div id="colheitaPendentes" class="lista-itens"></div>
-        </div>
-        
-        <div class="colheita-grupo">
-          <h3>Pagos</h3>
-          <div id="colheitaPagos" class="lista-itens"></div>
-        </div>
+      <section aria-label="Colheitas pendentes">
+        <input type="search" id="filtroColheitaPendentes" placeholder="Filtrar pendentes...">
+        <div id="listaColheitaPendentes"></div>
       </section>
-      
-      <!-- Botão de adicionar -->
-      <button id="fab-colheita" class="fab" aria-label="Adicionar colheita">
-        <i class="fas fa-plus"></i>
-      </button>
-      
-      <!-- Formulário de colheita -->
-      <section class="form-container">
-        <form id="formColheita" class="hidden card" autocomplete="off" aria-labelledby="form-colheita-titulo">
-          <h3 id="form-colheita-titulo">Nova Colheita</h3>
-          
-          <div class="form-grupo">
-            <label for="dataColheita">Data</label>
-            <input type="date" id="dataColheita" required>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="colhedor">Colhedor</label>
-            <input type="text" id="colhedor" list="sugestoesColhedor" placeholder="Colhedor" required>
-            <datalist id="sugestoesColhedor"></datalist>
-          </div>
-          
-          <div class="form-grupo">
-            <label for="quantidadeLatas">Quantidade de latas</label>
-            <input type="number" id="quantidadeLatas" placeholder="Quantidade de latas" required min="0" step="0.01">
-          </div>
-          
-          <div class="form-grupo">
-            <label for="valorLata">Valor da lata (R$)</label>
-            <input type="number" id="valorLata" min="0" step="0.01">
-          </div>
-          
-          <div class="form-acoes">
-            <button type="submit" id="btnSalvarColheita" class="btn-primario">
-              <i class="fas fa-save"></i> Salvar
-            </button>
-            <button type="button" id="btnCancelarEdicaoColheita" class="btn-secundario hidden">
-              <i class="fas fa-times"></i> Cancelar
-            </button>
-          </div>
-        </form>
+      <section aria-label="Colheitas pagas">
+        <input type="search" id="filtroColheitaPagos" placeholder="Filtrar pagos...">
+        <div id="listaColheitaPagos"></div>
       </section>
     </section>
 
-    <!-- ===== RELATÓRIOS ===== -->
-    <section class="aba" id="aba-relatorio">
-      <h2>Relatórios</h2>
-      
-      <!-- Ações de relatório -->
-      <section class="acoes-relatorio card">
-        <div class="acoes-grupo">
-          <button onclick="exportarPDF()" class="btn-relatorio">
-            <i class="fas fa-file-pdf"></i> Exportar PDF
-          </button>
-          <button onclick="exportarRelatorioCSV()" class="btn-relatorio">
-            <i class="fas fa-file-csv"></i> Exportar CSV
-          </button>
-        </div>
-      </section>
-      
-      <!-- Conteúdo do relatório -->
-      <section class="relatorio-container card">
-        <div class="relatorio-grupo">
-          <h3>Aplicações</h3>
-          <div id="resumoRelAplicacoes" class="relatorio-conteudo"></div>
-        </div>
-        
-        <div class="relatorio-grupo">
-          <h3>Tarefas</h3>
-          <div id="resumoRelTarefas" class="relatorio-conteudo"></div>
-        </div>
-        
-        <div class="relatorio-grupo">
-          <h3>Financeiro</h3>
-          <div id="resumoRelFinanceiro" class="relatorio-conteudo"></div>
-        </div>
-        
-        <div class="relatorio-grupo">
-          <h3>Colheita</h3>
-          <div id="resumoRelColheita" class="relatorio-conteudo"></div>
-        </div>
-      </section>
+    <!-- Relatório -->
+    <section id="aba-relatorio" class="aba" aria-labelledby="titulo-relatorio">
+      <h2 id="titulo-relatorio"><i class="fas fa-chart-line"></i> Relatório</h2>
+      <button type="button" id="btnExportarPDF">Exportar PDF</button>
+      <button type="button" id="btnExportarCSV">Exportar CSV</button>
+      <div id="relatorioGraficos"></div>
     </section>
 
-    <!-- ===== CONFIGURAÇÕES ===== -->
-    <section class="aba" id="aba-configuracoes">
-      <h2>Configurações</h2>
-      
-      <!-- Informações da safra -->
-      <section class="resumo-topo card">
-        <div class="resumo-item">
-          <strong>Ano da safra atual:</strong> 
-          <span id="anoSafraAtual"></span>
-        </div>
-      </section>
-      
-      <!-- Gerenciamento de safras -->
-      <section class="config-grupo card">
-        <h3>Gerenciamento de Safras</h3>
-        
-        <div class="config-item">
-          <label for="safraSelecionada">Safra arquivada:</label>
-          <select id="safraSelecionada"></select>
-        </div>
-        
-        <div class="config-acoes">
-          <button id="btnFecharSafra" class="btn-config" aria-label="Fechar safra atual (arquivar)">
-            <i class="fas fa-archive"></i> Fechar
-          </button>
-          <button id="btnRestaurarSafra" class="btn-config" aria-label="Restaurar safra arquivada">
-            <i class="fas fa-undo"></i> Restaurar
-          </button>
-          <button id="btnDeletarSafra" class="btn-config btn-perigo" aria-label="Deletar safra definitivamente">
-            <i class="fas fa-trash"></i> Deletar
-          </button>
-        </div>
-      </section>
-      
-      <!-- Backup e importação -->
-      <section class="config-grupo card">
-        <h3>Backup e Importação</h3>
-        
-        <div class="config-acoes">
-          <button id="btnBackup" class="btn-config" aria-label="Backup manual">
-            <i class="fas fa-download"></i> Backup
-          </button>
-          
-          <div class="config-item">
-            <label for="arquivoBackup">Selecione um arquivo para importar:</label>
-            <input type="file" id="arquivoBackup" accept=".json">
-          </div>
-          
-          <button id="btnImportarBackup
+    <!-- Configurações -->
+    <section id="aba-configuracoes" class="aba" aria-labelledby="titulo-configuracoes">
+      <h2 id="titulo-configuracoes"><i class="fas fa-cog"></i> Configurações</h2>
+      <button type="button" id="btnAlternarTema">Alternar Tema</button>
+      <p>Ano Safra Atual: <span id="anoSafraAtual"></span></p>
+      <button type="button" id="btnFazerBackup">Fazer Backup</button>
+      <input type="file" id="arquivoBackup" style="display:none;">
+      <label for="arquivoBackup" class="btn-secondary">Importar Backup</label>
+    </section>
+  </main>
+</body>
+</html>

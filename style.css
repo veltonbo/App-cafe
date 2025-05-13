@@ -1,34 +1,37 @@
 :root {
-  --primary: #4caf50;
+  --primary: #43a047;
   --primary-hover: #388e3c;
-  --danger: #f44336;
-  --danger-hover: #c62828;
-  --info: #2196f3;
+  --danger: #e53935;
+  --danger-hover: #b71c1c;
+  --info: #1976d2;
   --info-hover: #1565c0;
-  --warning: #ff9800;
-  --bg-dark: #121212;
-  --bg-light: #f5f5f5;
-  --text-dark: #e0e0e0;
-  --text-light: #222;
-  --input-bg-dark: #232323;
+  --warning: #ffa000;
+  --bg-dark: #181c1f;
+  --bg-light: #f7f8fa;
+  --text-dark: #e0e3e7;
+  --text-light: #23272f;
+  --input-bg-dark: #23272f;
   --input-bg-light: #fff;
-  --input-border-dark: #555;
-  --input-border-light: #ccc;
-  --item-bg-dark: #1e1e1e;
-  --item-bg-light: #fafafa;
-  --modal-bg: rgba(0,0,0,0.5);
-  --border-radius: 8px;
-  --transition: 0.3s;
+  --input-border-dark: #2c313a;
+  --input-border-light: #d1d5db;
+  --item-bg-dark: #23272f;
+  --item-bg-light: #fff;
+  --modal-bg: rgba(0,0,0,0.45);
+  --border-radius: 14px;
+  --transition: 0.2s;
+  --shadow: 0 2px 16px rgba(0,0,0,0.10);
+  --shadow-hover: 0 4px 24px rgba(0,0,0,0.13);
+  --font-main: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
-/* ===== LAYOUT GERAL ===== */
 body {
   margin: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: var(--font-main);
   background: var(--bg-dark);
   color: var(--text-dark);
   min-height: 100vh;
   transition: background 0.3s, color 0.3s;
+  letter-spacing: 0.01em;
 }
 
 body.claro {
@@ -37,7 +40,7 @@ body.claro {
 }
 
 .conteudo {
-  padding: 20px;
+  padding: 32px 16px 32px 16px;
   max-width: 900px;
   margin: auto;
   animation: fadeIn 0.5s;
@@ -52,48 +55,58 @@ body.claro {
 .menu-superior {
   display: flex;
   justify-content: center;
-  background: #1f1f1f;
-  padding: 10px 0;
+  background: #23272f;
+  padding: 0 0 0 0;
   position: sticky;
   top: 0;
   z-index: 999;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  gap: 2px;
 }
 
 .menu-superior button {
   background: none;
   border: none;
-  color: #aaa;
+  color: #b0b8c1;
   font-size: 22px;
-  margin: 0 4px;
+  margin: 0 2px;
   cursor: pointer;
   transition: color var(--transition), background var(--transition);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  border-radius: 0;
+  width: 60px;
+  height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-bottom: 2.5px solid transparent;
+  font-weight: 500;
 }
 
 .menu-superior button.active,
 .menu-superior button:focus {
   color: var(--primary);
-  background: rgba(76,175,80,0.08);
-  outline: 2px solid var(--primary);
+  background: #20232a;
+  border-bottom: 2.5px solid var(--primary);
+  outline: none;
 }
 
 .menu-superior button:hover {
   color: var(--primary);
+  background: #20232a;
 }
 
 body.claro .menu-superior {
-  background: #e0e0e0;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-
 body.claro .menu-superior button {
-  color: #555;
+  color: #6b7280;
+  background: none;
+}
+body.claro .menu-superior button.active,
+body.claro .menu-superior button:focus {
+  background: #f0f4f8;
+  color: var(--primary);
 }
 
 /* ===== ABAS ===== */
@@ -104,14 +117,43 @@ body.claro .menu-superior button {
   display: block;
 }
 
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 24px rgba(67,160,71,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, box-shadow 0.18s;
+  outline: none;
+}
+.botao-flutuante:hover, .botao-flutuante:focus {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-hover);
+}
+
 /* ===== FORMULÁRIOS ===== */
 form {
   background: var(--item-bg-dark);
-  padding: 18px 16px;
+  padding: 28px 22px 18px 22px;
   border-radius: var(--border-radius);
-  margin-bottom: 18px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  transition: background var(--transition);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  transition: background var(--transition), box-shadow var(--transition);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 body.claro form {
   background: var(--item-bg-light);
@@ -119,33 +161,41 @@ body.claro form {
 
 form label {
   display: block;
-  margin-top: 12px;
+  margin-top: 16px;
   margin-bottom: 4px;
   font-weight: 500;
+  font-size: 1.05em;
+  color: inherit;
 }
 
 input, select, textarea {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 8px;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--input-border-dark);
+  border-radius: 8px;
+  border: 1.5px solid var(--input-border-dark);
   background: var(--input-bg-dark);
   color: var(--text-dark);
-  font-size: 16px;
+  font-size: 17px;
   box-sizing: border-box;
-  transition: border var(--transition), background var(--transition);
+  transition: border var(--transition), background var(--transition), box-shadow var(--transition);
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 input:focus, select:focus, textarea:focus {
-  outline: 2px solid var(--primary);
   border-color: var(--primary);
+  background: #232f2b;
+  box-shadow: 0 0 0 2px rgba(67,160,71,0.13);
 }
 
 body.claro input, body.claro select, body.claro textarea {
   background: var(--input-bg-light);
   color: var(--text-light);
-  border: 1px solid var(--input-border-light);
+  border: 1.5px solid var(--input-border-light);
+}
+body.claro input:focus, body.claro select:focus, body.claro textarea:focus {
+  background: #f0f4f8;
 }
 
 input[type="checkbox"] {
@@ -156,67 +206,42 @@ input[type="checkbox"] {
 
 .form-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 18px;
+  justify-content: flex-end;
 }
 
 .hidden {
   display: none !important;
 }
 
-/* ===== BOTÃO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary, #4caf50);
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  font-size: 28px;
-  cursor: pointer;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-.botao-flutuante:hover {
-  background: var(--primary-hover, #388e3c);
-}
-
 /* ===== BOTÕES PADRÃO ===== */
 button, .btn-primary, .btn-secondary {
   font-size: 16px;
-  padding: 10px 18px;
-  border-radius: var(--border-radius);
+  padding: 10px 22px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-weight: bold;
-  transition: background var(--transition), color var(--transition);
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .btn-primary, button[type="submit"] {
   background: var(--primary);
   color: #fff;
 }
-
 .btn-primary:hover, button[type="submit"]:hover {
   background: var(--primary-hover);
 }
 
 .btn-secondary {
-  background: #444;
+  background: #353b42;
   color: #fff;
 }
-
 .btn-secondary:hover {
-  background: #222;
+  background: #23272f;
 }
-
 body.claro .btn-secondary {
   background: #e0e0e0;
   color: #222;
@@ -230,17 +255,24 @@ body.claro .btn-secondary:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
-  margin: 10px 0;
+  padding: 18px 20px;
+  margin: 14px 0;
   background: var(--item-bg-dark);
-  border-left: 5px solid var(--primary);
   border-radius: var(--border-radius);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  transition: background var(--transition);
+  box-shadow: var(--shadow);
+  transition: background var(--transition), box-shadow var(--transition);
+  border-left: 5px solid var(--primary);
+  gap: 12px;
 }
-
+.item:hover {
+  background: #232f2b;
+  box-shadow: var(--shadow-hover);
+}
 body.claro .item {
   background: var(--item-bg-light);
+}
+body.claro .item:hover {
+  background: #f0f4f8;
 }
 
 .item span {
@@ -248,6 +280,7 @@ body.claro .item {
   color: inherit;
   word-break: break-word;
   margin-right: 10px;
+  font-size: 1.08em;
 }
 
 .tarefa-feita span, .item.tarefa-feita span {
@@ -258,21 +291,56 @@ body.claro .tarefa-feita span, body.claro .item.tarefa-feita span {
   color: #aaa;
 }
 
+/* ===== BOTÕES DE AÇÃO NA LISTA ===== */
+.item .botao-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  margin-left: 4px;
+  margin-right: 0;
+  padding: 0;
+  transition: background var(--transition), box-shadow var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.item .botao-circular.vermelho {
+  background: var(--danger);
+}
+.item .botao-circular.vermelho:hover {
+  background: var(--danger-hover);
+}
+.item .botao-circular.azul {
+  background: var(--info);
+}
+.item .botao-circular.azul:hover {
+  background: var(--info-hover);
+}
+.item .botao-circular:hover {
+  background: var(--primary-hover);
+}
+
 /* ===== FILTRO E PESQUISA ===== */
 .filtro-lista {
-  padding: 10px;
+  padding: 12px;
   background: var(--input-bg-dark);
-  border: 1px solid var(--input-border-dark);
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
+  border: 1.5px solid var(--input-border-dark);
+  border-radius: 8px;
+  margin-bottom: 12px;
   color: inherit;
   font-size: 16px;
   width: 100%;
   box-sizing: border-box;
+  transition: border var(--transition), background var(--transition);
 }
 body.claro .filtro-lista {
   background: var(--input-bg-light);
-  border: 1px solid var(--input-border-light);
+  border: 1.5px solid var(--input-border-light);
 }
 
 /* ===== TOASTS ===== */
@@ -287,6 +355,12 @@ body.claro .filtro-lista {
   pointer-events: auto;
   opacity: 0;
   animation: toastIn 0.3s forwards;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  padding: 14px 22px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
 }
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(20px);}
@@ -312,10 +386,10 @@ body.claro .filtro-lista {
   background: #fff;
   color: #222;
   border-radius: var(--border-radius);
-  padding: 24px;
+  padding: 28px 24px;
   min-width: 260px;
   max-width: 90vw;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
   z-index: 2;
 }
 body.claro #modal-confirmacao .modal-box {
@@ -323,7 +397,7 @@ body.claro #modal-confirmacao .modal-box {
   color: #222;
 }
 body:not(.claro) #modal-confirmacao .modal-box {
-  background: #222;
+  background: #23272f;
   color: #fff;
 }
 
@@ -331,14 +405,15 @@ body:not(.claro) #modal-confirmacao .modal-box {
 .resumo-section, #resumoFinanceiro, #resumoColheita {
   margin-top: 15px;
   background: var(--item-bg-dark);
-  padding: 12px 16px;
+  padding: 16px 18px;
   border-radius: var(--border-radius);
-  border: 1px solid var(--input-border-dark);
+  border: 1.5px solid var(--input-border-dark);
   margin-bottom: 18px;
+  box-shadow: var(--shadow);
 }
 body.claro .resumo-section, body.claro #resumoFinanceiro, body.claro #resumoColheita {
   background: var(--item-bg-light);
-  border: 1px solid var(--input-border-light);
+  border: 1.5px solid var(--input-border-light);
 }
 
 .resumo-section h3, #resumoFinanceiro h3, #resumoColheita h3 {
@@ -350,11 +425,11 @@ body.claro .resumo-section, body.claro #resumoFinanceiro, body.claro #resumoColh
   border-radius: var(--border-radius);
   margin-top: 15px;
   padding: 10px;
-  border: 1px solid var(--input-border-dark);
+  border: 1.5px solid var(--input-border-dark);
 }
 body.claro #relatorioGraficos canvas {
   background: var(--item-bg-light);
-  border: 1px solid var(--input-border-light);
+  border: 1.5px solid var(--input-border-light);
 }
 
 /* ===== LOADING ===== */
@@ -376,6 +451,7 @@ body.claro .erro-campo {
 }
 .msg-erro {
   margin-bottom: 8px;
+  font-size: 0.97em;
 }
 
 /* ===== RESPONSIVIDADE ===== */
@@ -398,6 +474,13 @@ body.claro .erro-campo {
   .menu-superior {
     flex-wrap: wrap;
     gap: 2px;
+  }
+  .botao-flutuante {
+    right: 16px;
+    bottom: 16px;
+    width: 54px;
+    height: 54px;
+    font-size: 26px;
   }
 }
 

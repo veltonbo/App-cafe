@@ -45,7 +45,7 @@
     <!-- ===== APLICAÇÕES ===== -->
     <section id="aba-aplicacoes" class="aba" aria-labelledby="titulo-aplicacoes">
       <h2 id="titulo-aplicacoes"><i class="fas fa-flask"></i> Aplicações</h2>
-      <button id="btnAdicionarAplicacao" class="botao-flutuante" aria-label="Adicionar Aplicação" style="display:none;">
+      <button id="btnAdicionarAplicacao" class="botao-flutuante" aria-label="Adicionar Aplicação" type="button" style="display:none;">
         <i class="fas fa-plus"></i>
       </button>
       <form id="formAplicacao" class="hidden" autocomplete="off">
@@ -53,12 +53,8 @@
         <label for="dataApp">Data:</label>
         <input id="dataApp" type="date" required>
         <label for="produtoApp">Produto:</label>
-        <div class="input-group">
-          <input id="produtoApp" list="sugestoesProdutoApp" required>
-          <datalist id="sugestoesProdutoApp"></datalist>
-          <button type="button" id="btnEditarAplicacao" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" id="btnDeletarAplicacao" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
-        </div>
+        <input id="produtoApp" list="sugestoesProdutoApp" required>
+        <datalist id="sugestoesProdutoApp"></datalist>
         <label for="dosagemApp">Dosagem:</label>
         <input id="dosagemApp" required>
         <label for="tipoApp">Tipo:</label>
@@ -84,7 +80,7 @@
     <!-- ===== TAREFAS ===== -->
     <section id="aba-tarefas" class="aba" aria-labelledby="titulo-tarefas">
       <h2 id="titulo-tarefas"><i class="fas fa-tasks"></i> Tarefas</h2>
-      <button id="btnAdicionarTarefa" class="botao-flutuante" aria-label="Adicionar Tarefa" style="display:none;">
+      <button id="btnAdicionarTarefa" class="botao-flutuante" aria-label="Adicionar Tarefa" type="button" style="display:none;">
         <i class="fas fa-plus"></i>
       </button>
       <form id="formTarefa" class="hidden" autocomplete="off">
@@ -92,11 +88,7 @@
         <label for="dataTarefa">Data:</label>
         <input id="dataTarefa" type="date" required>
         <label for="descricaoTarefa">Descrição:</label>
-        <div class="input-group">
-          <input id="descricaoTarefa" required>
-          <button type="button" id="btnEditarTarefa" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" id="btnDeletarTarefa" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
-        </div>
+        <input id="descricaoTarefa" required>
         <label for="prioridadeTarefa">Prioridade:</label>
         <select id="prioridadeTarefa">
           <option value="Alta">Alta</option>
@@ -137,7 +129,7 @@
     <!-- ===== FINANCEIRO ===== -->
     <section id="aba-financeiro" class="aba" aria-labelledby="titulo-financeiro">
       <h2 id="titulo-financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</h2>
-      <button id="btnAdicionarFinanceiro" class="botao-flutuante" aria-label="Adicionar Lançamento" style="display:none;">
+      <button id="btnAdicionarFinanceiro" class="botao-flutuante" aria-label="Adicionar Lançamento" type="button" style="display:none;">
         <i class="fas fa-plus"></i>
       </button>
       <form id="formFinanceiro" class="hidden" autocomplete="off">
@@ -150,11 +142,7 @@
         <label for="dataFin">Data:</label>
         <input id="dataFin" type="date" required>
         <label for="descricaoFin">Descrição:</label>
-        <div class="input-group">
-          <input id="descricaoFin" required>
-          <button type="button" id="btnEditarFinanceiro" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" id="btnDeletarFinanceiro" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
-        </div>
+        <input id="descricaoFin" required>
         <label for="valorFin">Valor (R$):</label>
         <input id="valorFin" type="number" step="0.01" required>
         <label for="categoriaFin">Categoria:</label>
@@ -189,7 +177,7 @@
     <!-- ===== COLHEITA ===== -->
     <section id="aba-colheita" class="aba" aria-labelledby="titulo-colheita">
       <h2 id="titulo-colheita"><i class="fas fa-tractor"></i> Colheita</h2>
-      <button id="btnAdicionarColheita" class="botao-flutuante" aria-label="Adicionar Colheita" style="display:none;">
+      <button id="btnAdicionarColheita" class="botao-flutuante" aria-label="Adicionar Colheita" type="button" style="display:none;">
         <i class="fas fa-plus"></i>
       </button>
       <div>
@@ -202,12 +190,8 @@
         <label for="dataColheita">Data:</label>
         <input id="dataColheita" type="date" required>
         <label for="colhedorColheita">Colhedor:</label>
-        <div class="input-group">
-          <input id="colhedorColheita" list="sugestoesColhedor" required>
-          <datalist id="sugestoesColhedor"></datalist>
-          <button type="button" id="btnEditarColheita" class="btn-editar hidden" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" id="btnDeletarColheita" class="btn-deletar hidden" title="Deletar"><i class="fas fa-trash"></i></button>
-        </div>
+        <input id="colhedorColheita" list="sugestoesColhedor" required>
+        <datalist id="sugestoesColhedor"></datalist>
         <label for="quantidadeLatasColheita">Quantidade de Latas:</label>
         <input id="quantidadeLatasColheita" type="number" step="0.5" required>
         <div>

@@ -1,13 +1,17 @@
-// ===== VARIÁVEIS =====
 let anoAtual = new Date().getFullYear();
 
-// ===== TEMA CLARO/ESCURO =====
+// ====== TEMA CLARO/ESCURO ======
 function alternarTema() {
-  document.body.classList.toggle('claro');
-  localStorage.setItem('tema', document.body.classList.contains('claro') ? 'claro' : 'escuro');
+  document.body.classList.toggle("claro");
+  localStorage.setItem("tema", document.body.classList.contains("claro") ? "claro" : "escuro");
 }
 
-// ===== CARREGAR ANO DA SAFRA ATUAL =====
+// ====== Obter usuário atual ======
+function getCurrentUser() {
+  return localStorage.getItem("gm_cafe_current_user");
+}
+
+// ====== CARREGAR ANO SAFRA ======
 function carregarAnoSafra() {
   document.getElementById("anoSafraAtual").innerText = anoAtual;
 }
@@ -15,10 +19,11 @@ function carregarAnoSafra() {
 // ====== CARREGAR SAFRAS DISPONÍVEIS ======
 function carregarSafrasDisponiveis() {
   const select = document.getElementById("safraSelecionada");
-  if (!select) return;
+  const user = getCurrentUser();
+  if (!select || !user) return;
 
   select.innerHTML = "<option value=''>Selecione o ano</option>";
-  db.ref().once("value").then(snapshot => {
+  db.ref(`usuarios/${user}`).once("value").then(snapshot => {
     const data = snapshot.val() || {};
     Object.keys(data).forEach(key => {
       if (!["Aplicacoes", "Tarefas", "Financeiro", "Colheita", "ValorLata"].includes(key)) {
@@ -31,16 +36,19 @@ function carregarSafrasDisponiveis() {
   });
 }
 
-// ===== FECHAR SAFRA ATUAL (ARQUIVAR) =====
+// ====== FECHAR SAFRA ATUAL ======
 function fecharSafraAtual() {
-  if (!confirm(`Deseja fechar a safra ${anoAtual}? Isso arquivará os dados atuais.`)) return;
+  const user = getCurrentUser();
+  if (!user || !confirm(`Deseja fechar a safra ${anoAtual}? Isso arquivará os dados atuais.`)) return;
+
+  const base = db.ref(`usuarios/${user}`);
 
   Promise.all([
-    db.ref("Aplicacoes").once("value"),
-    db.ref("Tarefas").once("value"),
-    db.ref("Financeiro").once("value"),
-    db.ref("Colheita").once("value"),
-    db.ref("ValorLata").once("value")
+    base.child("Aplicacoes").once("value"),
+    base.child("Tarefas").once("value"),
+    base.child("Financeiro").once("value"),
+    base.child("Colheita").once("value"),
+    base.child("ValorLata").once("value")
   ]).then(([app, tar, fin, col, lata]) => {
     const dados = {
       Aplicacoes: app.val() || [],
@@ -49,73 +57,71 @@ function fecharSafraAtual() {
       Colheita: col.val() || [],
       ValorLata: lata.val() || 0
     };
-    return db.ref(anoAtual.toString()).set(dados).then(() => {
-      // Limpar dados da safra atual
-      db.ref("Aplicacoes").remove();
-      db.ref("Tarefas").remove();
-      db.ref("Financeiro").remove();
-      db.ref("Colheita").remove();
-      db.ref("ValorLata").remove();
+    return base.child(anoAtual.toString()).set(dados).then(() => {
+      base.child("Aplicacoes").remove();
+      base.child("Tarefas").remove();
+      base.child("Financeiro").remove();
+      base.child("Colheita").remove();
+      base.child("ValorLata").remove();
       alert(`Safra ${anoAtual} fechada com sucesso.`);
       location.reload();
     });
   });
 }
 
-// ===== RESTAURAR SAFRA ARQUIVADA =====
+// ====== RESTAURAR SAFRA ======
 function restaurarSafra() {
+  const user = getCurrentUser();
   const safra = document.getElementById("safraSelecionada").value;
-  if (!safra) {
-    alert("Selecione uma safra para restaurar.");
-    return;
-  }
+  if (!user || !safra) return alert("Selecione uma safra para restaurar.");
 
   if (!confirm(`Restaurar dados da safra ${safra}? Isso substituirá os dados atuais.`)) return;
 
-  db.ref(safra).once("value").then(snap => {
+  const base = db.ref(`usuarios/${user}`);
+  base.child(safra).once("value").then(snap => {
     const dados = snap.val();
-    if (!dados) {
-      alert("Dados da safra não encontrados.");
-      return;
-    }
+    if (!dados) return alert("Dados da safra não encontrados.");
 
-    db.ref("Aplicacoes").set(dados.Aplicacoes || []);
-    db.ref("Tarefas").set(dados.Tarefas || []);
-    db.ref("Financeiro").set(dados.Financeiro || []);
-    db.ref("Colheita").set(dados.Colheita || []);
-    db.ref("ValorLata").set(dados.ValorLata || 0);
-    
+    base.child("Aplicacoes").set(dados.Aplicacoes || []);
+    base.child("Tarefas").set(dados.Tarefas || []);
+    base.child("Financeiro").set(dados.Financeiro || []);
+    base.child("Colheita").set(dados.Colheita || []);
+    base.child("ValorLata").set(dados.ValorLata || 0);
+
     alert(`Safra ${safra} restaurada com sucesso.`);
     location.reload();
   });
 }
 
-// ===== DELETAR SAFRA DEFINITIVAMENTE =====
+// ====== DELETAR SAFRA ======
 function deletarSafra() {
+  const user = getCurrentUser();
   const safra = document.getElementById("safraSelecionada").value;
-  if (!safra) {
-    alert("Selecione uma safra para deletar.");
-    return;
-  }
+  if (!user || !safra) return alert("Selecione uma safra para deletar.");
 
   if (!confirm(`Deseja excluir permanentemente a safra ${safra}? Esta ação não poderá ser desfeita.`)) return;
 
-  db.ref(safra).remove().then(() => {
+  db.ref(`usuarios/${user}/${safra}`).remove().then(() => {
     alert(`Safra ${safra} deletada com sucesso.`);
     carregarSafrasDisponiveis();
-    localStorage.removeItem('safraSelecionada'); // Limpar o localStorage
+    localStorage.removeItem("safraSelecionada");
   });
 }
 
-// ===== BACKUP MANUAL =====
+// ====== BACKUP MANUAL ======
 function fazerBackup() {
+  const user = getCurrentUser();
+  if (!user) return;
+
   const backup = {};
+  const base = db.ref(`usuarios/${user}`);
+
   Promise.all([
-    db.ref("Aplicacoes").once("value"),
-    db.ref("Tarefas").once("value"),
-    db.ref("Financeiro").once("value"),
-    db.ref("Colheita").once("value"),
-    db.ref("ValorLata").once("value")
+    base.child("Aplicacoes").once("value"),
+    base.child("Tarefas").once("value"),
+    base.child("Financeiro").once("value"),
+    base.child("Colheita").once("value"),
+    base.child("ValorLata").once("value")
   ]).then(([app, tar, fin, col, lata]) => {
     backup.Aplicacoes = app.val() || [];
     backup.Tarefas = tar.val() || [];
@@ -123,46 +129,48 @@ function fazerBackup() {
     backup.Colheita = col.val() || [];
     backup.ValorLata = lata.val() || 0;
 
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `backup_manejo_cafe_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
   });
 }
 
-// ===== IMPORTAR BACKUP =====
+// ====== IMPORTAR BACKUP ======
 function importarBackup() {
+  const user = getCurrentUser();
   const input = document.getElementById("arquivoBackup");
-  const file = input.files[0];
-  if (!file) return alert("Nenhum arquivo selecionado.");
+  const file = input?.files?.[0];
+  if (!user || !file) return alert("Nenhum arquivo selecionado.");
 
   const reader = new FileReader();
   reader.onload = e => {
     try {
       const dados = JSON.parse(e.target.result);
-      db.ref("Aplicacoes").set(dados.Aplicacoes || []);
-      db.ref("Tarefas").set(dados.Tarefas || []);
-      db.ref("Financeiro").set(dados.Financeiro || []);
-      db.ref("Colheita").set(dados.Colheita || []);
-      db.ref("ValorLata").set(dados.ValorLata || 0);
-      
+      const base = db.ref(`usuarios/${user}`);
+      base.child("Aplicacoes").set(dados.Aplicacoes || []);
+      base.child("Tarefas").set(dados.Tarefas || []);
+      base.child("Financeiro").set(dados.Financeiro || []);
+      base.child("Colheita").set(dados.Colheita || []);
+      base.child("ValorLata").set(dados.ValorLata || 0);
+
       alert("Backup importado com sucesso.");
       location.reload();
     } catch (error) {
       alert("Erro ao importar o backup. Verifique o arquivo.");
     }
   };
-
   reader.readAsText(file);
 }
 
-// ===== INICIALIZAR CONFIGURAÇÕES =====
+// ====== INICIALIZAR CONFIGURAÇÕES ======
 document.addEventListener("DOMContentLoaded", () => {
   carregarAnoSafra();
   carregarSafrasDisponiveis();
-  document.getElementById('btnAlternarTema').addEventListener('click', alternarTema);
-  document.getElementById('btnFazerBackup').addEventListener('click', fazerBackup);
-  document.getElementById('arquivoBackup').addEventListener('change', importarBackup);
+
+  document.getElementById("btnAlternarTema")?.addEventListener("click", alternarTema);
+  document.getElementById("btnFazerBackup")?.addEventListener("click", fazerBackup);
+  document.getElementById("arquivoBackup")?.addEventListener("change", importarBackup);
 });

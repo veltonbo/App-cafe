@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function carregarFinanceiro() {
     loading = true;
     lista.innerHTML = '<div class="loading">Carregando...</div>';
-    getRef('financeiro').orderByChild('timestamp').on('value', snap => {
+    ref(database, 'financeiro').orderByChild('timestamp').on('value', snap => {
       financeiroCache = [];
       snap.forEach(child => {
         const lanc = child.val();
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      getRef('financeiro/' + idEdit.value).set(dados)
+      ref(database, 'financeiro/' + idEdit.value).set(dados)
         .then(() => {
           mostrarToast('Lançamento atualizado!', 'sucesso');
           limparForm();
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      getRef('financeiro').push(dados)
+      ref(database, 'financeiro').push(dados)
         .then(() => {
           mostrarToast('Lançamento salvo!', 'sucesso');
           limparForm();
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else if (btn.classList.contains('vermelho')) {
       mostrarModalConfirmacao('Deseja remover este lançamento?', () => {
-        getRef('financeiro/' + id).remove()
+        ref(database, 'financeiro/' + id).remove()
           .then(() => {
             mostrarToast('Lançamento removido!', 'sucesso');
             if (idEdit.value === id) limparForm();

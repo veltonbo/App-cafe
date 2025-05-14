@@ -1,6 +1,12 @@
-// aplicacao.js
-
 document.addEventListener('DOMContentLoaded', () => {
+  // Função auxiliar
+  function getCurrentUser() {
+    return localStorage.getItem("gm_cafe_current_user");
+  }
+
+  const user = getCurrentUser();
+  if (!user) return;
+
   // Elementos
   const form = document.getElementById('formAplicacao');
   const idEdit = document.getElementById('aplicacaoIdEdit');
@@ -16,19 +22,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const sugestoesProduto = document.getElementById('sugestoesProdutoApp');
   const sugestoesSetor = document.getElementById('sugestoesSetor');
 
-  // Estado
+  if (!form || !lista) return;
+
   let aplicacoesCache = [];
   let editando = false;
   let loading = false;
-
-  // --- Funções auxiliares ---
 
   function limparForm() {
     form.reset();
     idEdit.value = '';
     editando = false;
     btnSalvar.textContent = 'Salvar Aplicação';
-    btnCancelar.classList.add('hidden');
+    btnCancelar?.classList.add('hidden');
     limparErros();
     dataApp.focus();
   }
@@ -57,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarErroCampo(dataApp, 'Informe a data.');
       valido = false;
     } else {
-      // Não permite datas futuras
       const hoje = new Date();
       const dataSelecionada = new Date(dados.data + "T00:00:00");
       if (dataSelecionada > hoje) {
@@ -127,13 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- CRUD ---
-
-  // Carregar aplicações do Firebase e manter cache
   function carregarAplicacoes() {
     loading = true;
     lista.innerHTML = '<div class="loading">Carregando...</div>';
-    db.ref('aplicacoes').orderByChild('timestamp').on('value', snap => {
+    db.ref(`usuarios/${user}/aplicacoes`).orderByChild('timestamp').on('value', snap => {
       aplicacoesCache = [];
       snap.forEach(child => {
         const app = child.val();
@@ -146,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Adicionar ou atualizar aplicação
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     if (loading) return;
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      db.ref('aplicacoes/' + idEdit.value).set(dados)
+      db.ref(`usuarios/${user}/aplicacoes/${idEdit.value}`).set(dados)
         .then(() => {
           mostrarToast('Aplicação atualizada!', 'sucesso');
           limparForm();
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      db.ref('aplicacoes').push(dados)
+      db.ref(`usuarios/${user}/aplicacoes`).push(dados)
         .then(() => {
           mostrarToast('Aplicação salva!', 'sucesso');
           limparForm();
@@ -189,21 +189,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cancelar edição
-  btnCancelar.addEventListener('click', limparForm);
+  btnCancelar?.addEventListener('click', limparForm);
+  filtro?.addEventListener('input', () => renderizarLista(filtro.value));
 
-  // Filtro de aplicações
-  filtro.addEventListener('input', () => {
-    renderizarLista(filtro.value);
-  });
-
-  // Delegação de eventos para editar/remover (sem onclick inline)
   lista.addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
     const id = btn.getAttribute('data-id');
     if (btn.classList.contains('azul')) {
-      // Editar
       const app = aplicacoesCache.find(a => a._id === id);
       if (app) {
         dataApp.value = app.data;
@@ -214,14 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
         idEdit.value = id;
         editando = true;
         btnSalvar.textContent = 'Atualizar Aplicação';
-        btnCancelar.classList.remove('hidden');
+        btnCancelar?.classList.remove('hidden');
         dataApp.focus();
         mostrarToast('Editando aplicação...', 'info');
       }
     } else if (btn.classList.contains('vermelho')) {
-      // Remover com modal customizável
       mostrarModalConfirmacao('Deseja remover esta aplicação?', () => {
-        db.ref('aplicacoes/' + id).remove()
+        db.ref(`usuarios/${user}/aplicacoes/${id}`).remove()
           .then(() => {
             mostrarToast('Aplicação removida!', 'sucesso');
             if (idEdit.value === id) limparForm();
@@ -233,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Acessibilidade: permite remover/editar com Enter/Espaço
   lista.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') {
       e.preventDefault();
@@ -241,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Modal de confirmação customizável
   function mostrarModalConfirmacao(msg, onConfirm) {
     let modal = document.getElementById('modal-confirmacao');
     if (!modal) {
@@ -266,11 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
       modal.style.display = 'none';
       if (typeof onConfirm === 'function') onConfirm();
     };
-    // Acessibilidade: foco no botão cancelar
     setTimeout(() => modal.querySelector('#modal-btn-cancelar').focus(), 100);
   }
 
-  // Inicialização
   carregarAplicacoes();
   limparForm();
 });

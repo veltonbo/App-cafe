@@ -1,5 +1,5 @@
-import { ref, onValue, set, push, remove, update } from "firebase/database";
-import { database } from "./js/firebase-config.js"; // ajuste o caminho conforme necessário
+const database = window.firebaseDB;
+const { ref, onValue, set, push, remove, update } = window.firebaseModules;
 
 // tarefas.js
 
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loading = true;
     listaPendentes.innerHTML = '<div class="loading">Carregando...</div>';
     listaConcluidas.innerHTML = '<div class="loading">Carregando...</div>';
-    ref(database, 'tarefas').orderByChild('timestamp').on('value', snap => {
+    getRef('tarefas').orderByChild('timestamp').on('value', snap => {
       tarefasCache = [];
       snap.forEach(child => {
         const tarefa = child.val();
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      ref(database, 'tarefas/' + idEdit.value).set(dados)
+      getRef('tarefas/' + idEdit.value).set(dados)
         .then(() => {
           mostrarToast('Tarefa atualizada!', 'sucesso');
           limparForm();
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      ref(database, 'tarefas').push(dados)
+      getRef('tarefas').push(dados)
         .then(() => {
           mostrarToast('Tarefa salva!', 'sucesso');
           limparForm();
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else if (action === 'remove') {
         mostrarModalConfirmacao('Deseja remover esta tarefa?', () => {
-          ref(database, 'tarefas/' + id).remove()
+          getRef('tarefas/' + id).remove()
             .then(() => {
               mostrarToast('Tarefa removida!', 'sucesso');
               if (idEdit.value === id) limparForm();
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (action === 'toggle') {
         const tarefa = tarefasCache.find(t => t._id === id);
         if (tarefa) {
-          ref(database, 'tarefas/' + id).update({ feita: !tarefa.feita })
+          getRef('tarefas/' + id).update({ feita: !tarefa.feita })
             .then(() => {
               mostrarToast(tarefa.feita ? 'Tarefa marcada como pendente.' : 'Tarefa concluída!', 'sucesso');
             })

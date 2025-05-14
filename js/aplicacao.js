@@ -1,5 +1,5 @@
-import { ref, onValue, set, push, remove, update } from "firebase/database";
-import { database } from "./js/firebase-config.js"; // ajuste o caminho conforme necessário
+const database = window.firebaseDB;
+const { ref, onValue, set, push, remove, update } = window.firebaseModules;
 
 document.addEventListener('DOMContentLoaded', () => {
   // Função auxiliar

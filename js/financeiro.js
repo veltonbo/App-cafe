@@ -1,5 +1,5 @@
-import { ref, onValue, set, push, remove, update } from "firebase/database";
-import { database } from "./js/firebase-config.js"; // ajuste o caminho conforme necessário
+const database = window.firebaseDB;
+const { ref, onValue, set, push, remove, update } = window.firebaseModules;
 
 // financeiro.js
 
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function carregarFinanceiro() {
     loading = true;
     lista.innerHTML = '<div class="loading">Carregando...</div>';
-    ref(database, 'financeiro').orderByChild('timestamp').on('value', snap => {
+    getRef('financeiro').orderByChild('timestamp').on('value', snap => {
       financeiroCache = [];
       snap.forEach(child => {
         const lanc = child.val();
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      ref(database, 'financeiro/' + idEdit.value).set(dados)
+      getRef('financeiro/' + idEdit.value).set(dados)
         .then(() => {
           mostrarToast('Lançamento atualizado!', 'sucesso');
           limparForm();
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      ref(database, 'financeiro').push(dados)
+      getRef('financeiro').push(dados)
         .then(() => {
           mostrarToast('Lançamento salvo!', 'sucesso');
           limparForm();
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else if (btn.classList.contains('vermelho')) {
       mostrarModalConfirmacao('Deseja remover este lançamento?', () => {
-        ref(database, 'financeiro/' + id).remove()
+        getRef('financeiro/' + id).remove()
           .then(() => {
             mostrarToast('Lançamento removido!', 'sucesso');
             if (idEdit.value === id) limparForm();

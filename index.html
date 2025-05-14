@@ -230,5 +230,37 @@
       <label for="arquivoBackup" class="btn-secondary">Importar Backup</label>
     </section>
   </main>
+
+<!-- Firebase App + Database CDN -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, push, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc",
+    authDomain: "manej-cafe.firebaseapp.com",
+    databaseURL: "https://manej-cafe-default-rtdb.firebaseio.com",
+    projectId: "manej-cafe",
+    storageBucket: "manej-cafe.appspot.com",
+    messagingSenderId: "808931200634",
+    appId: "1:808931200634:web:71357af2ff0dc2e4f5f5c3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+
+  window.firebaseApp = app;
+  window.firebaseDB = database;
+  window.firebaseModules = { ref, onValue, set, push, remove, update };
+</script>
+
+<!-- Scripts do sistema -->
+<script src="js/tarefas.js"></script>
+<script src="js/financeiro.js"></script>
+<script src="js/aplicacao.js"></script>
+<script src="js/colheita.js"></script>
+<script src="js/relatorio.js"></script>
+<script src="js/configuracoes.js"></script>
+
 </body>
 </html>

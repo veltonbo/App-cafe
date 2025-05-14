@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loading = true;
     listaPendentes.innerHTML = '<div class="loading">Carregando...</div>';
     listaConcluidas.innerHTML = '<div class="loading">Carregando...</div>';
-    getRef('tarefas').orderByChild('timestamp').on('value', snap => {
+    ref(database, 'tarefas').orderByChild('timestamp').on('value', snap => {
       tarefasCache = [];
       snap.forEach(child => {
         const tarefa = child.val();
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editando && idEdit.value) {
-      getRef('tarefas/' + idEdit.value).set(dados)
+      ref(database, 'tarefas/' + idEdit.value).set(dados)
         .then(() => {
           mostrarToast('Tarefa atualizada!', 'sucesso');
           limparForm();
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
           btnSalvar.disabled = false;
         });
     } else {
-      getRef('tarefas').push(dados)
+      ref(database, 'tarefas').push(dados)
         .then(() => {
           mostrarToast('Tarefa salva!', 'sucesso');
           limparForm();
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else if (action === 'remove') {
         mostrarModalConfirmacao('Deseja remover esta tarefa?', () => {
-          getRef('tarefas/' + id).remove()
+          ref(database, 'tarefas/' + id).remove()
             .then(() => {
               mostrarToast('Tarefa removida!', 'sucesso');
               if (idEdit.value === id) limparForm();
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (action === 'toggle') {
         const tarefa = tarefasCache.find(t => t._id === id);
         if (tarefa) {
-          getRef('tarefas/' + id).update({ feita: !tarefa.feita })
+          ref(database, 'tarefas/' + id).update({ feita: !tarefa.feita })
             .then(() => {
               mostrarToast(tarefa.feita ? 'Tarefa marcada como pendente.' : 'Tarefa concluída!', 'sucesso');
             })

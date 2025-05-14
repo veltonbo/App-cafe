@@ -1,3 +1,6 @@
+import { ref, onValue, set, push, remove, update } from "firebase/database";
+import { database } from "./js/firebase-config.js"; // ajuste o caminho conforme necessário
+
 document.addEventListener('DOMContentLoaded', () => {
   const user = localStorage.getItem('gm_cafe_current_user');
   if (!user) return;

@@ -41,229 +41,12 @@ body {
   transition: color 0.3s;
 }
 
-.menu-superior button:hover {
-  color: #4caf50;
-}
-
-.menu-superior button i {
-  pointer-events: none;
-  font-size: 24px;
-}
-
-/* Ícone ativo (quando o menu está selecionado) */
+.menu-superior button:hover,
 .menu-superior button.active {
   color: #4caf50;
 }
 
-/* ===== ABAS ===== */
-.aba { 
-  display: none;
-}
-.aba.active {
-  display: block;
-}
-
-/* ===== CAMPOS DE FORMULÁRIO ===== */
-input, select {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #2c2c2c;
-  color: #fff;
-  font-size: 16px;
-  box-sizing: border-box;
-  display: block;
-}
-
-button {
-  width: 100%;
-  max-width: 350px;
-  min-width: 100px;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: none;
-  background-color: #4caf50;
-  color: #fff;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-  box-sizing: border-box;
-  display: block;
-}
-
-.modal-flutuante input,
-.modal-flutuante select {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin-bottom: 0;
-}
-
-@media (max-width: 600px) {
-  input, select, button, .modal-flutuante input, .modal-flutuante select {
-    max-width: 100vw;
-    min-width: 0;
-    font-size: 15px;
-    padding: 8px;
-  }
-}
-
-/* ===== BOTÕES PADRÃO ===== */
-button {
-  background-color: #4caf50;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-/* ===== BOTÕES CIRCULARES ===== */
-.botao-circular {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: white;
-  background-color: #4caf50;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-.botao-circular.vermelho:hover {
-  background-color: #d32f2f;
-}
-
-.botao-circular.azul {
-  background-color: #2196f3;
-}
-
-.botao-circular.azul:hover {
-  background-color: #1976d2;
-}
-
-/* ===== LISTAGEM DE ITENS ===== */
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 10px;
-  margin: 8px 0;
-  background-color: #1e1e1e;
-  border-left: 4px solid #4caf50;
-  border-radius: 6px;
-  position: relative;
-}
-
-.item span {
-  flex: 1;
-  color: #fff;
-  word-break: break-word;
-}
-
-.botoes-aplicacao, .botoes-financeiro {
-  display: flex;
-  gap: 10px;
-}
-
-.seta-menu-financeiro {
-  align-self: flex-start;
-  margin-left: 12px;
-  margin-top: 2px;
-  position: relative;
-  z-index: 2;
-}
-
-.seta-menu-financeiro,
-.seta-menu-tarefa,
-.seta-menu-tarefas {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 22px;
-  cursor: pointer;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  transform: none !important;
-  margin: 0 !important;
-}
-
-.seta-menu-financeiro:hover,
-.seta-menu-tarefa:hover,
-.seta-menu-tarefas:hover {
-  color: #4caf50;
-}
-
-/* ===== CAMPOS DE PESQUISA ===== */
-.campo-pesquisa {
-  padding: 10px;
-  background: #2c2c2c;
-  border: 1px solid #555;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  color: white;
-  font-size: 16px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal .modal-conteudo {
-  background-color: #2c2c2c;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
-}
-
-.modal button {
-  width: 100%;
-  background-color: #4caf50;
-  color: white;
-  margin-top: 10px;
-  padding: 10px;
-}
-
-/* ===== MODAL FLUTUANTE PARA FORMULÁRIO DE APLICAÇÃO ===== */
-.modal-flutuante-bg {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.55);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* ===== MODAL FLUTUANTE ===== */
 .modal-flutuante {
   background: #222;
   color: #fff;
@@ -279,14 +62,12 @@ button:hover {
   position: relative;
   animation: modalFadeIn 0.25s;
 }
+
 @keyframes modalFadeIn {
   from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }
 }
-body.claro .modal-flutuante {
-  background: #fff;
-  color: #222;
-}
+
 .modal-flutuante .fechar-modal {
   position: absolute;
   top: 18px;
@@ -304,140 +85,34 @@ body.claro .modal-flutuante {
   align-items: center;
   justify-content: center;
 }
+
 .modal-flutuante .fechar-modal:hover {
   color: #f44336;
 }
-.modal-flutuante label {
-  font-weight: 500;
-  margin-bottom: 2px;
-  margin-top: 4px;
-}
-.modal-flutuante input,
-.modal-flutuante select {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin-bottom: 0;
-}
-body.claro .modal-flutuante input,
-body.claro .modal-flutuante select {
-  background-color: #f9f9f9;
-  color: #222;
-  border: 1px solid #ccc;
-}
-.modal-flutuante button {
-  margin-top: 8px;
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 16px;
-}
-@media (max-width: 600px) {
-  .modal-flutuante {
-    min-width: 0;
-    width: 98vw;
-    padding: 14px 4vw 10px 4vw;
-    border-radius: 10px;
-    gap: 10px;
-  }
-  .modal-flutuante .fechar-modal {
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-  }
-}
 
-/* ===== FILTRO DE LISTAGEM ===== */
-.filtro-lista-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #232323;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-bottom: 12px;
-  transition: background 0.2s;
-  position: absolute;
-  right: 0;
-  top: 0;
-  z-index: 30;
-}
-.filtro-lista-btn:hover {
-  background: #333;
-}
-.filtro-lista-btn-container {
-  position: relative;
-  min-height: 40px;
-  margin-bottom: 12px;
-}
-body.claro .filtro-lista-btn {
-  background: #f5f5f5;
-  color: #222;
-}
-.filtro-lista-icn {
-  font-size: 20px;
-  margin-right: 4px;
-}
-.filtro-lista-modal-bg {
+/* ===== BOTÃO FLUTUANTE ===== */
+.botao-flutuante {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 3000;
+  bottom: 32px;
+  right: 32px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  font-size: 32px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.filtro-lista-modal {
-  background: #232323;
-  color: #fff;
-  border-radius: 12px;
-  padding: 24px 20px 18px 20px;
-  min-width: 260px;
-  max-width: 95vw;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.25);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: relative;
-  align-items: stretch;
-}
-.filtro-lista-modal .campo-pesquisa-filtro {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background: #181818;
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-body.claro .filtro-lista-modal .campo-pesquisa-filtro {
-  background: #f9f9f9;
-  color: #222;
-  border: 1px solid #ccc;
-}
-body.claro .filtro-lista-modal {
-  background: #fff;
-  color: #222;
-}
-.filtro-lista-modal .fechar-modal {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 24px;
+  z-index: 1001;
   cursor: pointer;
-  transition: color 0.2s;
-  z-index: 10;
-  padding: 0;
-  line-height: 1;
+  transition: background 0.3s;
+}
+
+.botao-flutuante:hover {
+  background: #388e3c;
 }
 
 /* ===== RESUMO E RELATÓRIO ===== */
@@ -476,195 +151,6 @@ body.claro button {
   border: 1px solid #ccc;
 }
 
-body.claro .item {
-  background-color: #fafafa;
-  border-left: 4px solid #4caf50;
-}
-
-body.claro .botao-circular {
-  background-color: #4caf50;
-}
-
-body.claro .botao-circular.vermelho {
-  background-color: #f44336;
-}
-
-body.claro .botao-circular.azul {
-  background-color: #2196f3;
-}
-
-/* ===== BOTÃO FLUTUANTE E FORMULÁRIO FLUTUANTE ===== */
-.botao-flutuante {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #4caf50;
-  color: #fff;
-  font-size: 32px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-.botao-flutuante:hover {
-  background: #388e3c;
-}
-
-.formulario-flutuante {
-  position: fixed;
-  bottom: 110px;
-  right: 32px;
-  background: #222;
-  color: #fff;
-  padding: 24px 20px 16px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.35);
-  z-index: 1002;
-  min-width: 260px;
-  max-width: 90vw;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-body.claro .formulario-flutuante {
-  background: #fff;
-  color: #222;
-}
-
-/* ===== PADRONIZAÇÃO DOS BOTÕES DE OPÇÕES (APLICAÇÃO E TAREFAS) ===== */
-.seta-menu-tarefa,
-.seta-menu-tarefas {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 22px;
-  cursor: pointer;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  transform: none !important;
-  margin: 0 !important;
-}
-.seta-menu-tarefa:hover,
-.seta-menu-tarefas:hover {
-  color: #4caf50;
-}
-/* ===== FIM DA PADRONIZAÇÃO ===== */
-
-/* Mantém o estilo do financeiro intacto */
-.seta-menu-financeiro {
-  align-self: flex-start;
-  margin-left: 12px;
-  margin-top: 2px;
-  position: relative;
-  z-index: 2;
-}
-
-/* ===== NOVO VISUAL MODERNO PARA BOTÃO E MENU DE OPÇÕES ===== */
-.seta-menu-opcoes-padrao {
-  background: #232323;
-  border: none;
-  color: #888;
-  font-size: 22px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  outline: none;
-  margin: 0 2px;
-  position: relative;
-}
-.seta-menu-opcoes-padrao:hover,
-.seta-menu-opcoes-padrao:focus {
-  background: #353535;
-  color: #4caf50;
-  box-shadow: 0 4px 16px rgba(76,175,80,0.10);
-}
-body.claro .seta-menu-opcoes-padrao {
-  background: #f5f5f5;
-  color: #888;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-body.claro .seta-menu-opcoes-padrao:hover,
-body.claro .seta-menu-opcoes-padrao:focus {
-  background: #e0e0e0;
-  color: #388e3c;
-  box-shadow: 0 4px 16px rgba(76,175,80,0.10);
-}
-
-.menu-opcoes-padrao-lista {
-  background: #232323;
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
-  padding: 10px 0;
-  min-width: 150px;
-  list-style: none;
-  margin: 0;
-  position: absolute;
-  top: 44px;
-  right: 0;
-  z-index: 20;
-  border: 1.5px solid #333;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-10px) scale(0.98);
-  transition: opacity 0.18s, transform 0.18s;
-}
-.menu-opcoes-padrao-lista.aberta {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0) scale(1);
-}
-.menu-opcoes-padrao-lista li.opcao-menu-padrao {
-  color: #fff;
-  padding: 12px 26px;
-  cursor: pointer;
-  font-size: 16px;
-  border: none;
-  background: none;
-  transition: background 0.18s, color 0.18s, padding 0.18s;
-  border-radius: 8px;
-  text-align: left;
-  margin: 2px 8px;
-  letter-spacing: 0.01em;
-}
-.menu-opcoes-padrao-lista li.opcao-menu-padrao:hover,
-.menu-opcoes-padrao-lista li.opcao-menu-padrao:focus {
-  background: #4caf50;
-  color: #fff;
-  padding-left: 32px;
-}
-body.claro .menu-opcoes-padrao-lista {
-  background: #fff;
-  border: 1.5px solid #e0e0e0;
-  box-shadow: 0 8px 32px rgba(76,175,80,0.08);
-}
-body.claro .menu-opcoes-padrao-lista li.opcao-menu-padrao {
-  color: #222;
-}
-body.claro .menu-opcoes-padrao-lista li.opcao-menu-padrao:hover,
-body.claro .menu-opcoes-padrao-lista li.opcao-menu-padrao:focus {
-  background: #4caf50;
-  color: #fff;
-  padding-left: 32px;
-}
-/* ===== FIM DO NOVO VISUAL MODERNO ===== */
-
 /* ===== DASHBOARD INÍCIO ===== */
 .dashboard-inicio {
   display: flex;
@@ -674,220 +160,39 @@ body.claro .menu-opcoes-padrao-lista li.opcao-menu-padrao:focus {
   justify-content: center;
   align-items: stretch;
 }
+
 .card-dashboard {
   background: #232323;
   border-radius: 18px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.13);
-  padding: 14px 12px 12px 14px;
-  min-width: 0;
+  padding: 14px 12px;
   flex: 1 1 220px;
   max-width: 340px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 8px;
-  position: relative;
 }
+
 .card-dashboard-titulo {
   font-size: 1.18em;
   font-weight: 700;
   color: #4caf50;
-  margin-bottom: 6px;
   display: flex;
   align-items: center;
   gap: 8px;
-  letter-spacing: 0.01em;
-}
-.card-tarefas ul, .card-tarefas .lista-tarefas-dia {
-  margin: 0;
-  padding-left: 16px;
-  font-size: 1.01em;
-  line-height: 1.5;
-}
-.card-tarefas .lista-tarefas-dia li {
-  margin-bottom: 2px;
-  color: #fff;
-  font-size: 1em;
-}
-.card-pagar .valor-pagar {
-  font-size: 2.2em;
-  font-weight: 800;
-  color: #f44336;
-  background: #181818;
-  border-radius: 12px;
-  padding: 10px 18px 6px 18px;
-  box-shadow: 0 1px 6px #0002;
-  margin-top: 2px;
-  text-align: center;
-  letter-spacing: 0.01em;
-}
-.card-grafico {
-  align-items: stretch;
-  min-width: 0;
-}
-.card-grafico canvas {
-  width: 100% !important;
-  max-width: 100%;
-  height: 140px !important;
-  background: #181818;
-  border-radius: 10px;
-  margin-top: 2px;
-}
-.inicio-atalhos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-.atalho-btn {
-  background: #232323;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
-  font-size: 1em;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.18s, color 0.18s;
-  cursor: pointer;
-}
-.atalho-btn:hover, .atalho-btn:focus {
-  background: #4caf50;
-  color: #fff;
-}
-@media (max-width: 700px) {
-  .dashboard-inicio {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .card-dashboard {
-    max-width: 100vw;
-    width: 100%;
-    min-width: 0;
-    padding: 10px 4vw 10px 4vw;
-    border-radius: 12px;
-  }
-  .card-dashboard-titulo {
-    font-size: 1.08em;
-  }
-  .inicio-atalhos {
-    gap: 4px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .atalho-btn {
-    width: 100%;
-    justify-content: center;
-    font-size: 1.05em;
-    padding: 12px 0;
-  }
-  .card-grafico canvas {
-    height: 120px !important;
-  }
-}
-body.claro .card-dashboard, body.claro .atalho-btn {
-  background: #fff;
-  color: #222;
-}
-body.claro .card-dashboard-titulo {
-  color: #388e3c;
-}
-body.claro .card-pagar .valor-pagar {
-  background: #f5f5f5;
-  color: #d32f2f;
-}
-body.claro .card-grafico canvas {
-  background: #f5f5f5;
 }
 
-/* ===== MELHORIA VISUAL LISTA DE TAREFAS ===== */
-.item-tarefa {
-  background: #232323;
-  border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-  margin-bottom: 12px;
-  padding: 0;
-  display: flex;
-  align-items: stretch;
-  min-height: 72px;
-  position: relative;
-  border: none;
-}
-.item-tarefa.feita {
-  opacity: 0.6;
-  filter: grayscale(0.2);
-}
-.tarefa-info {
-  flex: 1;
-  padding: 12px 10px 10px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.tarefa-topo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.98em;
-  margin-bottom: 2px;
-}
-.tarefa-data {
-  color: #90caf9;
-  font-weight: 500;
-  font-size: 1em;
-}
-.tarefa-prioridade {
-  font-weight: 700;
-  font-size: 1em;
-  letter-spacing: 0.01em;
-}
-.tarefa-desc {
-  font-size: 1.08em;
-  font-weight: 500;
-  color: #fff;
-  margin: 2px 0 2px 0;
-  word-break: break-word;
-}
-.tarefa-setor {
-  font-size: 0.97em;
-  color: #bdbdbd;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.tarefa-setor i {
-  font-size: 1em;
-  color: #4caf50;
-}
-.item-tarefa .opcoes-wrapper {
-  display: flex;
-  align-items: flex-start;
-  padding: 10px 10px 0 0;
-}
-@media (max-width: 700px) {
-  .item-tarefa {
-    border-radius: 10px;
-    min-height: 62px;
-    margin-bottom: 8px;
-    padding: 0;
+/* ===== PADRÕES RESPONSIVOS ===== */
+@media (max-width: 600px) {
+  .modal-flutuante, .conteudo {
+    max-width: 90vw;
+    padding: 14px;
   }
-  .tarefa-info {
-    padding: 10px 6px 8px 12px;
+  .botao-flutuante {
+    bottom: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
   }
-}
-body.claro .item-tarefa {
-  background: #fff;
-  color: #222;
-}
-body.claro .tarefa-desc {
-  color: #222;
-}
-body.claro .tarefa-setor i {
-  color: #388e3c;
 }

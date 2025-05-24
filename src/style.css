@@ -22,7 +22,11 @@ body {
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
+<<<<<<< HEAD
   justify-content: flex-end;
+=======
+  justify-content: center;
+>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   background-color: #1f1f1f;
   padding: 10px 0;
   position: sticky;
@@ -55,6 +59,7 @@ body {
   color: #4caf50;
 }
 
+<<<<<<< HEAD
 .menu-superior button.notificacoes-btn {
   position: relative;
   margin-left: auto;
@@ -111,6 +116,8 @@ body {
   font-size: 22px;
 }
 
+=======
+>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 /* ===== ABAS ===== */
 .aba { 
   display: none;
@@ -227,9 +234,57 @@ button:hover {
   position: relative;
 }
 
+<<<<<<< HEAD
+<<<<<<<< HEAD:src/style.css
+========
+body.claro .item {
+  background-color: #fafafa;
+  border-left: 4px solid #4caf50;
+}
+
+/* ITENS FINANCEIRO: PADRÃO VISUAL DE CARD, CENTRALIZADO E MESMO TAMANHO DOS OUTROS BLOCOS */
+.item-financeiro {
+  background: #232323 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10) !important;
+  padding: 14px 14px 10px 16px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 0 12px 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  position: relative !important;
+  transition: box-shadow 0.18s !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 700px) {
+  .item-financeiro {
+    padding: 10px 6px 10px 10px !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+    font-size: 0.98em;
+  }
+}
+body.claro .item-financeiro {
+  background: #fff !important;
+  color: #222 !important;
+}
+
+>>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café):App-cafe/src/style.css
 .item span {
   flex: 1;
   color: #fff;
+  font-size: 1.08em;
+  font-weight: 500;
+=======
+.item span {
+  flex: 1;
+  color: #fff;
+>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   word-break: break-word;
 }
 
@@ -946,6 +1001,7 @@ body.claro .tarefa-desc {
 body.claro .tarefa-setor i {
   color: #388e3c;
 }
+<<<<<<< HEAD
 
 /* ===== ESTILOS PARA NOTIFICAÇÕES ===== */
 .notificacoes-container {
@@ -1125,3 +1181,263 @@ body.claro .tarefa-setor i {
     max-height: 60vh;
   }
 }
+<<<<<<<< HEAD:src/style.css
+========
+body.claro .card-dashboard {
+  background: #fff;
+  color: #222;
+}
+
+/* ===== MELHORIA VISUAL E ORGANIZAÇÃO DO MENU FINANCEIRO ===== */
+#financeiro {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 24px 0 60px 0;
+}
+.titulo-centralizado {
+  text-align: left;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+}
+.financeiro-total-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.financeiro-total-label {
+  font-size: 1rem;
+  color: #666;
+}
+.financeiro-total-valor {
+  font-size: 1.2rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+.financeiro-filtros {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.financeiro-filtro-btn {
+  background: #f5f5f5;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 0.95rem;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.financeiro-filtro-btn.ativo,
+.financeiro-filtro-btn:hover {
+  background: #2e7d32;
+  color: #fff;
+}
+.financeiro-lista-blocos {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.financeiro-bloco-titulo {
+  font-size: 1.1rem;
+  color: #2e7d32;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.financeiro-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.financeiro-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 4px solid #2e7d32;
+}
+.financeiro-card.pago {
+  border-left: 4px solid #1976d2;
+  opacity: 0.85;
+}
+.financeiro-card .financeiro-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.financeiro-card .financeiro-card-produto {
+  font-weight: 600;
+  color: #333;
+}
+.financeiro-card .financeiro-card-valor {
+  font-size: 1.1rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+.financeiro-card.pago .financeiro-card-valor {
+  color: #1976d2;
+}
+.financeiro-card .financeiro-card-desc {
+  color: #888;
+  font-size: 0.95rem;
+}
+.financeiro-card .financeiro-card-data {
+  font-size: 0.92rem;
+  color: #aaa;
+}
+.financeiro-card .financeiro-card-tipo {
+  font-size: 0.92rem;
+  color: #666;
+}
+.botao-flutuante {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  font-size: 1.7rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.botao-flutuante:hover {
+  background: #1976d2;
+}
+/* Modal flutuante */
+.modal-flutuante-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.18);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.display-none { display: none !important; }
+.modal-flutuante {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.13);
+  padding: 28px 22px 18px 22px;
+  min-width: 320px;
+  max-width: 95vw;
+  position: relative;
+}
+.btn-fechar-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.modal-titulo {
+  font-size: 1.2rem;
+  color: #2e7d32;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+#formFinanceiro label {
+  font-size: 0.98rem;
+  color: #444;
+  margin-top: 8px;
+}
+#formFinanceiro input,
+#formFinanceiro select {
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  background: #fafafa;
+}
+.financeiro-parcelado-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.financeiro-modal-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+#btnSalvarFinanceiro {
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#btnSalvarFinanceiro:hover {
+  background: #1976d2;
+}
+/* Switch para Parcelado */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+.switch input { display: none; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  border-radius: 20px;
+  transition: .2s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .2s;
+}
+input:checked + .slider {
+  background-color: #2e7d32;
+}
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+/* Responsividade */
+@media (max-width: 600px) {
+  #financeiro {
+    max-width: 98vw;
+    padding: 12px 0 60px 0;
+  }
+  .modal-flutuante {
+    min-width: 90vw;
+    padding: 18px 6vw 12px 6vw;
+  }
+}
+>>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café):App-cafe/src/style.css
+=======
+>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)

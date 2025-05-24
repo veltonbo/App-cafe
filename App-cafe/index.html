@@ -203,7 +203,26 @@
 
     <!-- ===== FINANCEIRO ===== -->
 <div id="financeiro" class="aba">
-  <h2>Financeiro</h2>
+  <h2 class="titulo-centralizado"><i class="fas fa-wallet"></i> Financeiro</h2>
+  <div class="financeiro-total-box">
+    <span class="financeiro-total-label">Total:</span>
+    <span id="financeiroTotal" class="financeiro-total-valor"></span>
+  </div>
+  <div class="financeiro-filtros">
+    <button class="financeiro-filtro-btn ativo" data-filtro="todos" onclick="filtrarFinanceiro('todos', this)">Todos</button>
+    <button class="financeiro-filtro-btn" data-filtro="apagar" onclick="filtrarFinanceiro('apagar', this)">A Pagar</button>
+    <button class="financeiro-filtro-btn" data-filtro="pagos" onclick="filtrarFinanceiro('pagos', this)">Pagos</button>
+  </div>
+  <div class="financeiro-lista-blocos">
+    <div class="financeiro-bloco">
+      <h3 class="financeiro-bloco-titulo">A Pagar</h3>
+      <div class="financeiro-lista" id="listaFinanceiroApagar"></div>
+    </div>
+    <div class="financeiro-bloco">
+      <h3 class="financeiro-bloco-titulo">Pagos</h3>
+      <div class="financeiro-lista" id="listaFinanceiroPagos"></div>
+    </div>
+  </div>
   <!-- Botão flutuante para adicionar financeiro -->
   <button id="btnFlutuanteAddFinanceiro" class="botao-flutuante" title="Novo Gasto" onclick="abrirModalFinanceiro()">
     <i class="fas fa-plus"></i>
@@ -212,42 +231,46 @@
   <div id="modalFinanceiroBg" class="modal-flutuante-bg display-none">
     <div class="modal-flutuante">
       <button class="btn-fechar-modal" type="button" onclick="fecharModalFinanceiro()" title="Fechar" aria-label="Fechar modal"><i class="fas fa-times"></i></button>
-      <label for="dataFin">Data</label>
-      <input id="dataFin" type="date" placeholder="Data">
-      <label for="produtoFin">Produto</label>
-      <input id="produtoFin" placeholder="Produto">
-      <label for="descricaoFin">Descrição (opcional)</label>
-      <input id="descricaoFin" placeholder="Descrição (opcional)">
-      <label for="valorFin">Valor (R$)</label>
-      <input id="valorFin" type="number" placeholder="Valor (R$)">
-      <label for="tipoFin">Tipo</label>
-      <select id="tipoFin">
-        <option>Adubo</option>
-        <option>Fungicida</option>
-        <option>Inseticida</option>
-        <option>Herbicida</option>
-        <option>Defensivo</option>
-        <option>Corretivo</option>
-        <option>Foliar</option>
-        <option>Operacional</option>
-        <option>Serviço</option>
-        <option>Equipamento</option>
-        <option>Outro</option>
-      </select>
-      <label for="parceladoFin" style="display:flex;align-items:center;gap:10px;">
-        Parcelado
-        <label class="switch">
-          <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()">
-          <span class="slider round"></span>
-        </label>
-      </label>
-      <div id="camposParcelas" class="campos-extra">
-        <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
-      </div>
-      <button id="btnSalvarFinanceiro" onclick="salvarOuEditarFinanceiro()">Salvar Gasto</button>
+      <h3 class="modal-titulo">Novo Lançamento</h3>
+      <form id="formFinanceiro" onsubmit="event.preventDefault(); salvarOuEditarFinanceiro();">
+        <label for="dataFin">Data</label>
+        <input id="dataFin" type="date" placeholder="Data" required>
+        <label for="produtoFin">Produto</label>
+        <input id="produtoFin" placeholder="Produto" required>
+        <label for="descricaoFin">Descrição (opcional)</label>
+        <input id="descricaoFin" placeholder="Descrição (opcional)">
+        <label for="valorFin">Valor (R$)</label>
+        <input id="valorFin" type="number" placeholder="Valor (R$)" required>
+        <label for="tipoFin">Tipo</label>
+        <select id="tipoFin">
+          <option>Adubo</option>
+          <option>Fungicida</option>
+          <option>Inseticida</option>
+          <option>Herbicida</option>
+          <option>Defensivo</option>
+          <option>Corretivo</option>
+          <option>Foliar</option>
+          <option>Operacional</option>
+          <option>Serviço</option>
+          <option>Equipamento</option>
+          <option>Outro</option>
+        </select>
+        <div class="financeiro-parcelado-box">
+          <label for="parceladoFin" class="financeiro-parcelado-label">Parcelado</label>
+          <label class="switch">
+            <input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div id="camposParcelas" class="campos-extra">
+          <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
+        </div>
+        <div class="financeiro-modal-btns">
+          <button id="btnSalvarFinanceiro" type="submit">Salvar Gasto</button>
+        </div>
+      </form>
     </div>
   </div>
-  <div id="financeiroLista"></div>
 </div>
 
      <!-- ===== COLHEITA ===== -->
@@ -325,45 +348,7 @@
     });
   }
   </script>
-  <style>
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-.switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: #4caf50;
-}
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-</style>
-<script>
+  <script>
 // Exibe/esconde campos de aplicação conforme o switch
 if (typeof window !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function() {

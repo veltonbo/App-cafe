@@ -278,26 +278,27 @@ if (typeof window !== 'undefined') {
 // Função auxiliar para renderizar um card financeiro
 function renderizarCardFinanceiro(gasto, lista) {
   const i = gasto._index;
-  const item = document.createElement("div");
-  item.className = "item";
-  item.style.position = 'relative';
-  // Monta o menu de opções, removendo "Editar" se já estiver pago
-  let opcoesMenu = '';
-  if (!gasto.pago && !(gasto.descricao && gasto.descricao.toLowerCase().includes('pago'))) {
-    opcoesMenu += "<li class='opcao-menu-padrao' data-acao='editar'>Editar</li>";
-  }
-  opcoesMenu += "<li class='opcao-menu-padrao' data-acao='deletar'>Deletar</li>";
-  opcoesMenu += "<li class='opcao-menu-padrao' data-acao='estornar'>Estornar</li>";
-  item.innerHTML = `
-    <span>${formatarDataBR(gasto.data)} - ${gasto.produto} - ${formatarValorBR(gasto.valor)} (${gasto.tipo})</span>
+  const card = document.createElement("div");
+  card.className = "financeiro-card" + (gasto.pago ? " pago" : "");
+  card.innerHTML = `
+    <div class="financeiro-card-top">
+      <span class="financeiro-card-produto">${gasto.produto}</span>
+      <span class="financeiro-card-valor">${formatarValorBR(gasto.valor)}</span>
+    </div>
+    <div class="financeiro-card-desc">${gasto.descricao ? gasto.descricao : "&nbsp;"}</div>
+    <div class="financeiro-card-data">${formatarDataBR(gasto.data)}</div>
+    <div class="financeiro-card-tipo">${gasto.tipo}</div>
     <div class="opcoes-wrapper">
       <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
       <ul class="menu-opcoes-padrao-lista" style="display:none;">
-        ${opcoesMenu}
+        ${!gasto.pago ? "<li class='opcao-menu-padrao' data-acao='editar'>Editar</li>" : ''}
+        <li class='opcao-menu-padrao' data-acao='deletar'>Deletar</li>
+        <li class='opcao-menu-padrao' data-acao='estornar'>Estornar</li>
       </ul>
     </div>
   `;
-  const opcoesWrapper = item.querySelector('.opcoes-wrapper');
+  // Opções do menu
+  const opcoesWrapper = card.querySelector('.opcoes-wrapper');
   const seta = opcoesWrapper.querySelector('.seta-menu-opcoes-padrao');
   const menu = opcoesWrapper.querySelector('.menu-opcoes-padrao-lista');
   if (seta && menu) {
@@ -318,10 +319,9 @@ function renderizarCardFinanceiro(gasto, lista) {
         menu.classList.add('aberta');
         menu.style.display = 'block';
         seta.setAttribute('aria-expanded', 'true');
-        // Fecha ao clicar fora
         setTimeout(() => {
           function fecharMenuGlobal(e) {
-            if (!item.contains(e.target)) {
+            if (!card.contains(e.target)) {
               menu.classList.remove('aberta');
               menu.style.display = '';
               seta.setAttribute('aria-expanded', 'false');
@@ -332,7 +332,6 @@ function renderizarCardFinanceiro(gasto, lista) {
         }, 0);
       }
     };
-    // PADRÃO: clique nas opções do menu
     menu.querySelectorAll('.opcao-menu-padrao').forEach(opcao => {
       opcao.onclick = (e) => {
         e.stopPropagation();
@@ -345,23 +344,22 @@ function renderizarCardFinanceiro(gasto, lista) {
       };
     });
     document.addEventListener('click', function fecharMenu(e) {
-      if (!item.contains(e.target)) {
+      if (!card.contains(e.target)) {
         menu.classList.remove('aberta');
         menu.style.display = '';
         seta.setAttribute('aria-expanded', 'false');
       }
     }, { once: true });
   }
-  // Marcar como pago ao clicar no card (apenas se mostrarMarcarPago)
-  const mostrarMarcarPago = !gasto.pago && !(gasto.descricao && gasto.descricao.toLowerCase().includes('pago'));
-  if (mostrarMarcarPago) {
-    item.style.cursor = 'pointer';
-    item.addEventListener('click', (e) => {
-      if (e.target.closest('.seta-menu-financeiro') || e.target.closest('.menu-opcoes-financeiro-lista')) return;
+  // Marcar como pago ao clicar no card (se não pago)
+  if (!gasto.pago) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.seta-menu-opcoes-padrao') || e.target.closest('.menu-opcoes-padrao-lista')) return;
       marcarFinanceiroPago(i);
     });
   }
-  lista.appendChild(item);
+  lista.appendChild(card);
 }
 
 // ===== ABRIR MODAL FINANCEIRO =====
@@ -369,4 +367,102 @@ function abrirModalFinanceiro(editar = false) {
   document.getElementById('modalFinanceiroBg').style.display = 'flex';
   document.getElementById('btnFlutuanteAddFinanceiro').style.display = 'none';
   if (!editar) limparCamposFinanceiro();
+}
+
+// ===== FILTRO E EXIBIÇÃO DO MENU FINANCEIRO MODERNO =====
+function filtrarFinanceiro(filtro, btn) {
+  document.querySelectorAll('.financeiro-filtro-btn').forEach(b => b.classList.remove('ativo'));
+  if (btn) btn.classList.add('ativo');
+  const listaApagar = document.getElementById('listaFinanceiroApagar');
+  const listaPagos = document.getElementById('listaFinanceiroPagos');
+  if (!listaApagar || !listaPagos) return;
+  listaApagar.innerHTML = '';
+  listaPagos.innerHTML = '';
+  const gastos = window.gastos || [];
+  const filtrados = gastos.filter(g => {
+    if (filtro === 'apagar') return !g.pago && !(g.descricao && g.descricao.toLowerCase().includes('pago'));
+    if (filtro === 'pagos') return g.pago || (g.descricao && g.descricao.toLowerCase().includes('pago'));
+    return true;
+  });
+  filtrados.forEach((gasto, i) => {
+    const card = document.createElement('div');
+    card.className = 'item item-financeiro';
+    card.innerHTML = `
+      <span>${formatarDataBR(gasto.data)} - ${gasto.produto} - ${formatarValorBR(gasto.valor)} (${gasto.tipo})</span>
+      <div class="opcoes-wrapper">
+        <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
+        <ul class="menu-opcoes-padrao-lista" style="display:none;">
+          ${!gasto.pago ? "<li class='opcao-menu-padrao' data-acao='editar'>Editar</li>" : ''}
+          <li class='opcao-menu-padrao' data-acao='deletar'>Deletar</li>
+          <li class='opcao-menu-padrao' data-acao='estornar'>Estornar</li>
+        </ul>
+      </div>
+    `;
+    // Opções do menu
+    const opcoesWrapper = card.querySelector('.opcoes-wrapper');
+    const seta = opcoesWrapper.querySelector('.seta-menu-opcoes-padrao');
+    const menu = opcoesWrapper.querySelector('.menu-opcoes-padrao-lista');
+    if (seta && menu) {
+      seta.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.menu-opcoes-padrao-lista').forEach(m => {
+          if (m !== menu) {
+            m.classList.remove('aberta');
+            m.style.display = '';
+          }
+        });
+        const aberto = menu.classList.contains('aberta');
+        if (aberto) {
+          menu.classList.remove('aberta');
+          menu.style.display = '';
+          seta.setAttribute('aria-expanded', 'false');
+        } else {
+          menu.classList.add('aberta');
+          menu.style.display = 'block';
+          seta.setAttribute('aria-expanded', 'true');
+          setTimeout(() => {
+            function fecharMenuGlobal(e) {
+              if (!card.contains(e.target)) {
+                menu.classList.remove('aberta');
+                menu.style.display = '';
+                seta.setAttribute('aria-expanded', 'false');
+                document.removeEventListener('mousedown', fecharMenuGlobal);
+              }
+            }
+            document.addEventListener('mousedown', fecharMenuGlobal);
+          }, 0);
+        }
+      };
+      menu.querySelectorAll('.opcao-menu-padrao').forEach(opcao => {
+        opcao.onclick = (e) => {
+          e.stopPropagation();
+          menu.classList.remove('aberta');
+          menu.style.display = '';
+          seta.setAttribute('aria-expanded', 'false');
+          if (opcao.dataset.acao === 'editar') editarFinanceiro(i);
+          if (opcao.dataset.acao === 'deletar') excluirFinanceiro(i);
+          if (opcao.dataset.acao === 'estornar') estornarFinanceiro(i);
+        };
+      });
+      document.addEventListener('click', function fecharMenu(e) {
+        if (!card.contains(e.target)) {
+          menu.classList.remove('aberta');
+          menu.style.display = '';
+          seta.setAttribute('aria-expanded', 'false');
+        }
+      }, { once: true });
+    }
+    // Marcar como pago ao clicar no card (se não pago)
+    if (!gasto.pago) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.seta-menu-opcoes-padrao') || e.target.closest('.menu-opcoes-padrao-lista')) return;
+        marcarFinanceiroPago(i);
+      });
+    }
+    if (!gasto.pago && !(gasto.descricao && gasto.descricao.toLowerCase().includes('pago')))
+      listaApagar.appendChild(card);
+    else
+      listaPagos.appendChild(card);
+  });
 }

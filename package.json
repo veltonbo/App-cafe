@@ -1,25 +1,5 @@
 {
-  "name": "app-cafe",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "serve": "vite preview"
-  },
-  "dependencies": {
-    "vue": "^3.2.0",
-    "firebase": "^9.1.0"
-  },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^3.2.0",
-    "vite": "^5.2.0"
-  },
-  "vite": {
-    "plugins": [
-      "@vitejs/plugin-vue"
-    ],
-    "server": {
-      "port": 3000
-    }
+    "vite": "^6.3.5"
   }
 }

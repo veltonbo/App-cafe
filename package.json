@@ -1,17 +1,17 @@
 {
   "name": "app-cafe",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Sistema de manejo de café",
+  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
+  "keywords": [],
+  "author": "Elivelton Oliveira",
+  "license": "MIT",
   "devDependencies": {
     "vite": "^6.3.5"
-  },
-  "dependencies": {
-    "firebase": "^11.8.0"
   }
 }

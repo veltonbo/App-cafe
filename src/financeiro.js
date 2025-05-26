@@ -19,7 +19,11 @@ function alternarFormularioFinanceiro() {
 function mostrarCamposParcelas() {
   const camposParcelas = document.getElementById("camposParcelas");
   const parcelado = document.getElementById("parceladoFin").checked;
-  camposParcelas.style.display = parcelado ? "block" : "none";
+  if (parcelado) {
+    camposParcelas.removeAttribute('hidden');
+  } else {
+    camposParcelas.setAttribute('hidden', '');
+  }
 }
 
 // ===== CARREGAR FINANCEIRO =====
@@ -223,6 +227,13 @@ function atualizarFinanceiro() {
     todosPagos.sort((a, b) => b.data.localeCompare(a.data));
     todosPagos.forEach(gasto => { renderizarCardFinanceiro(gasto, subPagos); });
     lista.appendChild(subPagos);
+  }
+
+  // Notificação visual para contas a pagar do dia
+  const hoje = new Date().toISOString().slice(0,10);
+  const contasHoje = (window.gastos||[]).filter(g => g.data === hoje && !g.pago);
+  if (contasHoje.length > 0) {
+    if (typeof mostrarNotificacao === 'function') mostrarNotificacao(`Você tem ${contasHoje.length} conta(s) a pagar hoje!`, '#f44336');
   }
 }
 

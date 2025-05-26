@@ -111,16 +111,18 @@ function atualizarTarefas() {
   if (listaFeitas) listaFeitas.innerHTML = '';
 
   (window.tarefas || []).forEach(function(t, index) {
-    const item = document.createElement('div'); // Correção: criar o elemento item
-    const prioridadeCor = t.prioridade === 'Alta' ? '#f44336' : t.prioridade === 'Média' ? '#ff9800' : '#4caf50';
-    const feitaClass = t.feita ? 'feita' : '';
-    item.className = `item item-tarefa ${feitaClass}`;
-    item.setAttribute('data-prioridade', t.prioridade);
+    const item = document.createElement('div');
+    // Cor da borda e do menu conforme prioridade
+    let corBorda = '#4caf50';
+    if (t.prioridade === 'Alta') corBorda = '#f44336';
+    else if (t.prioridade === 'Média') corBorda = '#ff9800';
+    item.className = `item item-tarefa${t.feita ? ' feita' : ''}`;
+    item.style.borderLeft = `4px solid ${corBorda}`;
     item.innerHTML = `
       <div class="tarefa-info">
         <div class="tarefa-topo">
           <span class="tarefa-data">${formatarDataBR(t.data)}</span>
-          <span class="tarefa-prioridade" style="color:${prioridadeCor};">${t.prioridade}</span>
+          <span class="tarefa-prioridade" style="color:${corBorda};">${t.prioridade}</span>
         </div>
         <div class="tarefa-desc">${t.descricao}</div>
         <div class="tarefa-setor">${t.setor ? `<i class='fas fa-map-marker-alt'></i> ${t.setor}` : ''}</div>
@@ -193,6 +195,13 @@ function atualizarTarefas() {
     if (!t.feita && listaAFazer) listaAFazer.appendChild(item);
     if (t.feita && listaFeitas) listaFeitas.appendChild(item);
   });
+
+  // Notificação visual para tarefas do dia
+  const hoje = new Date().toISOString().slice(0,10);
+  const tarefasHoje = (window.tarefas||[]).filter(t => t.data === hoje && !t.feita);
+  if (tarefasHoje.length > 0) {
+    if (typeof mostrarNotificacao === 'function') mostrarNotificacao(`Você tem ${tarefasHoje.length} tarefa(s) para hoje!`, '#ff9800');
+  }
 }
 
 // ====== EXCLUIR TAREFA ======
@@ -231,3 +240,21 @@ function carregarTarefas() {
     atualizarTarefas();
   });
 }
+
+// Cor dinâmica do botão menu tarefa
+function atualizarCorMenuTarefa() {
+  const btn = document.getElementById('btn-tarefas');
+  const hoje = new Date().toISOString().slice(0,10);
+  const tarefaHoje = (window.tarefas||[]).find(t => t.data === hoje && !t.feita);
+  if (btn) {
+    if (tarefaHoje) {
+      let cor = '#4caf50';
+      if (tarefaHoje.prioridade === 'Alta') cor = '#f44336';
+      else if (tarefaHoje.prioridade === 'Média') cor = '#ff9800';
+      btn.style.color = cor;
+    } else {
+      btn.style.color = '';
+    }
+  }
+}
+document.addEventListener('dadosCarregados', atualizarCorMenuTarefa);

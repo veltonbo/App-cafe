@@ -204,12 +204,8 @@ function excluirTarefa(index) {
 }
 
 // ====== INICIALIZAR TAREFAS ======
-<<<<<<< HEAD
 // Removido para evitar loop infinito:
 // document.addEventListener("dadosCarregados", carregarTarefas);
-=======
-document.addEventListener("dadosCarregados", carregarTarefas);
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 
 // Atualiza selects de setor ao carregar setores dinâmicos
 if (typeof window !== 'undefined') {
@@ -234,7 +230,6 @@ function carregarTarefas() {
       window.tarefas = dados;
     }
     atualizarTarefas();
-<<<<<<< HEAD
     // Controle de carregamento de dados principais para notificações automáticas
     window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
     window.__dadosCarregados.tarefas = true;
@@ -265,7 +260,3 @@ if (Array.isArray(window.gastos) && window.gastos.length > 0) {
   window.__dadosCarregados.gastos = true;
   notificarSeAmbosCarregados();
 }
-=======
-  });
-}
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)

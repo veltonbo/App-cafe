@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "app-cafe",
   "private": true,
   "version": "0.0.0",
@@ -14,9 +13,5 @@
   },
   "dependencies": {
     "firebase": "^11.8.0"
-=======
-  "devDependencies": {
-    "vite": "^6.3.5"
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   }
 }

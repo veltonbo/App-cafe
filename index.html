@@ -21,10 +21,7 @@
 
   <!-- Scripts -->
   <script defer src="src/firebase-config.js"></script>
-<<<<<<< HEAD
   <script defer src="src/notifications.js"></script>
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   <script defer src="src/main.js"></script>
   <script defer src="src/aplicacao.js"></script>
   <script defer src="src/tarefas.js"></script>
@@ -35,7 +32,6 @@
   <script defer src="src/inicio.js"></script>
 </head>
 <body>
-<<<<<<< HEAD
   <!-- ===== NOTIFICAÇÕES ===== -->
   <div id="notificacoes-container" class="notificacoes-container"></div>
   <!-- ===== MODAL DE NOTIFICAÇÕES ===== -->
@@ -50,20 +46,15 @@
       <div id="notificacoesModalLista"></div>
     </div>
   </div>
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   <!-- ===== MENU SUPERIOR ===== -->
 <div class="menu-superior">
   <button id="btn-inicio" onclick="mostrarAba('inicio')" title="Início">
     <i class="fas fa-home"></i>
   </button>
-<<<<<<< HEAD
-  <button id="btn-notificacoes" onclick="abrirPainelNotificacoes()" title="Notificações" class="notificacoes-btn">
+  <button id="btn-notificacoes" onclick="abrirModalNotificacoes()" title="Notificações" class="notificacoes-btn">
     <i class="fas fa-bell"></i>
-    <span id="notificacoes-badge" class="notificacoes-badge" style="display:none;">0</span>
+    <span id="notificacoes-badge" class="notificacoes-badge oculto">0</span>
   </button>
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
     <i class="fas fa-flask"></i>
   </button>
@@ -88,7 +79,7 @@
   <div class="conteudo">
     <!-- ===== INÍCIO ===== -->
     <div id="inicio" class="aba">
-      <h2 style="font-size:1.5em;margin-bottom:18px;text-align:center;">Bem-vindo ao Manejo Café</h2>
+      <h2 class="titulo-centralizado">Bem-vindo ao Manejo Café</h2>
       <div id="dashboardInicio" class="dashboard-inicio">
         <div class="card-dashboard card-tarefas">
           <div class="card-dashboard-titulo"><i class="fas fa-tasks"></i> Tarefas do Dia</div>
@@ -122,7 +113,7 @@
       </button>
 
       <!-- Modal flutuante de aplicação (inicialmente oculto) -->
-      <div id="modalAplicacaoBg" class="modal-flutuante-bg" style="display: none;">
+      <div id="modalAplicacaoBg" class="modal-flutuante-bg modal-oculto">
         <div class="modal-flutuante">
           <label for="dataApp">Data</label>
           <input id="dataApp" type="date">
@@ -144,14 +135,14 @@
             <option>Setor 02</option>
           </select>
           <!-- NOVO: Botão liga/desliga de arrastar para reaplicação -->
-          <div style="margin: 10px 0 0 0; display: flex; align-items: center; gap: 10px;">
-            <label for="toggleReaplicacaoApp" style="margin: 0;">Reaplicação</label>
+          <div class="mg-t-10 flex-gap align-center gap-10">
+            <label for="toggleReaplicacaoApp" class="mg-0">Reaplicação</label>
             <label class="switch">
               <input type="checkbox" id="toggleReaplicacaoApp">
               <span class="slider round"></span>
             </label>
           </div>
-          <div id="camposReaplicacaoApp" style="display: none; margin-top: 8px;">
+          <div id="camposReaplicacaoApp" class="oculto mg-t-8">
             <label for="prioridadeReaplicacaoApp">Prioridade da Reaplicação</label>
             <select id="prioridadeReaplicacaoApp">
               <option value="Alta">Alta</option>
@@ -162,7 +153,7 @@
             <input id="dataReaplicacaoApp" type="date">
           </div>
           <button id="btnSalvarAplicacao" onclick="salvarOuEditarAplicacao()">Salvar Aplicação</button>
-          <button class="fechar-modal" type="button" onclick="fecharModalAplicacao()" title="Fechar" aria-label="Fechar modal" style="background:#f44336;color:#fff;width:100%;margin-top:8px;padding:12px 0;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;position:static;top:auto;right:auto;">
+          <button class="fechar-modal" type="button" onclick="fecharModalAplicacao()" title="Fechar" aria-label="Fechar modal">
             <i class="fas fa-times"></i> Fechar
           </button>
         </div>
@@ -179,7 +170,7 @@
         <i class="fas fa-plus"></i>
       </button>
       <!-- Modal flutuante de tarefa (inicialmente oculto) -->
-      <div id="modalTarefaBg" class="modal-flutuante-bg" style="display: none;">
+      <div id="modalTarefaBg" class="modal-flutuante-bg modal-oculto">
         <div class="modal-flutuante">
           <label for="dataTarefa">Data</label>
           <input id="dataTarefa" type="date">
@@ -198,12 +189,12 @@
             <option value="Setor 03">Setor 03</option>
           </select>
           <label><span>É uma Aplicação</span>
-            <label class="switch" style="margin-left:10px;vertical-align:middle;">
+            <label class="switch mg-l-10 align-middle">
               <input type="checkbox" id="eAplicacaoCheckbox">
               <span class="slider round"></span>
             </label>
           </label>
-          <div id="camposAplicacao" style="display: none;">
+          <div id="camposAplicacao" class="oculto">
             <input id="dosagemAplicacao" placeholder="Dosagem">
             <select id="tipoAplicacao">
               <option value="Adubo">Adubo</option>
@@ -214,20 +205,20 @@
             </select>
           </div>
           <button id="btnSalvarTarefa" onclick="salvarOuEditarTarefa()">Salvar Tarefa</button>
-          <button class="fechar-modal" type="button" onclick="fecharModalTarefa()" title="Fechar" aria-label="Fechar modal" style="background:#f44336;color:#fff;width:100%;margin-top:8px;padding:12px 0;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;position:static;top:auto;right:auto;">
+          <button class="fechar-modal" type="button" onclick="fecharModalTarefa()" title="Fechar" aria-label="Fechar modal">
             <i class="fas fa-times"></i> Fechar
           </button>
         </div>
       </div>
       <!-- Botão de filtro padrão acima do título 'A Fazer' -->
       <div id="filtroTarefasContainer"></div>
-      <div style="display: flex; gap: 24px; margin-bottom: 16px; align-items: flex-end; flex-wrap: wrap;">
-        <div style="flex:1; min-width: 220px;">
-          <h3 style="margin-bottom: 8px;">A Fazer</h3>
+      <div class="flex-gap mb-16 flex-wrap align-end">
+        <div class="flex-1">
+          <h3 class="mb-8">A Fazer</h3>
           <div id="listaTarefas"></div>
         </div>
-        <div style="flex:1; min-width: 220px;">
-          <h3 style="margin-bottom: 8px;">Feitas</h3>
+        <div class="flex-1">
+          <h3 class="mb-8">Feitas</h3>
           <div id="listaTarefasFeitas"></div>
         </div>
       </div>
@@ -241,7 +232,7 @@
     <i class="fas fa-plus"></i>
   </button>
   <!-- Modal flutuante de financeiro (inicialmente oculto) -->
-  <div id="modalFinanceiroBg" class="modal-flutuante-bg" style="display: none;">
+  <div id="modalFinanceiroBg" class="modal-flutuante-bg modal-oculto">
     <div class="modal-flutuante">
       <label for="dataFin">Data</label>
       <input id="dataFin" type="date" placeholder="Data">
@@ -266,11 +257,11 @@
         <option>Outro</option>
       </select>
       <label><input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado</label>
-      <div id="camposParcelas" style="display: none;">
+      <div id="camposParcelas" class="oculto">
         <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
       </div>
       <button id="btnSalvarFinanceiro" onclick="salvarOuEditarFinanceiro()">Salvar Gasto</button>
-      <button class="fechar-modal" type="button" onclick="fecharModalFinanceiro()" title="Fechar" aria-label="Fechar modal" style="background:#f44336;color:#fff;width:100%;margin-top:8px;padding:12px 0;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;position:static;top:auto;right:auto;">
+      <button class="fechar-modal" type="button" onclick="fecharModalFinanceiro()" title="Fechar" aria-label="Fechar modal">
         <i class="fas fa-times"></i> Fechar
       </button>
     </div>
@@ -286,7 +277,7 @@
     <i class="fas fa-plus"></i>
   </button>
   <!-- Modal flutuante de colheita (inicialmente oculto) -->
-  <div id="modalColheitaBg" class="modal-flutuante-bg" style="display: none;">
+  <div id="modalColheitaBg" class="modal-flutuante-bg modal-oculto">
     <div class="modal-flutuante">
       <label for="dataColheita">Data</label>
       <input id="dataColheita" type="date" placeholder="Data">
@@ -297,7 +288,7 @@
       <label for="valorLata">Valor da Lata (R$)</label>
       <input id="valorLata" type="number" step="0.01">
       <button id="btnSalvarColheita" onclick="salvarOuEditarColheita()">Salvar Colheita</button>
-      <button class="fechar-modal" type="button" onclick="fecharModalColheita()" title="Fechar" aria-label="Fechar modal" style="background:#f44336;color:#fff;width:100%;margin-top:8px;padding:12px 0;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;position:static;top:auto;right:auto;">
+      <button class="fechar-modal" type="button" onclick="fecharModalColheita()" title="Fechar" aria-label="Fechar modal">
         <i class="fas fa-times"></i> Fechar
       </button>
     </div>
@@ -328,13 +319,13 @@
       <h2>Configurações</h2>
       <button onclick="alternarTema()">Alternar Tema</button>
       <!-- NOVO: Cadastro de setores -->
-      <div id="cadastroSetores" style="margin-top:32px;">
+      <div id="cadastroSetores" class="mt-32">
         <h3>Setores</h3>
         <form id="formSetor" onsubmit="event.preventDefault(); adicionarSetor();">
-          <input id="novoSetorInput" placeholder="Nome do setor" maxlength="30" style="width:220px;display:inline-block;">
-          <button type="submit" style="width:auto;display:inline-block;">Adicionar</button>
+          <input id="novoSetorInput" placeholder="Nome do setor" maxlength="30" class="input-longo">
+          <button type="submit" class="btn-inline">Adicionar</button>
         </form>
-        <ul id="listaSetores" style="margin-top:12px;"></ul>
+        <ul id="listaSetores" class="lista-mt12"></ul>
       </div>
       <div style="margin-top:18px;">
         Ano da safra atual: <span id="anoSafraAtual"></span>
@@ -508,7 +499,6 @@ function atualizarResumoInicio() {
 //});
 //document.addEventListener('DOMContentLoaded', atualizarResumoInicio);
 </script>
-<<<<<<< HEAD
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof renderizarNotificacoesModal === 'function') renderizarNotificacoesModal();
@@ -546,7 +536,5 @@ if (btnNotif) {
   btnNotif.onclick = abrirModalNotificacoes;
 }
 </script>
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 </body>
 </html>

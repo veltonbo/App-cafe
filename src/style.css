@@ -22,11 +22,7 @@ body {
 /* ===== MENU SUPERIOR ===== */
 .menu-superior {
   display: flex;
-<<<<<<< HEAD
-  justify-content: flex-end;
-=======
   justify-content: center;
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   background-color: #1f1f1f;
   padding: 10px 0;
   position: sticky;
@@ -59,7 +55,6 @@ body {
   color: #4caf50;
 }
 
-<<<<<<< HEAD
 .menu-superior button.notificacoes-btn {
   position: relative;
   margin-left: auto;
@@ -116,8 +111,6 @@ body {
   font-size: 22px;
 }
 
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 /* ===== ABAS ===== */
 .aba { 
   display: none;
@@ -234,9 +227,6 @@ button:hover {
   position: relative;
 }
 
-<<<<<<< HEAD
-<<<<<<<< HEAD:src/style.css
-========
 body.claro .item {
   background-color: #fafafa;
   border-left: 4px solid #4caf50;
@@ -274,17 +264,11 @@ body.claro .item-financeiro {
   color: #222 !important;
 }
 
->>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café):App-cafe/src/style.css
 .item span {
   flex: 1;
   color: #fff;
   font-size: 1.08em;
   font-weight: 500;
-=======
-.item span {
-  flex: 1;
-  color: #fff;
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
   word-break: break-word;
 }
 
@@ -779,95 +763,54 @@ body.claro .menu-opcoes-padrao-lista li.opcao-menu-padrao:focus {
 .dashboard-inicio {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 18px;
   justify-content: center;
-  align-items: stretch;
+  margin-bottom: 24px;
 }
 .card-dashboard {
-  background: #232323;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
-  padding: 14px 12px 12px 14px;
-  min-width: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0002;
+  padding: 18px 16px 12px 16px;
+  min-width: 180px;
   flex: 1 1 220px;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  position: relative;
+  max-width: 320px;
 }
 .card-dashboard-titulo {
-  font-size: 1.18em;
-  font-weight: 700;
-  color: #4caf50;
-  margin-bottom: 6px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
   display: flex;
   align-items: center;
   gap: 8px;
-  letter-spacing: 0.01em;
 }
-.card-tarefas ul, .card-tarefas .lista-tarefas-dia {
-  margin: 0;
-  padding-left: 16px;
-  font-size: 1.01em;
-  line-height: 1.5;
-}
-.card-tarefas .lista-tarefas-dia li {
-  margin-bottom: 2px;
-  color: #fff;
-  font-size: 1em;
-}
-.card-pagar .valor-pagar {
-  font-size: 2.2em;
-  font-weight: 800;
+.valor-pagar {
+  font-size: 1.3em;
   color: #f44336;
-  background: #181818;
-  border-radius: 12px;
-  padding: 10px 18px 6px 18px;
-  box-shadow: 0 1px 6px #0002;
-  margin-top: 2px;
-  text-align: center;
-  letter-spacing: 0.01em;
-}
-.card-grafico {
-  align-items: stretch;
-  min-width: 0;
-}
-.card-grafico canvas {
-  width: 100% !important;
-  max-width: 100%;
-  height: 140px !important;
-  background: #181818;
-  border-radius: 10px;
-  margin-top: 2px;
+  font-weight: 600;
 }
 .inicio-atalhos {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-top: 18px;
 }
 .atalho-btn {
-  background: #232323;
+  background: #2196f3;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
+  border-radius: 8px;
+  padding: 10px 18px;
   font-size: 1em;
-  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.18s, color 0.18s;
   cursor: pointer;
+  transition: background 0.2s;
 }
-.atalho-btn:hover, .atalho-btn:focus {
-  background: #4caf50;
-  color: #fff;
+.atalho-btn:hover {
+  background: #1976d2;
 }
 @media (max-width: 700px) {
   .dashboard-inicio {
@@ -1001,7 +944,6 @@ body.claro .tarefa-desc {
 body.claro .tarefa-setor i {
   color: #388e3c;
 }
-<<<<<<< HEAD
 
 /* ===== ESTILOS PARA NOTIFICAÇÕES ===== */
 .notificacoes-container {
@@ -1181,8 +1123,7 @@ body.claro .tarefa-setor i {
     max-height: 60vh;
   }
 }
-<<<<<<<< HEAD:src/style.css
-========
+
 body.claro .card-dashboard {
   background: #fff;
   color: #222;
@@ -1438,6 +1379,93 @@ input:checked + .slider:before {
     padding: 18px 6vw 12px 6vw;
   }
 }
->>>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café):App-cafe/src/style.css
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
+
+/* Financeiro - Containers e Títulos */
+.financeiro-mes-titulo {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 24px 0 4px 0;
+}
+.financeiro-mes-total {
+  font-size: 0.8em;
+  font-weight: 400;
+  color: #888;
+  margin-left: 12px;
+}
+.financeiro-avencer-container {
+  background: rgba(255, 193, 7, 0.07);
+  border: 1.5px solid #ff9800;
+  border-radius: 10px;
+  margin: 12px 0 28px 0;
+  padding: 10px 12px 8px 12px;
+}
+.financeiro-avencer-titulo {
+  font-weight: 600;
+  color: #ff9800;
+  margin: 0 0 8px 0;
+}
+.financeiro-pagos-titulo {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 24px 0 4px 0;
+}
+.financeiro-pagos-container {
+  background: rgba(76, 175, 80, 0.07);
+  border: 1.5px solid #4caf50;
+  border-radius: 10px;
+  margin: 12px 0 32px 0;
+  padding: 10px 12px 8px 12px;
+}
+.financeiro-pagos-titulo-sec {
+  font-weight: 600;
+  color: #4caf50;
+  margin: 0 0 8px 0;
+}
+
+/* Botão de fechar modal */
+.fechar-modal {
+  background: #f44336;
+  color: #fff;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: static;
+  top: auto;
+  right: auto;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.fechar-modal:hover {
+  background: #d32f2f;
+}
+
+/* Títulos centralizados */
+.titulo-centralizado {
+  font-size: 1.5em;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* Utilitários */
+.oculto { display: none !important; }
+.flex-gap { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
+.flex-1 { flex: 1; min-width: 220px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mt-32 { margin-top: 32px; }
+.input-longo { width: 220px; display: inline-block; }
+.btn-inline { width: auto; display: inline-block; }
+.lista-mt12 { margin-top: 12px; }
+.modal-oculto { display: none !important; }
+.mg-t-10 { margin-top: 10px; }
+.mg-t-18 { margin-top: 18px; }
+.mg-0 { margin: 0; }
+.gap-10 { gap: 10px; }
+.align-center { align-items: center; }

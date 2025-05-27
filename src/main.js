@@ -27,7 +27,6 @@ function inicializarApp() {
     document.body.classList.add('claro');
   }
 
-<<<<<<< HEAD
   // Carregar dados do banco ao iniciar
   if (typeof carregarTarefas === 'function') carregarTarefas();
   if (typeof carregarFinanceiro === 'function') carregarFinanceiro();
@@ -35,19 +34,10 @@ function inicializarApp() {
   // Eventos customizados para garantir que as funções carreguem corretamente
   document.addEventListener('dadosCarregados', () => {
     if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-=======
-  // Eventos customizados para garantir que as funções carreguem corretamente
-  document.addEventListener('dadosCarregados', () => {
-    if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-    if (typeof carregarTarefas === "function") carregarTarefas();
-    if (typeof carregarFinanceiro === "function") carregarFinanceiro();
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
     if (typeof carregarColheita === "function") carregarColheita();
     if (typeof carregarValorLata === "function") carregarValorLata();
     if (typeof carregarAnoSafra === "function") carregarAnoSafra();
     if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
-<<<<<<< HEAD
-    // Removido carregarTarefas e carregarFinanceiro para evitar loop infinito
   });
 }
 
@@ -63,21 +53,11 @@ function aguardarDadosPrincipais(prontoCallback) {
     }
   }
   verificar();
-=======
-  });
-
-  // Disparar o evento após garantir que o DOM está pronto
-  document.dispatchEvent(new Event('dadosCarregados'));
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 }
 
 // Executa ao carregar a página
 window.addEventListener('DOMContentLoaded', function() {
   inicializarApp();
-<<<<<<< HEAD
-  // Removido aguardarDadosPrincipais para evitar conflito de eventos
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 });
 
 // ===== MODAL TAREFA =====
@@ -209,21 +189,17 @@ function filtrarListaGenerica(listaId, termo) {
   });
 }
 
-<<<<<<< HEAD
 // Ao final do carregamento dos dados principais:
 if (window.tarefas && window.gastos) {
   document.dispatchEvent(new Event('dadosCarregados'));
 }
 
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)
 ['tarefas','aplicacoes','gastos','colheita'].forEach(nome => {
   Object.defineProperty(window, nome, {
     set(v) { this['__'+nome]=v; if(typeof atualizarResumoInicio==='function') atualizarResumoInicio(); },
     get() { return this['__'+nome]||[]; }
   });
 });
-<<<<<<< HEAD
 
 function abrirPainelNotificacoes() {
   // Exibe as notificações já existentes no container, ou pode futuramente abrir um painel lateral/modal
@@ -299,5 +275,3 @@ window.addEventListener('dadosCarregados', () => {
     verificarNotificacoes();
   }
 });
-=======
->>>>>>> 8df9641 (Primeiro commit do projeto Manejo Café)

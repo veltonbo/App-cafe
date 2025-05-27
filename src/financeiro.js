@@ -1,6 +1,9 @@
 // ===== VARIÁVEIS GLOBAIS =====
 window.gastos = window.gastos || [];
 let indiceEdicaoGasto = null;
+let ignorarProximaAtualizacaoFinanceiro = false;
+let refFinanceiro = null;
+let listenerFinanceiro = null;
 
 // ===== INICIALIZAR FINANCEIRO =====
 function inicializarFinanceiro() {
@@ -19,22 +22,30 @@ function alternarFormularioFinanceiro() {
 function mostrarCamposParcelas() {
   const camposParcelas = document.getElementById("camposParcelas");
   const parcelado = document.getElementById("parceladoFin").checked;
-  if (parcelado) {
-    camposParcelas.removeAttribute('hidden');
-  } else {
-    camposParcelas.setAttribute('hidden', '');
-  }
+  camposParcelas.style.display = parcelado ? "block" : "none";
 }
 
 // ===== CARREGAR FINANCEIRO =====
 function carregarFinanceiro() {
-  db.ref('Financeiro').on('value', (snapshot) => {
+  if (refFinanceiro && listenerFinanceiro) {
+    refFinanceiro.off('value', listenerFinanceiro);
+  }
+  refFinanceiro = db.ref('Financeiro');
+  listenerFinanceiro = (snapshot) => {
     const dados = snapshot.val() ? Object.values(snapshot.val()) : [];
     if (JSON.stringify(window.gastos) !== JSON.stringify(dados)) {
       window.gastos = dados;
     }
     atualizarFinanceiro();
-  });
+    // Controle de carregamento de dados principais para notificações automáticas
+    window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
+    window.__dadosCarregados.gastos = true;
+    if (window.__dadosCarregados.tarefas) {
+      document.dispatchEvent(new Event('dadosCarregados'));
+      window.__dadosCarregados = { tarefas: false, gastos: false };
+    }
+  };
+  refFinanceiro.on('value', listenerFinanceiro);
 }
 
 // ====== ADICIONAR OU EDITAR FINANCEIRO ======
@@ -90,7 +101,15 @@ function salvarOuEditarFinanceiro() {
     }
   }
 
-  db.ref("Financeiro").set(gastos);
+  ignorarProximaAtualizacaoFinanceiro = true;
+  if (refFinanceiro && listenerFinanceiro) {
+    refFinanceiro.off('value', listenerFinanceiro);
+  }
+  db.ref("Financeiro").set(gastos).then(() => {
+    if (refFinanceiro && listenerFinanceiro) {
+      refFinanceiro.on('value', listenerFinanceiro);
+    }
+  });
   atualizarFinanceiro();
   resetarFormularioFinanceiro();
   alternarFormularioFinanceiro();
@@ -228,20 +247,20 @@ function atualizarFinanceiro() {
     todosPagos.forEach(gasto => { renderizarCardFinanceiro(gasto, subPagos); });
     lista.appendChild(subPagos);
   }
-
-  // Notificação visual para contas a pagar do dia
-  const hoje = new Date().toISOString().slice(0,10);
-  const contasHoje = (window.gastos||[]).filter(g => g.data === hoje && !g.pago);
-  if (contasHoje.length > 0) {
-    if (typeof mostrarNotificacao === 'function') mostrarNotificacao(`Você tem ${contasHoje.length} conta(s) a pagar hoje!`, '#f44336');
-  }
 }
 
 // Função para marcar um gasto como pago
 function marcarFinanceiroPago(index) {
   if (!gastos[index]) return;
   gastos[index].pago = true;
-  db.ref("Financeiro").set(gastos);
+  if (refFinanceiro && listenerFinanceiro) {
+    refFinanceiro.off('value', listenerFinanceiro);
+  }
+  db.ref("Financeiro").set(gastos).then(() => {
+    if (refFinanceiro && listenerFinanceiro) {
+      refFinanceiro.on('value', listenerFinanceiro);
+    }
+  });
   atualizarFinanceiro();
 }
 
@@ -266,7 +285,14 @@ function editarFinanceiro(index) {
 function excluirFinanceiro(index) {
   if (!confirm("Deseja excluir este lançamento financeiro?")) return;
   gastos.splice(index, 1);
-  db.ref("Financeiro").set(gastos);
+  if (refFinanceiro && listenerFinanceiro) {
+    refFinanceiro.off('value', listenerFinanceiro);
+  }
+  db.ref("Financeiro").set(gastos).then(() => {
+    if (refFinanceiro && listenerFinanceiro) {
+      refFinanceiro.on('value', listenerFinanceiro);
+    }
+  });
   atualizarFinanceiro();
 }
 
@@ -274,12 +300,23 @@ function excluirFinanceiro(index) {
 function estornarFinanceiro(index) {
   if (!gastos[index]) return;
   delete gastos[index].pago;
-  db.ref("Financeiro").set(gastos);
+  if (refFinanceiro && listenerFinanceiro) {
+    refFinanceiro.off('value', listenerFinanceiro);
+  }
+  db.ref("Financeiro").set(gastos).then(() => {
+    if (refFinanceiro && listenerFinanceiro) {
+      refFinanceiro.on('value', listenerFinanceiro);
+    }
+  });
   atualizarFinanceiro();
 }
 
 // ===== INICIALIZAR FINANCEIRO =====
-document.addEventListener("dadosCarregados", inicializarFinanceiro);
+// Removido para evitar loop infinito:
+// document.addEventListener("dadosCarregados", inicializarFinanceiro);
+// if (typeof window !== 'undefined') {
+//   document.addEventListener('dadosCarregados', carregarFinanceiro);
+// }
 
 // Garante que carregarFinanceiro é chamado ao carregar dados globais
 if (typeof window !== 'undefined') {
@@ -356,4 +393,25 @@ function renderizarCardFinanceiro(gasto, lista) {
     });
   }
   lista.appendChild(item);
+}
+
+// Controle de carregamento de dados principais para notificações automáticas
+window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
+
+function notificarSeAmbosCarregados() {
+  if (window.__dadosCarregados.tarefas && window.__dadosCarregados.gastos) {
+    document.dispatchEvent(new Event('dadosCarregados'));
+    // Evita disparar mais de uma vez
+    window.__dadosCarregados = { tarefas: false, gastos: false };
+  }
+}
+// Ao final do carregamento real das tarefas:
+if (Array.isArray(window.tarefas) && window.tarefas.length > 0) {
+  window.__dadosCarregados.tarefas = true;
+  notificarSeAmbosCarregados();
+}
+// Ao final do carregamento real dos gastos:
+if (Array.isArray(window.gastos) && window.gastos.length > 0) {
+  window.__dadosCarregados.gastos = true;
+  notificarSeAmbosCarregados();
 }

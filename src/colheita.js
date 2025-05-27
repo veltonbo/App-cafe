@@ -183,36 +183,6 @@ function atualizarResumoColheita() {
   `;
 }
 
-// ====== RESUMO POR COLHEDOR/DIA ======
-function atualizarResumoColheitaColhedorDia() {
-  const resumoDiv = document.getElementById('resumoColheitaColhedorDia');
-  if (!resumoDiv) return;
-  // Agrupa por colhedor e data
-  const mapa = {};
-  (window.colheita || []).forEach(c => {
-    if (!c.colhedor || !c.data) return;
-    if (!mapa[c.colhedor]) mapa[c.colhedor] = {};
-    if (!mapa[c.colhedor][c.data]) mapa[c.colhedor][c.data] = 0;
-    mapa[c.colhedor][c.data] += c.quantidade;
-  });
-  // Monta tabela
-  let html = '<strong>Latas por Colhedor/Dia</strong>';
-  html += '<div class="tabela-resumo-colheita"><table><thead><tr><th>Colhedor</th><th>Data</th><th>Latas</th></tr></thead><tbody>';
-  let linhas = [];
-  for (const colhedor in mapa) {
-    for (const data in mapa[colhedor]) {
-      linhas.push({colhedor, data, latas: mapa[colhedor][data]});
-    }
-  }
-  // Ordena por colhedor, depois data desc
-  linhas.sort((a,b) => a.colhedor.localeCompare(b.colhedor) || b.data.localeCompare(a.data));
-  linhas.forEach(l => {
-    html += `<tr><td>${l.colhedor}</td><td>${formatarDataBR(l.data)}</td><td>${l.latas}</td></tr>`;
-  });
-  html += '</tbody></table></div>';
-  resumoDiv.innerHTML = html;
-}
-
 // ====== GRÁFICOS (PODE SER IMPLEMENTADO DEPOIS) ======
 function gerarGraficoColheita() {
   console.log("Gerar Gráfico de Colheita - Em desenvolvimento");
@@ -243,10 +213,3 @@ if (typeof window !== 'undefined') {
 if (typeof window !== 'undefined') {
   document.addEventListener('dadosCarregados', carregarColheita);
 }
-
-// Chama o resumo por colhedor/dia sempre que atualizar colheita
-const _oldAtualizarColheita = atualizarColheita;
-atualizarColheita = function() {
-  _oldAtualizarColheita();
-  atualizarResumoColheitaColhedorDia();
-};

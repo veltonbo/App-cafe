@@ -27,24 +27,39 @@ function inicializarApp() {
     document.body.classList.add('claro');
   }
 
+  // Carregar dados do banco ao iniciar
+  if (typeof carregarTarefas === 'function') carregarTarefas();
+  if (typeof carregarFinanceiro === 'function') carregarFinanceiro();
+
   // Eventos customizados para garantir que as funções carreguem corretamente
   document.addEventListener('dadosCarregados', () => {
     if (typeof carregarAplicacoes === "function") carregarAplicacoes();
-    if (typeof carregarTarefas === "function") carregarTarefas();
-    if (typeof carregarFinanceiro === "function") carregarFinanceiro();
     if (typeof carregarColheita === "function") carregarColheita();
     if (typeof carregarValorLata === "function") carregarValorLata();
     if (typeof carregarAnoSafra === "function") carregarAnoSafra();
     if (typeof carregarSafrasDisponiveis === "function") carregarSafrasDisponiveis();
+    // Removido carregarTarefas e carregarFinanceiro para evitar loop infinito
   });
+}
 
-  // Disparar o evento após garantir que o DOM está pronto
-  document.dispatchEvent(new Event('dadosCarregados'));
+// Função para aguardar o carregamento de tarefas e gastos
+function aguardarDadosPrincipais(prontoCallback) {
+  let tentativas = 0;
+  function verificar() {
+    tentativas++;
+    if (window.tarefas && window.gastos) {
+      prontoCallback();
+    } else if (tentativas < 50) { // tenta por até 5 segundos
+      setTimeout(verificar, 100);
+    }
+  }
+  verificar();
 }
 
 // Executa ao carregar a página
 window.addEventListener('DOMContentLoaded', function() {
   inicializarApp();
+  // Removido aguardarDadosPrincipais para evitar conflito de eventos
 });
 
 // ===== MODAL TAREFA =====
@@ -176,9 +191,89 @@ function filtrarListaGenerica(listaId, termo) {
   });
 }
 
+// Ao final do carregamento dos dados principais:
+if (window.tarefas && window.gastos) {
+  document.dispatchEvent(new Event('dadosCarregados'));
+}
+
 ['tarefas','aplicacoes','gastos','colheita'].forEach(nome => {
   Object.defineProperty(window, nome, {
     set(v) { this['__'+nome]=v; if(typeof atualizarResumoInicio==='function') atualizarResumoInicio(); },
     get() { return this['__'+nome]||[]; }
   });
+});
+
+function abrirPainelNotificacoes() {
+  // Exibe as notificações já existentes no container, ou pode futuramente abrir um painel lateral/modal
+  const container = document.getElementById('notificacoes-container');
+  if (container) {
+    container.style.animation = 'none';
+    container.offsetHeight; // força reflow
+    container.style.animation = 'notificacaoPulse 0.5s';
+    setTimeout(() => { container.style.animation = ''; }, 500);
+  }
+}
+
+// Atualiza o badge de notificações no sino
+function atualizarBadgeNotificacoes(qtd) {
+  const badge = document.getElementById('notificacoes-badge');
+  if (!badge) return;
+  if (qtd > 0) {
+    badge.innerText = qtd > 99 ? '99+' : qtd;
+    badge.style.display = 'inline-block';
+    if (qtd > 9) {
+      badge.setAttribute('data-qtd', 'true');
+    } else {
+      badge.removeAttribute('data-qtd');
+    }
+  } else {
+    badge.style.display = 'none';
+    badge.removeAttribute('data-qtd');
+  }
+}
+
+// Marca notificações como lidas ao abrir o modal
+function marcarNotificacoesComoLidas() {
+  const lista = document.getElementById('notificacoesModalLista');
+  if (lista) {
+    lista.querySelectorAll('.notificacao.nao-lida').forEach(n => n.classList.remove('nao-lida'));
+    contarNotificacoesNaoLidas();
+  }
+}
+
+// Hook para contar notificações NÃO LIDAS
+function contarNotificacoesNaoLidas() {
+  let qtd = 0;
+  const lista = document.getElementById('notificacoesModalLista');
+  if (lista) {
+    qtd = lista.querySelectorAll('.notificacao.nao-lida').length;
+  }
+  atualizarBadgeNotificacoes(qtd);
+}
+
+// Observa mudanças no modal para atualizar badge
+const observer = new MutationObserver(contarNotificacoesNaoLidas);
+const notifLista = document.getElementById('notificacoesModalLista');
+if (notifLista) {
+  observer.observe(notifLista, { childList: true, subtree: true, attributes: true });
+}
+
+window.abrirPainelNotificacoes = function() {
+  // Efeito visual
+  const container = document.getElementById('notificacoes-container');
+  if (container) {
+    container.style.animation = 'none';
+    container.offsetHeight;
+    container.style.animation = 'notificacaoPulse 0.5s';
+    setTimeout(() => { container.style.animation = ''; }, 500);
+    // Marca como lidas
+    container.querySelectorAll('.notificacao.nao-lida').forEach(n => n.classList.remove('nao-lida'));
+    contarNotificacoesNaoLidas();
+  }
+};
+
+window.addEventListener('dadosCarregados', () => {
+  if (typeof verificarNotificacoes === 'function') {
+    verificarNotificacoes();
+  }
 });

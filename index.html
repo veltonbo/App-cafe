@@ -21,6 +21,7 @@
 
   <!-- Scripts -->
   <script defer src="src/firebase-config.js"></script>
+  <script defer src="src/notifications.js"></script>
   <script defer src="src/main.js"></script>
   <script defer src="src/aplicacao.js"></script>
   <script defer src="src/tarefas.js"></script>
@@ -32,17 +33,32 @@
 </head>
 <body>
   <!-- ===== NOTIFICAÇÕES ===== -->
-  <div id="notificacoes" style="position:fixed;top:18px;right:18px;z-index:3000;display:none;min-width:220px;"></div>
-
+  <div id="notificacoes-container" class="notificacoes-container"></div>
+  <!-- ===== MODAL DE NOTIFICAÇÕES ===== -->
+  <div id="modalNotificacoesBg" class="modal-flutuante-bg">
+    <div class="modal-flutuante">
+      <div class="modal-flutuante-header">
+        <h3>Notificações</h3>
+        <button class="fechar-modal" type="button" onclick="fecharModalNotificacoes()" title="Fechar" aria-label="Fechar modal">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      <div id="notificacoesModalLista"></div>
+    </div>
+  </div>
   <!-- ===== MENU SUPERIOR ===== -->
 <div class="menu-superior">
   <button id="btn-inicio" onclick="mostrarAba('inicio')" title="Início">
     <i class="fas fa-home"></i>
   </button>
+  <button id="btn-notificacoes" onclick="abrirPainelNotificacoes()" title="Notificações" class="notificacoes-btn">
+    <i class="fas fa-bell"></i>
+    <span id="notificacoes-badge" class="notificacoes-badge" style="display:none;">0</span>
+  </button>
   <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
     <i class="fas fa-flask"></i>
   </button>
-  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas" class="menu-tarefa-dinamica">
+  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas">
     <i class="fas fa-tasks"></i>
   </button>
   <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro">
@@ -63,7 +79,7 @@
   <div class="conteudo">
     <!-- ===== INÍCIO ===== -->
     <div id="inicio" class="aba">
-      <h2 class="titulo-inicio">Bem-vindo ao Manejo Café</h2>
+      <h2 style="font-size:1.5em;margin-bottom:18px;text-align:center;">Bem-vindo ao Manejo Café</h2>
       <div id="dashboardInicio" class="dashboard-inicio">
         <div class="card-dashboard card-tarefas">
           <div class="card-dashboard-titulo"><i class="fas fa-tasks"></i> Tarefas do Dia</div>
@@ -92,12 +108,12 @@
       <h2>Aplicações</h2>
 
       <!-- Botão flutuante para adicionar aplicação -->
-      <button id="btnFlutuanteAddApp" class="botao-flutuante mini-btn" title="Adicionar Aplicação" onclick="abrirModalAplicacao()">
+      <button id="btnFlutuanteAddApp" class="botao-flutuante" title="Adicionar Aplicação" onclick="abrirModalAplicacao()">
         <i class="fas fa-plus"></i>
       </button>
 
       <!-- Modal flutuante de aplicação (inicialmente oculto) -->
-      <div id="modalAplicacaoBg" class="modal-flutuante-bg" hidden>
+      <div id="modalAplicacaoBg" class="modal-flutuante-bg" style="display: none;">
         <div class="modal-flutuante">
           <label for="dataApp">Data</label>
           <input id="dataApp" type="date">
@@ -119,14 +135,14 @@
             <option>Setor 02</option>
           </select>
           <!-- NOVO: Botão liga/desliga de arrastar para reaplicação -->
-          <div class="reaplicacao-toggle">
-            <label for="toggleReaplicacaoApp" class="label-no-margin">Reaplicação</label>
+          <div style="margin: 10px 0 0 0; display: flex; align-items: center; gap: 10px;">
+            <label for="toggleReaplicacaoApp" style="margin: 0;">Reaplicação</label>
             <label class="switch">
               <input type="checkbox" id="toggleReaplicacaoApp">
               <span class="slider round"></span>
             </label>
           </div>
-          <div id="camposReaplicacaoApp" class="campos-reaplicacao" hidden>
+          <div id="camposReaplicacaoApp" style="display: none; margin-top: 8px;">
             <label for="prioridadeReaplicacaoApp">Prioridade da Reaplicação</label>
             <select id="prioridadeReaplicacaoApp">
               <option value="Alta">Alta</option>
@@ -150,11 +166,11 @@
     <div id="tarefas" class="aba">
       <h2>Tarefas</h2>
       <!-- Botão flutuante para adicionar tarefa -->
-      <button id="btnFlutuanteAddTarefa" class="botao-flutuante mini-btn" title="Adicionar Tarefa" onclick="abrirModalTarefa()">
+      <button id="btnFlutuanteAddTarefa" class="botao-flutuante" title="Adicionar Tarefa" onclick="abrirModalTarefa()">
         <i class="fas fa-plus"></i>
       </button>
       <!-- Modal flutuante de tarefa (inicialmente oculto) -->
-      <div id="modalTarefaBg" class="modal-flutuante-bg" hidden>
+      <div id="modalTarefaBg" class="modal-flutuante-bg" style="display: none;">
         <div class="modal-flutuante">
           <label for="dataTarefa">Data</label>
           <input id="dataTarefa" type="date">
@@ -173,12 +189,12 @@
             <option value="Setor 03">Setor 03</option>
           </select>
           <label><span>É uma Aplicação</span>
-            <label class="switch switch-aplicacao">
+            <label class="switch" style="margin-left:10px;vertical-align:middle;">
               <input type="checkbox" id="eAplicacaoCheckbox">
               <span class="slider round"></span>
             </label>
           </label>
-          <div id="camposAplicacao" class="campos-aplicacao" hidden>
+          <div id="camposAplicacao" style="display: none;">
             <input id="dosagemAplicacao" placeholder="Dosagem">
             <select id="tipoAplicacao">
               <option value="Adubo">Adubo</option>
@@ -196,13 +212,13 @@
       </div>
       <!-- Botão de filtro padrão acima do título 'A Fazer' -->
       <div id="filtroTarefasContainer"></div>
-      <div class="tarefas-flex-container">
-        <div class="tarefas-flex-col">
-          <h3 class="tarefas-flex-title">A Fazer</h3>
+      <div style="display: flex; gap: 24px; margin-bottom: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex:1; min-width: 220px;">
+          <h3 style="margin-bottom: 8px;">A Fazer</h3>
           <div id="listaTarefas"></div>
         </div>
-        <div class="tarefas-flex-col">
-          <h3 class="tarefas-flex-title">Feitas</h3>
+        <div style="flex:1; min-width: 220px;">
+          <h3 style="margin-bottom: 8px;">Feitas</h3>
           <div id="listaTarefasFeitas"></div>
         </div>
       </div>
@@ -212,11 +228,11 @@
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
   <!-- Botão flutuante para adicionar financeiro -->
-  <button id="btnFlutuanteAddFinanceiro" class="botao-flutuante mini-btn" title="Novo Gasto" onclick="abrirModalFinanceiro()">
+  <button id="btnFlutuanteAddFinanceiro" class="botao-flutuante" title="Novo Gasto" onclick="abrirModalFinanceiro()">
     <i class="fas fa-plus"></i>
   </button>
   <!-- Modal flutuante de financeiro (inicialmente oculto) -->
-  <div id="modalFinanceiroBg" class="modal-flutuante-bg" hidden>
+  <div id="modalFinanceiroBg" class="modal-flutuante-bg" style="display: none;">
     <div class="modal-flutuante">
       <label for="dataFin">Data</label>
       <input id="dataFin" type="date" placeholder="Data">
@@ -241,7 +257,7 @@
         <option>Outro</option>
       </select>
       <label><input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado</label>
-      <div id="camposParcelas" class="campos-parcelas" hidden>
+      <div id="camposParcelas" style="display: none;">
         <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
       </div>
       <button id="btnSalvarFinanceiro" onclick="salvarOuEditarFinanceiro()">Salvar Gasto</button>
@@ -257,11 +273,11 @@
 <div id="colheita" class="aba">
   <h2>Colheita</h2>
   <!-- Botão flutuante para adicionar colheita -->
-  <button id="btnFlutuanteAddColheita" class="botao-flutuante mini-btn" title="Adicionar Colheita" onclick="abrirModalColheita()">
+  <button id="btnFlutuanteAddColheita" class="botao-flutuante" title="Adicionar Colheita" onclick="abrirModalColheita()">
     <i class="fas fa-plus"></i>
   </button>
   <!-- Modal flutuante de colheita (inicialmente oculto) -->
-  <div id="modalColheitaBg" class="modal-flutuante-bg" hidden>
+  <div id="modalColheitaBg" class="modal-flutuante-bg" style="display: none;">
     <div class="modal-flutuante">
       <label for="dataColheita">Data</label>
       <input id="dataColheita" type="date" placeholder="Data">
@@ -277,8 +293,6 @@
       </button>
     </div>
   </div>
-  <!-- RESUMO POR COLHEDOR/DIA -->
-  <div id="resumoColheitaColhedorDia" class="resumo-colheita-colhedor-dia"></div>
   <!-- Resumo da Colheita -->
   <div id="resumoColheita" class="resumo-colheita">
     <strong>Resumo da Colheita:</strong>
@@ -305,15 +319,15 @@
       <h2>Configurações</h2>
       <button onclick="alternarTema()">Alternar Tema</button>
       <!-- NOVO: Cadastro de setores -->
-      <div id="cadastroSetores" class="cadastro-setores">
+      <div id="cadastroSetores" style="margin-top:32px;">
         <h3>Setores</h3>
         <form id="formSetor" onsubmit="event.preventDefault(); adicionarSetor();">
-          <input id="novoSetorInput" placeholder="Nome do setor" maxlength="30" class="input-setor">
-          <button type="submit" class="btn-setor">Adicionar</button>
+          <input id="novoSetorInput" placeholder="Nome do setor" maxlength="30" style="width:220px;display:inline-block;">
+          <button type="submit" style="width:auto;display:inline-block;">Adicionar</button>
         </form>
-        <ul id="listaSetores" class="lista-setores"></ul>
+        <ul id="listaSetores" style="margin-top:12px;"></ul>
       </div>
-      <div class="ano-safra-atual">
+      <div style="margin-top:18px;">
         Ano da safra atual: <span id="anoSafraAtual"></span>
       </div>
     </div>
@@ -326,11 +340,7 @@
       var campos = document.getElementById('camposReaplicacaoApp');
       if (toggle && campos) {
         toggle.addEventListener('change', function() {
-          if (toggle.checked) {
-            campos.removeAttribute('hidden');
-          } else {
-            campos.setAttribute('hidden', '');
-          }
+          campos.style.display = toggle.checked ? 'block' : 'none';
         });
       }
     });
@@ -373,78 +383,7 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(20px);
 }
-/* Mini botão flutuante */
-.mini-btn.botao-flutuante {
-  width: 38px !important;
-  height: 38px !important;
-  font-size: 18px !important;
-  bottom: 18px !important;
-  right: 18px !important;
-}
-/* Modal mais estreito e com rolagem */
-.modal-flutuante {
-  max-width: 340px !important;
-  min-width: 0 !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-}
-.notificacao-msg {
-  color: #fff;
-  padding: 14px 18px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px #0003;
-  font-size: 1.1em;
-  margin-bottom: 8px;
-}
-.titulo-inicio {
-  font-size: 1.5em;
-  margin-bottom: 18px;
-  text-align: center;
-}
-.cadastro-setores {
-  margin-top: 32px;
-}
-.input-setor {
-  width: 220px;
-  display: inline-block;
-}
-.btn-setor {
-  width: auto;
-  display: inline-block;
-}
-.lista-setores {
-  margin-top: 12px;
-}
-.ano-safra-atual {
-  margin-top: 18px;
-}
-.item-setor {
-  margin-bottom: 6px;
-}
-.btn-remover-setor {
-  width: auto;
-  background: #f44336;
-  color: #fff;
-  padding: 2px 10px;
-  font-size: 13px;
-  border-radius: 6px;
-  margin-left: 8px;
-}
-.tarefas-flex-container {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-.tarefas-flex-col {
-  flex: 1;
-  min-width: 220px;
-}
-.tarefas-flex-title {
-  margin-bottom: 8px;
-}
-  </style>
+</style>
 <script>
 // Exibe/esconde campos de aplicação conforme o switch
 if (typeof window !== 'undefined') {
@@ -453,11 +392,7 @@ if (typeof window !== 'undefined') {
     var campos = document.getElementById('camposAplicacao');
     if (toggle && campos) {
       toggle.addEventListener('change', function() {
-        if (toggle.checked) {
-          campos.removeAttribute('hidden');
-        } else {
-          campos.setAttribute('hidden', '');
-        }
+        campos.style.display = toggle.checked ? 'block' : 'none';
       });
     }
   });
@@ -498,7 +433,7 @@ function removerSetor(idx) {
 function atualizarListaSetores() {
   const ul = document.getElementById('listaSetores');
   if (!ul) return;
-  ul.innerHTML = setores.map((s, i) => `<li class='item-setor'>${s} <button onclick='removerSetor(${i})' class='btn-remover-setor'>Remover</button></li>`).join('');
+  ul.innerHTML = setores.map((s, i) => `<li style='margin-bottom:6px;'>${s} <button onclick='removerSetor(${i})' style='width:auto;background:#f44336;color:#fff;padding:2px 10px;font-size:13px;border-radius:6px;margin-left:8px;'>Remover</button></li>`).join('');
 }
 function atualizarSelectsSetor() {
   document.querySelectorAll('select[id$="setorApp"], select[id$="setorTarefa"], select[id$="setorColheita"]').forEach(sel => {
@@ -565,26 +500,41 @@ function atualizarResumoInicio() {
 //document.addEventListener('DOMContentLoaded', atualizarResumoInicio);
 </script>
 <script>
-// Sistema de Notificações Simples
-function mostrarNotificacao(msg, cor = '#4caf50', tempo = 4000) {
-  const notif = document.getElementById('notificacoes');
-  notif.innerHTML = `<div class='notificacao-msg' style='background:${cor};'>${msg}</div>`;
-  notif.style.display = 'block';
-  setTimeout(() => { notif.style.display = 'none'; }, tempo);
-}
-// Notificações automáticas para tarefas e contas a pagar do dia
-function checarNotificacoesDia() {
-  const hoje = new Date().toISOString().slice(0,10);
-  const tarefasHoje = (window.tarefas||[]).filter(t => t.data === hoje && !t.feita);
-  const contasHoje = (window.gastos||[]).filter(g => g.data === hoje && !g.pago);
-  if (tarefasHoje.length > 0) {
-    mostrarNotificacao(`Você tem ${tarefasHoje.length} tarefa(s) para hoje!`, '#ff9800');
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof renderizarNotificacoesModal === 'function') renderizarNotificacoesModal();
+});
+</script>
+<script>
+// Função para abrir o modal de notificações
+function abrirModalNotificacoes() {
+  if (typeof window.forcarAtualizacaoNotificacoes === 'function') window.forcarAtualizacaoNotificacoes();
+  var bg = document.getElementById('modalNotificacoesBg');
+  if (typeof renderizarNotificacoesModal === 'function') renderizarNotificacoesModal();
+  var lista = document.getElementById('notificacoesModalLista');
+  if (bg && lista) {
+    // Remove mensagem antiga de 'Nenhuma notificação.' se houver
+    if (lista.innerHTML.includes('Nenhuma notificação.')) {
+      lista.innerHTML = '';
+    }
+    // Se não houver notificações, mostra mensagem
+    var notificacoes = lista.querySelectorAll('.notificacao');
+    if (notificacoes.length === 0) {
+      lista.innerHTML = '<div style="color:#888;text-align:center;margin:24px 0;">Nenhuma notificação.</div>';
+    }
+    bg.classList.add('ativo');
+    // Atualiza badge ao abrir
+    if (typeof contarNotificacoesNaoLidas === 'function') contarNotificacoesNaoLidas();
   }
-  if (contasHoje.length > 0) {
-    mostrarNotificacao(`Você tem ${contasHoje.length} conta(s) a pagar hoje!`, '#f44336');
-  }
 }
-document.addEventListener('dadosCarregados', checarNotificacoesDia);
+function fecharModalNotificacoes() {
+  var bg = document.getElementById('modalNotificacoesBg');
+  if (bg) bg.classList.remove('ativo');
+}
+// Substitui o comportamento do botão do sino para abrir o modal
+var btnNotif = document.getElementById('btn-notificacoes');
+if (btnNotif) {
+  btnNotif.onclick = abrirModalNotificacoes;
+}
 </script>
 </body>
 </html>

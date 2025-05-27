@@ -1,5 +1,5 @@
 export default {
-  root: './App-cafe',
+  root: '.',
   server: {
     open: true
   }

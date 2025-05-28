@@ -213,3 +213,12 @@ if (typeof window !== 'undefined') {
 if (typeof window !== 'undefined') {
   document.addEventListener('dadosCarregados', carregarColheita);
 }
+
+// ===== LIMPAR CAMPOS DO MODAL DE COLHEITA =====
+function limparCamposColheita() {
+  document.getElementById('dataColheita').value = '';
+  document.getElementById('colhedor').value = '';
+  document.getElementById('quantidadeLatas').value = '';
+  document.getElementById('valorLata').value = '';
+  // Se houver outros campos, limpe-os aqui
+}

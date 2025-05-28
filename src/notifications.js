@@ -89,6 +89,23 @@ function verificarNotificacoes() {
   renderizarNotificacoesModal();
 }
 
+// Atualização do badge com efeito visual no botão
+function atualizarBadgeNotificacoes(qtd) {
+  const badge = document.getElementById('notificacoes-badge');
+  const btnNotificacao = document.getElementById('btn-notificacoes');
+  
+  if (!badge || !btnNotificacao) return;
+  
+  if (qtd > 0) {
+    badge.innerText = qtd > 99 ? '99+' : qtd;
+    badge.classList.remove('oculto');
+    btnNotificacao.classList.add('tem-notificacao');
+  } else {
+    badge.classList.add('oculto');
+    btnNotificacao.classList.remove('tem-notificacao');
+  }
+}
+
 // Função utilitária para garantir notificações sempre atualizadas ao abrir o modal
 window.forcarAtualizacaoNotificacoes = function() {
   if (typeof verificarNotificacoes === 'function') verificarNotificacoes();

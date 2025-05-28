@@ -1,21 +1,101 @@
-// ===== FUNÇÃO PARA TROCAR ABAS =====
+// ===== CONTROLE DO MENU LATERAL =====
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const hamburgerButton = document.getElementById('hamburger-button');
+  const sidebarMobileBg = document.getElementById('sidebarMobileBg');
+  const menuButtons = document.querySelectorAll('.sidebar-nav button');
+  
+  // Função para abrir/fechar o menu
+  function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('sidebar-open');
+    
+    // Prevenir scroll quando menu aberto em mobile
+    if (sidebar.classList.contains('open') && window.innerWidth <= 700) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+  
+  // Eventos para os botões do menu
+  sidebarToggle.addEventListener('click', toggleSidebar);
+  hamburgerButton.addEventListener('click', toggleSidebar);
+  
+  // Fechar menu ao clicar no overlay
+  sidebarMobileBg.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+    document.body.style.overflow = '';
+  });
+  
+  // Fechar menu ao selecionar um item no mobile
+  menuButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      if (window.innerWidth <= 700) {
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+      }
+      
+      // Remover classe ativa dos botões
+      menuButtons.forEach(btn => btn.classList.remove('active'));
+      // Adicionar classe ativa ao botão clicado
+      button.classList.add('active');
+    });
+  });
+});
+
+// ===== FUNÇÃO PARA TROCAR ABAS COM ANIMAÇÃO =====
 function mostrarAba(abaId) {
+  // Ocultar todas as abas primeiro
   document.querySelectorAll('.aba').forEach(aba => {
-    aba.style.display = 'none';
+    if (aba.style.display !== 'none') {
+      // Fade out da aba atual
+      aba.style.opacity = '0';
+      aba.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        aba.style.display = 'none';
+      }, 200);
+    } else {
+      aba.style.display = 'none';
+    }
   });
 
-  const abaSelecionada = document.getElementById(abaId);
-  if (abaSelecionada) abaSelecionada.style.display = 'block';
+  // Após um pequeno delay, mostrar a nova aba com animação
+  setTimeout(() => {
+    const abaSelecionada = document.getElementById(abaId);
+    if (abaSelecionada) {
+      abaSelecionada.style.display = 'block';
+      abaSelecionada.classList.add('aba-entrando');
+      
+      // Trigger reflow para garantir que a animação funcione
+      void abaSelecionada.offsetWidth;
+      
+      // Aplicar a animação de entrada
+      abaSelecionada.classList.add('aba-visivel');
+      abaSelecionada.classList.remove('aba-entrando');
+    }
 
-  document.querySelectorAll('.menu-superior button').forEach(btn => {
-    btn.classList.remove('active');
-  });
+    // Atualizar botões do menu
+    document.querySelectorAll('.sidebar-nav button').forEach(btn => {
+      btn.classList.remove('active');
+    });
 
-  const btnId = 'btn-' + abaId;
-  const btn = document.getElementById(btnId);
-  if (btn) btn.classList.add('active');
+    const btnId = 'btn-' + abaId;
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.classList.add('active');
+      // Destacar o botão com uma animação
+      btn.classList.add('animacao-destaque');
+      setTimeout(() => {
+        btn.classList.remove('animacao-destaque');
+      }, 2000);
+    }
 
-  localStorage.setItem('aba', abaId);
+    localStorage.setItem('aba', abaId);
+  }, 200);
 }
 
 // ===== INICIALIZAR O APLICATIVO =====
@@ -26,6 +106,10 @@ function inicializarApp() {
   if (localStorage.getItem('tema') === 'claro') {
     document.body.classList.add('claro');
   }
+  
+  // Marcar o botão da aba inicial como ativo
+  const btnInicial = document.getElementById('btn-' + abaInicial);
+  if (btnInicial) btnInicial.classList.add('active');
 
   // Carregar dados do banco ao iniciar
   if (typeof carregarTarefas === 'function') carregarTarefas();

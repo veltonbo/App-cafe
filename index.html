@@ -4,21 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café</title>
-  
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
   <!-- Chart.js e jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <!-- Estilos -->
   <link rel="stylesheet" href="src/style.css">
-
   <!-- Scripts -->
   <script defer src="src/firebase-config.js"></script>
   <script defer src="src/notifications.js"></script>
@@ -31,56 +26,50 @@
   <script defer src="src/configuracoes.js"></script>
   <script defer src="src/inicio.js"></script>
 </head>
-<body>
-  <!-- ===== NOTIFICAÇÕES ===== -->
-  <div id="notificacoes-container" class="notificacoes-container"></div>
-  <!-- ===== MODAL DE NOTIFICAÇÕES ===== -->
+<body>  <!-- MENU HAMBURGER PARA MOBILE -->
+  <button id="hamburger-button" class="hamburger-button" aria-label="Menu">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <!-- BOTÃO DE NOTIFICAÇÕES NO CANTO SUPERIOR DIREITO -->
+  <button id="btn-notificacoes" onclick="abrirModalNotificacoes()" title="Notificações" class="notificacoes-btn-superior" aria-label="Notificações">
+    <i class="fas fa-bell"></i>
+    <span id="notificacoes-badge" class="notificacoes-badge" aria-label="Quantidade de notificações">0</span>
+  </button>
+    <!-- MENU LATERAL MODERNO -->
+  <aside id="sidebar" class="sidebar" role="navigation" aria-label="Menu principal">
+    <div class="app-logo">
+      <div class="logo-icon"><i class="fas fa-coffee"></i></div>
+      <div class="logo-text">Manejo Café</div>
+    </div>
+    <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Fechar menu" title="Fechar menu">
+      <i class="fas fa-times"></i>
+    </button>
+    <nav class="sidebar-nav"><button id="btn-inicio" onclick="mostrarAba('inicio')" title="Início" aria-label="Início"><i class="fas fa-home"></i><span class="sidebar-label">Início</span></button>
+      <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações" aria-label="Aplicações"><i class="fas fa-flask"></i><span class="sidebar-label">Aplicações</span></button>
+      <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas" aria-label="Tarefas"><i class="fas fa-list-check"></i><span class="sidebar-label">Tarefas</span></button>
+      <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro" aria-label="Financeiro"><i class="fas fa-coins"></i><span class="sidebar-label">Financeiro</span></button>
+      <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita" aria-label="Colheita"><i class="fas fa-seedling"></i><span class="sidebar-label">Colheita</span></button>
+      <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório" aria-label="Relatório"><i class="fas fa-chart-line"></i><span class="sidebar-label">Relatório</span></button>
+      <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações" aria-label="Configurações"><i class="fas fa-cog"></i><span class="sidebar-label">Configurações</span></button>
+    </nav>
+  </aside>  <div class="sidebar-mobile-bg" id="sidebarMobileBg"></div>
+  
+  <!-- Modal de Notificações -->
   <div id="modalNotificacoesBg" class="modal-flutuante-bg">
     <div class="modal-flutuante">
-      <div class="modal-flutuante-header">
-        <h3>Notificações</h3>
-        <button class="fechar-modal" type="button" onclick="fecharModalNotificacoes()" title="Fechar" aria-label="Fechar modal">
-          <i class="fas fa-xmark"></i>
-        </button>
-      </div>
-      <div id="notificacoesModalLista"></div>
+      <h3 class="notificacoes-titulo">Notificações</h3>
+      <div id="notificacoesModalLista" class="notificacoes-lista"></div>
+      <button class="fechar-modal" type="button" onclick="fecharModalNotificacoes()" title="Fechar" aria-label="Fechar modal">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
-  <!-- ===== MENU SUPERIOR ===== -->
-<div class="menu-superior">
-  <button id="btn-inicio" onclick="mostrarAba('inicio')" title="Início">
-    <i class="fas fa-home"></i>
-  </button>
-  <button id="btn-notificacoes" onclick="abrirModalNotificacoes()" title="Notificações" class="notificacoes-btn">
-    <i class="fas fa-bell"></i>
-    <span id="notificacoes-badge" class="notificacoes-badge oculto">0</span>
-  </button>
-  <button id="btn-aplicacoes" onclick="mostrarAba('aplicacoes')" title="Aplicações">
-    <i class="fas fa-flask"></i>
-  </button>
-  <button id="btn-tarefas" onclick="mostrarAba('tarefas')" title="Tarefas">
-    <i class="fas fa-tasks"></i>
-  </button>
-  <button id="btn-financeiro" onclick="mostrarAba('financeiro')" title="Financeiro">
-    <i class="fas fa-dollar-sign"></i>
-  </button>
-  <button id="btn-colheita" onclick="mostrarAba('colheita')" title="Colheita">
-    <i class="fas fa-tractor"></i>
-  </button>
-  <button id="btn-relatorio" onclick="mostrarAba('relatorio')" title="Relatório">
-    <i class="fas fa-chart-line"></i>
-  </button>
-  <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações">
-    <i class="fas fa-cog"></i>
-  </button>
-</div>
-
-  <!-- ===== CONTEÚDO ===== -->
-  <div class="conteudo">
+  
+  <main class="conteudo">
     <!-- ===== INÍCIO ===== -->
     <div id="inicio" class="aba">
-      <h2 class="titulo-centralizado">Bem-vindo ao Manejo Café</h2>
-      <div id="dashboardInicio" class="dashboard-inicio">
+      <h2 class="titulo-centralizado">Bem-vindo ao Manejo Café</h2>      <div id="dashboardInicio" class="dashboard-inicio">
         <div class="card-dashboard card-tarefas">
           <div class="card-dashboard-titulo"><i class="fas fa-tasks"></i> Tarefas do Dia</div>
           <ul id="listaTarefasDia" class="lista-tarefas-dia"></ul>
@@ -93,13 +82,6 @@
           <div class="card-dashboard-titulo"><i class="fas fa-chart-pie"></i> Gastos por Categoria</div>
           <canvas id="graficoGastosInicio" height="160"></canvas>
         </div>
-      </div>
-      <div class="inicio-atalhos">
-        <button class="atalho-btn" onclick="mostrarAba('tarefas')"><i class="fas fa-tasks"></i> Tarefas</button>
-        <button class="atalho-btn" onclick="mostrarAba('aplicacoes')"><i class="fas fa-flask"></i> Aplicações</button>
-        <button class="atalho-btn" onclick="mostrarAba('financeiro')"><i class="fas fa-dollar-sign"></i> Financeiro</button>
-        <button class="atalho-btn" onclick="mostrarAba('colheita')"><i class="fas fa-tractor"></i> Colheita</button>
-        <button class="atalho-btn" onclick="mostrarAba('relatorio')"><i class="fas fa-chart-line"></i> Relatório</button>
       </div>
     </div>
 
@@ -190,13 +172,14 @@
           </select>
           <label><span>É uma Aplicação</span>
             <label class="switch mg-l-10 align-middle">
-              <input type="checkbox" id="eAplicacaoCheckbox">
+              <input type="checkbox" id="eAplicacaoCheckbox" title="Marcar como aplicação">
               <span class="slider round"></span>
             </label>
           </label>
           <div id="camposAplicacao" class="oculto">
             <input id="dosagemAplicacao" placeholder="Dosagem">
-            <select id="tipoAplicacao">
+            <label for="tipoAplicacao">Tipo de Aplicação</label>
+            <select id="tipoAplicacao" title="Tipo de Aplicação">
               <option value="Adubo">Adubo</option>
               <option value="Fungicida">Fungicida</option>
               <option value="Inseticida">Inseticida</option>
@@ -227,10 +210,29 @@
     <!-- ===== FINANCEIRO ===== -->
 <div id="financeiro" class="aba">
   <h2>Financeiro</h2>
-  <!-- Botão flutuante para adicionar financeiro -->
-  <button id="btnFlutuanteAddFinanceiro" class="botao-flutuante" title="Novo Gasto" onclick="abrirModalFinanceiro()">
-    <i class="fas fa-plus"></i>
-  </button>
+  <div class="financeiro-menu-modern">
+    <div class="financeiro-header">
+      <i class="fas fa-wallet"></i>
+      <span>Resumo Financeiro</span>
+      <button id="btnFlutuanteAddFinanceiro" class="botao-flutuante" title="Novo Gasto" onclick="abrirModalFinanceiro()">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+    <div class="financeiro-resumos">
+      <div class="financeiro-resumo-card card-apagar">
+        <div class="resumo-titulo">A Pagar</div>
+        <div id="financeiroResumoAPagar" class="resumo-valor">R$ 0,00</div>
+      </div>
+      <div class="financeiro-resumo-card card-pagos">
+        <div class="resumo-titulo">Pagos</div>
+        <div id="financeiroResumoPagos" class="resumo-valor">R$ 0,00</div>
+      </div>
+      <div class="financeiro-resumo-card card-categoria">
+        <div class="resumo-titulo">Por Categoria</div>
+        <canvas id="graficoFinanceiroCategoria" height="60"></canvas>
+      </div>
+    </div>
+  </div>
   <!-- Modal flutuante de financeiro (inicialmente oculto) -->
   <div id="modalFinanceiroBg" class="modal-flutuante-bg modal-oculto">
     <div class="modal-flutuante">
@@ -327,11 +329,11 @@
         </form>
         <ul id="listaSetores" class="lista-mt12"></ul>
       </div>
-      <div style="margin-top:18px;">
+      <div class="ano-safra-info">
         Ano da safra atual: <span id="anoSafraAtual"></span>
       </div>
     </div>
-  </div>
+  </main>
   <script>
   // Exibe/esconde campos de reaplicação conforme o toggle
   if (typeof window !== 'undefined') {

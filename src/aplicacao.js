@@ -4,19 +4,36 @@ let indiceEdicaoAplicacao = null;
 
 // ===== MODAL DE FORMULÁRIO =====
 function abrirModalAplicacao(editar = false) {
-  document.getElementById('modalAplicacaoBg').style.display = 'flex';
-  document.getElementById('btnFlutuanteAddApp').style.display = 'none';
-  if (!editar) limparCamposAplicacao();
+  try {
+    // Usar o modal manager para melhor controle
+    window.modalManager?.open('modalAplicacaoBg') || 
+      (document.getElementById('modalAplicacaoBg').style.display = 'flex');
+    
+    if (!editar) limparCamposAplicacao();
+  } catch (error) {
+    console.error('Erro ao abrir modal de aplicação:', error);
+  }
 }
+
 function fecharModalAplicacao() {
-  document.getElementById('modalAplicacaoBg').style.display = 'none';
-  document.getElementById('btnFlutuanteAddApp').style.display = 'block';
-  limparCamposAplicacao();
-  indiceEdicaoAplicacao = null;
-  if (document.getElementById('btnSalvarAplicacao')) document.getElementById('btnSalvarAplicacao').innerText = 'Salvar Aplicação';
-  // Só tenta esconder o botão de cancelar se ele existir
-  var btnCancelar = document.getElementById('btnCancelarEdicaoApp');
-  if (btnCancelar) btnCancelar.style.display = 'none';
+  try {
+    // Usar o modal manager para melhor controle
+    window.modalManager?.close('modalAplicacaoBg') || 
+      (document.getElementById('modalAplicacaoBg').style.display = 'none');
+    
+    limparCamposAplicacao();
+    indiceEdicaoAplicacao = null;
+    
+    if (document.getElementById('btnSalvarAplicacao')) {
+      document.getElementById('btnSalvarAplicacao').innerText = 'Salvar Aplicação';
+    }
+    
+    // Só tenta esconder o botão de cancelar se ele existir
+    var btnCancelar = document.getElementById('btnCancelarEdicaoApp');
+    if (btnCancelar) btnCancelar.style.display = 'none';
+  } catch (error) {
+    console.error('Erro ao fechar modal de aplicação:', error);
+  }
 }
 
 // ===== SALVAR OU EDITAR APLICAÇÃO =====
@@ -126,12 +143,15 @@ function atualizarAplicacoes() {
 
     // Ordena aplicações do mês por data decrescente
     grupos[chave].sort((a, b) => b.data.localeCompare(a.data));
-    grupos[chave].forEach(app => {
-      const i = app._index;
+    grupos[chave].forEach(app => {      const i = app._index;
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
-        <span>${formatarDataBR(app.data)} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}</span>
+        <span>
+          <div class="data-aplicacao">${formatarDataBR(app.data)} - ${app.setor}</div>
+          <div class="produto-aplicacao">${app.produto}</div>
+          <div class="detalhes-aplicacao">${app.tipo} - Dosagem: ${app.dosagem}</div>
+        </span>
         <div class="opcoes-wrapper">
           <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
           <ul class="menu-opcoes-padrao-lista" style="display:none;">
@@ -262,13 +282,19 @@ function formatarDataBR(dataISO) {
 // ===== INICIALIZAR APLICAÇÕES =====
 document.addEventListener("dadosCarregados", carregarAplicacoes);
 
-function carregarAplicacoes() {
+function carregarAplicacoes(callback) {
+  console.log("Carregando aplicações...");
   db.ref('Aplicacoes').on('value', (snapshot) => {
     const dados = snapshot.exists() ? Object.values(snapshot.val()) : [];
     if (JSON.stringify(window.aplicacoes) !== JSON.stringify(dados)) {
       window.aplicacoes = dados;
     }
     atualizarAplicacoes();
+    
+    // Execute callback if provided
+    if (typeof callback === 'function') {
+      callback();
+    }
   });
 }
 

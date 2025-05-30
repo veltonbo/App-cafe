@@ -1,0 +1,175 @@
+/* Estilos para componentes específicos em visualização mobile */
+
+/* Cards e containers */
+@media (max-width: 700px) {
+  /* Cards com melhor adequação para telas pequenas */
+  .card-dashboard,
+  .secao-card,
+  .card-data,
+  .financeiro-resumo-card {
+    border-radius: 16px;
+    margin-bottom: 18px;
+    padding: 16px;
+  }
+  
+  /* Gráficos responsivos */
+  .grafico-container {
+    height: auto !important;
+    min-height: 200px;
+    max-height: 300px;
+  }
+  
+  /* Listas e tabelas */
+  .lista-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  /* Formulários */
+  .form-container {
+    padding: 12px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
+  
+  .form-group {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  
+  input, select, textarea {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+  
+  /* Botões */
+  .btn-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-group button {
+    width: 100%;
+  }
+  
+  /* Modais */
+  .modal-flutuante {
+    width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 14px;
+  }
+  
+  /* Notificações */
+  .notificacoes-lista {
+    max-height: 60vh;
+  }
+}
+
+/* Smartphones menores */
+@media (max-width: 480px) {
+  /* Ajuste de padding nos cards */
+  .card-dashboard,
+  .secao-card,
+  .card-data,
+  .financeiro-resumo-card {
+    padding: 12px;
+  }
+  
+  /* Tabelas compactas */
+  th, td {
+    padding: 8px 6px;
+    font-size: 0.9rem;
+  }
+  
+  /* Ajuste para footer */
+  .conteudo {
+    padding-bottom: 120px; /* Espaço para botões fixos de ação */
+  }
+  
+  /* Botões de ação */
+  .botao-flutuante {
+    bottom: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  /* Ajustes para inputs */
+  input[type="date"],
+  input[type="datetime-local"] {
+    min-height: 40px; /* Fix para iOS */
+  }
+}
+
+/* Melhorias específicas para scrolling em mobile */
+@media (max-width: 700px) {
+  /* Scroll suavizado para toda a página */
+  html, body {
+    scroll-behavior: smooth;
+  }
+  
+  /* Otimização de scroll para listas e áreas de rolagem */
+  .scrollable-area {
+    overflow-y: auto;
+  }
+  
+  /* Header fixo para navegação rápida */
+  .tab-header,
+  .section-header {
+    position: sticky;
+    top: 65px;
+    background-color: rgba(34, 36, 40, 0.9);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    padding: 10px 0;
+  }
+  
+  /* Esconder barra de rolagem mas manter funcionalidade */
+  .clean-scroll::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+}
+
+/* Ajustes para vista em paisagem */
+@media (max-height: 500px) and (orientation: landscape) {
+  .conteudo {
+    padding-top: 60px;
+  }
+  
+  .modal-flutuante {
+    max-height: 90vh;
+  }
+  
+  .hamburger-button,
+  .notificacoes-btn-superior {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .app-logo {
+    margin-bottom: 15px;
+  }
+}
+
+/* Melhorias de usabilidade para touch */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.large-touch-target {
+  min-height: 55px;
+  min-width: 55px;
+}

@@ -1,0 +1,217 @@
+/* Estilos responsivos aprimorados para o Manejo Café */
+
+/* Melhorias gerais de responsividade */
+@media (max-width: 900px) {
+  .conteudo {
+    margin-left: 0;
+    max-width: 100%;
+    padding: 16px 3% 24px 3%;
+    border-radius: 0;
+  }
+}
+
+/* Ajustes para dispositivos móveis */
+@media (max-width: 700px) {
+  /* Cabeçalho e navegação */
+  .hamburger-button {
+    display: flex;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    z-index: 2100;
+    font-size: 1.4em;
+    background: rgba(34, 36, 40, 0.85);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .notificacoes-btn-superior {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    z-index: 2000;
+    font-size: 1.3em;
+    background: rgba(34, 36, 40, 0.85);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Área de conteúdo principal */
+  .conteudo {
+    margin-left: 0 !important;
+    padding: 75px 12px 24px 12px;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+  }
+  
+  /* Layout da barra lateral */  
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100%;
+    width: 85vw;
+    max-width: 320px;
+    background-color: #1a1c25;
+    z-index: 2200;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    transition: left 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+    .sidebar-mobile-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    z-index: 2150;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Melhoria para modais responsivos */
+  @supports not ((backdrop-filter: blur(3px)) or (-webkit-backdrop-filter: blur(3px))) {
+    /* Fallback para navegadores sem suporte a backdrop-filter */
+    .modal-flutuante-bg, .sidebar-mobile-bg {
+      background-color: rgba(0, 0, 0, 0.85);
+    }
+  }
+  
+  .sidebar.open + .sidebar-mobile-bg {
+    display: block;
+    opacity: 1;
+  }
+  
+  /* Logo e título */
+  .app-logo {
+    margin-top: 24px;
+    margin-bottom: 32px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  
+  .logo-text {
+    font-size: 1.3em;
+    opacity: 1;
+    width: auto;
+  }
+  
+  /* Melhorias nos cartões e conteúdo */
+  .dashboard-inicio, 
+  .financeiro-resumos {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .card-dashboard, 
+  .financeiro-resumo-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+  }
+  
+  /* Formulários e controles */
+  input, select, textarea {
+    padding: 12px 14px;
+    font-size: 16px; /* Evita zoom em campos em iOS */
+  }
+  
+  /* Botões e controles */
+  button, .atalho-btn {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+  
+  /* Tabelas responsivas */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* Smartphones menores */
+@media (max-width: 480px) {
+  .hamburger-button,
+  .notificacoes-btn-superior {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2em;
+  }
+  
+  .conteudo {
+    padding: 70px 8px 16px 8px;
+  }
+  
+  h2, h3, .titulo-centralizado {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+  
+  .titulo-centralizado {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+}
+
+/* Smartphones muito pequenos */
+@media (max-width: 360px) {
+  .hamburger-button,
+  .notificacoes-btn-superior {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .sidebar {
+    width: 90vw;
+  }
+  
+  .app-logo {
+    margin-top: 18px;
+    margin-bottom: 24px;
+  }
+}
+
+/* Estilos para orientação paisagem em dispositivos móveis */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hamburger-button,
+  .notificacoes-btn-superior {
+    top: 12px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .conteudo {
+    padding-top: 60px;
+  }
+  
+  .sidebar-nav {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}

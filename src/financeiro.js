@@ -26,7 +26,8 @@ function mostrarCamposParcelas() {
 }
 
 // ===== CARREGAR FINANCEIRO =====
-function carregarFinanceiro() {
+function carregarFinanceiro(callback) {
+  console.log("Carregando financeiro...");
   if (refFinanceiro && listenerFinanceiro) {
     refFinanceiro.off('value', listenerFinanceiro);
   }
@@ -40,6 +41,12 @@ function carregarFinanceiro() {
     // Controle de carregamento de dados principais para notificações automáticas
     window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
     window.__dadosCarregados.gastos = true;
+    
+    // Execute callback if provided
+    if (typeof callback === 'function') {
+      callback();
+    }
+    
     if (window.__dadosCarregados.tarefas) {
       document.dispatchEvent(new Event('dadosCarregados'));
       window.__dadosCarregados = { tarefas: false, gastos: false };
@@ -297,6 +304,7 @@ function renderizarCardFinanceiro(gasto, lista) {
   const i = gasto._index;
   const card = document.createElement("div");
   card.className = "financeiro-card" + (gasto.pago ? " pago" : "");
+  card.dataset.index = i; // Adiciona índice como data-attribute para o fix do menu
   card.innerHTML = `
     <div class="financeiro-card-top">
       <span class="financeiro-card-produto">${gasto.produto}</span>

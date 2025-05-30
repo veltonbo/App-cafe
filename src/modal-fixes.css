@@ -1,0 +1,91 @@
+/* Modal and floating button interactions */
+
+/* When a modal is open */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* Make sure modals appear above everything */
+.modal-flutuante-bg {
+  z-index: 10000 !important; 
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  display: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease-in-out;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Modal oculto class - make sure it's definitely hidden */
+.modal-oculto,
+.modal-flutuante-bg.modal-oculto,
+html body .modal-flutuante-bg.modal-oculto {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important; /* Coloca abaixo de todo conteúdo */
+}
+
+/* Ensure modal content is properly positioned */
+.modal-flutuante {
+  background-color: #2a2d36 !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+  width: 90% !important;
+  max-width: 500px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3) !important;
+  animation: modal-slide-in 0.3s ease !important;
+}
+
+/* Animation for modal appearance */
+@keyframes modal-slide-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Reset any floating button visibility issues */
+.botao-flutuante,
+.botao-flutuante-fixado {
+  opacity: 1 !important;
+  z-index: 9999 !important;
+}
+
+/* When modal is open, hide buttons */
+body.modal-open .botao-flutuante,
+body.modal-open .botao-flutuante-fixado {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Close button styling */
+.fechar-modal {
+  position: absolute !important;
+  top: 15px !important;
+  right: 15px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #ccc !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  z-index: 10 !important;
+  transition: color 0.2s !important;
+}
+
+.fechar-modal:hover {
+  color: #fff !important;
+}

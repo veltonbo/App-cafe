@@ -1,0 +1,96 @@
+/* Mobile layout fixes */
+@media (max-width: 700px) {
+  /* Fix spacing between menu button, logo and notification button */
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+    margin-top: 70px;
+    position: relative;
+    z-index: 1200;
+  }
+  
+  .hamburger-button {
+    display: flex;
+    top: 24px;
+    left: 16px;
+    width: 46px;
+    height: 46px;
+    z-index: 1500;
+  }
+  
+  .notificacoes-btn-superior {
+    top: 24px;
+    right: 16px;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 1.3em;
+    z-index: 1400;
+  }
+  
+  .titulo-centralizado {
+    margin-top: 70px;
+  }
+  
+  .conteudo {
+    padding-top: 70px;
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 500px) {
+  .app-logo {
+    margin-top: 60px;
+  }
+  
+  .hamburger-button {
+    top: 20px;
+    left: 16px;
+    width: 42px;
+    height: 42px;
+  }
+  
+  .notificacoes-btn-superior {
+    top: 20px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2em;
+  }
+  
+  .titulo-centralizado {
+    margin-top: 60px;
+  }
+  
+  .conteudo {
+    padding-top: 60px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .hamburger-button, 
+  .notificacoes-btn-superior {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .hamburger-button {
+    top: 16px;
+    left: 12px;
+  }
+  
+  .notificacoes-btn-superior {
+    top: 16px;
+    right: 12px;
+    font-size: 1.1em;
+  }
+}
+
+/* Create a proper fix for the logo and menu position */
+body.sidebar-open .app-logo {
+  margin-top: 0; 
+}

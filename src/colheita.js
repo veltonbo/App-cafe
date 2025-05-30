@@ -44,13 +44,19 @@ function adicionarColheita() {
 }
 
 // ====== CARREGAR COLHEITA ======
-function carregarColheita() {
+function carregarColheita(callback) {
+  console.log("Carregando colheita...");
   db.ref('Colheita').on('value', snap => {
     const dados = snap.exists() ? Object.values(snap.val()) : [];
     if (JSON.stringify(window.colheita) !== JSON.stringify(dados)) {
       window.colheita = dados;
     }
     atualizarColheita();
+    
+    // Execute callback if provided
+    if (typeof callback === 'function') {
+      callback();
+    }
   });
 }
 

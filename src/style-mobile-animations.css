@@ -1,0 +1,122 @@
+/* Animações otimizadas para dispositivos móveis */
+
+/* Animações gerais mais leves para melhorar desempenho */
+@media (max-width: 700px) {
+  /* Reduz a complexidade de algumas animações em dispositivos móveis */
+  .conteudo {
+    animation: none;
+  }
+  
+  /* Animações otimizadas de entrada */
+  @keyframes fadeInMobile {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideInMobile {
+    from { transform: translateY(15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* Aplicar animações mais simples em elementos */
+  .aba {
+    animation: fadeInMobile 0.3s ease-out;
+  }
+  
+  /* Reduzir a intensidade de efeitos hover em mobile */
+  button:hover, 
+  .atalho-btn:hover, 
+  .card-dashboard:hover,
+  .secao-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Usar propriedades que favorecem hardware acceleration */
+  .animated-element {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Simplificar animações de abas */
+  .aba-entrando {
+    opacity: 0;
+    transform: translateY(10px); /* menor distância de animação */
+  }
+  
+  .aba-visivel {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease; /* transição mais curta */
+  }
+}
+
+/* Desativar algumas animações em dispositivos com pouca memória ou com preferência para redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .aba-entrando, 
+  .aba-visivel {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Otimização para dispositivos mais lentos */
+.mobile-device.low-performance {
+  /* Desativar efeitos que possam ser pesados */
+  .heavy-animation {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Simplificar sombras */
+  .card-dashboard,
+  .secao-card,
+  .botao-flutuante,
+  .modal-flutuante {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* Desativar efeitos de desfoque de fundo */
+  .sidebar-mobile-bg {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Active states para feedback tátil em dispositivos touch */
+.touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* Feedback de toque para botões */
+@media (hover: none) {
+  button:active,
+  .atalho-btn:active,
+  .sidebar-nav button:active,
+  .botao-flutuante:active {
+    background-color: rgba(99, 102, 241, 0.9);
+    transform: scale(0.98);
+    transition: transform 0.1s ease, background-color 0.1s ease;
+  }
+}
+
+/* Indicadores visuais para elementos interativos em modo touch */
+.touch-only-indicator {
+  display: none;
+}
+
+@media (hover: none) {
+  .touch-only-indicator {
+    display: inline-block;
+  }
+}

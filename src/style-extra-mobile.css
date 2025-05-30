@@ -1,0 +1,130 @@
+/* Estilos adicionais para melhor responsividade em smartphones */
+:root {
+  --app-header-height: 60px;
+  --app-padding: 16px;
+  --app-button-size: 48px;
+  --font-size-base: 16px;
+}
+
+@media (max-width: 700px) {
+  /* Ajustes de tamanhos de fonte */
+  html {
+    font-size: 15px;
+  }
+  
+  h1 {
+    font-size: 1.6rem;
+  }
+  
+  h2 {
+    font-size: 1.4rem;
+  }
+  
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Espaçamentos */
+  .conteudo {
+    margin-top: 0;
+    padding-top: var(--app-header-height);
+  }
+  
+  /* Ajuste da altura considerando o viewport real em dispositivos móveis */
+  .conteudo {
+    min-height: calc(100vh - var(--app-header-height));
+    min-height: calc(var(--vh, 1vh) * 100 - var(--app-header-height));
+  }
+  
+  /* Melhoria nos formulários para mobile */
+  input, 
+  select, 
+  textarea, 
+  button {
+    font-size: 16px !important; /* Previne zoom em iOS */
+    border-radius: 12px;
+  }
+  
+  /* Ajuste para evitar sobreposições */
+  .app-header {
+    height: var(--app-header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(34, 36, 40, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Barra de rolagem - esconde em elementos que podem causar problemas */
+  .scrollable-content {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;     /* Firefox apenas */
+    /* Para Webkit */
+    ::-webkit-scrollbar { display: none; } /* Chrome, Safari e Opera */
+  }
+}
+
+/* Melhorar legibilidade em telas muito pequenas */
+@media (max-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .sidebar-nav button {
+    padding: 10px 0;
+  }
+}
+
+/* Estilos para dispositivos em modo paisagem */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Ajusta a altura da barra lateral */
+  .sidebar {
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+  
+  /* Reduz espaçamentos */
+  .sidebar-nav {
+    gap: 6px;
+  }
+  
+  .sidebar-nav button {
+    padding: 10px 0;
+  }
+}
+
+/* Fixar problemas de sobreposição entre elementos */
+.hamburger-button, 
+.notificacoes-btn-superior {
+  position: fixed !important;
+}
+
+/* Styling para estado ativo do botão de menu */
+.hamburger-button.active {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Garantir que o fundo do menu cubra toda a tela */
+.sidebar-mobile-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Corrigir layout de tabelas em mobile */
+@media (max-width: 700px) {
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  th, td {
+    min-width: 100px;
+  }
+}

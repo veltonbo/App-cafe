@@ -1,0 +1,46 @@
+/* Estilos específicos para garantir que o menu lateral funcione corretamente */
+
+/* Estado fechado para o menu lateral */
+.sidebar.closed {
+  left: -100% !important;
+}
+
+@media (max-width: 700px) {
+  /* Sobrescrever regras anteriores para garantir que o menu esteja oculto */
+  .sidebar {
+    left: -100vw !important;
+    width: 0;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+  }
+  
+  /* Apenas quando a classe 'open' estiver presente, mostrar o menu */
+  .sidebar.open {
+    left: 0 !important;
+    width: 80vw;
+    max-width: 300px !important;
+  }
+  
+  /* Garantir que o fundo do menu esteja escondido por padrão */
+  .sidebar-mobile-bg {
+    display: none !important;
+    opacity: 0;
+  }
+  
+  /* Mostrar o fundo do menu apenas quando o menu estiver aberto */
+  .sidebar.open + .sidebar-mobile-bg {
+    display: block !important;
+    opacity: 1;
+  }
+}
+
+/* Ajuste para o conteúdo quando o menu está fechado */
+body:not(.sidebar-open) .conteudo {
+  margin-left: 0 !important;
+}
+
+/* Garante que as transições sejam suaves */
+.sidebar,
+.sidebar-mobile-bg,
+.conteudo {
+  transition: all 0.3s ease-in-out;
+}

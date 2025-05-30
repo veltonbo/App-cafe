@@ -1,0 +1,65 @@
+/* Correções adicionais para modais em dispositivos móveis */
+
+/* Garantir que modais funcionam corretamente em iOS */
+@supports (-webkit-touch-callout: none) {
+  .modal-flutuante {
+    max-height: -webkit-fill-available;
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevenir scroll de fundo quando modal estiver aberto */
+  html.modal-open,
+  body.modal-open {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Melhorias na usabilidade dos modais em telas pequenas */
+@media (max-width: 480px) {
+  .modal-flutuante {
+    padding: 20px 16px !important;
+    max-height: 85vh !important;
+    width: 94% !important;
+    border-radius: 14px !important;
+  }
+  
+  /* Aumentar tamanho dos inputs e botões dentro do modal */
+  .modal-flutuante input,
+  .modal-flutuante select {
+    margin-bottom: 12px !important;
+    font-size: 16px !important; /* Evitar zoom no iOS */
+  }
+  
+  .modal-flutuante button:not(.fechar-modal) {
+    padding: 12px !important;
+    margin-top: 10px !important;
+  }
+  
+  /* Melhorar botão fechar */
+  .fechar-modal {
+    top: 12px !important;
+    right: 12px !important;
+    font-size: 20px !important;
+    padding: 6px !important;
+  }
+}
+
+/* Suportar telas muito pequenas */
+@media (max-width: 360px) {
+  .modal-flutuante {
+    padding: 18px 14px !important;
+    width: 96% !important;
+  }
+}
+
+/* Orientação paisagem em celulares */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-flutuante {
+    max-height: 94vh !important;
+    padding: 16px 14px !important;
+  }
+}

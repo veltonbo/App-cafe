@@ -1,0 +1,142 @@
+/* Position fixes for App-cafe 
+   This file contains fixes for element positioning */
+
+/* Fix for Add button to always be in bottom right corner */
+.botao-flutuante {
+  position: fixed !important;
+  bottom: 32px !important;
+  right: 32px !important;
+  z-index: 9999 !important; /* Super alto para garantir que fique sempre no topo */
+  margin: 0 !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: none !important;
+  /* Garantir que não seja afetado por outros elementos */
+  float: none !important;
+  clear: both !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+/* Botões flutuantes fixados (clones criados pelo script) */
+.botao-flutuante-fixado {
+  position: fixed !important;
+  z-index: 9999 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  font-size: 24px !important;
+  width: 60px !important;
+  height: 60px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4) !important;
+  background: linear-gradient(120deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Efeito hover nos botões fixados */
+.botao-flutuante-fixado:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6) !important;
+}
+
+/* Efeito active nos botões fixados */
+.botao-flutuante-fixado:active {
+  transform: scale(0.95) !important;
+}
+
+/* Garantir que os ícones dentro dos botões estejam centralizados */
+.botao-flutuante-fixado i {
+  font-size: inherit !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Garantir que os botões flutuantes sejam visíveis mesmo em situações problemáticas */
+body:has(.botao-flutuante) .botao-flutuante,
+body .botao-flutuante,
+html .botao-flutuante {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+/* Mobile adjustments for Add button and option buttons */
+@media (max-width: 700px) {
+  .botao-flutuante,
+  .botao-flutuante-fixado {
+    bottom: 16px !important;
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+  }
+  
+  .seta-menu-opcoes-padrao {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 1.2em !important;
+  }
+  
+  .item .opcoes-wrapper,
+  .item-financeiro .opcoes-wrapper,
+  .item-tarefa .opcoes-wrapper,
+  .item-colheita .opcoes-wrapper,
+  .item-aplicacao .opcoes-wrapper {
+    top: 8px !important;
+    right: 8px !important;
+  }
+}
+
+/* Fix for option buttons to always appear on the right side */
+/* Target all items with option wrappers */
+.item, .item-financeiro, .item-tarefa, .item-colheita, .item-aplicacao {
+  position: relative !important;
+}
+
+.item .opcoes-wrapper,
+.item-financeiro .opcoes-wrapper,
+.item-tarefa .opcoes-wrapper,
+.item-colheita .opcoes-wrapper,
+.item-aplicacao .opcoes-wrapper {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 10 !important;
+}
+
+/* Fix position of the options menu to open on the right side */
+.menu-opcoes-padrao-lista {
+  right: 0 !important;
+  left: auto !important;
+  top: calc(100% + 5px) !important;
+}
+
+/* Handle specific cases in each module */
+#tarefas .opcoes-wrapper,
+#financeiro .opcoes-wrapper,
+#colheita .opcoes-wrapper,
+#aplicacoes .opcoes-wrapper {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+}
+
+/* General fix for all option wrappers */
+.opcoes-wrapper {
+  position: relative !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}

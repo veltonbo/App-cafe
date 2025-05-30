@@ -1,0 +1,33 @@
+/* 
+ * Correção de modais para garantir ocultação
+ * Este arquivo contém correções críticas para modais
+ */
+
+/* Garantir que modais ocultos estejam realmente ocultos */
+html body .modal-flutuante-bg.modal-oculto,
+html body .modal-oculto.modal-flutuante-bg,
+.modal-oculto.modal-flutuante-bg,
+.modal-flutuante-bg.modal-oculto {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Garantir que modais ativos estejam visíveis e com z-index alto */
+html body .modal-flutuante-bg:not(.modal-oculto)[style*="display: flex"],
+html body .modal-flutuante-bg.ativo,
+.modal-flutuante-bg.ativo,
+.modal-flutuante-bg:not(.modal-oculto)[style*="display: flex"] {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 10000 !important;
+}
+
+/* Garantir que o conteúdo do modal fique sempre por cima */
+.modal-flutuante {
+  z-index: 10001 !important;
+  position: relative !important;
+}

@@ -222,7 +222,8 @@ function mostrarCamposAplicacao() {
 }
 
 // ====== CARREGAR TAREFAS ======
-function carregarTarefas() {
+function carregarTarefas(callback) {
+  console.log("Carregando tarefas...");
   db.ref('Tarefas').on('value', (snapshot) => {
     const dados = snapshot.exists() ? Object.values(snapshot.val()) : [];
     // Só atualiza window.tarefas se mudou
@@ -233,6 +234,12 @@ function carregarTarefas() {
     // Controle de carregamento de dados principais para notificações automáticas
     window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
     window.__dadosCarregados.tarefas = true;
+    
+    // Execute callback if provided
+    if (typeof callback === 'function') {
+      callback();
+    }
+    
     if (window.__dadosCarregados.gastos) {
       document.dispatchEvent(new Event('dadosCarregados'));
       window.__dadosCarregados = { tarefas: false, gastos: false };

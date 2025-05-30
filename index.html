@@ -1,7 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="loading">
 <head>
   <meta charset="UTF-8">
+  <!-- Script to handle initial loading state -->
+  <script>
+    // Configuração inicial para o menu e telas
+    window.addEventListener('load', function() {
+      var sidebar = document.getElementById('sidebar');
+      var sidebarMobileBg = document.getElementById('sidebarMobileBg');
+      
+      // Garantir que o menu esteja fechado no início
+      if (sidebar) {
+        sidebar.classList.remove('open');
+        sidebar.classList.add('closed');
+      }
+      
+      // Esconder o background do menu
+      if (sidebarMobileBg) {
+        sidebarMobileBg.style.display = 'none';
+        sidebarMobileBg.style.opacity = '0';
+      }
+      
+      document.body.classList.remove('sidebar-open');
+      document.body.style.overflow = '';
+      
+      console.log('Menu configurado como fechado no carregamento da página');
+    });
+    
+    // Configuração para conteúdo
+    document.documentElement.classList.add('loading');
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // Esconder abas durante a inicialização
+      var abas = document.querySelectorAll('.aba');
+      for (var i = 0; i < abas.length; i++) {
+        abas[i].style.display = 'none';
+        abas[i].style.opacity = '0';
+      }
+      
+      // Remover classe de carregamento após atraso
+      setTimeout(function() {
+        document.documentElement.classList.remove('loading');
+      }, 100);
+    });
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manejo Café</title>
   <!-- Firebase -->
@@ -12,19 +54,47 @@
   <!-- Chart.js e jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Estilos -->
-  <link rel="stylesheet" href="src/style.css">
-  <!-- Scripts -->
+  <!-- Scripts de segurança para modais - carregados antes de qualquer coisa -->
+  <script src="src/modal-safety.js"></script>
+  <script src="src/modal-behavior-fix.js"></script>
+  <script src="src/backdrop-filter-compatibility.js"></script>
+  
+  <!-- Estilos --><link rel="stylesheet" href="src/style.css">
+  <link rel="stylesheet" href="src/style-loading.css">
+  <link rel="stylesheet" href="src/style-mobile-fixes.css">
+  <link rel="stylesheet" href="src/style-responsive.css">
+  <link rel="stylesheet" href="src/style-extra-mobile.css">
+  <link rel="stylesheet" href="src/style-components-mobile.css">
+  <link rel="stylesheet" href="src/style-mobile-animations.css">  <link rel="stylesheet" href="src/style-menu-fix.css">
+  <link rel="stylesheet" href="src/menu-fix-final.css">  <link rel="stylesheet" href="src/style-position-fixes.css">
+  <link rel="stylesheet" href="src/modal-fixes.css">
+  <link rel="stylesheet" href="src/modal-critical-fixes.css">
+  <link rel="stylesheet" href="src/modal-mobile-fixes.css">  <!-- Scripts -->
+  <!-- Controlador do menu - carregado primeiro para evitar conflitos -->
+  <script src="src/menu-controller.js"></script>
+  <!-- Scripts de utilidade e infraestrutura -->
+  <script src="src/modal-manager.js"></script>
+  <script src="src/modal-init.js"></script>
+  <script src="src/app-recovery-improved.js"></script>
+  
+  <!-- Scripts principais -->
   <script defer src="src/firebase-config.js"></script>
   <script defer src="src/notifications.js"></script>
   <script defer src="src/main.js"></script>
   <script defer src="src/aplicacao.js"></script>
   <script defer src="src/tarefas.js"></script>
   <script defer src="src/financeiro.js"></script>
+  <!-- Fix para menus de opções financeiras - carregado após financeiro.js -->
+  <script defer src="src/menu-opcoes-fix-v2.js"></script>
   <script defer src="src/colheita.js"></script>
   <script defer src="src/relatorio.js"></script>
   <script defer src="src/configuracoes.js"></script>
   <script defer src="src/inicio.js"></script>
+  <script src="src/botao-flutuante-fix-fixed.js"></script>
+  
+  <!-- Scripts de interface e otimização -->
+  <script defer src="src/performance-mobile.js"></script>
+  <script defer src="src/responsive.js"></script>
 </head>
 <body>  <!-- MENU HAMBURGER PARA MOBILE -->
   <button id="hamburger-button" class="hamburger-button" aria-label="Menu">
@@ -37,8 +107,7 @@
     <span id="notificacoes-badge" class="notificacoes-badge" aria-label="Quantidade de notificações">0</span>
   </button>
     <!-- MENU LATERAL MODERNO -->
-  <aside id="sidebar" class="sidebar" role="navigation" aria-label="Menu principal">
-    <div class="app-logo">
+  <aside id="sidebar" class="sidebar closed" role="navigation" aria-label="Menu principal">    <div class="app-logo">
       <div class="logo-icon"><i class="fas fa-coffee"></i></div>
       <div class="logo-text">Manejo Café</div>
     </div>
@@ -54,9 +123,8 @@
       <button id="btn-configuracoes" onclick="mostrarAba('configuracoes')" title="Configurações" aria-label="Configurações"><i class="fas fa-cog"></i><span class="sidebar-label">Configurações</span></button>
     </nav>
   </aside>  <div class="sidebar-mobile-bg" id="sidebarMobileBg"></div>
-  
-  <!-- Modal de Notificações -->
-  <div id="modalNotificacoesBg" class="modal-flutuante-bg">
+    <!-- Modal de Notificações -->
+  <div id="modalNotificacoesBg" class="modal-flutuante-bg modal-oculto">
     <div class="modal-flutuante">
       <h3 class="notificacoes-titulo">Notificações</h3>
       <div id="notificacoesModalLista" class="notificacoes-lista"></div>
@@ -509,28 +577,61 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Função para abrir o modal de notificações
 function abrirModalNotificacoes() {
+  // Atualiza os dados das notificações
   if (typeof window.forcarAtualizacaoNotificacoes === 'function') window.forcarAtualizacaoNotificacoes();
-  var bg = document.getElementById('modalNotificacoesBg');
   if (typeof renderizarNotificacoesModal === 'function') renderizarNotificacoesModal();
+  
+  // Prepara a lista de notificações
   var lista = document.getElementById('notificacoesModalLista');
-  if (bg && lista) {
+  if (lista) {
     // Remove mensagem antiga de 'Nenhuma notificação.' se houver
     if (lista.innerHTML.includes('Nenhuma notificação.')) {
       lista.innerHTML = '';
     }
+    
     // Se não houver notificações, mostra mensagem
     var notificacoes = lista.querySelectorAll('.notificacao');
     if (notificacoes.length === 0) {
       lista.innerHTML = '<div style="color:#888;text-align:center;margin:24px 0;">Nenhuma notificação.</div>';
     }
-    bg.classList.add('ativo');
+    
     // Atualiza badge ao abrir
     if (typeof contarNotificacoesNaoLidas === 'function') contarNotificacoesNaoLidas();
   }
+  
+  // Usa o modal manager para abrir o modal (se disponível)
+  if (window.modalManager && typeof window.modalManager.open === 'function') {
+    window.modalManager.open('modalNotificacoesBg');
+  } else {
+    // Fallback para método direto
+    var bg = document.getElementById('modalNotificacoesBg');
+    if (bg) {
+      bg.classList.remove('modal-oculto');
+      bg.style.display = 'flex';
+      bg.style.opacity = '1';
+      bg.style.visibility = 'visible';
+      bg.classList.add('ativo');
+    }
+  }
 }
+
 function fecharModalNotificacoes() {
-  var bg = document.getElementById('modalNotificacoesBg');
-  if (bg) bg.classList.remove('ativo');
+  // Usa o modal manager para fechar o modal (se disponível)
+  if (window.modalManager && typeof window.modalManager.close === 'function') {
+    window.modalManager.close('modalNotificacoesBg');
+  } else {
+    // Fallback para método direto
+    var bg = document.getElementById('modalNotificacoesBg');
+    if (bg) {
+      bg.classList.remove('ativo');
+      bg.style.opacity = '0';
+      setTimeout(function() {
+        bg.style.display = 'none';
+        bg.style.visibility = 'hidden';
+        bg.classList.add('modal-oculto');
+      }, 200);
+    }
+  }
 }
 // Substitui o comportamento do botão do sino para abrir o modal
 var btnNotif = document.getElementById('btn-notificacoes');

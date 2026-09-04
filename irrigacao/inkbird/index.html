@@ -112,12 +112,12 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </div>
 <div id="tab-sectors" class="tabPanel">
 <section class="box">
-  <div class="head"><h2>Setores de irrigação</h2><span class="miniTag">8 setores por controlador</span></div>
+  <div class="head"><h2>Setores de irrigação</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="miniTag">8 setores por controlador</span><span id="durationMapTag" class="miniTag">Duração: aguardando</span></div></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
 <section class="box">
-  <div class="head"><h2>Programação disponível no IIC-800</h2></div>
+  <div class="head"><h2>Programação disponível no IIC-800</h2><span id="scheduleMapTag" class="miniTag">Agenda: aguardando</span></div>
   <div class="capGrid">
     <div class="cap"><b>Calendário por zona</b><small>Dias pares, dias ímpares, dias personalizados ou intervalo.</small></div>
     <div class="cap"><b>Até 6 partidas por dia</b><small>Vários horários de início para a mesma zona.</small></div>
@@ -241,6 +241,20 @@ function renderControllers(){
 function controlForZone(status,zone){
   return status?.mapping?.controls?.find(c=>Number(c.zone)===zone)||null;
 }
+function durationForZone(status,zone){
+  return status?.mapping?.durations?.find(d=>Number(d.zone)===zone)||null;
+}
+function durationValueForMinutes(meta,minutes){
+  const unit=String(meta?.unit||'').toLowerCase();
+  const scale=Math.max(0,Number(meta?.scale)||0);
+  let displayValue=Number(minutes);
+  if(/(^|\b)(s|sec|second|seconds)(\b|$)/.test(unit)) displayValue=Number(minutes)*60;
+  else if(/(^|\b)(h|hr|hour|hours)(\b|$)/.test(unit)) displayValue=Number(minutes)/60;
+  const raw=Math.round(displayValue*Math.pow(10,scale));
+  if(Number.isFinite(Number(meta?.min))&&raw<Number(meta.min)) return null;
+  if(Number.isFinite(Number(meta?.max))&&raw>Number(meta.max)) return null;
+  return raw;
+}
 
 function renderZones(){
   const c=selectedController();
@@ -249,20 +263,22 @@ function renderZones(){
   const controlReady=Boolean(status?.mapping?.control_ready);
 
   $('zones').innerHTML=prefs.map((p,i)=>{
-    const zone=i+1,sector=start+i,control=controlForZone(status,zone);
+    const zone=i+1,sector=start+i,control=controlForZone(status,zone),durationMeta=durationForZone(status,zone);
     const current=control?.current;
     const running=current===true;
-    const stateText=current===true?'Irrigando':current===false?'Parado':controlReady?'Pronto':'Aguardando mapeamento';
     const mapped=Boolean(control);
+    const timedReady=Boolean(durationMeta);
+    const durationLabel=timedReady?('Nativa • '+escapeHtml(durationMeta.code)):'Somente controle manual';
     return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
       '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
       '<div class="zoneState">Setor '+pad(sector)+' • saída '+zone+' do Controlador '+controllerIndex(c)+'</div></div><strong>'+(running?'Ligado':current===false?'Desligado':'—')+'</strong></div>'+
-      '<div class="zoneMeta"><span>Duração padrão</span><b>'+Number(p.duration||10)+' min</b></div>'+
-      '<div class="zoneMeta"><span>Mapeamento</span><b>'+escapeHtml(control?.code||'Pendente')+'</b></div>'+
+      '<div class="zoneMeta"><span>Duração configurada</span><b>'+Number(p.duration||10)+' min</b></div>'+
+      '<div class="zoneMeta"><span>Temporização</span><b>'+durationLabel+'</b></div>'+
+      '<div class="zoneMeta"><span>Saída Tuya</span><b>'+escapeHtml(control?.code||'Pendente')+'</b></div>'+
       '<div class="sectorActions">'+
-      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="sendZone('+zone+',true)">Ligar</button>'+
+      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">'+(timedReady?'Irrigar '+Number(p.duration||10)+' min':'Ligar')+'</button>'+
       '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Desligar</button>'+
-      '</div><button class="btn soft" style="width:100%;margin-top:8px" onclick="editSector('+zone+')">Editar setor</button></div>';
+      '</div><button class="btn soft" style="width:100%;margin-top:8px" onclick="editSector('+zone+')">Ajustar setor</button></div>';
   }).join('');
 }
 
@@ -311,7 +327,10 @@ function renderStatus(){
   $('accessDetail').textContent=s?.access?.detail||'';
   $('cloudState').textContent=linked?(online===false?'Offline':'Online'):'Não vinculado';
   const mapped=Number(s?.mapping?.mapped_count||0);
-  $('mappingState').textContent=s?.mapping?.control_ready?'8/8 pronto':mapped+'/8 identificado';
+  const durationMapped=Number(s?.mapping?.duration_mapped_count||0);
+  $('mappingState').textContent=s?.mapping?.control_ready?('8/8 pronto • duração '+durationMapped+'/8'):(mapped+'/8 identificado');
+  $('durationMapTag').textContent='Duração: '+durationMapped+'/8';
+  $('scheduleMapTag').textContent='Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
   $('heroBadge').textContent=s?.mapping?.control_ready?'PRONTO PARA CONTROLE':linked?'CONECTADO • MAPEANDO':'AGUARDANDO VÍNCULO';
   $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' conectado':'Controlador da lavoura';
   $('heroSub').textContent=s?.mapping?.control_ready?'As 8 saídas foram identificadas. O controle manual dos setores está liberado.':linked?'O IIC-800 está acessível. O app está identificando as funções das oito saídas antes de liberar comandos.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
@@ -322,7 +341,7 @@ function renderStatus(){
   $('functionsRaw').textContent=JSON.stringify(s.functions||[],null,2);
   $('statusRaw').textContent=JSON.stringify(s.status||{},null,2);
   $('shadowRaw').textContent=JSON.stringify(s.shadow||{},null,2);
-  $('errorsRaw').textContent=JSON.stringify({mapping:s.mapping||{},errors:s.errors||{}},null,2);
+  $('errorsRaw').textContent=JSON.stringify({mapping:s.mapping||{},schedule_candidates:s?.mapping?.schedule_candidates||[],errors:s.errors||{}},null,2);
   renderZones();
 }
 
@@ -365,6 +384,38 @@ function renderWeather(){
   $('weatherUpdated').textContent=state.weatherAt?new Date(state.weatherAt).toLocaleString('pt-BR'):'Nunca';
   const d=weatherDecision();$('weatherGuard').className='guard '+(d.blocked?'blocked':'');$('guardTitle').textContent=d.title;$('guardReason').textContent=d.reason;
   $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{}},null,2);
+}
+
+
+async function startSector(zone){
+  const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone),durationMeta=durationForZone(s,zone);
+  if(!c||!control)return toast('Saída ainda não mapeada');
+
+  const d=weatherDecision();
+  if(d.blocked){alert(d.title+'\n\n'+d.reason);return;}
+
+  const prefs=getPrefs(c),minutes=Math.max(1,Number(prefs[zone-1]?.duration)||10);
+  const sector=sectorStart(c)+zone-1;
+  const commands=[];
+
+  if(durationMeta){
+    const rawDuration=durationValueForMinutes(durationMeta,minutes);
+    if(rawDuration===null){
+      alert('A duração de '+minutes+' min está fora do limite aceito pelo controlador para este setor.');
+      return;
+    }
+    commands.push({code:durationMeta.code,value:rawDuration});
+  }
+  commands.push({code:control.code,value:true});
+
+  const mode=durationMeta?(' por '+minutes+' min'):'';
+  if(!confirm('LIGAR o Setor '+pad(sector)+mode+'?'))return;
+
+  try{
+    await api('/api/inkbird/command',{method:'POST',body:JSON.stringify({device_id:c.id,commands})});
+    toast(durationMeta?('Setor '+pad(sector)+' iniciado por '+minutes+' min'):('Setor '+pad(sector)+' ligado'));
+    setTimeout(()=>syncStatus(false),1200);
+  }catch(e){toast('Falha: '+e.message)}
 }
 
 async function sendZone(zone,on){

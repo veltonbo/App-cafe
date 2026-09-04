@@ -123,7 +123,7 @@ const API='https://app-cafe.vercel.app';
 const SETTINGS_KEY='viveiroEkazaRealV1';
 const INK_KEY='fazenda2eInkbirdV1';
 const defaultZones=Array.from({length:8},(_,i)=>({name:'Zona '+(i+1),duration:10}));
-let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null,weather:null,weatherAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
+let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null,weather:null,weatherAt:null,lastRainAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
 if(!Array.isArray(local.zones)||local.zones.length!==8)local.zones=defaultZones;
 if(!local.weatherRules)local.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
 const shared=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null')||{};
@@ -158,6 +158,11 @@ function weatherDecision(){
   if(rules.blockWhileRaining&&m.rainDetected){
     return {blocked:true,title:'Irrigação bloqueada por chuva',reason:'A Weather2-2 indica chuva agora.'};
   }
+  const holdMs=Math.max(0,Number(rules.rainHoldHours||0))*3600000;
+  if(local.lastRainAt&&holdMs>0&&(Date.now()-local.lastRainAt)<holdMs){
+    const remain=Math.ceil((holdMs-(Date.now()-local.lastRainAt))/3600000);
+    return {blocked:true,title:'Irrigação bloqueada após chuva',reason:'Bloqueio pós-chuva ativo. Restam aproximadamente '+remain+' h.'};
+  }
   if(Number.isFinite(amount)&&amount>=Number(rules.rainThreshold||0)){
     return {blocked:true,title:'Irrigação bloqueada por chuva acumulada',reason:'A estação registrou '+amount+' mm, acima do limite de '+Number(rules.rainThreshold||0)+' mm.'};
   }
@@ -166,7 +171,9 @@ function weatherDecision(){
 async function checkWeather(showToast=true){
   try{
     const w=await api('/api/weather/status');
-    local.weather=w;local.weatherAt=Date.now();save();renderWeather();
+    local.weather=w;local.weatherAt=Date.now();
+    if(w?.metrics?.rainDetected)local.lastRainAt=Date.now();
+    save();renderWeather();
     if(showToast)toast(w.linked?'Weather2-2 atualizada':'Weather2-2 não encontrada');
   }catch(e){
     if(showToast)toast('Clima: '+(e.message||String(e)));

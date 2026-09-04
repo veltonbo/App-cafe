@@ -673,6 +673,8 @@ function renderZones(){
   const manualReady=Array.from({length:8},(_,i)=>Boolean(manualMap[i+1])).every(Boolean);
   const nativeReady=status?.mapping?.native_dp45===true;
   const controlReady=Boolean(status?.mapping?.control_ready)||manualReady||nativeReady;
+  const session=activeSession();
+  const now=Date.now();
 
   $('zones').innerHTML=prefs.map((p,i)=>{
     const zone=i+1,sector=start+i,control=controlForZone(status,zone);
@@ -680,11 +682,27 @@ function renderZones(){
     const running=current===true;
     const mapped=Boolean(control);
     const minutes=Number(p.duration||10);
+    const schedule=scheduleChannel(zone);
     const stateLabel=running?'Irrigando':current===false?'Parado':'Aguardando';
+
+    let progress='';
+    if(running&&session){
+      const started=Number(session.started_at||0),ends=Number(session.expected_end_at||0);
+      if(started&&ends){
+        const total=Math.max(1,ends-started);
+        const remaining=ends-now;
+        const pct=Math.max(0,Math.min(100,((now-started)/total)*100));
+        const overdue=remaining<0;
+        progress='<div class="progressWrap"><div class="progressInfo"><span>'+(session.kind==='group'?'Grupo em andamento':'Tempo restante')+'</span><b class="'+(overdue?'overdue':'')+'">'+(overdue?'Tempo previsto excedido':durationText(remaining))+'</b></div><div class="progressTrack"><div class="progressBar" style="width:'+pct.toFixed(1)+'%"></div></div></div>';
+      }
+    }
+
+    const scheduleText=channelLabel(schedule);
     return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
       '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
       '<div class="zoneState">Setor '+pad(sector)+' • Controlador '+controllerIndex(c)+'</div></div>'+
       '<span class="zoneStatus '+(running?'on':'')+'"><span class="zoneStatusDot"></span>'+stateLabel+'</span></div>'+
+      progress+
       '<div class="timeLabel"><span>Tempo de irrigação</span><b>'+minutes+' min</b></div>'+
       '<div class="durationControl">'+
         '<button type="button" aria-label="Diminuir tempo" onclick="adjustDuration('+zone+',-1)">−</button>'+
@@ -692,13 +710,14 @@ function renderZones(){
         '<button type="button" aria-label="Aumentar tempo" onclick="adjustDuration('+zone+',1)">+</button>'+
       '</div>'+
       '<div class="quickTimes">'+[1,5,10,15,20,30].map(v=>'<button type="button" class="'+(minutes===v?'active':'')+'" onclick="setDuration('+zone+','+v+')">'+v+'m</button>').join('')+'</div>'+
+      '<div class="scheduleSummary '+(schedule?.enabled?'on':'')+'">Automático: '+escapeHtml(scheduleText)+'</div>'+
       '<div class="sectorActions">'+
       '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">Irrigar • '+minutes+' min</button>'+
       '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Parar</button>'+
-      '</div><button class="btn renameBtn" onclick="editSector('+zone+')">Renomear setor</button></div>';
+      '</div>'+
+      '<div class="zoneExtraActions"><button class="btn soft" onclick="openSchedule('+zone+')">Programar</button><button class="btn soft" onclick="editSector('+zone+')">Renomear</button></div></div>';
   }).join('');
 }
-
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
 async function syncControllers(showToast=true){

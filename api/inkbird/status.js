@@ -315,11 +315,13 @@ export default async function handler(req, res) {
   const shadowList = Array.isArray(shadow?.properties) ? shadow.properties : [];
   const shadowMap = Object.fromEntries(shadowList.map(item => [item.code, item.value]));
 
-  const functions = Array.isArray(functionsResult?.functions)
-    ? functionsResult.functions
-    : Array.isArray(specification?.functions)
-      ? specification.functions
-      : [];
+  const functions = Array.isArray(functionsResult)
+    ? functionsResult
+    : Array.isArray(functionsResult?.functions)
+      ? functionsResult.functions
+      : Array.isArray(specification?.functions)
+        ? specification.functions
+        : [];
 
   const statusSpec = Array.isArray(specification?.status) ? specification.status : [];
 

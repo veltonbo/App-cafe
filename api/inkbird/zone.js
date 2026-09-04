@@ -51,6 +51,7 @@ async function readRuntimeState(deviceId) {
   return {
     operation_mode: map.operation_mode ?? null,
     zonerun_state: Number.isFinite(Number(map.zonerun_state)) ? Number(map.zonerun_state) : 0,
+    pendingzone_state: Number.isFinite(Number(map.pendingzone_state)) ? Number(map.pendingzone_state) : 0,
     irrigation_mode: map.irrigation_mode ?? null
   };
 }
@@ -78,7 +79,7 @@ async function waitForAllZonesOff(deviceId, attempts = 6) {
     if (i) await sleep(700);
     try {
       last = await readRuntimeState(deviceId);
-      if (Number(last.zonerun_state || 0) === 0) return { confirmed:true, state:last };
+      if (Number(last.zonerun_state || 0) === 0 && Number(last.pendingzone_state || 0) === 0) return { confirmed:true, state:last };
     } catch {}
   }
 

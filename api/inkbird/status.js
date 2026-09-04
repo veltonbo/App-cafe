@@ -1,5 +1,7 @@
 import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
+import { decodeDp38, decodeDp45, decodeDp104 } from './_iic800.js';
+import { storeGet } from '../irrigation/_store.js';
 
 function settleValue(result, fallback = null) {
   return result.status === 'fulfilled' ? result.value : fallback;
@@ -348,6 +350,17 @@ export default async function handler(req, res) {
   const controllerIndex = Math.max(1, resolved.devices.findIndex(d => d.id === deviceId) + 1);
   const sectorStart = (controllerIndex - 1) * 8 + 1;
 
+  const dp45Raw = statusMap.irrigation_time_all ?? shadowMap.irrigation_time_all ?? null;
+  const dp38Raw = statusMap.normal_time ?? shadowMap.normal_time ?? null;
+  const dp104Raw = statusMap.Merge_History ?? statusMap.merge_history ?? shadowMap.Merge_History ?? shadowMap.merge_history ?? null;
+
+  const runtime = {
+    dp45: decodeDp45(dp45Raw),
+    schedule: decodeDp38(dp38Raw),
+    history: decodeDp104(dp104Raw),
+    active_session: await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(() => null)
+  };
+
   return res.status(200).json({
     ok: true,
     configured: true,
@@ -359,6 +372,7 @@ export default async function handler(req, res) {
     sector_end: sectorStart + 7,
     access,
     mapping,
+    runtime,
     discovery_source: resolved.source,
     device: {
       id: deviceId,

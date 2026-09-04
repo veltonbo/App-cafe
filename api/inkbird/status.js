@@ -361,6 +361,25 @@ export default async function handler(req, res) {
     active_session: await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(() => null)
   };
 
+  const pendingMask = Number(statusMap.pendingzone_state ?? shadowMap.pendingzone_state ?? 0);
+  if (runtime.active_session && Number(mapping.active_mask || 0) === 0 && pendingMask === 0) {
+    const finished = runtime.active_session;
+    await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, null).catch(() => null);
+    runtime.active_session = null;
+    await appendHistory({
+      type:'complete',
+      controller_id:deviceId,
+      controller_index:controllerIndex,
+      zone:Number(finished.zone || 0),
+      sector:Number(finished.sector || 0),
+      duration_minutes:Number(finished.duration_minutes || 0),
+      mode:finished.mode || 'Manual',
+      source:'device',
+      status:'confirmed',
+      detail:finished.kind === 'group' ? (finished.name || 'Grupo concluído') : 'Irrigação concluída'
+    }).catch(() => null);
+  }
+
   if (runtime.history?.zone >= 1 && runtime.history?.zone <= 8 && runtime.history?.total_time_minutes > 0) {
     const signature = [
       runtime.history.total_time_minutes,

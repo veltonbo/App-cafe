@@ -52,7 +52,8 @@ export default async function handler(req, res) {
 
   let resolved;
   try {
-    resolved = await resolveInkbirdDevice();
+    const preferredId = String(req.query?.device_id || '').trim();
+    resolved = await resolveInkbirdDevice(preferredId);
   } catch (error) {
     return res.status(502).json({ ok:false, linked:false, error:error.message || 'Falha ao listar dispositivos do projeto Tuya.' });
   }
@@ -70,7 +71,7 @@ export default async function handler(req, res) {
         title: 'IIC-800 ainda não apareceu no projeto Tuya',
         detail: 'O controlador está no Smart Life, mas o projeto Tuya ainda não sincronizou esse novo dispositivo.'
       },
-      candidates: resolved.devices.map(d => ({id:d.id||d.device_id,name:d.name||d.custom_name||d.product_name||'Sem nome',online:d.online??null,category:d.category??null}))
+      candidates: resolved.devices.map((d,index) => ({id:d.id,name:d.name,online:d.online,category:d.category,model:d.model,controller_index:index+1,sector_start:index*8+1,sector_end:index*8+8}))
     });
   }
 
@@ -143,7 +144,7 @@ export default async function handler(req, res) {
     status_spec: statusSpec,
     status: statusMap,
     shadow: shadowMap,
-    candidates: resolved.devices.map(d => ({id:d.id||d.device_id,name:d.name||d.custom_name||d.product_name||'Sem nome',online:d.online??null,category:d.category??null})),
+    candidates: resolved.devices.map((d,index) => ({id:d.id,name:d.name,online:d.online,category:d.category,model:d.model,controller_index:index+1,sector_start:index*8+1,sector_end:index*8+8})),
     errors
   });
 }

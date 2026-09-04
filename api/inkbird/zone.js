@@ -69,6 +69,20 @@ async function waitForZoneState(deviceId, zone, expectedOn, attempts = 5) {
   return { confirmed:false, state:last };
 }
 
+async function waitForAllZonesOff(deviceId, attempts = 6) {
+  let last = null;
+
+  for (let i = 0; i < attempts; i++) {
+    if (i) await sleep(700);
+    try {
+      last = await readRuntimeState(deviceId);
+      if (Number(last.zonerun_state || 0) === 0) return { confirmed:true, state:last };
+    } catch {}
+  }
+
+  return { confirmed:false, state:last };
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -155,7 +169,7 @@ export default async function handler(req, res) {
         offCommandError = error?.message || String(error);
       }
 
-      let verification = await waitForZoneState(deviceId, zone, false, 4);
+      let verification = await waitForAllZonesOff(deviceId, 5);
 
       if (!verification.confirmed) {
         try {
@@ -164,7 +178,7 @@ export default async function handler(req, res) {
           });
         } catch {}
 
-        verification = await waitForZoneState(deviceId, zone, false, 4);
+        verification = await waitForAllZonesOff(deviceId, 5);
       }
 
       if (!verification.confirmed) {

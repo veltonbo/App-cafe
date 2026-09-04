@@ -4,32 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b6b52">
-<title>Viveiro • Irrigação Café</title>
+<title>Fazenda 2E • Irrigação do Viveiro</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}button,input{font:inherit}
 .top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
-h1{font-size:1.2rem;margin:2px 0}.ey{font-size:.7rem;font-weight:850;letter-spacing:.12em;color:var(--g)}.pill{border:1px solid var(--l);background:#fff;border-radius:99px;padding:9px 12px;font-weight:800}
-.wrap{max-width:820px;margin:auto;padding:16px 14px 100px}.hero{background:linear-gradient(135deg,#0b6b52,#0d8464);color:#fff;border-radius:24px;padding:22px;box-shadow:0 18px 38px #0b6b5230}
+h1{font-size:1.2rem;margin:2px 0}.ey{font-size:.7rem;font-weight:850;letter-spacing:.12em;color:var(--g)}.pill{border:1px solid var(--l);background:#fff;border-radius:99px;padding:10px 14px;font-weight:850;box-shadow:0 8px 22px #17372e0c}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 110px}.hero{background:linear-gradient(135deg,#0a5a49,#13806a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 22px 46px #0b6b5238;border:1px solid #ffffff20}
 .heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.hero p{margin:0;color:#d8f3ea}.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}.liveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.liveDot{width:9px;height:9px;border-radius:50%;background:#aab7b2}.liveDot.on{background:#7ff0c0;box-shadow:0 0 0 4px #7ff0c025}.mutedWhite{color:#d8f3ea;font-size:.8rem}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.stat,.box{background:#fff;border:1px solid var(--l);box-shadow:0 10px 24px #17372e0c}.stat{border-radius:16px;padding:13px}.stat small{display:block;color:var(--m)}.stat strong{font-size:1.08rem}
-.box{border-radius:22px;padding:17px;margin-top:12px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:850;cursor:pointer;flex:1;min-width:135px}.btn:disabled{opacity:.5}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}.diag{margin-top:10px;border:1px solid var(--l);border-radius:14px;padding:12px;background:#fbfdfc}.diag pre{white-space:pre-wrap;word-break:break-word;font-size:.76rem;max-height:180px;overflow:auto}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.stat,.box{background:#fff;border:1px solid var(--l);box-shadow:0 12px 30px #17372e12}.stat{border-radius:18px;padding:15px}.stat small{display:block;color:var(--m)}.stat strong{font-size:1.08rem}
+.box{border-radius:24px;padding:19px;margin-top:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:14px;padding:13px 15px;font-weight:850;cursor:pointer;flex:1;min-width:135px;transition:.18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}.diag{margin-top:10px;border:1px solid var(--l);border-radius:14px;padding:12px;background:#fbfdfc}.diag pre{white-space:pre-wrap;word-break:break-word;font-size:.76rem;max-height:180px;overflow:auto}
 .timeline{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.step{border-radius:14px;padding:14px;border:1px solid var(--l);background:#fbfdfc}.step b{display:block}.step small{color:var(--m)}.onStep{background:#edf9f5;border-color:#98d8c5}.offStep{background:#f6f8f7}
 .history{display:grid;gap:7px}.hist{border:1px solid var(--l);border-radius:12px;padding:10px}.hist small{display:block;color:var(--m)}.empty{color:var(--m);text-align:center;border:1px dashed var(--l);border-radius:12px;padding:15px}.note{font-size:.84rem;color:var(--m);line-height:1.45}
 dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backdrop{background:#092a225c}.modal{padding:20px;display:grid;gap:12px}.modal h2{margin:0}label{display:grid;gap:6px;font-size:.85rem;font-weight:750}input{width:100%;border:1px solid var(--l);border-radius:11px;padding:11px;background:#fff}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:10}.toast.show{transform:translate(-50%,0)}
-@media(max-width:620px){.grid{grid-template-columns:1fr 1fr}.grid .stat:last-child{grid-column:1/-1}.heroTop{flex-direction:column}.timeline{grid-template-columns:1fr}.row{flex-direction:column}.btn{width:100%}}
+@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.grid .stat:last-child{grid-column:auto}.heroTop{flex-direction:column}.timeline{grid-template-columns:1fr}.row{flex-direction:column}.btn{width:100%}}
 </style>
 </head>
 <body>
-<header class="top"><div><div class="ey">SÍTIO AM</div><h1>Viveiro • Irrigação</h1></div><button id="conn" class="pill">● Não conectado</button></header>
+<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Painel de Irrigação do Viveiro</h1></div><button id="conn" class="pill">● Não conectado</button></header>
 <main class="wrap">
-<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • VIVEIRO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
-<section class="grid"><div class="stat"><small>Ciclo</small><strong>1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
+<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • MONITORAMENTO REMOTO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
+<section class="grid"><div class="stat"><small>Ciclo configurado</small><strong>1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Tuya</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
 <section class="box">
 <div class="head"><h2>Estado em tempo real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar agora</button></div>
-<div class="statusLine"><span>Conexão Tuya</span><strong id="connectionState">Não conectada</strong></div>
 <div class="statusLine"><span>Fase atual</span><strong id="phaseState">Desconhecida</strong></div>
 <div class="statusLine"><span>Ciclo detectado</span><strong id="cycleDetected">Aguardando</strong></div>
 <div class="statusLine"><span>Contagem Tuya</span><strong id="countdownState">—</strong></div>
@@ -52,8 +51,8 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
 
-<section class="box"><div class="head"><h2>Conexão segura</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">Backend configurado em <b>app-cafe.vercel.app</b>. O Access Secret da Tuya fica somente no servidor e nunca é publicado no GitHub Pages.</p></section>
-</main>
+<section class="box"><div class="head"><h2>Conexão segura • Fazenda 2E</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">Backend configurado em <b>app-cafe.vercel.app</b>. O Access Secret da Tuya fica somente no servidor e nunca é publicado no GitHub Pages.</p></section>
+<div style="text-align:center;color:var(--m);font-size:.78rem;margin:18px 0 6px">Fazenda 2E • Painel de Irrigação do Viveiro • EKAZA / Tuya</div></main>
 
 <dialog id="settingsDlg"><form method="dialog" class="modal"><div class="ey">CONEXÃO</div><h2>Servidor Tuya</h2>
 <label>URL do backend<input id="apiUrl" type="url" value="https://app-cafe.vercel.app"></label>

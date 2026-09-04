@@ -80,6 +80,13 @@ function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
   const zonesFound = [...new Set(candidates.filter(x => !x.status_only).map(x => x.zone))];
 
   const controls = [];
+  const durations = [];
+
+  function looksLikeDuration(item) {
+    const text = (String(item.code || '') + ' ' + String(item.name || '')).toLowerCase();
+    return /duration|runtime|run_time|watering_time|water_time|irrigation_time|time_set|work_time|minutes|min\b|countdown/.test(text);
+  }
+
   for (let zone = 1; zone <= 8; zone++) {
     const booleanControls = candidates.filter(x =>
       !x.status_only &&
@@ -94,15 +101,50 @@ function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
         current: booleanControls[0].current
       });
     }
+
+    const durationCandidates = candidates.filter(x =>
+      !x.status_only &&
+      x.zone === zone &&
+      /integer|value/i.test(String(x.type || '')) &&
+      looksLikeDuration(x)
+    );
+
+    if (durationCandidates.length === 1) {
+      const d = durationCandidates[0];
+      durations.push({
+        zone,
+        code: d.code,
+        name: d.name,
+        current: d.current,
+        min: Number.isFinite(Number(d.values?.min)) ? Number(d.values.min) : null,
+        max: Number.isFinite(Number(d.values?.max)) ? Number(d.values.max) : null,
+        step: Number.isFinite(Number(d.values?.step)) ? Number(d.values.step) : 1,
+        scale: Number.isFinite(Number(d.values?.scale)) ? Number(d.values.scale) : 0,
+        unit: d.values?.unit || null
+      });
+    }
   }
+
+  const scheduleCandidates = functions
+    .filter(fn => /schedule|program|timer|plan|cycle|appointment|reservation/i.test(String(fn.code || '') + ' ' + String(fn.name || '') + ' ' + String(fn.desc || '')))
+    .map(fn => ({
+      code: fn.code,
+      name: fn.name || fn.code,
+      type: fn.type || null,
+      values: parseValues(fn.values)
+    }));
 
   return {
     candidates,
     controls,
+    durations,
+    schedule_candidates: scheduleCandidates,
     zones_found: zonesFound,
     mapped_count: zonesFound.length,
+    duration_mapped_count: durations.length,
     ready: zonesFound.length === 8,
-    control_ready: controls.length === 8
+    control_ready: controls.length === 8,
+    duration_ready: durations.length === 8
   };
 }
 

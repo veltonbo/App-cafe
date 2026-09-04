@@ -58,7 +58,7 @@ function normalizeConfig(body = {}) {
   return {
     zone,
     enabled,
-    duration_minutes:duration,
+    duration_minutes:enabled ? duration : 0,
     start_times:startTimes,
     cycle_mode:cycleMode,
     days_mask:daysMask,

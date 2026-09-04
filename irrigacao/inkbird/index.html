@@ -460,7 +460,10 @@ function historyTitle(h){
   if(h?.type==='stop')return sector?sector+' parado':'Irrigação parada';
   if(h?.type==='group_start')return h.detail||'Grupo iniciado';
   if(h?.type==='schedule')return 'Programação do Setor '+pad((Number(h.controller_index||1)-1)*8+Number(h.zone||0));
+  if(h?.type==='complete')return sector?sector+' concluído':(h.detail||'Irrigação concluída');
   if(h?.type==='blocked'||h?.type==='group_blocked')return 'Irrigação bloqueada pelo clima';
+  if(h?.type==='weather_suspend')return 'Agenda suspensa pela chuva';
+  if(h?.type==='weather_restore')return 'Agenda liberada pelo clima';
   if(h?.type==='native_report')return sector+' • registro do controlador';
   return h?.detail||'Atividade da irrigação';
 }

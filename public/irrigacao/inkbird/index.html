@@ -22,17 +22,19 @@
 .capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}.weatherGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.weatherCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.weatherCard small{display:block;color:var(--m);margin-bottom:5px}.weatherCard strong{font-size:1.05rem}.guard{border:1px solid #a8d8ca;background:#eef9f5;border-radius:16px;padding:14px;margin-top:12px}.guard.blocked{border-color:#efbbb7;background:#fff1f0}.ruleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.ruleGrid label{display:grid;gap:5px;font-size:.82rem;font-weight:800}.ruleGrid input{width:100%;border:1px solid var(--l);border-radius:10px;padding:10px;background:#fff}.checkLine{display:flex;gap:9px;align-items:center;font-weight:800}.checkLine input{width:auto}
 .controllerBar{display:grid;grid-template-columns:1fr auto auto;gap:9px;align-items:end}.controllerBar label{display:grid;gap:6px;font-size:.82rem;font-weight:850}.controllerBar select{width:100%;border:1px solid var(--l);border-radius:12px;padding:11px;background:#fff;color:#17372e}.controllerSummary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.miniTag{padding:7px 10px;border-radius:999px;background:var(--gs);color:var(--g);font-size:.8rem;font-weight:850}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
 details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
-.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
-@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.tabBtn{border:1px solid var(--l);background:#fff;color:var(--m);border-radius:14px;padding:11px 8px;font-weight:850}.tabBtn.active{background:var(--g);color:#fff;border-color:var(--g)}.tabPanel{display:none}.tabPanel.active{display:block}.errorBanner{background:#fff0ef;border:1px solid #efbbb7;color:#9f352f;border-radius:16px;padding:12px 14px;margin-bottom:12px;font-weight:750}.sectorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sectorActions .btn{width:100%}.zone.mapped{border-color:#a9d8ca}.zone.running{background:#edf9f5}.sysGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sysCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.sysCard small{display:block;color:var(--m);margin-bottom:5px}.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
+@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar,.sysGrid{grid-template-columns:1fr}.tabs{grid-template-columns:1fr 1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação • INKBIRD</h1></div>
-  <div class="actions"><a class="navbtn" href="/irrigacao/">Viveiro EKAZA</a><button id="refresh" class="pill">● Verificar</button></div>
+  <div class="actions"><a class="navbtn" href="/irrigacao/">Viveiro EKAZA</a><button id="settingsBtn" class="pill">Configurar</button><button id="refresh" class="pill">● Atualizar</button></div>
 </header>
 <main class="wrap">
-
+<div class="tabs"><button class="tabBtn active" data-tab="overview">Geral</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
+<div id="globalError" class="errorBanner" hidden></div>
+<div id="tab-overview" class="tabPanel active">
 <section class="box" style="margin-top:0">
   <div class="head"><h2>Controladores da Fazenda 2E</h2></div>
   <div class="controllerBar">
@@ -76,6 +78,8 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <p id="integrationNote" class="note">O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.</p>
 </section>
 
+</div>
+<div id="tab-weather" class="tabPanel">
 <section class="box">
   <div class="head"><h2>Estação meteorológica • Weather2-2</h2><button id="checkWeather" class="btn soft">Atualizar clima</button></div>
   <div class="weatherGrid">
@@ -105,8 +109,10 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <details><summary>Dados meteorológicos detectados</summary><pre id="weatherRaw">Nenhuma leitura realizada.</pre></details>
 </section>
 
+</div>
+<div id="tab-sectors" class="tabPanel">
 <section class="box">
-  <div class="head"><h2>Zonas de irrigação</h2><button id="renameZones" class="btn soft">Editar nomes</button></div>
+  <div class="head"><h2>Setores de irrigação</h2><span class="miniTag">8 setores por controlador</span></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
@@ -122,8 +128,10 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   </div>
 </section>
 
+</div>
+<div id="tab-system" class="tabPanel">
 <section class="box">
-  <div class="head"><h2>Diagnóstico técnico</h2></div>
+  <div class="head"><h2>Sistema e diagnóstico</h2></div>
   <p class="note">Quando o controlador for encontrado, esta área mostrará os códigos reais de funções e estados. A partir deles o app libera somente os comandos compatíveis com o seu aparelho.</p>
   <details><summary>Funções Tuya detectadas</summary><pre id="functionsRaw">Nenhuma leitura realizada.</pre></details>
   <details><summary>Status atual</summary><pre id="statusRaw">Nenhuma leitura realizada.</pre></details>
@@ -131,49 +139,81 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <details><summary>Erros de integração</summary><pre id="errorsRaw">Nenhum erro registrado.</pre></details>
 </section>
 
+<section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">app-cafe.vercel.app</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente na Vercel. Neste aparelho fica apenas o token de controle do app.</p></section>
+</div>
 <div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
 </main>
+<dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão da Central</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
 <div id="toast" class="toast"></div>
 <script>
-const API='https://app-cafe.vercel.app';
-const SETTINGS_KEY='viveiroEkazaRealV1';
-const INK_KEY='fazenda2eInkbirdV1';
-const makeDefaultZones=(startSector=1)=>Array.from({length:8},(_,i)=>({name:'Setor '+String(startSector+i).padStart(2,'0'),duration:10}));
-let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{controllers:[],selectedControllerId:null,zonesByController:{},lastByController:{},weather:null,weatherAt:null,lastRainAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
-if(!Array.isArray(local.controllers))local.controllers=[];
-if(!local.zonesByController)local.zonesByController={};
-if(!local.lastByController)local.lastByController={};
-if(local.zones&&Array.isArray(local.zones)&&!Object.keys(local.zonesByController).length)local._legacyZones=local.zones;
-if(!local.weatherRules)local.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
-const shared=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null')||{};
-const token=shared?.settings?.token||'';
+const DEFAULT_API='https://app-cafe.vercel.app';
+const APP_KEY='fazenda2eCentralIrrigacaoV3';
+const VIVEIRO_KEY='viveiroEkazaRealV1';
+const oldShared=JSON.parse(localStorage.getItem(VIVEIRO_KEY)||'null')||{};
+let state=JSON.parse(localStorage.getItem(APP_KEY)||'null')||{
+  settings:{apiUrl:oldShared?.settings?.apiUrl||DEFAULT_API,token:oldShared?.settings?.token||''},
+  controllers:[],selectedControllerId:null,statusByController:{},zonePrefs:{},
+  weather:null,weatherAt:null,lastRainAt:null,
+  weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}
+};
+if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
+if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
+if(!state.settings.token&&oldShared?.settings?.token)state.settings.token=oldShared.settings.token;
+if((!state.settings.apiUrl||state.settings.apiUrl===DEFAULT_API)&&oldShared?.settings?.apiUrl)state.settings.apiUrl=oldShared.settings.apiUrl;
+if(!state.controllers)state.controllers=[];
+if(!state.statusByController)state.statusByController={};
+if(!state.zonePrefs)state.zonePrefs={};
+if(!state.weatherRules)state.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
+
 const $=id=>document.getElementById(id);
-function save(){localStorage.setItem(INK_KEY,JSON.stringify(local))}
-function selectedController(){return local.controllers.find(c=>c.id===local.selectedControllerId)||local.controllers[0]||null}
-function controllerIndex(ctrl){return Math.max(1,Number(ctrl?.controller_index)||1)}
-function sectorStart(ctrl){return (controllerIndex(ctrl)-1)*8+1}
-function ensureZones(ctrl){if(!ctrl)return[];if(!Array.isArray(local.zonesByController[ctrl.id])||local.zonesByController[ctrl.id].length!==8){const start=sectorStart(ctrl);local.zonesByController[ctrl.id]=local._legacyZones&&controllerIndex(ctrl)===1?local._legacyZones.map((z,i)=>({name:z.name||('Setor '+String(start+i).padStart(2,'0')),duration:z.duration||10})):makeDefaultZones(start);delete local._legacyZones;save()}return local.zonesByController[ctrl.id]}
-function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
-function renderZones(){
-  const ctrl=selectedController();
-  const zones=ensureZones(ctrl);
-  if(!ctrl){$('zones').innerHTML='<div class="zone"><div class="zoneName">Nenhum controlador selecionado</div></div>';return;}
-  const start=sectorStart(ctrl);
-  $('zones').innerHTML=zones.map((z,i)=>{
-    const sector=start+i;
-    return `
-    <div class="zone">
-      <div class="zoneTop"><div><div class="zoneName">${z.name||('Setor '+String(sector).padStart(2,'0'))}</div><div class="zoneState">Setor ${String(sector).padStart(2,'0')} • saída ${i+1} do Controlador ${controllerIndex(ctrl)}</div></div><strong>—</strong></div>
-      <div class="zoneMeta"><span>Duração padrão</span><b>${z.duration} min</b></div>
-      <button class="btn soft" disabled>Acionamento será liberado após mapear o controlador</button>
-    </div>`;
-  }).join('');
+let busy=false;
+
+function save(){localStorage.setItem(APP_KEY,JSON.stringify(state))}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
+function showError(msg){$('globalError').hidden=!msg;$('globalError').textContent=msg||''}
+function selectedController(){return state.controllers.find(c=>c.id===state.selectedControllerId)||state.controllers[0]||null}
+function controllerIndex(c){return Math.max(1,Number(c?.controller_index)||1)}
+function sectorStart(c){return Number(c?.sector_start)||((controllerIndex(c)-1)*8+1)}
+function pad(n){return String(n).padStart(2,'0')}
+function getPrefs(c){
+  if(!c)return[];
+  if(!Array.isArray(state.zonePrefs[c.id])||state.zonePrefs[c.id].length!==8){
+    const start=sectorStart(c);
+    state.zonePrefs[c.id]=Array.from({length:8},(_,i)=>({name:'Setor '+pad(start+i),duration:10}));
+    save();
+  }
+  return state.zonePrefs[c.id];
+}
+function currentStatus(){const c=selectedController();return c?state.statusByController[c.id]||null:null}
+
+async function api(path,opt={}){
+  if(!state.settings.token)throw new Error('Configure o token de controle em Sistema > Configurar conexão.');
+  const ctl=new AbortController();
+  const timer=setTimeout(()=>ctl.abort(),12000);
+  try{
+    const r=await fetch((state.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')+path,{
+      ...opt,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.settings.token,...(opt.headers||{})},
+      signal:ctl.signal
+    });
+    const body=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(body.error||('HTTP '+r.status));
+    return body;
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('Tempo esgotado ao consultar o servidor.');
+    throw e;
+  }finally{clearTimeout(timer)}
 }
 
+function activateTab(name){
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.tabPanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
+}
+document.querySelectorAll('.tabBtn').forEach(b=>b.onclick=()=>activateTab(b.dataset.tab));
 
 function renderControllers(){
   const select=$('controllerSelect');
-  if(!local.controllers.length){
+  if(!state.controllers.length){
     select.innerHTML='<option value="">Nenhum IIC-800 encontrado</option>';
     $('controllerSummary').innerHTML='<span class="miniTag">0 controladores</span>';
     $('controllerNumber').textContent='IIC-800-WIFI';
@@ -181,226 +221,206 @@ function renderControllers(){
     renderZones();
     return;
   }
-
-  if(!local.selectedControllerId||!local.controllers.some(c=>c.id===local.selectedControllerId)){
-    local.selectedControllerId=local.controllers[0].id;
-    save();
+  if(!state.selectedControllerId||!state.controllers.some(c=>c.id===state.selectedControllerId)){
+    state.selectedControllerId=state.controllers[0].id;save();
   }
-
-  select.innerHTML=local.controllers.map(ctrl=>{
-    const idx=controllerIndex(ctrl);
-    const start=sectorStart(ctrl);
-    const end=start+7;
-    const selected=ctrl.id===local.selectedControllerId?' selected':'';
-    return '<option value="'+ctrl.id+'"'+selected+'>Controlador '+idx+' • Setores '+String(start).padStart(2,'0')+'–'+String(end).padStart(2,'0')+'</option>';
+  select.innerHTML=state.controllers.map(c=>{
+    const i=controllerIndex(c),s=sectorStart(c),e=s+7;
+    return '<option value="'+c.id+'"'+(c.id===state.selectedControllerId?' selected':'')+'>Controlador '+i+' • Setores '+pad(s)+'–'+pad(e)+'</option>';
   }).join('');
-
-  $('controllerSummary').innerHTML=local.controllers.map(ctrl=>{
-    const idx=controllerIndex(ctrl);
-    const start=sectorStart(ctrl);
-    return '<span class="miniTag">C'+idx+': '+String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0')+'</span>';
+  $('controllerSummary').innerHTML=state.controllers.map(c=>{
+    const i=controllerIndex(c),s=sectorStart(c);
+    return '<span class="miniTag">C'+i+': '+pad(s)+'–'+pad(s+7)+(c.online===false?' • offline':'')+'</span>';
   }).join('');
-
-  const ctrl=selectedController();
-  const idx=controllerIndex(ctrl);
-  const start=sectorStart(ctrl);
-  $('controllerNumber').textContent='Controlador '+idx+' • IIC-800';
-  $('sectorRange').textContent=String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0');
+  const c=selectedController(),i=controllerIndex(c),s=sectorStart(c);
+  $('controllerNumber').textContent='Controlador '+i+' • IIC-800';
+  $('sectorRange').textContent=pad(s)+'–'+pad(s+7);
   renderZones();
 }
 
+function controlForZone(status,zone){
+  return status?.mapping?.controls?.find(c=>Number(c.zone)===zone)||null;
+}
+
+function renderZones(){
+  const c=selectedController();
+  if(!c){$('zones').innerHTML='<div class="zone"><div class="zoneName">Nenhum controlador encontrado</div><p class="note">Adicione o IIC-800 ao Smart Life e toque em Buscar controladores.</p></div>';return;}
+  const prefs=getPrefs(c),status=currentStatus(),start=sectorStart(c);
+  const controlReady=Boolean(status?.mapping?.control_ready);
+
+  $('zones').innerHTML=prefs.map((p,i)=>{
+    const zone=i+1,sector=start+i,control=controlForZone(status,zone);
+    const current=control?.current;
+    const running=current===true;
+    const stateText=current===true?'Irrigando':current===false?'Parado':controlReady?'Pronto':'Aguardando mapeamento';
+    const mapped=Boolean(control);
+    return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
+      '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
+      '<div class="zoneState">Setor '+pad(sector)+' • saída '+zone+' do Controlador '+controllerIndex(c)+'</div></div><strong>'+(running?'Ligado':current===false?'Desligado':'—')+'</strong></div>'+
+      '<div class="zoneMeta"><span>Duração padrão</span><b>'+Number(p.duration||10)+' min</b></div>'+
+      '<div class="zoneMeta"><span>Mapeamento</span><b>'+escapeHtml(control?.code||'Pendente')+'</b></div>'+
+      '<div class="sectorActions">'+
+      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="sendZone('+zone+',true)">Ligar</button>'+
+      '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Desligar</button>'+
+      '</div><button class="btn soft" style="width:100%;margin-top:8px" onclick="editSector('+zone+')">Editar setor</button></div>';
+  }).join('');
+}
+
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
 async function syncControllers(showToast=true){
   try{
+    showError('');
     const r=await api('/api/inkbird/controllers');
-    local.controllers=Array.isArray(r.controllers)?r.controllers:[];
-    if(!local.selectedControllerId||!local.controllers.some(c=>c.id===local.selectedControllerId)){
-      local.selectedControllerId=local.controllers[0]?.id||null;
+    state.controllers=Array.isArray(r.controllers)?r.controllers:[];
+    if(!state.selectedControllerId||!state.controllers.some(c=>c.id===state.selectedControllerId)){
+      state.selectedControllerId=state.controllers[0]?.id||null;
     }
-    local.controllers.forEach(ctrl=>ensureZones(ctrl));
-    save();
-    renderControllers();
-    if(showToast)toast(local.controllers.length?local.controllers.length+' controlador(es) encontrado(s)':'Nenhum IIC-800 encontrado');
-    return local.controllers;
-  }catch(e){
-    if(showToast)toast('Falha ao buscar controladores: '+(e.message||String(e)));
-    return [];
-  }
+    state.controllers.forEach(getPrefs);save();renderControllers();
+    if(showToast)toast(state.controllers.length?state.controllers.length+' controlador(es) encontrado(s)':'Nenhum IIC-800 encontrado');
+    return state.controllers;
+  }catch(e){showError(e.message);if(showToast)toast('Falha ao buscar controladores');return[]}
 }
 
-function metricText(metric,fallbackUnit=''){
-  if(!metric||metric.value===null||metric.value===undefined)return '—';
-  const unit=metric.unit||fallbackUnit||'';
-  return String(metric.value)+(unit?' '+unit:'');
+async function syncStatus(showToast=false){
+  const c=selectedController();
+  if(!c)return;
+  try{
+    const s=await api('/api/inkbird/status?device_id='+encodeURIComponent(c.id));
+    state.statusByController[c.id]=s;save();renderStatus();
+    if(showToast)toast('Controlador atualizado');
+  }catch(e){showError(e.message);if(showToast)toast('Falha ao ler controlador')}
 }
-function getRainAmount(metrics){
-  const candidates=[metrics?.rain24h,metrics?.rainToday,metrics?.rainGeneric].filter(Boolean);
-  return candidates.length?Number(candidates[0].value):null;
+
+function renderStatus(){
+  const c=selectedController(),s=currentStatus();
+  if(!c||!s){
+    $('linkedState').textContent='Aguardando';$('onlineState').textContent='—';$('categoryState').textContent='—';
+    $('functionsState').textContent='—';$('accessState').textContent='Aguardando';$('accessDetail').textContent='';
+    $('cloudState').textContent='Aguardando';$('mappingState').textContent='Pendente';
+    $('heroBadge').textContent='AGUARDANDO LEITURA';$('heroTitle').textContent='Controlador da lavoura';
+    $('liveDot').className='dot';$('liveText').textContent='Ainda não verificado';renderZones();return;
+  }
+  const linked=Boolean(s.linked),online=s?.device?.online;
+  $('linkedState').textContent=linked?'Sim':'Não';$('linkedState').className=linked?'ok':'bad';
+  $('onlineState').textContent=online===true?'Online':online===false?'Offline':'Não informado';$('onlineState').className=online===true?'ok':online===false?'bad':'';
+  $('categoryState').textContent=s?.device?.category||'—';
+  $('functionsState').textContent=Array.isArray(s.functions)?String(s.functions.length):'0';
+  $('accessState').textContent=s?.access?.title||'Não identificado';
+  $('accessState').className=s?.access?.state==='accessible'?'ok':'bad';
+  $('accessDetail').textContent=s?.access?.detail||'';
+  $('cloudState').textContent=linked?(online===false?'Offline':'Online'):'Não vinculado';
+  const mapped=Number(s?.mapping?.mapped_count||0);
+  $('mappingState').textContent=s?.mapping?.control_ready?'8/8 pronto':mapped+'/8 identificado';
+  $('heroBadge').textContent=s?.mapping?.control_ready?'PRONTO PARA CONTROLE':linked?'CONECTADO • MAPEANDO':'AGUARDANDO VÍNCULO';
+  $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' conectado':'Controlador da lavoura';
+  $('heroSub').textContent=s?.mapping?.control_ready?'As 8 saídas foram identificadas. O controle manual dos setores está liberado.':linked?'O IIC-800 está acessível. O app está identificando as funções das oito saídas antes de liberar comandos.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
+  $('liveDot').className='dot '+(linked?'on':'');
+  $('liveText').textContent=linked?'Tuya respondendo':'Sem conexão';
+  $('lastCheck').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  $('integrationNote').textContent=s?.mapping?.control_ready?'Controle das 8 saídas identificado com segurança.':'Os botões de acionamento ficam bloqueados até que as oito saídas sejam identificadas de forma consistente.';
+  $('functionsRaw').textContent=JSON.stringify(s.functions||[],null,2);
+  $('statusRaw').textContent=JSON.stringify(s.status||{},null,2);
+  $('shadowRaw').textContent=JSON.stringify(s.shadow||{},null,2);
+  $('errorsRaw').textContent=JSON.stringify({mapping:s.mapping||{},errors:s.errors||{}},null,2);
+  renderZones();
+}
+
+function metricText(metric,fallback=''){
+  if(!metric||metric.value===null||metric.value===undefined)return '—';
+  const unit=metric.unit||fallback||'';return String(metric.value)+(unit?' '+unit:'');
+}
+function rainAmount(){
+  const m=state.weather?.metrics||{};
+  const x=[m.rain24h,m.rainToday,m.rainGeneric].find(Boolean);
+  return x?Number(x.value):null;
 }
 function weatherDecision(){
-  const w=local.weather;
-  const rules=local.weatherRules||{};
-  if(!w?.linked||!w?.metrics)return {blocked:false,title:'Proteção meteorológica aguardando dados',reason:'A estação ainda não forneceu dados suficientes para tomar decisão.'};
-  const m=w.metrics;
-  const amount=getRainAmount(m);
-  if(rules.blockWhileRaining&&m.rainDetected){
-    return {blocked:true,title:'Irrigação bloqueada por chuva',reason:'A Weather2-2 indica chuva agora.'};
+  const w=state.weather,r=state.weatherRules||{};
+  if(!w?.linked||!w?.metrics)return{blocked:false,title:'Clima aguardando dados',reason:'A Weather2-2 ainda não forneceu dados suficientes.'};
+  const m=w.metrics,amount=rainAmount();
+  if(r.blockWhileRaining&&m.rainDetected)return{blocked:true,title:'Irrigação bloqueada por chuva',reason:'A Weather2-2 indica chuva neste momento.'};
+  const hold=Math.max(0,Number(r.rainHoldHours||0))*3600000;
+  if(state.lastRainAt&&hold>0&&Date.now()-state.lastRainAt<hold){
+    const left=Math.ceil((hold-(Date.now()-state.lastRainAt))/3600000);
+    return{blocked:true,title:'Bloqueio pós-chuva ativo',reason:'Aguarde aproximadamente '+left+' h para liberar pelo app.'};
   }
-  const holdMs=Math.max(0,Number(rules.rainHoldHours||0))*3600000;
-  if(local.lastRainAt&&holdMs>0&&(Date.now()-local.lastRainAt)<holdMs){
-    const remain=Math.ceil((holdMs-(Date.now()-local.lastRainAt))/3600000);
-    return {blocked:true,title:'Irrigação bloqueada após chuva',reason:'Bloqueio pós-chuva ativo. Restam aproximadamente '+remain+' h.'};
-  }
-  if(Number.isFinite(amount)&&amount>=Number(rules.rainThreshold||0)){
-    return {blocked:true,title:'Irrigação bloqueada por chuva acumulada',reason:'A estação registrou '+amount+' mm, acima do limite de '+Number(rules.rainThreshold||0)+' mm.'};
-  }
-  return {blocked:false,title:'Irrigação liberada pelo clima',reason:'Nenhum bloqueio meteorológico ativo com os dados atuais.'};
+  if(Number.isFinite(amount)&&amount>=Number(r.rainThreshold||0))return{blocked:true,title:'Bloqueado por chuva acumulada',reason:'Foram registrados '+amount+' mm; limite configurado: '+Number(r.rainThreshold||0)+' mm.'};
+  return{blocked:false,title:'Irrigação liberada pelo clima',reason:'Nenhum bloqueio meteorológico ativo.'};
 }
-async function checkWeather(showToast=true){
+async function syncWeather(showToast=false){
   try{
-    const w=await api('/api/weather/status');
-    local.weather=w;local.weatherAt=Date.now();
-    if(w?.metrics?.rainDetected)local.lastRainAt=Date.now();
-    save();renderWeather();
-    if(showToast)toast(w.linked?'Weather2-2 atualizada':'Weather2-2 não encontrada');
-  }catch(e){
-    if(showToast)toast('Clima: '+(e.message||String(e)));
-  }
+    const w=await api('/api/weather/status');state.weather=w;state.weatherAt=Date.now();
+    if(w?.metrics?.rainDetected)state.lastRainAt=Date.now();save();renderWeather();
+    if(showToast)toast(w.linked?'Clima atualizado':'Weather2-2 não encontrada');
+  }catch(e){if(showToast)toast('Falha ao atualizar clima')}
 }
 function renderWeather(){
-  const w=local.weather;
-  const m=w?.metrics||{};
-  $('weatherLinked').textContent=w?.linked?'Sim':'Não';
-  $('weatherLinked').className=w?.linked?'ok':'bad';
+  const w=state.weather,m=w?.metrics||{};
+  $('weatherLinked').textContent=w?.linked?'Sim':'Não';$('weatherLinked').className=w?.linked?'ok':'bad';
   $('weatherOnline').textContent=w?.device?.online===true?'Online':w?.device?.online===false?'Offline':'—';
-  $('weatherOnline').className=w?.device?.online===true?'ok':w?.device?.online===false?'bad':'';
-  $('rainNow').textContent=m.rainDetected?'Chovendo / chuva detectada':'Sem chuva detectada';
-  $('rainNow').className=m.rainDetected?'bad':'ok';
-  const rain=getRainAmount(m);
-  $('rainAmount').textContent=Number.isFinite(rain)?rain+' mm':'—';
-  $('weatherTemp').textContent=metricText(m.temperature,'°C');
-  $('weatherHum').textContent=metricText(m.humidity,'%');
-  $('weatherWind').textContent=metricText(m.windSpeed);
-  $('weatherUpdated').textContent=local.weatherAt?new Date(local.weatherAt).toLocaleString('pt-BR'):'Nunca';
-  $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{},errors:w?.errors||{}},null,2);
-  const d=weatherDecision();
-  $('weatherGuard').className='guard '+(d.blocked?'blocked':'');
-  $('guardTitle').textContent=d.title;
-  $('guardReason').textContent=d.reason;
+  $('rainNow').textContent=m.rainDetected?'Chuva detectada':'Sem chuva detectada';$('rainNow').className=m.rainDetected?'bad':'ok';
+  const amount=rainAmount();$('rainAmount').textContent=Number.isFinite(amount)?amount+' mm':'—';
+  $('weatherTemp').textContent=metricText(m.temperature,'°C');$('weatherHum').textContent=metricText(m.humidity,'%');$('weatherWind').textContent=metricText(m.windSpeed);
+  $('weatherUpdated').textContent=state.weatherAt?new Date(state.weatherAt).toLocaleString('pt-BR'):'Nunca';
+  const d=weatherDecision();$('weatherGuard').className='guard '+(d.blocked?'blocked':'');$('guardTitle').textContent=d.title;$('guardReason').textContent=d.reason;
+  $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{}},null,2);
 }
 
-async function api(path){
-  if(!token)throw new Error('Abra primeiro o painel do Viveiro e configure o token de controle.');
-  const r=await fetch(API+path,{headers:{Authorization:'Bearer '+token}});
-  const body=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(body.error||('HTTP '+r.status));
-  return body;
-}
-async function check(){
-  $('refresh').textContent='● Verificando';
-  $('checkDevice').disabled=true;
-  try{
-    if(!local.controllers.length)await syncControllers(false);
-    const ctrl=selectedController();
-    const query=ctrl?('?device_id='+encodeURIComponent(ctrl.id)):'';
-    const s=await api('/api/inkbird/status'+query);
-    if(ctrl)local.lastByController[ctrl.id]={at:Date.now(),data:s};
-    save();renderStatus(s);
-    toast(s.linked?'Controlador '+controllerIndex(ctrl)+' encontrado':(s?.access?.title||'Acesso remoto não confirmado'));
-  }catch(e){
-    renderError(e.message||String(e));toast('Falha: '+(e.message||String(e)));
-  }finally{
-    $('refresh').textContent='● Verificar';$('checkDevice').disabled=false;
+async function sendZone(zone,on){
+  const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone);
+  if(!c||!control)return toast('Saída ainda não mapeada');
+  if(on){
+    const d=weatherDecision();
+    if(d.blocked){alert(d.title+'\n\n'+d.reason);return;}
   }
+  const sector=sectorStart(c)+zone-1;
+  if(!confirm((on?'LIGAR':'DESLIGAR')+' o Setor '+pad(sector)+' agora?'))return;
+  try{
+    await api('/api/inkbird/command',{method:'POST',body:JSON.stringify({device_id:c.id,code:control.code,value:on})});
+    toast('Comando enviado ao Setor '+pad(sector));setTimeout(()=>syncStatus(false),1200);
+  }catch(e){toast('Falha: '+e.message)}
 }
-function renderStatus(s){
-  const ctrl=selectedController();
-  const idx=controllerIndex(ctrl);
-  const start=sectorStart(ctrl);
-  $('controllerNumber').textContent=ctrl?('Controlador '+idx+' • IIC-800'):'IIC-800-WIFI';
-  $('sectorRange').textContent=ctrl?(String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0')):'—';
-  const linked=Boolean(s?.linked);
-  const online=s?.device?.online;
-  $('linkedState').textContent=linked?'Sim':'Não';
-  $('linkedState').className=linked?'ok':'bad';
-  $('onlineState').textContent=online===true?'Online':online===false?'Offline':'Não informado';
-  $('onlineState').className=online===true?'ok':online===false?'bad':'';
-  $('categoryState').textContent=s?.device?.category||'—';
-  $('functionsState').textContent=Array.isArray(s?.functions)?String(s.functions.length):'0';
-  $('accessState').textContent=s?.access?.title||'Não identificado';
-  $('accessState').className=s?.access?.state==='accessible'?'ok':(s?.access?.state==='oem_locked'||s?.access?.state==='not_found'?'bad':'');
-  $('accessDetail').textContent=s?.access?.detail||'';
-  $('cloudState').textContent=linked?(online===false?'Offline':'Vinculado'):'Não vinculado';
-  $('mappingState').textContent=linked&&Array.isArray(s?.functions)&&s.functions.length?'Em diagnóstico':'Pendente';
-  $('heroBadge').textContent=linked?'CONTROLADOR ENCONTRADO':'AGUARDANDO VÍNCULO';
-  $('heroTitle').textContent=linked?('Controlador '+idx+' detectado'):'Controlador da lavoura';
-  $('heroSub').textContent=linked?'O app já consegue consultar o seu IIC-800. O próximo passo é mapear os comandos reais das 8 zonas antes de liberar o controle.':'Painel preparado para leitura, programação e acionamento remoto das oito zonas assim que o controlador estiver disponível no projeto Tuya da Fazenda 2E.';
-  $('liveDot').className='dot '+(linked?'on':'');
-  $('liveText').textContent=linked?'Tuya respondeu':'Aguardando dispositivo';
-  $('lastCheck').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  $('integrationNote').textContent=linked?'O controlador foi encontrado. Os comandos ainda ficam bloqueados até identificarmos quais DPs correspondem a cada zona, programação e sensor de chuva.':'O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.';
-  $('functionsRaw').textContent=JSON.stringify(s?.functions||[],null,2);
-  $('statusRaw').textContent=JSON.stringify(s?.status||{},null,2);
-  $('shadowRaw').textContent=JSON.stringify(s?.shadow||{},null,2);
-  $('errorsRaw').textContent=JSON.stringify(s?.errors||{},null,2);
+
+function editSector(zone){
+  const c=selectedController();if(!c)return;
+  const prefs=getPrefs(c),p=prefs[zone-1],sector=sectorStart(c)+zone-1;
+  const name=prompt('Nome do Setor '+pad(sector),p.name||('Setor '+pad(sector)));if(name===null)return;
+  const duration=prompt('Duração padrão em minutos',String(p.duration||10));if(duration===null)return;
+  prefs[zone-1]={name:name.trim()||('Setor '+pad(sector)),duration:Math.max(1,Number(duration)||10)};save();renderZones();
 }
-function renderError(msg){
-  $('cloudState').textContent='Erro';$('cloudState').className='bad';
-  $('liveText').textContent='Falha na consulta';
-  $('accessState').textContent='Falha na consulta';$('accessState').className='bad';
-  $('accessDetail').textContent=msg;
-  $('errorsRaw').textContent=msg;
+
+async function refreshAll(){
+  if(busy)return;busy=true;$('refresh').textContent='● Atualizando';showError('');
+  try{await syncControllers(false);await Promise.all([syncStatus(false),syncWeather(false)]);toast('Central atualizada')}
+  finally{busy=false;$('refresh').textContent='● Atualizar'}
 }
-$('checkDevice').onclick=check;$('refresh').onclick=()=>{syncControllers(false).then(()=>check());checkWeather(false)};
+
+$('controllerSelect').onchange=()=>{state.selectedControllerId=$('controllerSelect').value||null;save();renderControllers();renderStatus();syncStatus(false)};
 $('syncControllers').onclick=()=>syncControllers(true);
-$('addController').onclick=async()=>{
-  const before=local.controllers.length;
-  await syncControllers(false);
-  if(local.controllers.length>before){toast('Novo controlador encontrado e adicionado');return;}
-  alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador no Smart Life, na mesma conta.\n2. Sincronize essa conta com o projeto Tuya Irrigação Café.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente no próximo setor.');
-};
-$('controllerSelect').onchange=()=>{
-  local.selectedControllerId=$('controllerSelect').value||null;save();renderControllers();
-  const cached=local.lastByController[local.selectedControllerId]?.data;
-  if(cached)renderStatus(cached);else check();
-};
-$('checkWeather').onclick=()=>checkWeather(true);
+$('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador na mesma conta Smart Life.\n2. Sincronize a conta com o projeto Tuya “Irrigação Café”.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente: 01–08, 09–16, 17–24...');
+$('checkDevice').onclick=()=>syncStatus(true);
+$('checkWeather').onclick=()=>syncWeather(true);
+$('refresh').onclick=refreshAll;
 $('saveWeatherRules').onclick=()=>{
-  local.weatherRules={
-    rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),
-    rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),
-    refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),
-    blockWhileRaining:$('blockWhileRaining').checked
-  };save();renderWeather();toast('Regras meteorológicas salvas');
+  state.weatherRules={rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),blockWhileRaining:$('blockWhileRaining').checked};
+  save();renderWeather();toast('Regras meteorológicas salvas');
 };
-$('renameZones').onclick=()=>{
-  const ctrl=selectedController();
-  if(!ctrl)return toast('Selecione um controlador');
-  const start=sectorStart(ctrl);
-  const zones=ensureZones(ctrl);
-  local.zonesByController[ctrl.id]=zones.map((z,i)=>{
-    const sector=start+i;
-    const name=prompt('Nome do Setor '+String(sector).padStart(2,'0'),z.name||('Setor '+String(sector).padStart(2,'0')));
-    if(name===null)return z;
-    const duration=prompt('Duração padrão em minutos para '+(name.trim()||z.name),String(z.duration));
-    return {name:(name.trim()||z.name),duration:Math.max(1,Number(duration)||z.duration)};
-  });save();renderZones();
-};
-renderControllers();
-$('rainThreshold').value=local.weatherRules.rainThreshold;
-$('rainHoldHours').value=local.weatherRules.rainHoldHours;
-$('weatherRefreshMinutes').value=local.weatherRules.refreshMinutes;
-$('blockWhileRaining').checked=local.weatherRules.blockWhileRaining!==false;
-renderWeather();
-if(token){
-  syncControllers(false).then(()=>{
-    const ctrl=selectedController();
-    const cached=ctrl?local.lastByController[ctrl.id]?.data:null;
-    if(cached)renderStatus(cached);
-    check();
-  });
-  checkWeather(false);
-}
-setInterval(()=>{if(token&&document.visibilityState==='visible')checkWeather(false)},Math.max(1,Number(local.weatherRules.refreshMinutes)||5)*60000);
+
+function openSettings(){$('apiUrlInput').value=state.settings.apiUrl||DEFAULT_API;$('tokenInput').value=state.settings.token||'';$('settingsDlg').showModal()}
+$('settingsBtn').onclick=openSettings;$('settingsBtn2').onclick=openSettings;
+$('saveSettings').onclick=e=>{e.preventDefault();state.settings.apiUrl=$('apiUrlInput').value.trim()||DEFAULT_API;state.settings.token=$('tokenInput').value.trim();save();$('settingsDlg').close();renderSystem();refreshAll()};
+function renderSystem(){$('backendState').textContent=(state.settings.apiUrl||DEFAULT_API).replace(/^https?:\/\//,'');$('tokenState').textContent=state.settings.token?'Configurado':'Não configurado';$('tokenState').className=state.settings.token?'ok':'bad'}
+
+$('rainThreshold').value=state.weatherRules.rainThreshold;
+$('rainHoldHours').value=state.weatherRules.rainHoldHours;
+$('weatherRefreshMinutes').value=state.weatherRules.refreshMinutes;
+$('blockWhileRaining').checked=state.weatherRules.blockWhileRaining!==false;
+
+renderControllers();renderStatus();renderWeather();renderSystem();
+if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncStatus(false);}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
 </script>
 </body>
 </html>

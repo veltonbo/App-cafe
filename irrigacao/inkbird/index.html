@@ -1239,7 +1239,7 @@ $('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/inkbird/sw.js').catch(()=>null);
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
-setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncStatus(false);}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
 setInterval(()=>{
   if(document.visibilityState!=='visible')return;

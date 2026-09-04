@@ -363,7 +363,9 @@ function renderStatus(){
   const durationMapped=nativeReady?8:Number(s?.mapping?.duration_mapped_count||0);
   $('mappingState').textContent=nativeReady?'Perfil nativo IIC-800':effectiveReady?('8/8 pronto • duração '+durationMapped+'/8'):(mapped+'/8 identificado');
   $('durationMapTag').textContent=nativeReady?'Duração: DP45 nativo':'Duração: '+durationMapped+'/8';
-  $('modeTag').textContent='Modo: '+(s?.mapping?.operation_mode||'—');
+  const operationMode=s?.mapping?.operation_mode||'—';
+  const activeMask=Number(s?.mapping?.active_mask||0);
+  $('modeTag').textContent='Modo: '+(operationMode==='Manual'&&activeMask===0?'Manual • parado':operationMode);
   $('resumeAutoBtn').disabled=!nativeReady||s?.mapping?.operation_mode==='Auto';
   $('manualMapBtn').style.display=nativeReady?'none':'';
   $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda: DP38 detectável':'Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
@@ -464,6 +466,40 @@ function clearManualMapping(){
   state.manualControlMap[c.id]={};save();$('mappingDlg').close();renderStatus();toast('Mapeamento manual limpo');
 }
 
+
+function applyCommandRuntimeState(result){
+  const ctrl=selectedController(),s=currentStatus();
+  if(!ctrl||!s||!result?.state)return;
+
+  const runtime=result.state;
+  const mask=Number.isFinite(Number(runtime.zonerun_state))?Number(runtime.zonerun_state):Number(s?.mapping?.active_mask||0);
+
+  if(!s.mapping)s.mapping={};
+  s.mapping.active_mask=mask;
+  if(runtime.operation_mode!==undefined&&runtime.operation_mode!==null)s.mapping.operation_mode=runtime.operation_mode;
+  if(runtime.irrigation_mode!==undefined&&runtime.irrigation_mode!==null)s.mapping.irrigation_mode=runtime.irrigation_mode;
+
+  if(!s.status)s.status={};
+  s.status.zonerun_state=mask;
+  if(runtime.operation_mode!==undefined&&runtime.operation_mode!==null)s.status.operation_mode=runtime.operation_mode;
+  if(runtime.irrigation_mode!==undefined&&runtime.irrigation_mode!==null)s.status.irrigation_mode=runtime.irrigation_mode;
+
+  if(Array.isArray(s.mapping.controls)){
+    s.mapping.controls=s.mapping.controls.map(control=>({
+      ...control,
+      current:Boolean(mask&(1<<(Number(control.zone)-1)))
+    }));
+  }
+
+  state.statusByController[ctrl.id]=s;
+  save();
+  renderStatus();
+}
+
+function refreshStatusBurst(){
+  [900,2200,5000].forEach(ms=>setTimeout(()=>syncStatus(false),ms));
+}
+
 async function startSector(zone){
   const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone);
   if(!c||!control)return toast('Setor ainda não disponível');
@@ -480,9 +516,10 @@ async function startSector(zone){
     const warning=active?'\n\nJá existe irrigação manual ativa neste controlador. O novo comando pode substituir/reiniciar o ciclo manual atual.':'';
     if(!confirm('IRRIGAR o Setor '+pad(sector)+' por '+minutes+' min?'+warning))return;
     try{
-      await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
+      const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
+      applyCommandRuntimeState(result);
       toast('Confirmado: Setor '+pad(sector)+' irrigando por '+minutes+' min');
-      setTimeout(()=>syncStatus(false),300);
+      refreshStatusBurst();
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -512,9 +549,10 @@ async function sendZone(zone,on){
     if(on)return startSector(zone);
     if(!confirm('PARAR a irrigação manual do Controlador '+controllerIndex(c)+'?\n\nNo IIC-800, o comando OFF encerra qualquer setor manual ativo nesse controlador.'))return;
     try{
-      await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'stop',zone})});
+      const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'stop',zone})});
+      applyCommandRuntimeState(result);
       toast('Irrigação manual parada');
-      setTimeout(()=>syncStatus(false),1200);
+      refreshStatusBurst();
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -531,9 +569,10 @@ async function resumeAutomaticMode(){
   if(!c||!s?.mapping?.native_dp45)return;
   if(!confirm('Voltar o Controlador '+controllerIndex(c)+' para o modo AUTOMÁTICO?'))return;
   try{
-    await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'auto'})});
+    const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'auto'})});
+    applyCommandRuntimeState(result);
     toast('Controlador voltou ao modo automático');
-    setTimeout(()=>syncStatus(false),1000);
+    refreshStatusBurst();
   }catch(e){toast('Falha: '+e.message)}
 }
 

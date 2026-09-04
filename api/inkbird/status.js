@@ -1,7 +1,7 @@
 import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
 import { decodeDp38, decodeDp45, decodeDp104 } from './_iic800.js';
-import { storeGet } from '../irrigation/_store.js';
+import { appendHistory, storeGet, storeSet } from '../irrigation/_store.js';
 
 function settleValue(result, fallback = null) {
   return result.status === 'fulfilled' ? result.value : fallback;
@@ -360,6 +360,34 @@ export default async function handler(req, res) {
     history: decodeDp104(dp104Raw),
     active_session: await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(() => null)
   };
+
+  if (runtime.history?.zone >= 1 && runtime.history?.zone <= 8 && runtime.history?.total_time_minutes > 0) {
+    const signature = [
+      runtime.history.total_time_minutes,
+      runtime.history.zone,
+      runtime.history.manual ? 1 : 0,
+      runtime.history.valve_state
+    ].join(':');
+    const lastNative = await storeGet(`IrrigacaoFazenda2E/lastNativeHistory/${deviceId}`).catch(() => null);
+    if (lastNative?.signature !== signature) {
+      await storeSet(`IrrigacaoFazenda2E/lastNativeHistory/${deviceId}`, {
+        signature,
+        at:Date.now()
+      }).catch(() => null);
+      await appendHistory({
+        type:'native_report',
+        controller_id:deviceId,
+        controller_index:controllerIndex,
+        zone:runtime.history.zone,
+        sector:sectorStart + runtime.history.zone - 1,
+        duration_minutes:runtime.history.total_time_minutes,
+        mode:runtime.history.manual ? 'Manual' : 'Auto',
+        source:'device',
+        status:String(runtime.history.valve_state),
+        detail:runtime.history.manual ? 'Registro manual do controlador' : 'Registro automático do controlador'
+      }).catch(() => null);
+    }
+  }
 
   return res.status(200).json({
     ok: true,

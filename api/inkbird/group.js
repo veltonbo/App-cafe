@@ -82,6 +82,10 @@ export default async function handler(req,res) {
 
     const index = Math.max(0,(resolved.devices || []).findIndex(d => d.id === deviceId));
     const controllerIndex = index + 1;
+    const controllerEntry = (resolved.devices || [])[index] || null;
+    if (controllerEntry?.online === false) {
+      return res.status(409).json({ ok:false,error:'Controlador offline. O grupo não foi iniciado.' });
+    }
 
     const before = await readState(deviceId);
     if (before.active_mask || before.pending_mask) {

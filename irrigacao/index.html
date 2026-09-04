@@ -33,9 +33,9 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
   <div class="heroTop">
     <div>
       <div class="ey" style="color:#bcefe0">EKAZA • VIVEIRO</div>
-      <h2 id="heroTitle">Ciclo pausado</h2>
-      <p id="heroSub">Pronto para iniciar 1 min ligado / 2 min desligado.</p>
-      <span id="phase" class="phase off">PAUSADO</span>
+      <h2 id="heroTitle">Ciclo nativo do EKAZA</h2>
+      <p id="heroSub">O próprio EKAZA já executa 1 min ligado / 2 min desligado.</p>
+      <span id="phase" class="phase off">AGUARDANDO ESTADO</span>
     </div>
     <div id="timer" class="timer">--:--</div>
   </div>
@@ -50,8 +50,8 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <section class="box">
   <div class="head"><h2>Controle do viveiro</h2></div>
   <div class="row">
-    <button id="startCycle" class="btn primary">▶ Iniciar ciclo</button>
-    <button id="pauseCycle" class="btn danger">■ Pausar</button>
+    <button id="startCycle" class="btn primary">▶ Retomar ciclo</button>
+    <button id="pauseCycle" class="btn danger">■ Pausar ciclo</button>
   </div>
   <div class="row" style="margin-top:9px">
     <button id="manualOn" class="btn soft">Ligar manualmente</button>
@@ -60,12 +60,12 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 </section>
 
 <section class="box">
-  <div class="head"><h2>Como o ciclo funciona</h2></div>
+  <div class="head"><h2>Ciclo já configurado no EKAZA</h2></div>
   <div class="timeline">
-    <div id="onStep" class="step onStep"><b>💧 1 minuto ligado</b><small>EKAZA energiza o sistema do viveiro.</small></div>
-    <div id="offStep" class="step offStep"><b>⏸ 2 minutos desligado</b><small>Espera antes de iniciar novamente.</small></div>
+    <div id="onStep" class="step onStep"><b>💧 1 minuto ligado</b><small>Executado pelo próprio EKAZA.</small></div>
+    <div id="offStep" class="step offStep"><b>⏸ 2 minutos desligado</b><small>Depois ele volta a ligar automaticamente.</small></div>
   </div>
-  <p class="note">O ciclo se repete continuamente até você tocar em <b>Pausar</b>. No modo real, essa repetição deve ser executada no servidor/Tuya, não depender do navegador ficar aberto.</p>
+  <p class="note"><b>O app não vai recriar esse ciclo.</b> Ele apenas lerá e comandará o EKAZA. Assim, a programação que já está salva no dispositivo continua funcionando mesmo com o app fechado.</p>
 </section>
 
 <section class="box">
@@ -92,7 +92,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
   <label>URL do servidor
     <input id="apiUrl" type="url" placeholder="https://seu-servidor.exemplo.com">
   </label>
-  <p class="note">Endpoints esperados: <b>/viveiro/status</b>, <b>/viveiro/ciclo/iniciar</b>, <b>/viveiro/ciclo/pausar</b>, <b>/viveiro/ligar</b> e <b>/viveiro/desligar</b>.</p>
+  <p class="note">Endpoints esperados: <b>/viveiro/status</b>, <b>/viveiro/ciclo/retomar</b>, <b>/viveiro/ciclo/pausar</b>, <b>/viveiro/ligar</b> e <b>/viveiro/desligar</b>.</p>
   <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div>
 </form>
 </dialog>
@@ -135,7 +135,7 @@ async function startCycle(){
     data.cycle.running=true;
     if(data.settings.mode==='simulator') setPhase('on');
     else {log('cycle','Ciclo iniciado');save();await syncStatus();}
-    toast('Ciclo iniciado: 1 min ligado / 2 min desligado');
+    toast('Ciclo retomado no EKAZA');
   }catch(e){toast('Falha: '+e.message)}
 }
 async function pauseCycle(){

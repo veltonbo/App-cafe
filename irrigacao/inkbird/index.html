@@ -368,6 +368,212 @@ function getPrefs(c){
 }
 function currentStatus(){const c=selectedController();return c?state.statusByController[c.id]||null:null}
 
+function currentSchedule(){
+  const c=selectedController();
+  return c?(state.scheduleByController[c.id]||[]):[];
+}
+function scheduleChannel(zone){
+  return currentSchedule().find(ch=>Number(ch.zone)===Number(zone))||null;
+}
+function activeSession(){
+  const c=selectedController();
+  if(!c)return null;
+  return state.activeSessions[c.id]||currentStatus()?.runtime?.active_session||null;
+}
+function clockText(ms){
+  if(!Number.isFinite(Number(ms)))return '—';
+  const d=new Date(Number(ms));
+  return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function durationText(ms){
+  const total=Math.max(0,Math.ceil(Number(ms||0)/1000));
+  const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+  if(h>0)return h+'h '+String(m).padStart(2,'0')+'min';
+  if(m>0)return m+'min '+String(s).padStart(2,'0')+'s';
+  return s+'s';
+}
+function daysText(mask){
+  const names=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const selected=names.filter((_,i)=>Number(mask||0)&(1<<i));
+  return selected.length===7?'Todos os dias':selected.join(', ');
+}
+function channelLabel(ch){
+  if(!ch||!ch.enabled)return 'Sem programação';
+  const times=(ch.start_times||[]).map(x=>x.value||x).filter(Boolean);
+  if(!times.length)return 'Sem horário';
+  if(Number(ch.cycle_mode)===0)return times.join(', ')+' • '+daysText(ch.days_mask);
+  if(Number(ch.cycle_mode)===1)return times.join(', ')+' • dias ímpares';
+  if(Number(ch.cycle_mode)===2)return times.join(', ')+' • dias pares';
+  return times.join(', ')+' • a cada '+Number(ch.days_mask||1)+' dia(s)';
+}
+function nextChannelDate(ch,now=new Date()){
+  if(!ch?.enabled||!(ch.start_times||[]).length)return null;
+  const mode=Number(ch.cycle_mode||0);
+  const times=(ch.start_times||[]).map(x=>{
+    const text=x.value||x;
+    const [h,m]=String(text).split(':').map(Number);
+    return {h,m};
+  }).filter(x=>Number.isFinite(x.h)&&Number.isFinite(x.m)).sort((a,b)=>a.h*60+a.m-(b.h*60+b.m));
+  for(let addDay=0;addDay<40;addDay++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+addDay);
+    let allowed=true;
+    if(mode===0)allowed=Boolean(Number(ch.days_mask||0)&(1<<d.getDay()));
+    else if(mode===1)allowed=d.getDate()%2===1;
+    else if(mode===2)allowed=d.getDate()%2===0;
+    else if(mode===3){
+      const base=ch.interval_start||{};
+      const year=2000+Number(base.year_offset||0);
+      const month=Number(base.month||0);
+      const day=Number(base.day||0);
+      if(month&&day){
+        const start=new Date(year,month-1,day);
+        const diff=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate())-start)/86400000);
+        allowed=diff>=0&&diff%Math.max(1,Number(ch.days_mask||1))===0;
+      }
+    }
+    if(!allowed)continue;
+    for(const t of times){
+      const candidate=new Date(d.getFullYear(),d.getMonth(),d.getDate(),t.h,t.m,0,0);
+      if(candidate>now)return candidate;
+    }
+  }
+  return null;
+}
+function nextScheduled(){
+  let best=null;
+  for(const ch of currentSchedule()){
+    const date=nextChannelDate(ch);
+    if(date&&(!best||date<best.date))best={ch,date};
+  }
+  return best;
+}
+function historyTitle(h){
+  const sector=Number(h?.sector||0)?'Setor '+pad(h.sector):'';
+  if(h?.type==='start')return sector+' iniciado';
+  if(h?.type==='stop')return sector?sector+' parado':'Irrigação parada';
+  if(h?.type==='group_start')return h.detail||'Grupo iniciado';
+  if(h?.type==='schedule')return 'Programação do Setor '+pad((Number(h.controller_index||1)-1)*8+Number(h.zone||0));
+  if(h?.type==='blocked'||h?.type==='group_blocked')return 'Irrigação bloqueada pelo clima';
+  if(h?.type==='native_report')return sector+' • registro do controlador';
+  return h?.detail||'Atividade da irrigação';
+}
+function renderHistory(){
+  const el=$('historyList');if(!el)return;
+  if(!state.history.length){el.innerHTML='<div class="note">Ainda não há atividades registradas.</div>';return;}
+  el.innerHTML=state.history.slice(0,12).map(h=>{
+    const type=String(h.type||'');
+    const icon=/stop/.test(type)?'■':/blocked/.test(type)?'!':/schedule/.test(type)?'◷':'▶';
+    const when=h.at?new Date(h.at):new Date(Number(h.ts||Date.now()));
+    const detail=h.duration_minutes?Number(h.duration_minutes)+' min':(h.mode||h.status||'');
+    return '<div class="historyItem"><div class="historyIcon">'+icon+'</div><div><b>'+escapeHtml(historyTitle(h))+'</b><small>'+escapeHtml(detail)+'</small></div><div class="historyTime">'+when.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+when.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</div></div>';
+  }).join('');
+}
+function renderToday(){
+  if(!$('todayActive'))return;
+  const c=selectedController(),s=currentStatus();
+  const mask=Number(s?.mapping?.active_mask||0);
+  const activeZone=[1,2,3,4,5,6,7,8].find(z=>mask&(1<<(z-1)));
+  const session=activeSession();
+  if(activeZone&&c){
+    const sector=sectorStart(c)+activeZone-1;
+    $('todayActive').textContent='Setor '+pad(sector)+' irrigando';
+    $('todayActiveSub').textContent=session?.expected_end_at?'Término estimado '+clockText(session.expected_end_at):'Controlador em modo manual';
+  }else{
+    $('todayActive').textContent='Nenhum setor irrigando';
+    $('todayActiveSub').textContent=s?.device?.online===false?'Controlador offline':'Sistema em espera';
+  }
+  const next=nextScheduled();
+  if(next){
+    const sector=c?sectorStart(c)+Number(next.ch.zone)-1:Number(next.ch.zone);
+    $('todayNext').textContent='Setor '+pad(sector)+' • '+next.date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    $('todayNextSub').textContent=next.date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+  }else{
+    $('todayNext').textContent='Nenhuma programada';
+    $('todayNextSub').textContent='Configure um setor na aba Setores';
+  }
+  const wd=weatherDecision();
+  $('todayWeather').textContent=state.weather?.linked?(wd.blocked?'Bloqueado':'Liberado'):'Sem dados';
+  $('todayWeather').className=state.weather?.linked?(wd.blocked?'bad':'ok'):'';
+  $('todayWeatherSub').textContent=wd.reason||'Weather2-2';
+  const last=state.history[0];
+  $('todayLast').textContent=last?historyTitle(last):'—';
+  $('todayLastSub').textContent=last?.at?new Date(last.at).toLocaleString('pt-BR'):'Sem histórico';
+}
+async function loadHistory(showToast=false){
+  try{
+    const r=await api('/api/irrigation/history?limit=100');
+    state.history=Array.isArray(r.history)?r.history:[];
+    save();renderHistory();renderToday();
+    if(showToast)toast('Histórico atualizado');
+  }catch(e){if(showToast)toast('Falha ao carregar histórico')}
+}
+async function syncSchedule(showToast=false){
+  const c=selectedController();if(!c)return[];
+  try{
+    const r=await api('/api/inkbird/schedule?device_id='+encodeURIComponent(c.id));
+    state.scheduleByController[c.id]=Array.isArray(r.channels)?r.channels:[];
+    save();renderZones();renderToday();
+    if(showToast)toast('Programação atualizada');
+    return state.scheduleByController[c.id];
+  }catch(e){
+    if(showToast)toast('Agenda: '+e.message);
+    return [];
+  }
+}
+async function loadServerConfig(){
+  try{
+    const r=await api('/api/irrigation/config');
+    state.serverConfig=r.config||{};
+    if(r.config?.weather){
+      state.weatherRules={
+        ...state.weatherRules,
+        rainThreshold:Number(r.config.weather.rainThreshold??state.weatherRules.rainThreshold),
+        rainHoldHours:Number(r.config.weather.rainHoldHours??state.weatherRules.rainHoldHours),
+        blockWhileRaining:r.config.weather.blockWhileRaining!==false,
+        serverGuard:r.config.weather.enabled!==false
+      };
+    }
+    if(r.config?.profiles)state.profiles=r.config.profiles;
+    if(r.config?.groups)state.groups=r.config.groups;
+    save();renderProfiles();
+  }catch{}
+}
+async function persistUserAutomation(){
+  try{
+    await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({
+      weather:{
+        enabled:state.weatherRules.serverGuard!==false,
+        rainThreshold:Number(state.weatherRules.rainThreshold||0),
+        rainHoldHours:Number(state.weatherRules.rainHoldHours||0),
+        blockWhileRaining:state.weatherRules.blockWhileRaining!==false,
+        backgroundProtection:Boolean(state.serverConfig?.weather?.backgroundProtection)
+      },
+      profiles:state.profiles,
+      groups:state.groups
+    })});
+  }catch(e){toast('Salvo no aparelho; servidor: '+e.message)}
+}
+function renderProfiles(){
+  const el=$('profileSelect');if(!el)return;
+  const names=Object.keys(state.profiles||{});
+  el.innerHTML='<option value="">Perfil de irrigação...</option>'+names.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');
+}
+function saveCurrentProfile(){
+  const c=selectedController();if(!c)return;
+  const name=prompt('Nome do perfil de irrigação');if(!name?.trim())return;
+  state.profiles[name.trim()]={durations:getPrefs(c).map(p=>Number(p.duration||10)),updated_at:Date.now()};
+  save();renderProfiles();persistUserAutomation();toast('Perfil salvo');
+}
+function applySelectedProfile(){
+  const c=selectedController();if(!c)return;
+  const name=$('profileSelect')?.value;
+  const profile=state.profiles?.[name];
+  if(!profile?.durations)return toast('Selecione um perfil');
+  const prefs=getPrefs(c);
+  prefs.forEach((p,i)=>p.duration=Math.max(1,Math.min(1440,Number(profile.durations[i]||p.duration||10))));
+  state.zonePrefs[c.id]=prefs;save();renderZones();toast('Perfil '+name+' aplicado');
+}
+
 async function api(path,opt={}){
   if(!state.settings.token)throw new Error('Configure o token de controle em Sistema > Configurar conexão.');
   const ctl=new AbortController();

@@ -7,7 +7,7 @@ function encodeStartPayload(zone, durationMinutes) {
   payload[1] = 0x01;
   const offset = 2 + (zone - 1) * 2;
   payload.writeUInt16BE(durationMinutes, offset);
-  return payload.toString('hex');
+  return payload.toString('base64');
 }
 
 function normalizeFunctions(result) {
@@ -24,8 +24,42 @@ function normalizeStatus(result) {
   return [];
 }
 
+function statusMapFrom(result) {
+  return Object.fromEntries(normalizeStatus(result).map(item => [item.code, item.value]));
+}
+
 function fulfilled(result, fallback = null) {
   return result.status === 'fulfilled' ? result.value : fallback;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function readRuntimeState(deviceId) {
+  const status = await tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/status`);
+  const map = statusMapFrom(status);
+  return {
+    operation_mode: map.operation_mode ?? null,
+    zonerun_state: Number.isFinite(Number(map.zonerun_state)) ? Number(map.zonerun_state) : 0,
+    irrigation_mode: map.irrigation_mode ?? null
+  };
+}
+
+async function waitForZoneState(deviceId, zone, expectedOn, attempts = 5) {
+  const bit = 1 << (zone - 1);
+  let last = null;
+
+  for (let i = 0; i < attempts; i++) {
+    if (i) await sleep(700);
+    try {
+      last = await readRuntimeState(deviceId);
+      const isOn = Boolean(last.zonerun_state & bit);
+      if (isOn === expectedOn) return { confirmed:true, state:last };
+    } catch {}
+  }
+
+  return { confirmed:false, state:last };
 }
 
 export default async function handler(req, res) {
@@ -93,10 +127,14 @@ export default async function handler(req, res) {
       await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
         commands: [{ code:'operation_mode', value:'Auto' }]
       });
+      await sleep(500);
+      const state = await readRuntimeState(deviceId).catch(() => null);
       return res.status(200).json({
         ok:true,
         device_id:deviceId,
-        action:'auto'
+        action:'auto',
+        verified:state?.operation_mode === 'Auto',
+        state
       });
     }
 
@@ -104,11 +142,16 @@ export default async function handler(req, res) {
       await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
         commands: [{ code:'operation_mode', value:'OFF' }]
       });
+
+      const verification = await waitForZoneState(deviceId, zone, false, 4);
+
       return res.status(200).json({
         ok:true,
         device_id:deviceId,
         action:'stop',
         zone,
+        verified:verification.confirmed,
+        state:verification.state,
         note:'No IIC-800, OFF encerra a irrigação manual ativa no controlador.'
       });
     }
@@ -120,21 +163,50 @@ export default async function handler(req, res) {
       });
     }
 
-    const rawHex = encodeStartPayload(zone, duration);
+    const rawBase64 = encodeStartPayload(zone, duration);
+
+    // RAW DPs na Tuya Cloud usam Base64.
+    // Primeiro carregamos a duração do setor e depois colocamos o controlador em Manual.
+    await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+      commands: [{ code:'irrigation_time_all', value:rawBase64 }]
+    });
+
+    await sleep(350);
 
     await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-      commands: [
-        { code:'irrigation_time_all', value:rawHex },
-        { code:'operation_mode', value:'Manual' }
-      ]
+      commands: [{ code:'operation_mode', value:'Manual' }]
     });
+
+    const verification = await waitForZoneState(deviceId, zone, true, 6);
+
+    if (!verification.confirmed) {
+      // Não deixar o controlador preso em Manual se o pacote RAW não iniciou nenhuma zona.
+      if (verification.state?.operation_mode === 'Manual' && verification.state?.zonerun_state === 0) {
+        await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+          commands: [{ code:'operation_mode', value:'Auto' }]
+        }).catch(() => null);
+      }
+
+      return res.status(409).json({
+        ok:false,
+        error:'A Tuya recebeu o comando, mas o IIC-800 não confirmou a abertura do setor.',
+        device_id:deviceId,
+        action:'start',
+        zone,
+        duration_minutes:duration,
+        state:verification.state,
+        profile:'IIC-800-DP45'
+      });
+    }
 
     return res.status(200).json({
       ok:true,
+      verified:true,
       device_id:deviceId,
       action:'start',
       zone,
       duration_minutes:duration,
+      state:verification.state,
       profile:'IIC-800-DP45'
     });
   } catch (error) {

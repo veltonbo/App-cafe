@@ -1,11 +1,11 @@
-import { applyCors, authorize, ensureConfig, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'Método não permitido.' });
-  if (!authorize(req, res) || !ensureConfig(res)) return;
+  if (!authorize(req, res) || !ensureCloudConfig(res)) return;
 
   const code = String(req.body?.code || '').trim();
   if (!code || !Object.prototype.hasOwnProperty.call(req.body || {}, 'value')) {

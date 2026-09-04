@@ -1,4 +1,4 @@
-import { applyCors, authorize, ensureConfig, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
 
 function settleValue(result, fallback = null) {
@@ -8,6 +8,102 @@ function settleValue(result, fallback = null) {
 function settleError(result) {
   if (result.status === 'rejected') return result.reason?.message || String(result.reason);
   return null;
+}
+
+
+function parseValues(values) {
+  if (!values) return {};
+  if (typeof values === 'object') return values;
+  try { return JSON.parse(values); } catch { return {}; }
+}
+
+function zoneNumberFrom(text) {
+  const s = String(text || '').toLowerCase();
+  const patterns = [
+    /(?:zone|zona|station|valve|switch|channel|way|road|outlet|port)[_\s-]*([1-8])\b/,
+    /\b([1-8])[_\s-]*(?:zone|zona|station|valve|switch|channel|way|road|outlet|port)\b/
+  ];
+  for (const p of patterns) {
+    const m = s.match(p);
+    if (m) return Number(m[1]);
+  }
+  return null;
+}
+
+function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
+  const combinedStatus = [...statusSpec];
+  const candidates = [];
+
+  for (const fn of functions) {
+    const zone = zoneNumberFrom(fn.code) || zoneNumberFrom(fn.name) || zoneNumberFrom(fn.desc);
+    if (!zone) continue;
+
+    const type = String(fn.type || '').toLowerCase();
+    const values = parseValues(fn.values);
+    const safeType = ['boolean', 'bool', 'integer', 'value', 'enum'].some(t => type.includes(t));
+    if (!safeType) continue;
+
+    candidates.push({
+      zone,
+      code: fn.code,
+      name: fn.name || fn.code,
+      type: fn.type || null,
+      values,
+      current: Object.prototype.hasOwnProperty.call(statusMap, fn.code)
+        ? statusMap[fn.code]
+        : Object.prototype.hasOwnProperty.call(shadowMap, fn.code)
+          ? shadowMap[fn.code]
+          : null
+    });
+  }
+
+  for (const st of combinedStatus) {
+    const zone = zoneNumberFrom(st.code) || zoneNumberFrom(st.name);
+    if (!zone) continue;
+    if (candidates.some(x => x.zone === zone && x.code === st.code)) continue;
+    candidates.push({
+      zone,
+      code: st.code,
+      name: st.name || st.code,
+      type: st.type || null,
+      values: parseValues(st.values),
+      current: Object.prototype.hasOwnProperty.call(statusMap, st.code)
+        ? statusMap[st.code]
+        : Object.prototype.hasOwnProperty.call(shadowMap, st.code)
+          ? shadowMap[st.code]
+          : null,
+      status_only: true
+    });
+  }
+
+  candidates.sort((a, b) => a.zone - b.zone || a.code.localeCompare(b.code));
+  const zonesFound = [...new Set(candidates.filter(x => !x.status_only).map(x => x.zone))];
+
+  const controls = [];
+  for (let zone = 1; zone <= 8; zone++) {
+    const booleanControls = candidates.filter(x =>
+      !x.status_only &&
+      x.zone === zone &&
+      /boolean|bool/i.test(String(x.type || ''))
+    );
+    if (booleanControls.length === 1) {
+      controls.push({
+        zone,
+        code: booleanControls[0].code,
+        name: booleanControls[0].name,
+        current: booleanControls[0].current
+      });
+    }
+  }
+
+  return {
+    candidates,
+    controls,
+    zones_found: zonesFound,
+    mapped_count: zonesFound.length,
+    ready: zonesFound.length === 8,
+    control_ready: controls.length === 8
+  };
 }
 
 function classifyAccess(errors, linked) {
@@ -48,7 +144,7 @@ export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ ok:false, error:'Método não permitido.' });
-  if (!authorize(req, res) || !ensureConfig(res)) return;
+  if (!authorize(req, res) || !ensureCloudConfig(res)) return;
 
   let resolved;
   try {
@@ -124,6 +220,9 @@ export default async function handler(req, res) {
   );
 
   const access = classifyAccess(errors, linked);
+  const mapping = buildZoneCandidates(functions, statusSpec, statusMap, shadowMap);
+  const controllerIndex = Math.max(1, resolved.devices.findIndex(d => d.id === deviceId) + 1);
+  const sectorStart = (controllerIndex - 1) * 8 + 1;
 
   return res.status(200).json({
     ok: true,
@@ -131,7 +230,11 @@ export default async function handler(req, res) {
     linked,
     model: 'IIC-800-WIFI',
     zones: 8,
+    controller_index: controllerIndex,
+    sector_start: sectorStart,
+    sector_end: sectorStart + 7,
     access,
+    mapping,
     discovery_source: resolved.source,
     device: {
       id: deviceId,

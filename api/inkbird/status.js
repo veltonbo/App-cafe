@@ -10,6 +10,83 @@ function settleError(result) {
   return null;
 }
 
+
+function parseValues(values) {
+  if (!values) return {};
+  if (typeof values === 'object') return values;
+  try { return JSON.parse(values); } catch { return {}; }
+}
+
+function zoneNumberFrom(text) {
+  const s = String(text || '').toLowerCase();
+  const patterns = [
+    /(?:zone|zona|station|valve|switch|channel|way|road|outlet|port)[_\s-]*([1-8])\b/,
+    /\b([1-8])[_\s-]*(?:zone|zona|station|valve|switch|channel|way|road|outlet|port)\b/
+  ];
+  for (const p of patterns) {
+    const m = s.match(p);
+    if (m) return Number(m[1]);
+  }
+  return null;
+}
+
+function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
+  const combinedStatus = [...statusSpec];
+  const candidates = [];
+
+  for (const fn of functions) {
+    const zone = zoneNumberFrom(fn.code) || zoneNumberFrom(fn.name) || zoneNumberFrom(fn.desc);
+    if (!zone) continue;
+
+    const type = String(fn.type || '').toLowerCase();
+    const values = parseValues(fn.values);
+    const safeType = ['boolean', 'bool', 'integer', 'value', 'enum'].some(t => type.includes(t));
+    if (!safeType) continue;
+
+    candidates.push({
+      zone,
+      code: fn.code,
+      name: fn.name || fn.code,
+      type: fn.type || null,
+      values,
+      current: Object.prototype.hasOwnProperty.call(statusMap, fn.code)
+        ? statusMap[fn.code]
+        : Object.prototype.hasOwnProperty.call(shadowMap, fn.code)
+          ? shadowMap[fn.code]
+          : null
+    });
+  }
+
+  for (const st of combinedStatus) {
+    const zone = zoneNumberFrom(st.code) || zoneNumberFrom(st.name);
+    if (!zone) continue;
+    if (candidates.some(x => x.zone === zone && x.code === st.code)) continue;
+    candidates.push({
+      zone,
+      code: st.code,
+      name: st.name || st.code,
+      type: st.type || null,
+      values: parseValues(st.values),
+      current: Object.prototype.hasOwnProperty.call(statusMap, st.code)
+        ? statusMap[st.code]
+        : Object.prototype.hasOwnProperty.call(shadowMap, st.code)
+          ? shadowMap[st.code]
+          : null,
+      status_only: true
+    });
+  }
+
+  candidates.sort((a, b) => a.zone - b.zone || a.code.localeCompare(b.code));
+  const zonesFound = [...new Set(candidates.filter(x => !x.status_only).map(x => x.zone))];
+
+  return {
+    candidates,
+    zones_found: zonesFound,
+    mapped_count: zonesFound.length,
+    ready: zonesFound.length === 8
+  };
+}
+
 function classifyAccess(errors, linked) {
   if (linked) {
     return {
@@ -124,6 +201,9 @@ export default async function handler(req, res) {
   );
 
   const access = classifyAccess(errors, linked);
+  const mapping = buildZoneCandidates(functions, statusSpec, statusMap, shadowMap);
+  const controllerIndex = Math.max(1, resolved.devices.findIndex(d => d.id === deviceId) + 1);
+  const sectorStart = (controllerIndex - 1) * 8 + 1;
 
   return res.status(200).json({
     ok: true,
@@ -131,7 +211,11 @@ export default async function handler(req, res) {
     linked,
     model: 'IIC-800-WIFI',
     zones: 8,
+    controller_index: controllerIndex,
+    sector_start: sectorStart,
+    sector_end: sectorStart + 7,
     access,
+    mapping,
     discovery_source: resolved.source,
     device: {
       id: deviceId,

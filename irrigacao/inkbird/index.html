@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fazenda 2E">
+<link rel="manifest" href="/irrigacao/inkbird/manifest.webmanifest">
+<link rel="icon" href="/irrigacao/inkbird/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/irrigacao/inkbird/icon.svg">
 <title>Fazenda 2E • INKBIRD IIC-800</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--g2:#0d8464;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2;--w:#fff}
@@ -66,6 +72,19 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   .head{align-items:flex-start}.head h2{margin-bottom:8px}.head>div{width:100%}
 }
 @media(max-width:390px){.brand h1{font-size:.92rem}.navbtn{display:none}.quickTimes{grid-template-columns:repeat(3,1fr)}.operationStrip{grid-template-columns:1fr 1fr}.operationStrip .opCard:last-child{grid-column:1/-1}}
+
+
+.todayGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}.todayCard{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.todayCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:5px}.todayCard strong{font-size:.96rem}.todayCard em{display:block;font-style:normal;color:var(--muted);font-size:.72rem;margin-top:4px}
+.historyList{display:grid;gap:8px}.historyItem{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #edf2ef}.historyItem:last-child{border-bottom:0}.historyIcon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--greenSoft);color:var(--green);font-weight:900}.historyItem b{display:block;font-size:.84rem}.historyItem small{color:var(--muted);font-size:.72rem}.historyTime{font-size:.7rem;color:var(--muted);white-space:nowrap}
+.progressWrap{margin-top:10px}.progressInfo{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:5px}.progressTrack{height:7px;background:#e8efec;border-radius:999px;overflow:hidden}.progressBar{height:100%;background:var(--green);border-radius:999px;transition:width .8s linear}.overdue{color:var(--danger)!important;font-weight:900}
+.zoneExtraActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.zoneExtraActions .btn{margin:0!important;padding:9px!important;font-size:.76rem}
+.profileBar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:15px}.profileBar select{min-width:160px;flex:1;border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff;color:var(--ink);font-weight:750}.profileBar .btn{padding:10px 11px}
+.scheduleSummary{margin-top:8px;padding:8px 10px;border-radius:11px;background:#f7faf8;color:var(--muted);font-size:.72rem}.scheduleSummary.on{background:#edf8f4;color:var(--green);font-weight:750}
+.modalForm{padding:20px;display:grid;gap:13px;min-width:min(92vw,560px)}.modalTitle{margin:0;font-size:1.2rem}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formField{display:grid;gap:6px;font-size:.78rem;font-weight:800;color:var(--ink)}.formField input,.formField select{width:100%;border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff}.daysGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.daysGrid label{position:relative}.daysGrid input{position:absolute;opacity:0;pointer-events:none}.daysGrid span{display:block;text-align:center;padding:9px 2px;border:1px solid var(--border);border-radius:9px;font-size:.68rem;font-weight:850;color:var(--muted)}.daysGrid input:checked+span{background:var(--green);border-color:var(--green);color:#fff}
+.timeSlots{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.timeSlots input{border:1px solid var(--border);border-radius:10px;padding:9px;width:100%}
+.groupRows{display:grid;gap:7px}.groupRow{display:grid;grid-template-columns:auto 1fr 88px;gap:8px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:11px;background:#fff}.groupRow input[type=number]{width:100%;border:1px solid var(--border);border-radius:9px;padding:8px}.groupRow label{font-size:.8rem;font-weight:800}
+.installCard{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:15px;background:var(--surface2)}.installCard b{display:block}.installCard small{color:var(--muted)}
+@media(max-width:760px){.todayGrid{grid-template-columns:1fr 1fr}.historyItem{grid-template-columns:auto 1fr}.historyTime{grid-column:2}.formGrid{grid-template-columns:1fr}.daysGrid{grid-template-columns:repeat(4,1fr)}.timeSlots{grid-template-columns:1fr 1fr}.profileBar{display:grid;grid-template-columns:1fr 1fr}.profileBar select{grid-column:1/-1}.installCard{align-items:flex-start;flex-direction:column}}
 
 </style>
 </head>

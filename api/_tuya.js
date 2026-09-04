@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import { TuyaContext } from '@tuya/tuya-connector-nodejs';
 
 const baseUrl = process.env.TUYA_BASE_URL || 'https://openapi.tuyaus.com';
 const accessKey = process.env.TUYA_ACCESS_ID;
@@ -10,6 +10,7 @@ export function applyCors(req, res) {
   const origin = req.headers.origin;
   const allowed = new Set([
     'https://veltonbo.github.io',
+    'https://app-cafe.vercel.app',
     'http://localhost:5173',
     'http://127.0.0.1:5173'
   ]);
@@ -40,67 +41,25 @@ export function ensureConfig(res) {
   return true;
 }
 
-function sha256(text) {
-  return crypto.createHash('sha256').update(text || '', 'utf8').digest('hex');
-}
-
-function hmac(text) {
-  return crypto.createHmac('sha256', secretKey).update(text, 'utf8').digest('hex').toUpperCase();
-}
-
-function canonicalPath(path) {
-  const u = new URL(path, 'https://placeholder.local');
-  const entries = [...u.searchParams.entries()].sort(([a],[b]) => a.localeCompare(b));
-  const query = entries.map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-  return u.pathname + (query ? `?${query}` : '');
-}
-
-function stringToSign(method, path, bodyText) {
-  return [
-    method.toUpperCase(),
-    sha256(bodyText),
-    '',
-    canonicalPath(path)
-  ].join('\n');
-}
-
-async function signedFetch(method, path, body = null, accessToken = '') {
-  const bodyText = body == null ? '' : JSON.stringify(body);
-  const t = Date.now().toString();
-  const sts = stringToSign(method, path, bodyText);
-  const signSource = accessKey + accessToken + t + sts;
-  const headers = {
-    client_id: accessKey,
-    sign: hmac(signSource),
-    sign_method: 'HMAC-SHA256',
-    t,
-    lang: 'en'
-  };
-  if (accessToken) headers.access_token = accessToken;
-  if (body != null) headers['Content-Type'] = 'application/json';
-
-  const r = await fetch(baseUrl + canonicalPath(path), {
-    method,
-    headers,
-    body: body == null ? undefined : bodyText
+function context() {
+  return new TuyaContext({
+    baseUrl,
+    accessKey,
+    secretKey,
   });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok || data.success === false) {
-    throw new Error(data.msg || data.message || `Tuya HTTP ${r.status}`);
+}
+
+export async function tuyaRequest(method, path, body = {}) {
+  const ctx = context();
+  const response = await ctx.request({ method, path, body });
+  const data = response?.data ?? response;
+
+  if (!data || data.success === false) {
+    const code = data?.code ? ` [${data.code}]` : '';
+    const msg = data?.msg || data?.message || 'Falha na Tuya';
+    throw new Error(msg + code);
   }
-  return data;
-}
 
-async function getAccessToken() {
-  const data = await signedFetch('GET', '/v1.0/token?grant_type=1');
-  const token = data?.result?.access_token;
-  if (!token) throw new Error('A Tuya não retornou access_token.');
-  return token;
-}
-
-export async function tuyaRequest(method, path, body = null) {
-  const token = await getAccessToken();
-  const data = await signedFetch(method, path, body, token);
   return data.result;
 }
 

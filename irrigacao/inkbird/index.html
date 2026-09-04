@@ -172,14 +172,13 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </section>
 
 <section class="box">
-  <div class="head"><div><div class="ey" style="color:var(--green)">AUTOMAÇÃO</div><h2>Programação do controlador</h2></div><span id="scheduleMapTag" class="miniTag">Agenda: aguardando</span></div>
+  <div class="head"><div><div class="ey" style="color:var(--green)">AUTOMAÇÃO</div><h2>Programação automática</h2></div><span id="scheduleMapTag" class="miniTag">Verificando agenda</span></div>
+  <p class="note" style="margin-top:0">O controle manual dos setores já está ativo. A edição completa dos horários será liberada no app somente depois de validarmos o formato de agenda do seu IIC-800, sem alterar programações existentes por engano.</p>
   <div class="capGrid">
-    <div class="cap"><b>Calendário por zona</b><small>Dias pares, dias ímpares, dias personalizados ou intervalo.</small></div>
-    <div class="cap"><b>Até 6 partidas por dia</b><small>Vários horários de início para a mesma zona.</small></div>
-    <div class="cap"><b>Duração individual</b><small>Tempo de irrigação configurado separadamente para cada zona.</small></div>
-    <div class="cap"><b>Sensor de chuva</b><small>Opção para obedecer ou ignorar o sensor em cada programação.</small></div>
-    <div class="cap"><b>Multi-zona</b><small>Execução sequencial das zonas selecionadas.</small></div>
-    <div class="cap"><b>Modo manual</b><small>Acionamento temporizado de uma ou várias zonas.</small></div>
+    <div class="cap"><b>Controle manual</b><small>Pronto para irrigar cada setor pelo tempo definido.</small></div>
+    <div class="cap"><b>Proteção pelo clima</b><small>A Weather2-2 é consultada antes de iniciar uma irrigação pelo app.</small></div>
+    <div class="cap"><b>Agenda automática</b><small>Em preparação para edição segura de horários e dias.</small></div>
+    <div class="cap"><b>Vários controladores</b><small>Setores continuam automaticamente em blocos de 8.</small></div>
   </div>
 </section>
 
@@ -410,7 +409,11 @@ function renderStatus(){
     $('functionsState').textContent='—';$('accessState').textContent='Aguardando';$('accessDetail').textContent='';
     $('cloudState').textContent='Aguardando';$('mappingState').textContent='Pendente';
     $('heroBadge').textContent='AGUARDANDO LEITURA';$('heroTitle').textContent='Controlador da lavoura';
-    $('liveDot').className='dot';$('liveText').textContent='Ainda não verificado';renderZones();return;
+    $('liveDot').className='dot';$('liveText').textContent='Ainda não verificado';
+    if($('quickConnection'))$('quickConnection').textContent='Aguardando controlador';
+    if($('quickConnectionDot'))$('quickConnectionDot').className='healthDot';
+    if($('quickMode'))$('quickMode').textContent='—';
+    renderZones();return;
   }
   const linked=Boolean(s.linked),online=s?.device?.online;
   $('linkedState').textContent=linked?'Sim':'Não';$('linkedState').className=linked?'ok':'bad';
@@ -438,7 +441,7 @@ function renderStatus(){
   if($('quickConnectionDot'))$('quickConnectionDot').className='healthDot '+(linked&&online!==false?'on':'');
   $('resumeAutoBtn').disabled=!nativeReady||s?.mapping?.operation_mode==='Auto';
   $('manualMapBtn').style.display=nativeReady?'none':'';
-  $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda compatível':'Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
+  $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda detectada':'Agenda em análise';
   $('heroBadge').textContent=effectiveReady?'SISTEMA PRONTO':linked?'CONFIGURAÇÃO PENDENTE':'AGUARDANDO VÍNCULO';
   $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' online':'Controlador da lavoura';
   $('heroSub').textContent=nativeReady?'Controle remoto disponível para os 8 setores deste controlador.':effectiveReady?'Os setores estão disponíveis para controle remoto.':linked?'Controlador conectado; finalize a configuração das saídas.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
@@ -491,7 +494,10 @@ function renderWeather(){
   $('weatherTemp').textContent=metricText(m.temperature,'°C');$('weatherHum').textContent=metricText(m.humidity,'%');$('weatherWind').textContent=metricText(m.windSpeed);
   $('weatherUpdated').textContent=state.weatherAt?new Date(state.weatherAt).toLocaleString('pt-BR'):'Nunca';
   const d=weatherDecision();$('weatherGuard').className='guard '+(d.blocked?'blocked':'');$('guardTitle').textContent=d.title;$('guardReason').textContent=d.reason;
-  if($('quickWeather')){$('quickWeather').textContent=d.blocked?'Bloqueado':'Liberado';$('quickWeather').className=d.blocked?'bad':'ok';}
+  if($('quickWeather')){
+    if(!w?.linked||!w?.metrics){$('quickWeather').textContent='Sem dados';$('quickWeather').className='';}
+    else{$('quickWeather').textContent=d.blocked?'Bloqueado':'Liberado';$('quickWeather').className=d.blocked?'bad':'ok';}
+  }
   $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{}},null,2);
 }
 

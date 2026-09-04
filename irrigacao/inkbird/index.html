@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b6b52">
+<title>Fazenda 2E • INKBIRD IIC-800</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--g2:#0d8464;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2;--w:#fff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}button,input,select{font:inherit}
+.top{position:sticky;top:0;z-index:8;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
+.brand small{display:block;font-size:.7rem;font-weight:900;letter-spacing:.13em;color:var(--g)}h1{font-size:1.18rem;margin:3px 0}
+.actions{display:flex;gap:8px}.pill,.navbtn{border:1px solid var(--l);background:#fff;border-radius:999px;padding:9px 12px;font-weight:850;color:#17372e;text-decoration:none;box-shadow:0 8px 22px #17372e0c}
+.wrap{max-width:1040px;margin:auto;padding:18px 14px 110px}
+.hero{background:linear-gradient(135deg,#0a5a49,#13806a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 22px 46px #0b6b5238;border:1px solid #ffffff20}
+.heroTop{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.ey{font-size:.7rem;font-weight:900;letter-spacing:.12em;color:#bcefe0}.hero h2{margin:7px 0 4px;font-size:1.7rem}.hero p{margin:0;color:#d8f3ea;max-width:650px;line-height:1.5}
+.badge{display:inline-flex;margin-top:14px;padding:8px 11px;border-radius:999px;background:#ffffff1e;font-weight:850}.live{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px;color:#d8f3ea;font-size:.85rem}.dot{width:9px;height:9px;border-radius:50%;background:#aab7b2}.dot.on{background:#7ff0c0;box-shadow:0 0 0 4px #7ff0c025}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.stat,.box,.zone{background:#fff;border:1px solid var(--l);box-shadow:0 12px 30px #17372e12}.stat{border-radius:18px;padding:15px}.stat small{display:block;color:var(--m);margin-bottom:4px}.stat strong{font-size:1.06rem}
+.box{border-radius:24px;padding:19px;margin-top:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.note{font-size:.85rem;color:var(--m);line-height:1.5}
+.btn{border:0;border-radius:14px;padding:12px 14px;font-weight:850;cursor:pointer}.primary{background:var(--g);color:#fff}.soft{background:var(--gs);color:var(--g)}.danger{background:var(--rs);color:var(--r)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.zoneGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.zone{border-radius:18px;padding:15px}.zoneTop{display:flex;justify-content:space-between;gap:10px;align-items:center}.zoneName{font-weight:900;font-size:1.02rem}.zoneState{font-size:.78rem;color:var(--m)}.zoneMeta{display:flex;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid #edf2ef}.zoneMeta span{color:var(--m);font-size:.82rem}.zone .btn{width:100%;margin-top:10px}
+.capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}
+.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
+details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
+@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação • INKBIRD</h1></div>
+  <div class="actions"><a class="navbtn" href="/irrigacao/">Viveiro EKAZA</a><button id="refresh" class="pill">● Verificar</button></div>
+</header>
+<main class="wrap">
+<section class="hero">
+  <div class="heroTop">
+    <div>
+      <div class="ey">INKBIRD • IIC-800-WIFI • 8 ZONAS</div>
+      <h2 id="heroTitle">Controlador da lavoura</h2>
+      <p id="heroSub">Painel preparado para leitura, programação e acionamento remoto das oito zonas assim que o controlador estiver disponível no projeto Tuya da Fazenda 2E.</p>
+      <span id="heroBadge" class="badge">AGUARDANDO VÍNCULO</span>
+      <div class="live"><span id="liveDot" class="dot"></span><span id="liveText">Ainda não verificado</span><span>•</span><span id="lastCheck">Nunca atualizado</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="stat"><small>Controlador</small><strong>IIC-800-WIFI</strong></div>
+  <div class="stat"><small>Zonas</small><strong>8</strong></div>
+  <div class="stat"><small>Conexão Tuya</small><strong id="cloudState">Aguardando</strong></div>
+  <div class="stat"><small>Mapeamento</small><strong id="mappingState">Pendente</strong></div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Status da integração</h2><button id="checkDevice" class="btn primary">Ler controlador</button></div>
+  <div class="statusLine"><span>Dispositivo localizado</span><strong id="linkedState">Aguardando</strong></div>
+  <div class="statusLine"><span>Online na Tuya</span><strong id="onlineState">—</strong></div>
+  <div class="statusLine"><span>Categoria Tuya</span><strong id="categoryState">—</strong></div>
+  <div class="statusLine"><span>Funções encontradas</span><strong id="functionsState">—</strong></div>
+  <p id="integrationNote" class="note">O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.</p>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Zonas de irrigação</h2><button id="renameZones" class="btn soft">Editar nomes</button></div>
+  <div id="zones" class="zoneGrid"></div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Programação disponível no IIC-800</h2></div>
+  <div class="capGrid">
+    <div class="cap"><b>Calendário por zona</b><small>Dias pares, dias ímpares, dias personalizados ou intervalo.</small></div>
+    <div class="cap"><b>Até 6 partidas por dia</b><small>Vários horários de início para a mesma zona.</small></div>
+    <div class="cap"><b>Duração individual</b><small>Tempo de irrigação configurado separadamente para cada zona.</small></div>
+    <div class="cap"><b>Sensor de chuva</b><small>Opção para obedecer ou ignorar o sensor em cada programação.</small></div>
+    <div class="cap"><b>Multi-zona</b><small>Execução sequencial das zonas selecionadas.</small></div>
+    <div class="cap"><b>Modo manual</b><small>Acionamento temporizado de uma ou várias zonas.</small></div>
+  </div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Diagnóstico técnico</h2></div>
+  <p class="note">Quando o controlador for encontrado, esta área mostrará os códigos reais de funções e estados. A partir deles o app libera somente os comandos compatíveis com o seu aparelho.</p>
+  <details><summary>Funções Tuya detectadas</summary><pre id="functionsRaw">Nenhuma leitura realizada.</pre></details>
+  <details><summary>Status atual</summary><pre id="statusRaw">Nenhuma leitura realizada.</pre></details>
+  <details><summary>Shadow Properties</summary><pre id="shadowRaw">Nenhuma leitura realizada.</pre></details>
+  <details><summary>Erros de integração</summary><pre id="errorsRaw">Nenhum erro registrado.</pre></details>
+</section>
+
+<div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const API='https://app-cafe.vercel.app';
+const SETTINGS_KEY='viveiroEkazaRealV1';
+const INK_KEY='fazenda2eInkbirdV1';
+const defaultZones=Array.from({length:8},(_,i)=>({name:'Zona '+(i+1),duration:10}));
+let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null};
+if(!Array.isArray(local.zones)||local.zones.length!==8)local.zones=defaultZones;
+const shared=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null')||{};
+const token=shared?.settings?.token||'';
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(INK_KEY,JSON.stringify(local))}
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
+function renderZones(){
+  $('zones').innerHTML=local.zones.map((z,i)=>`
+    <div class="zone">
+      <div class="zoneTop"><div><div class="zoneName">${z.name}</div><div class="zoneState">Zona ${i+1} • aguardando mapeamento</div></div><strong>—</strong></div>
+      <div class="zoneMeta"><span>Duração padrão</span><b>${z.duration} min</b></div>
+      <button class="btn soft" disabled>Acionamento será liberado após mapear o controlador</button>
+    </div>`).join('');
+}
+async function api(path){
+  if(!token)throw new Error('Abra primeiro o painel do Viveiro e configure o token de controle.');
+  const r=await fetch(API+path,{headers:{Authorization:'Bearer '+token}});
+  const body=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(body.error||('HTTP '+r.status));
+  return body;
+}
+async function check(){
+  $('refresh').textContent='● Verificando';
+  $('checkDevice').disabled=true;
+  try{
+    const s=await api('/api/inkbird/status');
+    local.last={at:Date.now(),data:s};save();renderStatus(s);
+    toast(s.linked?'INKBIRD encontrado':'Controlador ainda não disponível na Tuya');
+  }catch(e){
+    renderError(e.message||String(e));toast('Falha: '+(e.message||String(e)));
+  }finally{
+    $('refresh').textContent='● Verificar';$('checkDevice').disabled=false;
+  }
+}
+function renderStatus(s){
+  const linked=Boolean(s?.linked);
+  const online=s?.device?.online;
+  $('linkedState').textContent=linked?'Sim':'Não';
+  $('linkedState').className=linked?'ok':'bad';
+  $('onlineState').textContent=online===true?'Online':online===false?'Offline':'Não informado';
+  $('onlineState').className=online===true?'ok':online===false?'bad':'';
+  $('categoryState').textContent=s?.device?.category||'—';
+  $('functionsState').textContent=Array.isArray(s?.functions)?String(s.functions.length):'0';
+  $('cloudState').textContent=linked?(online===false?'Offline':'Vinculado'):'Não vinculado';
+  $('mappingState').textContent=linked&&Array.isArray(s?.functions)&&s.functions.length?'Em diagnóstico':'Pendente';
+  $('heroBadge').textContent=linked?'CONTROLADOR ENCONTRADO':'AGUARDANDO VÍNCULO';
+  $('heroTitle').textContent=linked?'INKBIRD detectado':'Controlador da lavoura';
+  $('heroSub').textContent=linked?'O app já consegue consultar o seu IIC-800. O próximo passo é mapear os comandos reais das 8 zonas antes de liberar o controle.':'Painel preparado para leitura, programação e acionamento remoto das oito zonas assim que o controlador estiver disponível no projeto Tuya da Fazenda 2E.';
+  $('liveDot').className='dot '+(linked?'on':'');
+  $('liveText').textContent=linked?'Tuya respondeu':'Aguardando dispositivo';
+  $('lastCheck').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  $('integrationNote').textContent=linked?'O controlador foi encontrado. Os comandos ainda ficam bloqueados até identificarmos quais DPs correspondem a cada zona, programação e sensor de chuva.':'O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.';
+  $('functionsRaw').textContent=JSON.stringify(s?.functions||[],null,2);
+  $('statusRaw').textContent=JSON.stringify(s?.status||{},null,2);
+  $('shadowRaw').textContent=JSON.stringify(s?.shadow||{},null,2);
+  $('errorsRaw').textContent=JSON.stringify(s?.errors||{},null,2);
+}
+function renderError(msg){
+  $('cloudState').textContent='Erro';$('cloudState').className='bad';
+  $('liveText').textContent='Falha na consulta';
+  $('errorsRaw').textContent=msg;
+}
+$('checkDevice').onclick=check;$('refresh').onclick=check;
+$('renameZones').onclick=()=>{
+  local.zones=local.zones.map((z,i)=>{
+    const name=prompt('Nome da Zona '+(i+1),z.name);
+    if(name===null)return z;
+    const duration=prompt('Duração padrão em minutos para '+(name.trim()||z.name),String(z.duration));
+    return {name:(name.trim()||z.name),duration:Math.max(1,Number(duration)||z.duration)};
+  });save();renderZones();
+};
+renderZones();
+if(local.last?.data)renderStatus(local.last.data);
+</script>
+</body>
+</html>

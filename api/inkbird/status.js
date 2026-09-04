@@ -1,7 +1,5 @@
 import { applyCors, authorize, ensureConfig, tuyaRequest } from '../_tuya.js';
-
-const DEFAULT_DEVICE_ID = 'eb7f32868bdffc559bkgyh';
-const deviceId = (process.env.INKBIRD_DEVICE_ID || DEFAULT_DEVICE_ID).trim();
+import { resolveInkbirdDevice } from './_device.js';
 
 function settleValue(result, fallback = null) {
   return result.status === 'fulfilled' ? result.value : fallback;
@@ -52,18 +50,27 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok:false, error:'Método não permitido.' });
   if (!authorize(req, res) || !ensureConfig(res)) return;
 
+  let resolved;
+  try {
+    resolved = await resolveInkbirdDevice();
+  } catch (error) {
+    return res.status(502).json({ ok:false, linked:false, error:error.message || 'Falha ao listar dispositivos do projeto Tuya.' });
+  }
+
+  const deviceId = resolved.id;
   if (!deviceId) {
     return res.status(200).json({
       ok: true,
-      configured: false,
+      configured: true,
       linked: false,
       model: 'IIC-800-WIFI',
       zones: 8,
       access: {
-        state: 'missing_id',
-        title: 'Device ID não configurado',
-        detail: 'Configure INKBIRD_DEVICE_ID no servidor.'
-      }
+        state: 'not_found',
+        title: 'IIC-800 ainda não apareceu no projeto Tuya',
+        detail: 'O controlador está no Smart Life, mas o projeto Tuya ainda não sincronizou esse novo dispositivo.'
+      },
+      candidates: resolved.devices.map(d => ({id:d.id||d.device_id,name:d.name||d.custom_name||d.product_name||'Sem nome',online:d.online??null,category:d.category??null}))
     });
   }
 
@@ -124,6 +131,7 @@ export default async function handler(req, res) {
     model: 'IIC-800-WIFI',
     zones: 8,
     access,
+    discovery_source: resolved.source,
     device: {
       id: deviceId,
       name: info?.name ?? 'INKBIRD IIC-800-WIFI',
@@ -135,6 +143,7 @@ export default async function handler(req, res) {
     status_spec: statusSpec,
     status: statusMap,
     shadow: shadowMap,
+    candidates: resolved.devices.map(d => ({id:d.id||d.device_id,name:d.name||d.custom_name||d.product_name||'Sem nome',online:d.online??null,category:d.category??null})),
     errors
   });
 }

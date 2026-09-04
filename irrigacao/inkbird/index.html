@@ -739,7 +739,10 @@ async function syncStatus(showToast=false){
   if(!c)return;
   try{
     const s=await api('/api/inkbird/status?device_id='+encodeURIComponent(c.id));
-    state.statusByController[c.id]=s;save();renderStatus();
+    state.statusByController[c.id]=s;
+    if(s?.runtime?.active_session)state.activeSessions[c.id]=s.runtime.active_session;
+    else if(Number(s?.mapping?.active_mask||0)===0)delete state.activeSessions[c.id];
+    save();renderStatus();renderToday();
     if(showToast)toast('Controlador atualizado');
   }catch(e){showError(e.message);if(showToast)toast('Falha ao ler controlador')}
 }
@@ -823,7 +826,7 @@ function weatherDecision(){
 async function syncWeather(showToast=false){
   try{
     const w=await api('/api/weather/status');state.weather=w;state.weatherAt=Date.now();
-    if(w?.metrics?.rainDetected)state.lastRainAt=Date.now();save();renderWeather();
+    if(w?.metrics?.rainDetected)state.lastRainAt=Date.now();save();renderWeather();renderToday();
     if(showToast)toast(w.linked?'Clima atualizado':'Weather2-2 não encontrada');
   }catch(e){if(showToast)toast('Falha ao atualizar clima')}
 }
@@ -1020,12 +1023,17 @@ function editSector(zone){
 
 async function refreshAll(){
   if(busy)return;busy=true;$('refresh').textContent='● Atualizando';showError('');
-  try{await syncControllers(false);await Promise.all([syncStatus(false),syncWeather(false)]);toast('Central atualizada')}
-  finally{busy=false;$('refresh').textContent='● Atualizar'}
+  try{
+    await syncControllers(false);
+    await Promise.all([syncStatus(false),syncWeather(false),loadServerConfig(),loadHistory(false),syncSchedule(false)]);
+    renderToday();renderProfiles();
+    toast('Central atualizada');
+  }finally{busy=false;$('refresh').textContent='● Atualizar'}
 }
 
 function changeController(id){
-  state.selectedControllerId=id||null;save();renderControllers();renderStatus();syncStatus(false);
+  state.selectedControllerId=id||null;save();renderControllers();renderStatus();
+  Promise.all([syncStatus(false),syncSchedule(false)]).then(()=>renderToday());
 }
 $('controllerSelect').onchange=()=>changeController($('controllerSelect').value);
 if($('quickControllerSelect'))$('quickControllerSelect').onchange=()=>changeController($('quickControllerSelect').value);

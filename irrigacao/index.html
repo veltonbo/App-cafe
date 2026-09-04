@@ -7,195 +7,109 @@
 <title>Viveiro • Irrigação Café</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}
-button,input,select{font:inherit}.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}button,input{font:inherit}
+.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
 h1{font-size:1.2rem;margin:2px 0}.ey{font-size:.7rem;font-weight:850;letter-spacing:.12em;color:var(--g)}.pill{border:1px solid var(--l);background:#fff;border-radius:99px;padding:9px 12px;font-weight:800}
 .wrap{max-width:820px;margin:auto;padding:16px 14px 100px}.hero{background:linear-gradient(135deg,#0b6b52,#0d8464);color:#fff;border-radius:24px;padding:22px;box-shadow:0 18px 38px #0b6b5230}
-.heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.hero p{margin:0;color:#d8f3ea}.timer{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums}
-.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}
+.heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.hero p{margin:0;color:#d8f3ea}.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.stat,.box{background:#fff;border:1px solid var(--l);box-shadow:0 10px 24px #17372e0c}.stat{border-radius:16px;padding:13px}.stat small{display:block;color:var(--m)}.stat strong{font-size:1.08rem}
-.box{border-radius:22px;padding:17px;margin-top:12px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:850;cursor:pointer;flex:1;min-width:135px}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}.dark{background:#17372e;color:#fff}
+.box{border-radius:22px;padding:17px;margin-top:12px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:850;cursor:pointer;flex:1;min-width:135px}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}
 .timeline{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.step{border-radius:14px;padding:14px;border:1px solid var(--l);background:#fbfdfc}.step b{display:block}.step small{color:var(--m)}.onStep{background:#edf9f5;border-color:#98d8c5}.offStep{background:#f6f8f7}
 .history{display:grid;gap:7px}.hist{border:1px solid var(--l);border-radius:12px;padding:10px}.hist small{display:block;color:var(--m)}.empty{color:var(--m);text-align:center;border:1px dashed var(--l);border-radius:12px;padding:15px}.note{font-size:.84rem;color:var(--m);line-height:1.45}
-dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backdrop{background:#092a225c}.modal{padding:20px;display:grid;gap:12px}.modal h2{margin:0}label{display:grid;gap:6px;font-size:.85rem;font-weight:750}input,select{width:100%;border:1px solid var(--l);border-radius:11px;padding:11px;background:#fff}
+dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backdrop{background:#092a225c}.modal{padding:20px;display:grid;gap:12px}.modal h2{margin:0}label{display:grid;gap:6px;font-size:.85rem;font-weight:750}input{width:100%;border:1px solid var(--l);border-radius:11px;padding:11px;background:#fff}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:10}.toast.show{transform:translate(-50%,0)}
-@media(max-width:620px){.grid{grid-template-columns:1fr 1fr}.grid .stat:last-child{grid-column:1/-1}.heroTop{flex-direction:column}.timer{font-size:2.1rem}.timeline{grid-template-columns:1fr}.row{flex-direction:column}.btn{width:100%}}
+@media(max-width:620px){.grid{grid-template-columns:1fr 1fr}.grid .stat:last-child{grid-column:1/-1}.heroTop{flex-direction:column}.timeline{grid-template-columns:1fr}.row{flex-direction:column}.btn{width:100%}}
 </style>
 </head>
 <body>
-<header class="top">
-  <div><div class="ey">SÍTIO AM</div><h1>Viveiro • Irrigação</h1></div>
-  <button id="conn" class="pill">● Simulador</button>
-</header>
-
+<header class="top"><div><div class="ey">SÍTIO AM</div><h1>Viveiro • Irrigação</h1></div><button id="conn" class="pill">● Não conectado</button></header>
 <main class="wrap">
-<section class="hero">
-  <div class="heroTop">
-    <div>
-      <div class="ey" style="color:#bcefe0">EKAZA • VIVEIRO</div>
-      <h2 id="heroTitle">Ciclo pausado</h2>
-      <p id="heroSub">Pronto para iniciar 1 min ligado / 2 min desligado.</p>
-      <span id="phase" class="phase off">PAUSADO</span>
-    </div>
-    <div id="timer" class="timer">--:--</div>
-  </div>
-</section>
+<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • VIVEIRO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span></div></div></section>
+<section class="grid"><div class="stat"><small>Ciclo</small><strong>1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão</small><strong id="connectionState">Não conectada</strong></div></section>
 
-<section class="grid">
-  <div class="stat"><small>Ciclo</small><strong>1 min / 2 min</strong></div>
-  <div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desligada</strong></div>
-  <div class="stat"><small>Conexão</small><strong id="connectionState">Teste</strong></div>
+<section class="box">
+<div class="head"><h2>Estado real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar</button></div>
+<p class="note" id="cycleInfo">A programação 1/2 já existente no EKAZA será preservada.</p>
 </section>
 
 <section class="box">
-  <div class="head"><h2>Controle do viveiro</h2></div>
-  <div class="row">
-    <button id="startCycle" class="btn primary">▶ Iniciar ciclo</button>
-    <button id="pauseCycle" class="btn danger">■ Pausar</button>
-  </div>
-  <div class="row" style="margin-top:9px">
-    <button id="manualOn" class="btn soft">Ligar manualmente</button>
-    <button id="manualOff" class="btn soft">Desligar</button>
-  </div>
+<div class="head"><h2>Controle manual</h2></div>
+<div class="row"><button id="manualOn" class="btn primary">Ligar agora</button><button id="manualOff" class="btn danger">Desligar agora</button></div>
+<p class="note">Esses botões alteram apenas o estado da saída. Não vamos editar o <b>cycle_time</b> até confirmar o formato exato usado pelo seu EKAZA.</p>
 </section>
 
 <section class="box">
-  <div class="head"><h2>Como o ciclo funciona</h2></div>
-  <div class="timeline">
-    <div id="onStep" class="step onStep"><b>💧 1 minuto ligado</b><small>EKAZA energiza o sistema do viveiro.</small></div>
-    <div id="offStep" class="step offStep"><b>⏸ 2 minutos desligado</b><small>Espera antes de iniciar novamente.</small></div>
-  </div>
-  <p class="note">O ciclo se repete continuamente até você tocar em <b>Pausar</b>. No modo real, essa repetição deve ser executada no servidor/Tuya, não depender do navegador ficar aberto.</p>
+<div class="head"><h2>Ciclo já configurado</h2></div>
+<div class="timeline"><div class="step onStep"><b>💧 1 minuto ligado</b><small>Executado pelo próprio EKAZA.</small></div><div class="step offStep"><b>⏸ 2 minutos desligado</b><small>Depois ele volta a ligar conforme a programação existente.</small></div></div>
+<p class="note">O app não recria esse ciclo. Assim, a programação continua funcionando mesmo com o celular ou o site fechados.</p>
 </section>
 
-<section class="box">
-  <div class="head"><h2>Histórico</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div>
-  <div id="history" class="history"></div>
-</section>
+<section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
 
-<section class="box">
-  <div class="head"><h2>Conexão Tuya / EKAZA</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div>
-  <p class="note">O EKAZA já está vinculado ao projeto Tuya. Para controle real, o app chamará um <b>servidor seguro</b>, que guarda as credenciais Tuya fora deste site público. Nenhuma chave ou ID privado fica exposto aqui.</p>
-</section>
+<section class="box"><div class="head"><h2>Conexão segura</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">A tela conversa com um backend seguro. O Access Secret da Tuya fica somente no servidor e nunca é publicado no GitHub Pages.</p></section>
 </main>
 
-<dialog id="settingsDlg">
-<form method="dialog" class="modal">
-  <div class="ey">CONEXÃO</div>
-  <h2>EKAZA do viveiro</h2>
-  <label>Modo
-    <select id="mode">
-      <option value="simulator">Simulador</option>
-      <option value="api">Servidor seguro / Tuya</option>
-    </select>
-  </label>
-  <label>URL do servidor
-    <input id="apiUrl" type="url" placeholder="https://seu-servidor.exemplo.com">
-  </label>
-  <p class="note">Endpoints esperados: <b>/viveiro/status</b>, <b>/viveiro/ciclo/iniciar</b>, <b>/viveiro/ciclo/pausar</b>, <b>/viveiro/ligar</b> e <b>/viveiro/desligar</b>.</p>
-  <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div>
-</form>
-</dialog>
-
+<dialog id="settingsDlg"><form method="dialog" class="modal"><div class="ey">CONEXÃO</div><h2>Servidor Tuya</h2>
+<label>URL do backend<input id="apiUrl" type="url" placeholder="https://seu-projeto.vercel.app"></label>
+<label>Token de controle<input id="controlToken" type="password" placeholder="token privado"></label>
+<p class="note">O token é salvo somente neste aparelho. Use um valor longo e aleatório no servidor.</p>
+<div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div></form></dialog>
 <div id="toast" class="toast"></div>
 
 <script>
-const KEY='viveiroEkazaV1';
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||{
-  settings:{mode:'simulator',apiUrl:''},
-  cycle:{running:false,phase:'off',ends:0},
-  relay:false,
-  history:[]
-};
-function $(id){return document.getElementById(id)}
+const KEY='viveiroEkazaRealV1';
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:'',token:''},relay:null,online:null,cycleTime:null,countdown:null,history:[]};
+const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
-function fmt(ms){let s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function log(type,detail){data.history.unshift({at:new Date().toISOString(),type,detail});data.history=data.history.slice(0,100);save()}
+function log(detail){data.history.unshift({at:new Date().toISOString(),detail});data.history=data.history.slice(0,80);save()}
 async function api(path,opt={}){
-  if(data.settings.mode!=='api') return {ok:true,simulator:true};
-  if(!data.settings.apiUrl) throw new Error('Configure a URL do servidor');
-  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),8000);
+  if(!data.settings.apiUrl) throw new Error('Configure a URL do backend');
+  if(!data.settings.token) throw new Error('Configure o token de controle');
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),9000);
   try{
-    const r=await fetch(data.settings.apiUrl.replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json'},signal:ctl.signal});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.status===204?{}:await r.json();
+    const r=await fetch(data.settings.apiUrl.replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json','Authorization':'Bearer '+data.settings.token},signal:ctl.signal});
+    const body=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(body.error||('HTTP '+r.status));
+    return body;
   }finally{clearTimeout(tm)}
 }
-function setPhase(phase){
-  data.cycle.phase=phase;
-  data.relay=phase==='on';
-  data.cycle.ends=Date.now()+(phase==='on'?60000:120000);
-  log(phase==='on'?'on':'off',phase==='on'?'Ciclo: 1 minuto ligado':'Ciclo: 2 minutos desligado');
-  save();render();
-}
-async function startCycle(){
+async function syncStatus(showToast=false){
   try{
-    await api('/viveiro/ciclo/iniciar',{method:'POST',body:JSON.stringify({onSeconds:60,offSeconds:120})});
-    data.cycle.running=true;
-    if(data.settings.mode==='simulator') setPhase('on');
-    else {log('cycle','Ciclo iniciado');save();await syncStatus();}
-    toast('Ciclo iniciado: 1 min ligado / 2 min desligado');
-  }catch(e){toast('Falha: '+e.message)}
-}
-async function pauseCycle(){
-  try{
-    await api('/viveiro/ciclo/pausar',{method:'POST'});
-    data.cycle.running=false;data.cycle.ends=0;data.relay=false;data.cycle.phase='off';
-    log('pause','Ciclo pausado');save();render();toast('Ciclo pausado');
-  }catch(e){toast('Falha: '+e.message)}
+    $('connectionState').textContent='Consultando';
+    const s=await api('/api/status');
+    data.online=s.online!==false;
+    data.relay=typeof s.relay==='boolean'?s.relay:null;
+    data.cycleTime=s.cycle_time??null;
+    data.countdown=s.countdown_1??null;
+    save();render();if(showToast)toast('Estado atualizado');
+  }catch(e){data.online=false;render();if(showToast)toast('Falha: '+e.message)}
 }
 async function manual(on){
   try{
-    await api(on?'/viveiro/ligar':'/viveiro/desligar',{method:'POST'});
-    data.cycle.running=false;data.cycle.ends=0;data.relay=on;data.cycle.phase=on?'on':'off';
-    log(on?'on':'off',on?'Ligado manualmente':'Desligado manualmente');save();render();toast(on?'Viveiro ligado':'Viveiro desligado');
+    await api('/api/switch',{method:'POST',body:JSON.stringify({on})});
+    log(on?'Viveiro ligado manualmente':'Viveiro desligado manualmente');
+    data.relay=on;render();toast(on?'Comando LIGAR enviado':'Comando DESLIGAR enviado');
+    setTimeout(()=>syncStatus(false),1200);
   }catch(e){toast('Falha: '+e.message)}
 }
-async function syncStatus(){
-  if(data.settings.mode!=='api'||!data.settings.apiUrl)return;
-  try{
-    const s=await api('/viveiro/status');
-    if(typeof s.relay==='boolean') data.relay=s.relay;
-    if(typeof s.cycleRunning==='boolean') data.cycle.running=s.cycleRunning;
-    if(s.phase) data.cycle.phase=s.phase;
-    if(s.remainingSeconds!=null) data.cycle.ends=Date.now()+Number(s.remainingSeconds)*1000;
-    $('connectionState').textContent=s.online===false?'Offline':'Online';
-    save();render(false);
-  }catch(e){$('connectionState').textContent='Offline'}
+function render(){
+  $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
+  $('connectionState').textContent=data.settings.apiUrl?(data.online===true?'Online':data.online===false?'Offline':'Pronta'):'Não conectada';
+  $('conn').textContent=data.settings.apiUrl?'● Tuya':'● Não conectado';
+  $('heroTitle').textContent=data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':'Ciclo nativo do EKAZA';
+  $('heroSub').textContent=data.relay===true?'Saída EKAZA está ligada agora.':data.relay===false?'Saída EKAZA está desligada agora.':'O próprio dispositivo mantém 1 min ligado / 2 min desligado.';
+  $('phase').textContent=data.relay===true?'LIGADO':data.relay===false?'DESLIGADO':'AGUARDANDO ESTADO';
+  $('phase').className='phase '+(data.relay===true?'':'off');
+  $('cycleInfo').textContent=data.cycleTime!=null?'Tuya respondeu cycle_time. A programação existente foi detectada e não será alterada.':'A programação 1/2 já existente no EKAZA será preservada.';
+  $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }
-function render(refreshConnection=true){
-  const c=data.cycle.running, on=data.relay;
-  $('relayState').textContent=on?'Ligada':'Desligada';
-  $('heroTitle').textContent=c?(on?'Irrigando o viveiro':'Aguardando próximo ciclo'):(on?'Ligado manualmente':'Ciclo pausado');
-  $('heroSub').textContent=c?(on?'Fase ligada: 1 minuto.':'Fase desligada: 2 minutos.'):'Pronto para iniciar 1 min ligado / 2 min desligado.';
-  $('phase').textContent=c?(on?'LIGADO':'DESLIGADO'):(on?'MANUAL':'PAUSADO');
-  $('phase').className='phase '+(on?'':'off');
-  $('timer').textContent=c&&data.cycle.ends?fmt(data.cycle.ends-Date.now()):'--:--';
-  $('onStep').style.outline=c&&on?'3px solid #69b99f':'none';
-  $('offStep').style.outline=c&&!on?'3px solid #9aa7a2':'none';
-  $('conn').textContent=data.settings.mode==='api'?'● Tuya':'● Simulador';
-  if(data.settings.mode!=='api') $('connectionState').textContent='Teste';
-  $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{
-    const d=new Date(h.at);
-    const icon=h.type==='on'?'▶':h.type==='off'?'■':h.type==='pause'?'⏸':'↻';
-    return '<div class="hist"><b>'+icon+' '+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'
-  }).join(''):'<div class="empty">O histórico aparecerá aqui.</div>';
-  if(refreshConnection&&data.settings.mode==='api') syncStatus();
-}
-setInterval(()=>{
-  if(data.settings.mode==='simulator'&&data.cycle.running&&data.cycle.ends&&Date.now()>=data.cycle.ends){
-    setPhase(data.cycle.phase==='on'?'off':'on');
-  } else render(false);
-},1000);
-$('startCycle').onclick=startCycle;
-$('pauseCycle').onclick=pauseCycle;
+$('refresh').onclick=()=>syncStatus(true);
 $('manualOn').onclick=()=>manual(true);
 $('manualOff').onclick=()=>manual(false);
 $('clear').onclick=()=>{data.history=[];save();render()};
-$('settings').onclick=$('conn').onclick=()=>{$('mode').value=data.settings.mode;$('apiUrl').value=data.settings.apiUrl||'';$('settingsDlg').showModal()};
-$('saveSettings').onclick=e=>{e.preventDefault();data.settings.mode=$('mode').value;data.settings.apiUrl=$('apiUrl').value.trim();save();$('settingsDlg').close();render();toast('Conexão atualizada')};
-render();
+$('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};
+$('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
+render();if(data.settings.apiUrl&&data.settings.token)syncStatus();
 </script>
-</body>
-</html>
+</body></html>

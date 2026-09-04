@@ -13,7 +13,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const resolved = await resolveInkbirdDevice();
+    const preferredId = String(req.body?.device_id || '').trim();
+    const resolved = await resolveInkbirdDevice(preferredId);
     const deviceId = resolved.id;
     if (!deviceId) return res.status(400).json({ ok:false, error:'IIC-800 ainda não sincronizado com o projeto Tuya.' });
 

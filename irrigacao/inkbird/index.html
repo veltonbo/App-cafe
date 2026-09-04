@@ -20,10 +20,10 @@
 .btn{border:0;border-radius:14px;padding:12px 14px;font-weight:850;cursor:pointer}.primary{background:var(--g);color:#fff}.soft{background:var(--gs);color:var(--g)}.danger{background:var(--rs);color:var(--r)}.btn:disabled{opacity:.45;cursor:not-allowed}
 .zoneGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.zone{border-radius:18px;padding:15px}.zoneTop{display:flex;justify-content:space-between;gap:10px;align-items:center}.zoneName{font-weight:900;font-size:1.02rem}.zoneState{font-size:.78rem;color:var(--m)}.zoneMeta{display:flex;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid #edf2ef}.zoneMeta span{color:var(--m);font-size:.82rem}.zone .btn{width:100%;margin-top:10px}
 .capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}.weatherGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.weatherCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.weatherCard small{display:block;color:var(--m);margin-bottom:5px}.weatherCard strong{font-size:1.05rem}.guard{border:1px solid #a8d8ca;background:#eef9f5;border-radius:16px;padding:14px;margin-top:12px}.guard.blocked{border-color:#efbbb7;background:#fff1f0}.ruleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.ruleGrid label{display:grid;gap:5px;font-size:.82rem;font-weight:800}.ruleGrid input{width:100%;border:1px solid var(--l);border-radius:10px;padding:10px;background:#fff}.checkLine{display:flex;gap:9px;align-items:center;font-weight:800}.checkLine input{width:auto}
-.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
+.controllerBar{display:grid;grid-template-columns:1fr auto auto;gap:9px;align-items:end}.controllerBar label{display:grid;gap:6px;font-size:.82rem;font-weight:850}.controllerBar select{width:100%;border:1px solid var(--l);border-radius:12px;padding:11px;background:#fff;color:#17372e}.controllerSummary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.miniTag{padding:7px 10px;border-radius:999px;background:var(--gs);color:var(--g);font-size:.8rem;font-weight:850}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
 details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
-@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}}
+@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}}
 </style>
 </head>
 <body>
@@ -32,6 +32,20 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <div class="actions"><a class="navbtn" href="/irrigacao/">Viveiro EKAZA</a><button id="refresh" class="pill">● Verificar</button></div>
 </header>
 <main class="wrap">
+
+<section class="box" style="margin-top:0">
+  <div class="head"><h2>Controladores da Fazenda 2E</h2></div>
+  <div class="controllerBar">
+    <label>Controlador selecionado
+      <select id="controllerSelect"><option value="">Buscando controladores...</option></select>
+    </label>
+    <button id="syncControllers" class="btn soft">Buscar controladores</button>
+    <button id="addController" class="btn primary">Adicionar outro</button>
+  </div>
+  <div id="controllerSummary" class="controllerSummary"></div>
+  <p class="note" style="margin-top:10px">Cada IIC-800 possui 8 saídas. A numeração dos setores continua automaticamente: Controlador 1 = Setores 01–08, Controlador 2 = 09–16, Controlador 3 = 17–24.</p>
+</section>
+
 <section class="hero">
   <div class="heroTop">
     <div>
@@ -45,8 +59,8 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </section>
 
 <section class="grid">
-  <div class="stat"><small>Controlador</small><strong>IIC-800-WIFI</strong></div>
-  <div class="stat"><small>Zonas</small><strong>8</strong></div>
+  <div class="stat"><small>Controlador</small><strong id="controllerNumber">IIC-800-WIFI</strong></div>
+  <div class="stat"><small>Setores deste controlador</small><strong id="sectorRange">01–08</strong></div>
   <div class="stat"><small>Conexão Tuya</small><strong id="cloudState">Aguardando</strong></div>
   <div class="stat"><small>Mapeamento</small><strong id="mappingState">Pendente</strong></div>
 </section>
@@ -124,22 +138,93 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 const API='https://app-cafe.vercel.app';
 const SETTINGS_KEY='viveiroEkazaRealV1';
 const INK_KEY='fazenda2eInkbirdV1';
-const defaultZones=Array.from({length:8},(_,i)=>({name:'Zona '+(i+1),duration:10}));
-let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null,weather:null,weatherAt:null,lastRainAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
-if(!Array.isArray(local.zones)||local.zones.length!==8)local.zones=defaultZones;
+const makeDefaultZones=(startSector=1)=>Array.from({length:8},(_,i)=>({name:'Setor '+String(startSector+i).padStart(2,'0'),duration:10}));
+let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{controllers:[],selectedControllerId:null,zonesByController:{},lastByController:{},weather:null,weatherAt:null,lastRainAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
+if(!Array.isArray(local.controllers))local.controllers=[];
+if(!local.zonesByController)local.zonesByController={};
+if(!local.lastByController)local.lastByController={};
+if(local.zones&&Array.isArray(local.zones)&&!Object.keys(local.zonesByController).length)local._legacyZones=local.zones;
 if(!local.weatherRules)local.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
 const shared=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null')||{};
 const token=shared?.settings?.token||'';
 const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(INK_KEY,JSON.stringify(local))}
+function selectedController(){return local.controllers.find(c=>c.id===local.selectedControllerId)||local.controllers[0]||null}
+function controllerIndex(ctrl){return Math.max(1,Number(ctrl?.controller_index)||1)}
+function sectorStart(ctrl){return (controllerIndex(ctrl)-1)*8+1}
+function ensureZones(ctrl){if(!ctrl)return[];if(!Array.isArray(local.zonesByController[ctrl.id])||local.zonesByController[ctrl.id].length!==8){const start=sectorStart(ctrl);local.zonesByController[ctrl.id]=local._legacyZones&&controllerIndex(ctrl)===1?local._legacyZones.map((z,i)=>({name:z.name||('Setor '+String(start+i).padStart(2,'0')),duration:z.duration||10})):makeDefaultZones(start);delete local._legacyZones;save()}return local.zonesByController[ctrl.id]}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
 function renderZones(){
-  $('zones').innerHTML=local.zones.map((z,i)=>`
+  const ctrl=selectedController();
+  const zones=ensureZones(ctrl);
+  if(!ctrl){$('zones').innerHTML='<div class="zone"><div class="zoneName">Nenhum controlador selecionado</div></div>';return;}
+  const start=sectorStart(ctrl);
+  $('zones').innerHTML=zones.map((z,i)=>{
+    const sector=start+i;
+    return `
     <div class="zone">
-      <div class="zoneTop"><div><div class="zoneName">${z.name}</div><div class="zoneState">Zona ${i+1} • aguardando mapeamento</div></div><strong>—</strong></div>
+      <div class="zoneTop"><div><div class="zoneName">${z.name||('Setor '+String(sector).padStart(2,'0'))}</div><div class="zoneState">Setor ${String(sector).padStart(2,'0')} • saída ${i+1} do Controlador ${controllerIndex(ctrl)}</div></div><strong>—</strong></div>
       <div class="zoneMeta"><span>Duração padrão</span><b>${z.duration} min</b></div>
       <button class="btn soft" disabled>Acionamento será liberado após mapear o controlador</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+
+function renderControllers(){
+  const select=$('controllerSelect');
+  if(!local.controllers.length){
+    select.innerHTML='<option value="">Nenhum IIC-800 encontrado</option>';
+    $('controllerSummary').innerHTML='<span class="miniTag">0 controladores</span>';
+    $('controllerNumber').textContent='IIC-800-WIFI';
+    $('sectorRange').textContent='—';
+    renderZones();
+    return;
+  }
+
+  if(!local.selectedControllerId||!local.controllers.some(c=>c.id===local.selectedControllerId)){
+    local.selectedControllerId=local.controllers[0].id;
+    save();
+  }
+
+  select.innerHTML=local.controllers.map(ctrl=>{
+    const idx=controllerIndex(ctrl);
+    const start=sectorStart(ctrl);
+    const end=start+7;
+    const selected=ctrl.id===local.selectedControllerId?' selected':'';
+    return '<option value="'+ctrl.id+'"'+selected+'>Controlador '+idx+' • Setores '+String(start).padStart(2,'0')+'–'+String(end).padStart(2,'0')+'</option>';
+  }).join('');
+
+  $('controllerSummary').innerHTML=local.controllers.map(ctrl=>{
+    const idx=controllerIndex(ctrl);
+    const start=sectorStart(ctrl);
+    return '<span class="miniTag">C'+idx+': '+String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0')+'</span>';
+  }).join('');
+
+  const ctrl=selectedController();
+  const idx=controllerIndex(ctrl);
+  const start=sectorStart(ctrl);
+  $('controllerNumber').textContent='Controlador '+idx+' • IIC-800';
+  $('sectorRange').textContent=String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0');
+  renderZones();
+}
+
+async function syncControllers(showToast=true){
+  try{
+    const r=await api('/api/inkbird/controllers');
+    local.controllers=Array.isArray(r.controllers)?r.controllers:[];
+    if(!local.selectedControllerId||!local.controllers.some(c=>c.id===local.selectedControllerId)){
+      local.selectedControllerId=local.controllers[0]?.id||null;
+    }
+    local.controllers.forEach(ctrl=>ensureZones(ctrl));
+    save();
+    renderControllers();
+    if(showToast)toast(local.controllers.length?local.controllers.length+' controlador(es) encontrado(s)':'Nenhum IIC-800 encontrado');
+    return local.controllers;
+  }catch(e){
+    if(showToast)toast('Falha ao buscar controladores: '+(e.message||String(e)));
+    return [];
+  }
 }
 
 function metricText(metric,fallbackUnit=''){
@@ -214,9 +299,13 @@ async function check(){
   $('refresh').textContent='● Verificando';
   $('checkDevice').disabled=true;
   try{
-    const s=await api('/api/inkbird/status');
-    local.last={at:Date.now(),data:s};save();renderStatus(s);
-    toast(s.linked?'INKBIRD encontrado':(s?.access?.title||'Acesso remoto não confirmado'));
+    if(!local.controllers.length)await syncControllers(false);
+    const ctrl=selectedController();
+    const query=ctrl?('?device_id='+encodeURIComponent(ctrl.id)):'';
+    const s=await api('/api/inkbird/status'+query);
+    if(ctrl)local.lastByController[ctrl.id]={at:Date.now(),data:s};
+    save();renderStatus(s);
+    toast(s.linked?'Controlador '+controllerIndex(ctrl)+' encontrado':(s?.access?.title||'Acesso remoto não confirmado'));
   }catch(e){
     renderError(e.message||String(e));toast('Falha: '+(e.message||String(e)));
   }finally{
@@ -224,6 +313,11 @@ async function check(){
   }
 }
 function renderStatus(s){
+  const ctrl=selectedController();
+  const idx=controllerIndex(ctrl);
+  const start=sectorStart(ctrl);
+  $('controllerNumber').textContent=ctrl?('Controlador '+idx+' • IIC-800'):'IIC-800-WIFI';
+  $('sectorRange').textContent=ctrl?(String(start).padStart(2,'0')+'–'+String(start+7).padStart(2,'0')):'—';
   const linked=Boolean(s?.linked);
   const online=s?.device?.online;
   $('linkedState').textContent=linked?'Sim':'Não';
@@ -238,7 +332,7 @@ function renderStatus(s){
   $('cloudState').textContent=linked?(online===false?'Offline':'Vinculado'):'Não vinculado';
   $('mappingState').textContent=linked&&Array.isArray(s?.functions)&&s.functions.length?'Em diagnóstico':'Pendente';
   $('heroBadge').textContent=linked?'CONTROLADOR ENCONTRADO':'AGUARDANDO VÍNCULO';
-  $('heroTitle').textContent=linked?'INKBIRD detectado':'Controlador da lavoura';
+  $('heroTitle').textContent=linked?('Controlador '+idx+' detectado'):'Controlador da lavoura';
   $('heroSub').textContent=linked?'O app já consegue consultar o seu IIC-800. O próximo passo é mapear os comandos reais das 8 zonas antes de liberar o controle.':'Painel preparado para leitura, programação e acionamento remoto das oito zonas assim que o controlador estiver disponível no projeto Tuya da Fazenda 2E.';
   $('liveDot').className='dot '+(linked?'on':'');
   $('liveText').textContent=linked?'Tuya respondeu':'Aguardando dispositivo';
@@ -256,7 +350,19 @@ function renderError(msg){
   $('accessDetail').textContent=msg;
   $('errorsRaw').textContent=msg;
 }
-$('checkDevice').onclick=check;$('refresh').onclick=()=>{check();checkWeather(false)};
+$('checkDevice').onclick=check;$('refresh').onclick=()=>{syncControllers(false).then(()=>check());checkWeather(false)};
+$('syncControllers').onclick=()=>syncControllers(true);
+$('addController').onclick=async()=>{
+  const before=local.controllers.length;
+  await syncControllers(false);
+  if(local.controllers.length>before){toast('Novo controlador encontrado e adicionado');return;}
+  alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador no Smart Life, na mesma conta.\n2. Sincronize essa conta com o projeto Tuya Irrigação Café.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente no próximo setor.');
+};
+$('controllerSelect').onchange=()=>{
+  local.selectedControllerId=$('controllerSelect').value||null;save();renderControllers();
+  const cached=local.lastByController[local.selectedControllerId]?.data;
+  if(cached)renderStatus(cached);else check();
+};
 $('checkWeather').onclick=()=>checkWeather(true);
 $('saveWeatherRules').onclick=()=>{
   local.weatherRules={
@@ -267,21 +373,33 @@ $('saveWeatherRules').onclick=()=>{
   };save();renderWeather();toast('Regras meteorológicas salvas');
 };
 $('renameZones').onclick=()=>{
-  local.zones=local.zones.map((z,i)=>{
-    const name=prompt('Nome da Zona '+(i+1),z.name);
+  const ctrl=selectedController();
+  if(!ctrl)return toast('Selecione um controlador');
+  const start=sectorStart(ctrl);
+  const zones=ensureZones(ctrl);
+  local.zonesByController[ctrl.id]=zones.map((z,i)=>{
+    const sector=start+i;
+    const name=prompt('Nome do Setor '+String(sector).padStart(2,'0'),z.name||('Setor '+String(sector).padStart(2,'0')));
     if(name===null)return z;
     const duration=prompt('Duração padrão em minutos para '+(name.trim()||z.name),String(z.duration));
     return {name:(name.trim()||z.name),duration:Math.max(1,Number(duration)||z.duration)};
   });save();renderZones();
 };
-renderZones();
+renderControllers();
 $('rainThreshold').value=local.weatherRules.rainThreshold;
 $('rainHoldHours').value=local.weatherRules.rainHoldHours;
 $('weatherRefreshMinutes').value=local.weatherRules.refreshMinutes;
 $('blockWhileRaining').checked=local.weatherRules.blockWhileRaining!==false;
-if(local.last?.data)renderStatus(local.last.data);
 renderWeather();
-if(token)checkWeather(false);
+if(token){
+  syncControllers(false).then(()=>{
+    const ctrl=selectedController();
+    const cached=ctrl?local.lastByController[ctrl.id]?.data:null;
+    if(cached)renderStatus(cached);
+    check();
+  });
+  checkWeather(false);
+}
 setInterval(()=>{if(token&&document.visibilityState==='visible')checkWeather(false)},Math.max(1,Number(local.weatherRules.refreshMinutes)||5)*60000);
 </script>
 </body>

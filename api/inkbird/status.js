@@ -1,5 +1,7 @@
 import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
+import { decodeDp38, decodeDp45, decodeDp104 } from './_iic800.js';
+import { appendHistory, storeGet, storeSet } from '../irrigation/_store.js';
 
 function settleValue(result, fallback = null) {
   return result.status === 'fulfilled' ? result.value : fallback;
@@ -348,6 +350,64 @@ export default async function handler(req, res) {
   const controllerIndex = Math.max(1, resolved.devices.findIndex(d => d.id === deviceId) + 1);
   const sectorStart = (controllerIndex - 1) * 8 + 1;
 
+  const dp45Raw = statusMap.irrigation_time_all ?? shadowMap.irrigation_time_all ?? null;
+  const dp38Raw = statusMap.normal_time ?? shadowMap.normal_time ?? null;
+  const dp104Raw = statusMap.Merge_History ?? statusMap.merge_history ?? shadowMap.Merge_History ?? shadowMap.merge_history ?? null;
+
+  const runtime = {
+    dp45: decodeDp45(dp45Raw),
+    schedule: decodeDp38(dp38Raw),
+    history: decodeDp104(dp104Raw),
+    active_session: await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(() => null)
+  };
+
+  const pendingMask = Number(statusMap.pendingzone_state ?? shadowMap.pendingzone_state ?? 0);
+  if (runtime.active_session && Number(mapping.active_mask || 0) === 0 && pendingMask === 0) {
+    const finished = runtime.active_session;
+    await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, null).catch(() => null);
+    runtime.active_session = null;
+    await appendHistory({
+      type:'complete',
+      controller_id:deviceId,
+      controller_index:controllerIndex,
+      zone:Number(finished.zone || 0),
+      sector:Number(finished.sector || 0),
+      duration_minutes:Number(finished.duration_minutes || 0),
+      mode:finished.mode || 'Manual',
+      source:'device',
+      status:'confirmed',
+      detail:finished.kind === 'group' ? (finished.name || 'Grupo concluído') : 'Irrigação concluída'
+    }).catch(() => null);
+  }
+
+  if (runtime.history?.zone >= 1 && runtime.history?.zone <= 8 && runtime.history?.total_time_minutes > 0) {
+    const signature = [
+      runtime.history.total_time_minutes,
+      runtime.history.zone,
+      runtime.history.manual ? 1 : 0,
+      runtime.history.valve_state
+    ].join(':');
+    const lastNative = await storeGet(`IrrigacaoFazenda2E/lastNativeHistory/${deviceId}`).catch(() => null);
+    if (lastNative?.signature !== signature) {
+      await storeSet(`IrrigacaoFazenda2E/lastNativeHistory/${deviceId}`, {
+        signature,
+        at:Date.now()
+      }).catch(() => null);
+      await appendHistory({
+        type:'native_report',
+        controller_id:deviceId,
+        controller_index:controllerIndex,
+        zone:runtime.history.zone,
+        sector:sectorStart + runtime.history.zone - 1,
+        duration_minutes:runtime.history.total_time_minutes,
+        mode:runtime.history.manual ? 'Manual' : 'Auto',
+        source:'device',
+        status:String(runtime.history.valve_state),
+        detail:runtime.history.manual ? 'Registro manual do controlador' : 'Registro automático do controlador'
+      }).catch(() => null);
+    }
+  }
+
   return res.status(200).json({
     ok: true,
     configured: true,
@@ -359,6 +419,7 @@ export default async function handler(req, res) {
     sector_end: sectorStart + 7,
     access,
     mapping,
+    runtime,
     discovery_source: resolved.source,
     device: {
       id: deviceId,

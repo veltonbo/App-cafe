@@ -1,0 +1,18 @@
+{
+  "name": "Fazenda 2E • Central de Irrigação",
+  "short_name": "Fazenda 2E",
+  "description": "Controle de irrigação da Fazenda 2E",
+  "start_url": "/irrigacao/inkbird/",
+  "scope": "/irrigacao/inkbird/",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#0b6b52",
+  "icons": [
+    {
+      "src": "/irrigacao/inkbird/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

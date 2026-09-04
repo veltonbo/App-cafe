@@ -25,10 +25,10 @@ export default async function handler(req, res) {
   const zone = Number(req.body?.zone);
   const duration = Number(req.body?.duration_minutes);
 
-  if (!['start','stop'].includes(action)) {
+  if (!['start','stop','auto'].includes(action)) {
     return res.status(400).json({ ok:false, error:'Ação inválida.' });
   }
-  if (!Number.isInteger(zone) || zone < 1 || zone > 8) {
+  if (action !== 'auto' && (!Number.isInteger(zone) || zone < 1 || zone > 8)) {
     return res.status(400).json({ ok:false, error:'Setor inválido. Use zona de 1 a 8.' });
   }
   if (action === 'start' && (!Number.isInteger(duration) || duration < 1 || duration > 1440)) {
@@ -47,6 +47,17 @@ export default async function handler(req, res) {
 
     if (!hasFunction(functions, 'operation_mode')) {
       return res.status(400).json({ ok:false, error:'O controlador não expôs operation_mode.' });
+    }
+
+    if (action === 'auto') {
+      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+        commands: [{ code:'operation_mode', value:'Auto' }]
+      });
+      return res.status(200).json({
+        ok:true,
+        device_id:deviceId,
+        action:'auto'
+      });
     }
 
     if (action === 'stop') {

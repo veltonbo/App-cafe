@@ -70,11 +70,17 @@ function normalizeConfig(body = {}) {
 
 function sameZone(a,b) {
   if (!a || !b) return false;
+  const mode = Number(b.cycle_mode || 0);
+  const dayMatch = mode === 0
+    ? Number(a.days_mask) === Number(b.days_mask)
+    : mode === 3
+      ? Number(a.days_mask) === Number(b.interval_days || 1)
+      : true;
   return Number(a.zone) === Number(b.zone) &&
     Number(a.duration_minutes) === Number(b.duration_minutes) &&
     Boolean(a.enabled) === Boolean(b.enabled) &&
-    Number(a.cycle_mode) === Number(b.cycle_mode) &&
-    Number(a.days_mask) === Number(b.days_mask) &&
+    Number(a.cycle_mode) === mode &&
+    dayMatch &&
     JSON.stringify((a.start_times || []).map(x => typeof x === 'string' ? x : x.value)) ===
       JSON.stringify((b.start_times || []).map(x => typeof x === 'string' ? x : x.value));
 }

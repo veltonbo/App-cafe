@@ -1,5 +1,7 @@
 import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
+import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
+import { appendHistory, getAutomationConfig, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
 
 function encodeStartPayload(zone, durationMinutes) {
   const payload = Buffer.alloc(34);
@@ -83,6 +85,51 @@ async function waitForAllZonesOff(deviceId, attempts = 6) {
   return { confirmed:false, state:last };
 }
 
+
+async function evaluateServerWeather() {
+  const config = await getAutomationConfig().catch(() => ({}));
+  const policy = config?.weather || {
+    enabled:true,
+    rainThreshold:5,
+    rainHoldHours:12,
+    blockWhileRaining:true,
+    backgroundProtection:false
+  };
+
+  const snapshot = await fetchWeatherSnapshot().catch(() => null);
+  const weatherState = (await storeGet('IrrigacaoFazenda2E/weatherState').catch(() => null)) || {};
+
+  if (snapshot?.metrics?.rainDetected) {
+    weatherState.lastRainAt = Date.now();
+  }
+
+  const decision = decideWeather(snapshot, policy, weatherState);
+  await storePatch('IrrigacaoFazenda2E/weatherState', {
+    lastRainAt:weatherState.lastRainAt || null,
+    checkedAt:Date.now(),
+    decision,
+    snapshot:{
+      linked:snapshot?.linked || false,
+      online:snapshot?.device?.online ?? null,
+      metrics:snapshot?.metrics || null
+    }
+  }).catch(() => null);
+
+  return { policy, snapshot, decision };
+}
+
+function controllerMeta(resolved, deviceId, zone) {
+  const index = Math.max(0, (resolved.devices || []).findIndex(d => d.id === deviceId));
+  return {
+    controller_index:index + 1,
+    sector:index * 8 + zone
+  };
+}
+
+async function recordCommand(entry) {
+  await appendHistory(entry).catch(() => null);
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -137,6 +184,8 @@ export default async function handler(req, res) {
       knownCodes.has('zonerun_state') ||
       String(info?.product_id || '') === 'h71ip90tp4mfd6mx';
 
+    const meta = controllerMeta(resolved, deviceId, Number.isInteger(zone) ? zone : 0);
+
     if (!nativeSignature) {
       return res.status(400).json({
         ok:false,
@@ -150,11 +199,21 @@ export default async function handler(req, res) {
       });
       await sleep(500);
       const state = await readRuntimeState(deviceId).catch(() => null);
+      const verified = state?.operation_mode === 'Auto';
+      await recordCommand({
+        type:'mode',
+        controller_id:deviceId,
+        controller_index:meta.controller_index,
+        mode:'Auto',
+        source:'app',
+        status:verified?'confirmed':'sent',
+        detail:'Controlador alterado para modo automático'
+      });
       return res.status(200).json({
         ok:true,
         device_id:deviceId,
         action:'auto',
-        verified:state?.operation_mode === 'Auto',
+        verified,
         state
       });
     }
@@ -193,6 +252,18 @@ export default async function handler(req, res) {
         });
       }
 
+      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, null).catch(() => null);
+      await recordCommand({
+        type:'stop',
+        controller_id:deviceId,
+        controller_index:meta.controller_index,
+        zone,
+        sector:meta.sector,
+        mode:'Manual',
+        source:'app',
+        status:'confirmed',
+        detail:'Irrigação manual parada'
+      });
       return res.status(200).json({
         ok:true,
         device_id:deviceId,
@@ -200,7 +271,8 @@ export default async function handler(req, res) {
         zone,
         verified:true,
         state:verification.state,
-        warning:offCommandError || null
+        warning:offCommandError || null,
+        stopped_at:Date.now()
       });
     }
 
@@ -208,6 +280,29 @@ export default async function handler(req, res) {
       return res.status(400).json({
         ok:false,
         error:'O controlador não apresentou irrigation_time_all (DP45).'
+      });
+    }
+
+    const weather = await evaluateServerWeather();
+    if (weather.decision?.blocked) {
+      await recordCommand({
+        type:'blocked',
+        controller_id:deviceId,
+        controller_index:meta.controller_index,
+        zone,
+        sector:meta.sector,
+        duration_minutes:duration,
+        mode:'Manual',
+        source:'server_weather',
+        status:'blocked',
+        detail:weather.decision.reason,
+        weather:weather.decision
+      });
+      return res.status(423).json({
+        ok:false,
+        blocked:true,
+        error:'Irrigação bloqueada pela proteção meteorológica.',
+        weather:weather.decision
       });
     }
 
@@ -222,6 +317,30 @@ export default async function handler(req, res) {
     let verification = await waitForZoneState(deviceId, zone, true, 5);
 
     if (verification.confirmed) {
+      const startedAt = Date.now();
+      const expectedEndAt = startedAt + duration * 60000;
+      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, {
+        zone,
+        sector:meta.sector,
+        controller_index:meta.controller_index,
+        duration_minutes:duration,
+        started_at:startedAt,
+        expected_end_at:expectedEndAt,
+        source:'app'
+      }).catch(() => null);
+      await recordCommand({
+        type:'start',
+        controller_id:deviceId,
+        controller_index:meta.controller_index,
+        zone,
+        sector:meta.sector,
+        duration_minutes:duration,
+        mode:'Manual',
+        source:'app',
+        status:'confirmed',
+        detail:'Irrigação manual iniciada',
+        weather:weather.decision
+      });
       return res.status(200).json({
         ok:true,
         verified:true,
@@ -229,7 +348,10 @@ export default async function handler(req, res) {
         action:'start',
         zone,
         duration_minutes:duration,
+        started_at:startedAt,
+        expected_end_at:expectedEndAt,
         state:verification.state,
+        weather:weather.decision,
         profile:'IIC-800-DP45',
         path:'dp45-only'
       });
@@ -250,6 +372,30 @@ export default async function handler(req, res) {
     verification = await waitForZoneState(deviceId, zone, true, 5);
 
     if (verification.confirmed) {
+      const startedAt = Date.now();
+      const expectedEndAt = startedAt + duration * 60000;
+      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, {
+        zone,
+        sector:meta.sector,
+        controller_index:meta.controller_index,
+        duration_minutes:duration,
+        started_at:startedAt,
+        expected_end_at:expectedEndAt,
+        source:'app'
+      }).catch(() => null);
+      await recordCommand({
+        type:'start',
+        controller_id:deviceId,
+        controller_index:meta.controller_index,
+        zone,
+        sector:meta.sector,
+        duration_minutes:duration,
+        mode:'Manual',
+        source:'app',
+        status:'confirmed',
+        detail:'Irrigação manual iniciada',
+        weather:weather.decision
+      });
       return res.status(200).json({
         ok:true,
         verified:true,
@@ -257,7 +403,10 @@ export default async function handler(req, res) {
         action:'start',
         zone,
         duration_minutes:duration,
+        started_at:startedAt,
+        expected_end_at:expectedEndAt,
         state:verification.state,
+        weather:weather.decision,
         profile:'IIC-800-DP45',
         path:'dp45-plus-manual',
         warning:manualCommandError || null

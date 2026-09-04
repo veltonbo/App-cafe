@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fazenda 2E">
+<link rel="manifest" href="/irrigacao/inkbird/manifest.webmanifest">
+<link rel="icon" href="/irrigacao/inkbird/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/irrigacao/inkbird/icon.svg">
 <title>Fazenda 2E • INKBIRD IIC-800</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--g2:#0d8464;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2;--w:#fff}
@@ -67,6 +73,19 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 }
 @media(max-width:390px){.brand h1{font-size:.92rem}.navbtn{display:none}.quickTimes{grid-template-columns:repeat(3,1fr)}.operationStrip{grid-template-columns:1fr 1fr}.operationStrip .opCard:last-child{grid-column:1/-1}}
 
+
+.todayGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}.todayCard{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.todayCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:5px}.todayCard strong{font-size:.96rem}.todayCard em{display:block;font-style:normal;color:var(--muted);font-size:.72rem;margin-top:4px}
+.historyList{display:grid;gap:8px}.historyItem{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #edf2ef}.historyItem:last-child{border-bottom:0}.historyIcon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--greenSoft);color:var(--green);font-weight:900}.historyItem b{display:block;font-size:.84rem}.historyItem small{color:var(--muted);font-size:.72rem}.historyTime{font-size:.7rem;color:var(--muted);white-space:nowrap}
+.progressWrap{margin-top:10px}.progressInfo{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:5px}.progressTrack{height:7px;background:#e8efec;border-radius:999px;overflow:hidden}.progressBar{height:100%;background:var(--green);border-radius:999px;transition:width .8s linear}.overdue{color:var(--danger)!important;font-weight:900}
+.zoneExtraActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.zoneExtraActions .btn{margin:0!important;padding:9px!important;font-size:.76rem}
+.profileBar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:15px}.profileBar select{min-width:160px;flex:1;border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff;color:var(--ink);font-weight:750}.profileBar .btn{padding:10px 11px}
+.scheduleSummary{margin-top:8px;padding:8px 10px;border-radius:11px;background:#f7faf8;color:var(--muted);font-size:.72rem}.scheduleSummary.on{background:#edf8f4;color:var(--green);font-weight:750}
+.modalForm{padding:20px;display:grid;gap:13px;min-width:min(92vw,560px)}.modalTitle{margin:0;font-size:1.2rem}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formField{display:grid;gap:6px;font-size:.78rem;font-weight:800;color:var(--ink)}.formField input,.formField select{width:100%;border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff}.daysGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.daysGrid label{position:relative}.daysGrid input{position:absolute;opacity:0;pointer-events:none}.daysGrid span{display:block;text-align:center;padding:9px 2px;border:1px solid var(--border);border-radius:9px;font-size:.68rem;font-weight:850;color:var(--muted)}.daysGrid input:checked+span{background:var(--green);border-color:var(--green);color:#fff}
+.timeSlots{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.timeSlots input{border:1px solid var(--border);border-radius:10px;padding:9px;width:100%}
+.groupRows{display:grid;gap:7px}.groupRow{display:grid;grid-template-columns:auto 1fr 88px;gap:8px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:11px;background:#fff}.groupRow input[type=number]{width:100%;border:1px solid var(--border);border-radius:9px;padding:8px}.groupRow label{font-size:.8rem;font-weight:800}
+.installCard{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:15px;background:var(--surface2)}.installCard b{display:block}.installCard small{color:var(--muted)}
+@media(max-width:760px){.todayGrid{grid-template-columns:1fr 1fr}.historyItem{grid-template-columns:auto 1fr}.historyTime{grid-column:2}.formGrid{grid-template-columns:1fr}.daysGrid{grid-template-columns:repeat(4,1fr)}.timeSlots{grid-template-columns:1fr 1fr}.profileBar{display:grid;grid-template-columns:1fr 1fr}.profileBar select{grid-column:1/-1}.installCard{align-items:flex-start;flex-direction:column}}
+
 </style>
 </head>
 <body>
@@ -79,6 +98,21 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <div id="globalError" class="errorBanner" hidden></div>
 <div id="tab-overview" class="tabPanel">
 <section class="box" style="margin-top:0">
+  <div class="head"><div><div class="ey" style="color:var(--green)">HOJE</div><h2>Resumo da irrigação</h2></div><button id="refreshToday" class="btn soft">Atualizar</button></div>
+  <div class="todayGrid">
+    <div class="todayCard"><small>Agora</small><strong id="todayActive">Nenhum setor irrigando</strong><em id="todayActiveSub">Aguardando leitura</em></div>
+    <div class="todayCard"><small>Próxima irrigação</small><strong id="todayNext">—</strong><em id="todayNextSub">Agenda ainda não lida</em></div>
+    <div class="todayCard"><small>Clima</small><strong id="todayWeather">Aguardando</strong><em id="todayWeatherSub">Weather2-2</em></div>
+    <div class="todayCard"><small>Última atividade</small><strong id="todayLast">—</strong><em id="todayLastSub">Sem histórico</em></div>
+  </div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Atividade recente</h2><button id="refreshHistory" class="btn soft">Atualizar histórico</button></div>
+  <div id="historyList" class="historyList"><div class="note">Nenhum histórico carregado.</div></div>
+</section>
+
+<section class="box">
   <div class="head"><h2>Controladores da Fazenda 2E</h2></div>
   <div class="controllerBar">
     <label>Controlador selecionado
@@ -147,6 +181,8 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
     <label>Atualizar clima a cada (min)<input id="weatherRefreshMinutes" type="number" min="1" max="60" step="1" value="5"></label>
   </div>
   <label class="checkLine" style="margin-top:12px"><input id="blockWhileRaining" type="checkbox" checked> Bloquear irrigação enquanto estiver chovendo</label>
+  <label class="checkLine" style="margin-top:10px"><input id="serverWeatherGuard" type="checkbox" checked> Aplicar proteção meteorológica também no servidor</label>
+  <p class="note" style="margin-top:7px">O servidor verifica a Weather2-2 antes de qualquer irrigação manual ou em grupo. A proteção automática com o app fechado pode ser ativada separadamente quando o agendador do servidor estiver habilitado.</p>
   <button id="saveWeatherRules" class="btn primary" style="margin-top:12px">Salvar regras meteorológicas</button>
 
   <details><summary>Dados meteorológicos detectados</summary><pre id="weatherRaw">Nenhuma leitura realizada.</pre></details>
@@ -167,17 +203,23 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
     <div class="opCard"><small>Modo</small><strong id="quickMode">—</strong></div>
     <div class="opCard"><small>Clima</small><strong id="quickWeather">Aguardando</strong></div>
   </div>
+  <div class="profileBar">
+    <select id="profileSelect"><option value="">Perfil de irrigação...</option></select>
+    <button id="applyProfile" class="btn soft">Aplicar perfil</button>
+    <button id="saveProfile" class="btn soft">Salvar perfil atual</button>
+    <button id="openGroup" class="btn primary">Irrigar grupo</button>
+  </div>
   <div style="display:none"><span id="durationMapTag"></span><span id="modeTag"></span><button id="manualMapBtn"></button></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
 <section class="box">
   <div class="head"><div><div class="ey" style="color:var(--green)">AUTOMAÇÃO</div><h2>Programação automática</h2></div><span id="scheduleMapTag" class="miniTag">Verificando agenda</span></div>
-  <p class="note" style="margin-top:0">O controle manual dos setores já está ativo. A edição completa dos horários será liberada no app somente depois de validarmos o formato de agenda do seu IIC-800, sem alterar programações existentes por engano.</p>
+  <p class="note" style="margin-top:0">Configure duração, até 6 horários e dias da semana para cada setor. A gravação usa a agenda nativa do IIC-800 e preserva os outros setores.</p>
   <div class="capGrid">
     <div class="cap"><b>Controle manual</b><small>Pronto para irrigar cada setor pelo tempo definido.</small></div>
     <div class="cap"><b>Proteção pelo clima</b><small>A Weather2-2 é consultada antes de iniciar uma irrigação pelo app.</small></div>
-    <div class="cap"><b>Agenda automática</b><small>Em preparação para edição segura de horários e dias.</small></div>
+    <div class="cap"><b>Agenda automática</b><small>Programação nativa por setor, com horários e dias configurados no próprio controlador.</small></div>
     <div class="cap"><b>Vários controladores</b><small>Setores continuam automaticamente em blocos de 8.</small></div>
   </div>
 </section>
@@ -193,10 +235,86 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   <details><summary>Erros de integração</summary><pre id="errorsRaw">Nenhum erro registrado.</pre></details>
 </section>
 
+<section class="box">
+  <div class="head"><h2>Automação Weather2-2 ↔ INKBIRD</h2><button id="checkLinkage" class="btn soft">Verificar nuvem Tuya</button></div>
+  <p class="note">O app verifica se a própria nuvem Tuya permite criar uma regra direta entre a estação meteorológica e os controladores. Se disponível, essa é a melhor opção para proteção com o telefone fechado.</p>
+  <details><summary>Compatibilidade da automação cloud</summary><pre id="linkageRaw">Ainda não verificado.</pre></details>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Aplicativo no telefone</h2></div>
+  <div class="installCard">
+    <div><b>Instalar Fazenda 2E</b><small>Abra como aplicativo em tela cheia, direto pela Tela de Início.</small></div>
+    <button id="installApp" class="btn primary">Como instalar</button>
+  </div>
+</section>
+
 <section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">app-cafe.vercel.app</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente na Vercel. Neste aparelho fica apenas o token de controle do app.</p></section>
 </div>
 <div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
 </main>
+<dialog id="scheduleDlg">
+<form method="dialog" class="modalForm">
+  <div><div class="ey" style="color:var(--green)">PROGRAMAÇÃO</div><h2 id="scheduleTitle" class="modalTitle">Programar setor</h2></div>
+  <input id="scheduleZone" type="hidden">
+  <label class="checkLine"><input id="scheduleEnabled" type="checkbox" checked> Programação automática ativa</label>
+  <div class="formGrid">
+    <label class="formField">Duração (min)<input id="scheduleDuration" type="number" min="1" max="255" step="1" value="10"></label>
+    <label class="formField">Modo
+      <select id="scheduleMode">
+        <option value="0">Dias da semana</option>
+        <option value="1">Dias ímpares</option>
+        <option value="2">Dias pares</option>
+        <option value="3">Intervalo de dias</option>
+      </select>
+    </label>
+  </div>
+  <div>
+    <div class="note" style="margin-bottom:7px">Horários de início • até 6</div>
+    <div class="timeSlots">
+      <input class="scheduleTime" type="time"><input class="scheduleTime" type="time"><input class="scheduleTime" type="time">
+      <input class="scheduleTime" type="time"><input class="scheduleTime" type="time"><input class="scheduleTime" type="time">
+    </div>
+  </div>
+  <div id="scheduleDaysWrap">
+    <div class="note" style="margin-bottom:7px">Dias da semana</div>
+    <div class="daysGrid">
+      <label><input class="scheduleDay" type="checkbox" value="1"><span>Dom</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="2"><span>Seg</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="4"><span>Ter</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="8"><span>Qua</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="16"><span>Qui</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="32"><span>Sex</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="64"><span>Sáb</span></label>
+    </div>
+  </div>
+  <label id="intervalDaysWrap" class="formField" style="display:none">Repetir a cada (dias)<input id="scheduleIntervalDays" type="number" min="1" max="9" value="1"></label>
+  <label class="checkLine"><input id="scheduleRain" type="checkbox" checked> Respeitar sensor de chuva do controlador</label>
+  <div style="display:flex;gap:8px">
+    <button value="cancel" class="btn soft" style="flex:1">Cancelar</button>
+    <button id="saveSchedule" type="button" class="btn primary" style="flex:1">Salvar programação</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="groupDlg">
+<form method="dialog" class="modalForm">
+  <div><div class="ey" style="color:var(--green)">GRUPO</div><h2 class="modalTitle">Irrigar vários setores</h2></div>
+  <label class="formField">Grupo salvo
+    <select id="groupSavedSelect"><option value="">Novo grupo</option></select>
+  </label>
+  <label class="formField">Nome do grupo<input id="groupName" value="Grupo de irrigação"></label>
+  <label class="formField">Execução
+    <select id="groupMode"><option value="order">Em sequência</option><option value="together">Ao mesmo tempo</option></select>
+  </label>
+  <div id="groupRows" class="groupRows"></div>
+  <div style="display:flex;gap:8px">
+    <button value="cancel" class="btn soft" style="flex:1">Cancelar</button>
+    <button id="startGroup" type="button" class="btn primary" style="flex:1">Iniciar grupo</button>
+  </div>
+</form>
+</dialog>
+
 <dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão da Central</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
 <dialog id="mappingDlg"><form method="dialog" style="padding:20px;display:grid;gap:14px;min-width:min(92vw,560px)">
   <div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Configurar saídas do IIC-800</h2></div>
@@ -217,8 +335,9 @@ const oldShared=JSON.parse(localStorage.getItem(VIVEIRO_KEY)||'null')||{};
 let state=JSON.parse(localStorage.getItem(APP_KEY)||'null')||{
   settings:{apiUrl:oldShared?.settings?.apiUrl||DEFAULT_API,token:oldShared?.settings?.token||''},
   controllers:[],selectedControllerId:null,statusByController:{},zonePrefs:{},manualControlMap:{},
+  scheduleByController:{},activeSessions:{},history:[],profiles:{},groups:{},serverConfig:{},
   weather:null,weatherAt:null,lastRainAt:null,
-  weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}
+  weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true,serverGuard:true}
 };
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
@@ -228,10 +347,18 @@ if(!state.controllers)state.controllers=[];
 if(!state.statusByController)state.statusByController={};
 if(!state.zonePrefs)state.zonePrefs={};
 if(!state.manualControlMap)state.manualControlMap={};
-if(!state.weatherRules)state.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
+if(!state.scheduleByController)state.scheduleByController={};
+if(!state.activeSessions)state.activeSessions={};
+if(!Array.isArray(state.history))state.history=[];
+if(!state.profiles)state.profiles={};
+if(!state.groups)state.groups={};
+if(!state.serverConfig)state.serverConfig={};
+if(!state.weatherRules)state.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true,serverGuard:true};
+if(state.weatherRules.serverGuard===undefined)state.weatherRules.serverGuard=true;
 
 const $=id=>document.getElementById(id);
 let busy=false;
+let overdueSyncAt=0;
 
 function save(){localStorage.setItem(APP_KEY,JSON.stringify(state))}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
@@ -250,6 +377,234 @@ function getPrefs(c){
   return state.zonePrefs[c.id];
 }
 function currentStatus(){const c=selectedController();return c?state.statusByController[c.id]||null:null}
+
+function currentSchedule(){
+  const c=selectedController();
+  return c?(state.scheduleByController[c.id]||[]):[];
+}
+function scheduleChannel(zone){
+  return currentSchedule().find(ch=>Number(ch.zone)===Number(zone))||null;
+}
+function activeSession(){
+  const c=selectedController();
+  if(!c)return null;
+  return state.activeSessions[c.id]||currentStatus()?.runtime?.active_session||null;
+}
+function clockText(ms){
+  if(!Number.isFinite(Number(ms)))return '—';
+  const d=new Date(Number(ms));
+  return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function durationText(ms){
+  const total=Math.max(0,Math.ceil(Number(ms||0)/1000));
+  const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+  if(h>0)return h+'h '+String(m).padStart(2,'0')+'min';
+  if(m>0)return m+'min '+String(s).padStart(2,'0')+'s';
+  return s+'s';
+}
+function daysText(mask){
+  const names=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const selected=names.filter((_,i)=>Number(mask||0)&(1<<i));
+  return selected.length===7?'Todos os dias':selected.join(', ');
+}
+function channelLabel(ch){
+  if(!ch||!ch.enabled)return 'Sem programação';
+  const times=(ch.start_times||[]).map(x=>x.value||x).filter(Boolean);
+  if(!times.length)return 'Sem horário';
+  if(Number(ch.cycle_mode)===0)return times.join(', ')+' • '+daysText(ch.days_mask);
+  if(Number(ch.cycle_mode)===1)return times.join(', ')+' • dias ímpares';
+  if(Number(ch.cycle_mode)===2)return times.join(', ')+' • dias pares';
+  return times.join(', ')+' • a cada '+Number(ch.days_mask||1)+' dia(s)';
+}
+function nextChannelDate(ch,now=new Date()){
+  if(!ch?.enabled||!(ch.start_times||[]).length)return null;
+  const mode=Number(ch.cycle_mode||0);
+  const times=(ch.start_times||[]).map(x=>{
+    const text=x.value||x;
+    const [h,m]=String(text).split(':').map(Number);
+    return {h,m};
+  }).filter(x=>Number.isFinite(x.h)&&Number.isFinite(x.m)).sort((a,b)=>a.h*60+a.m-(b.h*60+b.m));
+  for(let addDay=0;addDay<40;addDay++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+addDay);
+    let allowed=true;
+    if(mode===0)allowed=Boolean(Number(ch.days_mask||0)&(1<<d.getDay()));
+    else if(mode===1)allowed=d.getDate()%2===1;
+    else if(mode===2)allowed=d.getDate()%2===0;
+    else if(mode===3){
+      const base=ch.interval_start||{};
+      const year=2000+Number(base.year_offset||0);
+      const month=Number(base.month||0);
+      const day=Number(base.day||0);
+      if(month&&day){
+        const start=new Date(year,month-1,day);
+        const diff=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate())-start)/86400000);
+        allowed=diff>=0&&diff%Math.max(1,Number(ch.days_mask||1))===0;
+      }
+    }
+    if(!allowed)continue;
+    for(const t of times){
+      const candidate=new Date(d.getFullYear(),d.getMonth(),d.getDate(),t.h,t.m,0,0);
+      if(candidate>now)return candidate;
+    }
+  }
+  return null;
+}
+function nextScheduled(){
+  let best=null;
+  for(const ctrl of state.controllers||[]){
+    const channels=state.scheduleByController[ctrl.id]||[];
+    for(const ch of channels){
+      const date=nextChannelDate(ch);
+      if(date&&(!best||date<best.date))best={ch,date,controller:ctrl};
+    }
+  }
+  return best;
+}
+function historyTitle(h){
+  const sector=Number(h?.sector||0)?'Setor '+pad(h.sector):'';
+  if(h?.type==='start')return sector+' iniciado';
+  if(h?.type==='stop')return sector?sector+' parado':'Irrigação parada';
+  if(h?.type==='group_start')return h.detail||'Grupo iniciado';
+  if(h?.type==='schedule')return 'Programação do Setor '+pad((Number(h.controller_index||1)-1)*8+Number(h.zone||0));
+  if(h?.type==='complete')return sector?sector+' concluído':(h.detail||'Irrigação concluída');
+  if(h?.type==='blocked'||h?.type==='group_blocked')return 'Irrigação bloqueada pelo clima';
+  if(h?.type==='weather_suspend')return 'Agenda suspensa pela chuva';
+  if(h?.type==='weather_restore')return 'Agenda liberada pelo clima';
+  if(h?.type==='native_report')return sector+' • registro do controlador';
+  return h?.detail||'Atividade da irrigação';
+}
+function renderHistory(){
+  const el=$('historyList');if(!el)return;
+  if(!state.history.length){el.innerHTML='<div class="note">Ainda não há atividades registradas.</div>';return;}
+  el.innerHTML=state.history.slice(0,12).map(h=>{
+    const type=String(h.type||'');
+    const icon=/stop/.test(type)?'■':/blocked/.test(type)?'!':/schedule/.test(type)?'◷':'▶';
+    const when=h.at?new Date(h.at):new Date(Number(h.ts||Date.now()));
+    const detail=h.duration_minutes?Number(h.duration_minutes)+' min':(h.mode||h.status||'');
+    return '<div class="historyItem"><div class="historyIcon">'+icon+'</div><div><b>'+escapeHtml(historyTitle(h))+'</b><small>'+escapeHtml(detail)+'</small></div><div class="historyTime">'+when.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+when.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</div></div>';
+  }).join('');
+}
+function renderToday(){
+  if(!$('todayActive'))return;
+  const c=selectedController(),s=currentStatus();
+  let activeInfo=null;
+  for(const ctrl of state.controllers||[]){
+    const st=state.statusByController[ctrl.id];
+    const mask=Number(st?.mapping?.active_mask||0);
+    const zone=[1,2,3,4,5,6,7,8].find(z=>mask&(1<<(z-1)));
+    if(zone){activeInfo={ctrl,zone,session:state.activeSessions[ctrl.id]||st?.runtime?.active_session||null};break;}
+  }
+  if(activeInfo){
+    const sector=sectorStart(activeInfo.ctrl)+activeInfo.zone-1;
+    $('todayActive').textContent='Setor '+pad(sector)+' irrigando';
+    $('todayActiveSub').textContent=activeInfo.session?.expected_end_at?'Término estimado '+clockText(activeInfo.session.expected_end_at):'Controlador '+controllerIndex(activeInfo.ctrl)+' em operação';
+  }else{
+    $('todayActive').textContent='Nenhum setor irrigando';
+    const offline=(state.controllers||[]).filter(ctrl=>state.statusByController[ctrl.id]?.device?.online===false).length;
+    $('todayActiveSub').textContent=offline?offline+' controlador(es) offline':'Sistema em espera';
+  }
+  const next=nextScheduled();
+  if(next){
+    const ctrl=next.controller||c;
+    const sector=ctrl?sectorStart(ctrl)+Number(next.ch.zone)-1:Number(next.ch.zone);
+    $('todayNext').textContent='Setor '+pad(sector)+' • '+next.date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    $('todayNextSub').textContent=next.date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+  }else{
+    $('todayNext').textContent='Nenhuma programada';
+    $('todayNextSub').textContent='Configure um setor na aba Setores';
+  }
+  const wd=weatherDecision();
+  $('todayWeather').textContent=state.weather?.linked?(wd.blocked?'Bloqueado':'Liberado'):'Sem dados';
+  $('todayWeather').className=state.weather?.linked?(wd.blocked?'bad':'ok'):'';
+  $('todayWeatherSub').textContent=wd.reason||'Weather2-2';
+  const last=state.history[0];
+  $('todayLast').textContent=last?historyTitle(last):'—';
+  $('todayLastSub').textContent=last?.at?new Date(last.at).toLocaleString('pt-BR'):'Sem histórico';
+}
+async function loadHistory(showToast=false){
+  try{
+    const r=await api('/api/irrigation/history?limit=100');
+    state.history=Array.isArray(r.history)?r.history:[];
+    save();renderHistory();renderToday();
+    if(showToast)toast('Histórico atualizado');
+  }catch(e){if(showToast)toast('Falha ao carregar histórico')}
+}
+async function syncSchedule(showToast=false,controller=null){
+  const c=controller||selectedController();if(!c)return[];
+  try{
+    const r=await api('/api/inkbird/schedule?device_id='+encodeURIComponent(c.id));
+    state.scheduleByController[c.id]=Array.isArray(r.channels)?r.channels:[];
+    save();
+    if(c.id===selectedController()?.id)renderZones();
+    renderToday();
+    if($('scheduleMapTag')&&c.id===selectedController()?.id){
+      const count=state.scheduleByController[c.id].filter(x=>x.enabled).length;
+      $('scheduleMapTag').textContent=count?count+' setor(es) programado(s)':'Nenhum setor programado';
+    }
+    if(showToast)toast('Programação atualizada');
+    return state.scheduleByController[c.id];
+  }catch(e){
+    if(showToast)toast('Agenda: '+e.message);
+    return [];
+  }
+}
+async function syncAllSchedules(){
+  await Promise.all((state.controllers||[]).map(c=>syncSchedule(false,c)));
+  renderToday();
+}
+async function loadServerConfig(){
+  try{
+    const r=await api('/api/irrigation/config');
+    state.serverConfig=r.config||{};
+    if(r.config?.weather){
+      state.weatherRules={
+        ...state.weatherRules,
+        rainThreshold:Number(r.config.weather.rainThreshold??state.weatherRules.rainThreshold),
+        rainHoldHours:Number(r.config.weather.rainHoldHours??state.weatherRules.rainHoldHours),
+        blockWhileRaining:r.config.weather.blockWhileRaining!==false,
+        serverGuard:r.config.weather.enabled!==false
+      };
+    }
+    if(r.config?.profiles)state.profiles=r.config.profiles;
+    if(r.config?.groups)state.groups=r.config.groups;
+    save();renderProfiles();
+  }catch{}
+}
+async function persistUserAutomation(){
+  try{
+    await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({
+      weather:{
+        enabled:state.weatherRules.serverGuard!==false,
+        rainThreshold:Number(state.weatherRules.rainThreshold||0),
+        rainHoldHours:Number(state.weatherRules.rainHoldHours||0),
+        blockWhileRaining:state.weatherRules.blockWhileRaining!==false,
+        backgroundProtection:Boolean(state.serverConfig?.weather?.backgroundProtection)
+      },
+      profiles:state.profiles,
+      groups:state.groups
+    })});
+  }catch(e){toast('Salvo no aparelho; servidor: '+e.message)}
+}
+function renderProfiles(){
+  const el=$('profileSelect');if(!el)return;
+  const names=Object.keys(state.profiles||{});
+  el.innerHTML='<option value="">Perfil de irrigação...</option>'+names.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');
+}
+function saveCurrentProfile(){
+  const c=selectedController();if(!c)return;
+  const name=prompt('Nome do perfil de irrigação');if(!name?.trim())return;
+  state.profiles[name.trim()]={durations:getPrefs(c).map(p=>Number(p.duration||10)),updated_at:Date.now()};
+  save();renderProfiles();persistUserAutomation();toast('Perfil salvo');
+}
+function applySelectedProfile(){
+  const c=selectedController();if(!c)return;
+  const name=$('profileSelect')?.value;
+  const profile=state.profiles?.[name];
+  if(!profile?.durations)return toast('Selecione um perfil');
+  const prefs=getPrefs(c);
+  prefs.forEach((p,i)=>p.duration=Math.max(1,Math.min(1440,Number(profile.durations[i]||p.duration||10))));
+  state.zonePrefs[c.id]=prefs;save();renderZones();toast('Perfil '+name+' aplicado');
+}
 
 async function api(path,opt={}){
   if(!state.settings.token)throw new Error('Configure o token de controle em Sistema > Configurar conexão.');
@@ -350,6 +705,8 @@ function renderZones(){
   const manualReady=Array.from({length:8},(_,i)=>Boolean(manualMap[i+1])).every(Boolean);
   const nativeReady=status?.mapping?.native_dp45===true;
   const controlReady=Boolean(status?.mapping?.control_ready)||manualReady||nativeReady;
+  const session=activeSession();
+  const now=Date.now();
 
   $('zones').innerHTML=prefs.map((p,i)=>{
     const zone=i+1,sector=start+i,control=controlForZone(status,zone);
@@ -357,11 +714,27 @@ function renderZones(){
     const running=current===true;
     const mapped=Boolean(control);
     const minutes=Number(p.duration||10);
+    const schedule=scheduleChannel(zone);
     const stateLabel=running?'Irrigando':current===false?'Parado':'Aguardando';
+
+    let progress='';
+    if(running&&session){
+      const started=Number(session.started_at||0),ends=Number(session.expected_end_at||0);
+      if(started&&ends){
+        const total=Math.max(1,ends-started);
+        const remaining=ends-now;
+        const pct=Math.max(0,Math.min(100,((now-started)/total)*100));
+        const overdue=remaining<0;
+        progress='<div class="progressWrap"><div class="progressInfo"><span>'+(session.kind==='group'?'Grupo em andamento':'Tempo restante')+'</span><b class="'+(overdue?'overdue':'')+'">'+(overdue?'Tempo previsto excedido':durationText(remaining))+'</b></div><div class="progressTrack"><div class="progressBar" style="width:'+pct.toFixed(1)+'%"></div></div></div>';
+      }
+    }
+
+    const scheduleText=channelLabel(schedule);
     return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
       '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
       '<div class="zoneState">Setor '+pad(sector)+' • Controlador '+controllerIndex(c)+'</div></div>'+
       '<span class="zoneStatus '+(running?'on':'')+'"><span class="zoneStatusDot"></span>'+stateLabel+'</span></div>'+
+      progress+
       '<div class="timeLabel"><span>Tempo de irrigação</span><b>'+minutes+' min</b></div>'+
       '<div class="durationControl">'+
         '<button type="button" aria-label="Diminuir tempo" onclick="adjustDuration('+zone+',-1)">−</button>'+
@@ -369,13 +742,14 @@ function renderZones(){
         '<button type="button" aria-label="Aumentar tempo" onclick="adjustDuration('+zone+',1)">+</button>'+
       '</div>'+
       '<div class="quickTimes">'+[1,5,10,15,20,30].map(v=>'<button type="button" class="'+(minutes===v?'active':'')+'" onclick="setDuration('+zone+','+v+')">'+v+'m</button>').join('')+'</div>'+
+      '<div class="scheduleSummary '+(schedule?.enabled?'on':'')+'">Automático: '+escapeHtml(scheduleText)+'</div>'+
       '<div class="sectorActions">'+
       '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">Irrigar • '+minutes+' min</button>'+
       '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Parar</button>'+
-      '</div><button class="btn renameBtn" onclick="editSector('+zone+')">Renomear setor</button></div>';
+      '</div>'+
+      '<div class="zoneExtraActions"><button class="btn soft" onclick="openSchedule('+zone+')">Programar</button><button class="btn soft" onclick="editSector('+zone+')">Renomear</button></div></div>';
   }).join('');
 }
-
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
 async function syncControllers(showToast=true){
@@ -392,14 +766,23 @@ async function syncControllers(showToast=true){
   }catch(e){showError(e.message);if(showToast)toast('Falha ao buscar controladores');return[]}
 }
 
-async function syncStatus(showToast=false){
-  const c=selectedController();
+async function syncStatus(showToast=false,controller=null){
+  const c=controller||selectedController();
   if(!c)return;
   try{
     const s=await api('/api/inkbird/status?device_id='+encodeURIComponent(c.id));
-    state.statusByController[c.id]=s;save();renderStatus();
+    state.statusByController[c.id]=s;
+    if(s?.runtime?.active_session)state.activeSessions[c.id]=s.runtime.active_session;
+    else if(Number(s?.mapping?.active_mask||0)===0)delete state.activeSessions[c.id];
+    save();
+    if(c.id===selectedController()?.id)renderStatus();
+    renderToday();
     if(showToast)toast('Controlador atualizado');
-  }catch(e){showError(e.message);if(showToast)toast('Falha ao ler controlador')}
+  }catch(e){if(c.id===selectedController()?.id)showError(e.message);if(showToast)toast('Falha ao ler controlador')}
+}
+async function syncAllStatuses(){
+  await Promise.all((state.controllers||[]).map(c=>syncStatus(false,c)));
+  renderToday();
 }
 
 function renderStatus(){
@@ -481,7 +864,7 @@ function weatherDecision(){
 async function syncWeather(showToast=false){
   try{
     const w=await api('/api/weather/status');state.weather=w;state.weatherAt=Date.now();
-    if(w?.metrics?.rainDetected)state.lastRainAt=Date.now();save();renderWeather();
+    if(w?.metrics?.rainDetected)state.lastRainAt=Date.now();save();renderWeather();renderToday();
     if(showToast)toast(w.linked?'Clima atualizado':'Weather2-2 não encontrada');
   }catch(e){if(showToast)toast('Falha ao atualizar clima')}
 }
@@ -502,6 +885,129 @@ function renderWeather(){
 }
 
 
+
+
+function openSchedule(zone){
+  const c=selectedController();if(!c)return;
+  const sector=sectorStart(c)+zone-1;
+  const ch=scheduleChannel(zone);
+  const prefs=getPrefs(c);
+  $('scheduleZone').value=zone;
+  $('scheduleTitle').textContent='Programar Setor '+pad(sector);
+  $('scheduleEnabled').checked=ch?.enabled!==false;
+  $('scheduleDuration').value=Math.max(1,Math.min(255,Number(ch?.duration_minutes||prefs[zone-1]?.duration||10)));
+  $('scheduleMode').value=String(Number(ch?.cycle_mode||0));
+  const times=(ch?.start_times||[]).map(x=>x.value||x);
+  document.querySelectorAll('.scheduleTime').forEach((input,i)=>input.value=times[i]||'');
+  const mask=Number(ch?.days_mask ?? 127);
+  document.querySelectorAll('.scheduleDay').forEach(cb=>cb.checked=Boolean(mask&Number(cb.value)));
+  $('scheduleIntervalDays').value=Number(ch?.cycle_mode)===3?Math.max(1,Number(ch?.days_mask||1)):1;
+  $('scheduleRain').checked=ch?.rain_sensor_follow!==false;
+  updateScheduleModeUI();
+  $('scheduleDlg').showModal();
+}
+function updateScheduleModeUI(){
+  const mode=Number($('scheduleMode').value||0);
+  $('scheduleDaysWrap').style.display=mode===0?'':'none';
+  $('intervalDaysWrap').style.display=mode===3?'':'none';
+}
+async function saveScheduleConfig(){
+  const c=selectedController();if(!c)return;
+  const zone=Number($('scheduleZone').value);
+  const enabled=$('scheduleEnabled').checked;
+  const times=Array.from(document.querySelectorAll('.scheduleTime')).map(x=>x.value).filter(Boolean);
+  const daysMask=Array.from(document.querySelectorAll('.scheduleDay:checked')).reduce((m,cb)=>m|Number(cb.value),0);
+  const mode=Number($('scheduleMode').value||0);
+  const duration=Math.max(1,Math.min(255,Math.round(Number($('scheduleDuration').value)||10)));
+  if(enabled&&!times.length)return toast('Informe pelo menos um horário');
+  if(enabled&&mode===0&&!daysMask)return toast('Selecione pelo menos um dia');
+  const now=new Date();
+  const payload={
+    device_id:c.id,
+    zone,
+    enabled,
+    duration_minutes:duration,
+    start_times:times,
+    cycle_mode:mode,
+    days_mask:daysMask,
+    interval_days:Math.max(1,Math.min(9,Number($('scheduleIntervalDays').value)||1)),
+    interval_start:{year_offset:now.getFullYear()-2000,month:now.getMonth()+1,day:now.getDate()},
+    rain_sensor_follow:$('scheduleRain').checked
+  };
+  if(!confirm((enabled?'SALVAR':'DESATIVAR')+' a programação automática deste setor?'))return;
+  try{
+    $('saveSchedule').disabled=true;
+    const r=await api('/api/inkbird/schedule',{method:'POST',body:JSON.stringify(payload)});
+    state.scheduleByController[c.id]=r.channels||state.scheduleByController[c.id]||[];
+    if(enabled){
+      const prefs=getPrefs(c);prefs[zone-1].duration=duration;state.zonePrefs[c.id]=prefs;
+    }
+    save();$('scheduleDlg').close();renderZones();renderToday();
+    toast(enabled?'Programação salva no IIC-800':'Programação desativada');
+    loadHistory(false);
+  }catch(e){toast('Falha: '+e.message)}
+  finally{$('saveSchedule').disabled=false}
+}
+function openGroupDialog(){
+  const c=selectedController();if(!c)return;
+  const prefs=getPrefs(c),start=sectorStart(c);
+  const saved=Object.keys(state.groups||{});
+  $('groupSavedSelect').innerHTML='<option value="">Novo grupo</option>'+saved.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');
+  $('groupRows').innerHTML=prefs.map((p,i)=>{
+    const zone=i+1,sector=start+i;
+    return '<div class="groupRow"><input class="groupCheck" type="checkbox" data-zone="'+zone+'"><label>Setor '+pad(sector)+'<br><small>'+escapeHtml(p.name||'')+'</small></label><input class="groupDuration" data-zone="'+zone+'" type="number" min="1" max="1440" value="'+Number(p.duration||10)+'"></div>';
+  }).join('');
+  $('groupName').value='Grupo '+pad(start)+'–'+pad(start+7);
+  $('groupMode').value='order';
+  $('groupDlg').showModal();
+}
+function loadSavedGroup(){
+  const name=$('groupSavedSelect').value;
+  const group=state.groups?.[name];
+  if(!group)return;
+  $('groupName').value=group.name||name;
+  $('groupMode').value=group.mode==='together'?'together':'order';
+  document.querySelectorAll('.groupCheck').forEach(cb=>{
+    const item=(group.zones||[]).find(x=>Number(x.zone)===Number(cb.dataset.zone));
+    cb.checked=Boolean(item);
+    const input=document.querySelector('.groupDuration[data-zone="'+cb.dataset.zone+'"]');
+    if(item&&input)input.value=Number(item.duration_minutes||10);
+  });
+}
+async function startGroupNow(){
+  const c=selectedController();if(!c)return;
+  const checks=Array.from(document.querySelectorAll('.groupCheck:checked'));
+  const zones=checks.map(cb=>{
+    const zone=Number(cb.dataset.zone);
+    const input=document.querySelector('.groupDuration[data-zone="'+zone+'"]');
+    return {zone,duration_minutes:Math.max(1,Math.min(1440,Number(input?.value)||10))};
+  });
+  if(!zones.length)return toast('Selecione pelo menos um setor');
+  const name=$('groupName').value.trim()||'Grupo de irrigação';
+  const mode=$('groupMode').value==='together'?'together':'order';
+  const label=mode==='order'?'em sequência':'ao mesmo tempo';
+  if(!confirm('Iniciar '+name+' '+label+'?\n\nSetores: '+zones.map(x=>x.zone).join(', ')))return;
+  try{
+    $('startGroup').disabled=true;
+    const r=await api('/api/inkbird/group',{method:'POST',body:JSON.stringify({device_id:c.id,name,mode,zones})});
+    state.groups[name]={name,mode,zones,updated_at:Date.now()};
+    state.activeSessions[c.id]={kind:'group',name,mode,zones,started_at:r.started_at,expected_end_at:r.expected_end_at,duration_minutes:(r.expected_end_at-r.started_at)/60000};
+    save();persistUserAutomation();$('groupDlg').close();toast('Grupo iniciado');
+    setTimeout(()=>syncStatus(false),500);refreshStatusBurst();loadHistory(false);renderZones();renderToday();
+  }catch(e){toast('Falha: '+e.message)}
+  finally{$('startGroup').disabled=false}
+}
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e});
+async function installPwa(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(()=>null);
+    deferredInstallPrompt=null;
+    return;
+  }
+  alert('No iPhone:\n\n1. Toque no botão Compartilhar do Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Confirme “Adicionar”.\n\nA Central Fazenda 2E abrirá como aplicativo em tela cheia.');
+}
 
 function booleanFunctionOptions(){
   const s=currentStatus();
@@ -611,8 +1117,10 @@ async function startSector(zone){
     try{
       const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
       applyCommandRuntimeState(result);
+      state.activeSessions[c.id]={kind:'zone',zone,sector,duration_minutes:minutes,started_at:result.started_at||Date.now(),expected_end_at:result.expected_end_at||(Date.now()+minutes*60000),source:'app'};
+      save();renderZones();renderToday();
       toast('Confirmado: Setor '+pad(sector)+' irrigando por '+minutes+' min');
-      refreshStatusBurst();
+      refreshStatusBurst();loadHistory(false);
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -644,8 +1152,9 @@ async function sendZone(zone,on){
     try{
       const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'stop',zone})});
       applyCommandRuntimeState(result);
+      delete state.activeSessions[c.id];save();renderZones();renderToday();
       toast('Irrigação manual parada');
-      refreshStatusBurst();
+      refreshStatusBurst();loadHistory(false);
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -665,7 +1174,7 @@ async function resumeAutomaticMode(){
     const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'auto'})});
     applyCommandRuntimeState(result);
     toast('Controlador voltou ao modo automático');
-    refreshStatusBurst();
+    refreshStatusBurst();loadHistory(false);
   }catch(e){toast('Falha: '+e.message)}
 }
 
@@ -678,12 +1187,17 @@ function editSector(zone){
 
 async function refreshAll(){
   if(busy)return;busy=true;$('refresh').textContent='● Atualizando';showError('');
-  try{await syncControllers(false);await Promise.all([syncStatus(false),syncWeather(false)]);toast('Central atualizada')}
-  finally{busy=false;$('refresh').textContent='● Atualizar'}
+  try{
+    await syncControllers(false);
+    await Promise.all([syncAllStatuses(),syncWeather(false),loadServerConfig(),loadHistory(false),syncAllSchedules()]);
+    renderToday();renderProfiles();
+    toast('Central atualizada');
+  }finally{busy=false;$('refresh').textContent='● Atualizar'}
 }
 
 function changeController(id){
-  state.selectedControllerId=id||null;save();renderControllers();renderStatus();syncStatus(false);
+  state.selectedControllerId=id||null;save();renderControllers();renderStatus();
+  Promise.all([syncStatus(false),syncSchedule(false)]).then(()=>renderToday());
 }
 $('controllerSelect').onchange=()=>changeController($('controllerSelect').value);
 if($('quickControllerSelect'))$('quickControllerSelect').onchange=()=>changeController($('quickControllerSelect').value);
@@ -696,10 +1210,39 @@ $('saveManualMap').onclick=saveManualMapping;
 $('clearManualMap').onclick=clearManualMapping;
 $('checkWeather').onclick=()=>syncWeather(true);
 $('refresh').onclick=refreshAll;
-$('saveWeatherRules').onclick=()=>{
-  state.weatherRules={rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),blockWhileRaining:$('blockWhileRaining').checked};
-  save();renderWeather();toast('Regras meteorológicas salvas');
+$('refreshToday').onclick=refreshAll;
+$('refreshHistory').onclick=()=>loadHistory(true);
+$('saveProfile').onclick=saveCurrentProfile;
+$('applyProfile').onclick=applySelectedProfile;
+$('openGroup').onclick=openGroupDialog;
+$('startGroup').onclick=startGroupNow;
+$('groupSavedSelect').onchange=loadSavedGroup;
+$('scheduleMode').onchange=updateScheduleModeUI;
+$('saveSchedule').onclick=saveScheduleConfig;
+$('installApp').onclick=installPwa;
+$('checkLinkage').onclick=checkCloudLinkage;
+$('saveWeatherRules').onclick=async()=>{
+  state.weatherRules={
+    rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),
+    rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),
+    refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),
+    blockWhileRaining:$('blockWhileRaining').checked,
+    serverGuard:$('serverWeatherGuard').checked
+  };
+  save();renderWeather();await persistUserAutomation();toast('Regras meteorológicas salvas');
 };
+
+async function checkCloudLinkage(){
+  try{
+    $('checkLinkage').disabled=true;
+    const r=await api('/api/irrigation/linkage');
+    $('linkageRaw').textContent=JSON.stringify(r,null,2);
+    const hasWeather=Boolean(r?.weather?.linkage);
+    const hasController=(r?.controllers||[]).some(x=>x.linkage);
+    toast(hasWeather&&hasController?'Automação Tuya compatível detectada':'Diagnóstico da automação concluído');
+  }catch(e){$('linkageRaw').textContent='Falha: '+e.message;toast('Falha ao verificar automação Tuya')}
+  finally{$('checkLinkage').disabled=false}
+}
 
 function openSettings(){$('apiUrlInput').value=state.settings.apiUrl||DEFAULT_API;$('tokenInput').value=state.settings.token||'';$('settingsDlg').showModal()}
 $('settingsBtn').onclick=openSettings;$('settingsBtn2').onclick=openSettings;
@@ -710,11 +1253,21 @@ $('rainThreshold').value=state.weatherRules.rainThreshold;
 $('rainHoldHours').value=state.weatherRules.rainHoldHours;
 $('weatherRefreshMinutes').value=state.weatherRules.refreshMinutes;
 $('blockWhileRaining').checked=state.weatherRules.blockWhileRaining!==false;
+$('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 
-renderControllers();renderStatus();renderWeather();renderSystem();
+renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/inkbird/sw.js').catch(()=>null);
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
-setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncStatus(false);}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
+setInterval(()=>{
+  if(document.visibilityState!=='visible')return;
+  renderZones();renderToday();
+  const session=activeSession();
+  if(session?.expected_end_at&&Date.now()>Number(session.expected_end_at)+1500&&Date.now()-overdueSyncAt>10000){
+    overdueSyncAt=Date.now();syncStatus(false);
+  }
+},1000);
 </script>
 </body>
 </html>

@@ -35,9 +35,15 @@ async function readScheduleRaw(deviceId){
   return status.find(x=>x.code==='normal_time')?.value??shadow.find(x=>x.code==='normal_time')?.value??null;
 }
 async function writeScheduleRaw(deviceId,value){
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'normal_time',value}]
-  });
+  try{
+    return await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
+      commands:[{code:'normal_time',value}]
+    });
+  }catch(firstError){
+    return tuyaRequest('POST',`/v2.0/cloud/thing/${deviceId}/shadow/properties/issue`,{
+      properties:JSON.stringify({normal_time:value})
+    });
+  }
 }
 
 export default async function handler(req,res){

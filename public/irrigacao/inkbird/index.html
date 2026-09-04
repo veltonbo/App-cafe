@@ -19,11 +19,11 @@
 .box{border-radius:24px;padding:19px;margin-top:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.note{font-size:.85rem;color:var(--m);line-height:1.5}
 .btn{border:0;border-radius:14px;padding:12px 14px;font-weight:850;cursor:pointer}.primary{background:var(--g);color:#fff}.soft{background:var(--gs);color:var(--g)}.danger{background:var(--rs);color:var(--r)}.btn:disabled{opacity:.45;cursor:not-allowed}
 .zoneGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.zone{border-radius:18px;padding:15px}.zoneTop{display:flex;justify-content:space-between;gap:10px;align-items:center}.zoneName{font-weight:900;font-size:1.02rem}.zoneState{font-size:.78rem;color:var(--m)}.zoneMeta{display:flex;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid #edf2ef}.zoneMeta span{color:var(--m);font-size:.82rem}.zone .btn{width:100%;margin-top:10px}
-.capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}
+.capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}.weatherGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.weatherCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.weatherCard small{display:block;color:var(--m);margin-bottom:5px}.weatherCard strong{font-size:1.05rem}.guard{border:1px solid #a8d8ca;background:#eef9f5;border-radius:16px;padding:14px;margin-top:12px}.guard.blocked{border-color:#efbbb7;background:#fff1f0}.ruleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.ruleGrid label{display:grid;gap:5px;font-size:.82rem;font-weight:800}.ruleGrid input{width:100%;border:1px solid var(--l);border-radius:10px;padding:10px;background:#fff}.checkLine{display:flex;gap:9px;align-items:center;font-weight:800}.checkLine input{width:auto}
 .statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
 details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
-@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}}
+@media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid{grid-template-columns:1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}}
 </style>
 </head>
 <body>
@@ -61,6 +61,35 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </section>
 
 <section class="box">
+  <div class="head"><h2>Estação meteorológica • Weather2-2</h2><button id="checkWeather" class="btn soft">Atualizar clima</button></div>
+  <div class="weatherGrid">
+    <div class="weatherCard"><small>Chuva</small><strong id="rainNow">Aguardando</strong></div>
+    <div class="weatherCard"><small>Chuva acumulada</small><strong id="rainAmount">—</strong></div>
+    <div class="weatherCard"><small>Temperatura</small><strong id="weatherTemp">—</strong></div>
+    <div class="weatherCard"><small>Umidade</small><strong id="weatherHum">—</strong></div>
+  </div>
+  <div class="statusLine"><span>Estação localizada</span><strong id="weatherLinked">Aguardando</strong></div>
+  <div class="statusLine"><span>Online na Tuya</span><strong id="weatherOnline">—</strong></div>
+  <div class="statusLine"><span>Vento</span><strong id="weatherWind">—</strong></div>
+  <div class="statusLine"><span>Última leitura</span><strong id="weatherUpdated">Nunca</strong></div>
+
+  <div id="weatherGuard" class="guard">
+    <strong id="guardTitle">Proteção meteorológica aguardando dados</strong>
+    <p id="guardReason" class="note" style="margin:5px 0 0">Quando os dados da estação forem identificados, o app poderá bloquear uma irrigação desnecessária depois de chuva.</p>
+  </div>
+
+  <div class="ruleGrid">
+    <label>Chuva acumulada para bloquear (mm)<input id="rainThreshold" type="number" min="0" step="0.1" value="5"></label>
+    <label>Bloqueio após chuva (horas)<input id="rainHoldHours" type="number" min="0" max="168" step="1" value="12"></label>
+    <label>Atualizar clima a cada (min)<input id="weatherRefreshMinutes" type="number" min="1" max="60" step="1" value="5"></label>
+  </div>
+  <label class="checkLine" style="margin-top:12px"><input id="blockWhileRaining" type="checkbox" checked> Bloquear irrigação enquanto estiver chovendo</label>
+  <button id="saveWeatherRules" class="btn primary" style="margin-top:12px">Salvar regras meteorológicas</button>
+
+  <details><summary>Dados meteorológicos detectados</summary><pre id="weatherRaw">Nenhuma leitura realizada.</pre></details>
+</section>
+
+<section class="box">
   <div class="head"><h2>Zonas de irrigação</h2><button id="renameZones" class="btn soft">Editar nomes</button></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
@@ -94,8 +123,9 @@ const API='https://app-cafe.vercel.app';
 const SETTINGS_KEY='viveiroEkazaRealV1';
 const INK_KEY='fazenda2eInkbirdV1';
 const defaultZones=Array.from({length:8},(_,i)=>({name:'Zona '+(i+1),duration:10}));
-let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null};
+let local=JSON.parse(localStorage.getItem(INK_KEY)||'null')||{zones:defaultZones,last:null,weather:null,weatherAt:null,lastRainAt:null,weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}};
 if(!Array.isArray(local.zones)||local.zones.length!==8)local.zones=defaultZones;
+if(!local.weatherRules)local.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
 const shared=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null')||{};
 const token=shared?.settings?.token||'';
 const $=id=>document.getElementById(id);
@@ -109,6 +139,68 @@ function renderZones(){
       <button class="btn soft" disabled>Acionamento será liberado após mapear o controlador</button>
     </div>`).join('');
 }
+
+function metricText(metric,fallbackUnit=''){
+  if(!metric||metric.value===null||metric.value===undefined)return '—';
+  const unit=metric.unit||fallbackUnit||'';
+  return String(metric.value)+(unit?' '+unit:'');
+}
+function getRainAmount(metrics){
+  const candidates=[metrics?.rain24h,metrics?.rainToday,metrics?.rainGeneric].filter(Boolean);
+  return candidates.length?Number(candidates[0].value):null;
+}
+function weatherDecision(){
+  const w=local.weather;
+  const rules=local.weatherRules||{};
+  if(!w?.linked||!w?.metrics)return {blocked:false,title:'Proteção meteorológica aguardando dados',reason:'A estação ainda não forneceu dados suficientes para tomar decisão.'};
+  const m=w.metrics;
+  const amount=getRainAmount(m);
+  if(rules.blockWhileRaining&&m.rainDetected){
+    return {blocked:true,title:'Irrigação bloqueada por chuva',reason:'A Weather2-2 indica chuva agora.'};
+  }
+  const holdMs=Math.max(0,Number(rules.rainHoldHours||0))*3600000;
+  if(local.lastRainAt&&holdMs>0&&(Date.now()-local.lastRainAt)<holdMs){
+    const remain=Math.ceil((holdMs-(Date.now()-local.lastRainAt))/3600000);
+    return {blocked:true,title:'Irrigação bloqueada após chuva',reason:'Bloqueio pós-chuva ativo. Restam aproximadamente '+remain+' h.'};
+  }
+  if(Number.isFinite(amount)&&amount>=Number(rules.rainThreshold||0)){
+    return {blocked:true,title:'Irrigação bloqueada por chuva acumulada',reason:'A estação registrou '+amount+' mm, acima do limite de '+Number(rules.rainThreshold||0)+' mm.'};
+  }
+  return {blocked:false,title:'Irrigação liberada pelo clima',reason:'Nenhum bloqueio meteorológico ativo com os dados atuais.'};
+}
+async function checkWeather(showToast=true){
+  try{
+    const w=await api('/api/weather/status');
+    local.weather=w;local.weatherAt=Date.now();
+    if(w?.metrics?.rainDetected)local.lastRainAt=Date.now();
+    save();renderWeather();
+    if(showToast)toast(w.linked?'Weather2-2 atualizada':'Weather2-2 não encontrada');
+  }catch(e){
+    if(showToast)toast('Clima: '+(e.message||String(e)));
+  }
+}
+function renderWeather(){
+  const w=local.weather;
+  const m=w?.metrics||{};
+  $('weatherLinked').textContent=w?.linked?'Sim':'Não';
+  $('weatherLinked').className=w?.linked?'ok':'bad';
+  $('weatherOnline').textContent=w?.device?.online===true?'Online':w?.device?.online===false?'Offline':'—';
+  $('weatherOnline').className=w?.device?.online===true?'ok':w?.device?.online===false?'bad':'';
+  $('rainNow').textContent=m.rainDetected?'Chovendo / chuva detectada':'Sem chuva detectada';
+  $('rainNow').className=m.rainDetected?'bad':'ok';
+  const rain=getRainAmount(m);
+  $('rainAmount').textContent=Number.isFinite(rain)?rain+' mm':'—';
+  $('weatherTemp').textContent=metricText(m.temperature,'°C');
+  $('weatherHum').textContent=metricText(m.humidity,'%');
+  $('weatherWind').textContent=metricText(m.windSpeed);
+  $('weatherUpdated').textContent=local.weatherAt?new Date(local.weatherAt).toLocaleString('pt-BR'):'Nunca';
+  $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{},errors:w?.errors||{}},null,2);
+  const d=weatherDecision();
+  $('weatherGuard').className='guard '+(d.blocked?'blocked':'');
+  $('guardTitle').textContent=d.title;
+  $('guardReason').textContent=d.reason;
+}
+
 async function api(path){
   if(!token)throw new Error('Abra primeiro o painel do Viveiro e configure o token de controle.');
   const r=await fetch(API+path,{headers:{Authorization:'Bearer '+token}});
@@ -157,7 +249,16 @@ function renderError(msg){
   $('liveText').textContent='Falha na consulta';
   $('errorsRaw').textContent=msg;
 }
-$('checkDevice').onclick=check;$('refresh').onclick=check;
+$('checkDevice').onclick=check;$('refresh').onclick=()=>{check();checkWeather(false)};
+$('checkWeather').onclick=()=>checkWeather(true);
+$('saveWeatherRules').onclick=()=>{
+  local.weatherRules={
+    rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),
+    rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),
+    refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),
+    blockWhileRaining:$('blockWhileRaining').checked
+  };save();renderWeather();toast('Regras meteorológicas salvas');
+};
 $('renameZones').onclick=()=>{
   local.zones=local.zones.map((z,i)=>{
     const name=prompt('Nome da Zona '+(i+1),z.name);
@@ -167,7 +268,14 @@ $('renameZones').onclick=()=>{
   });save();renderZones();
 };
 renderZones();
+$('rainThreshold').value=local.weatherRules.rainThreshold;
+$('rainHoldHours').value=local.weatherRules.rainHoldHours;
+$('weatherRefreshMinutes').value=local.weatherRules.refreshMinutes;
+$('blockWhileRaining').checked=local.weatherRules.blockWhileRaining!==false;
 if(local.last?.data)renderStatus(local.last.data);
+renderWeather();
+if(token)checkWeather(false);
+setInterval(()=>{if(token&&document.visibilityState==='visible')checkWeather(false)},Math.max(1,Number(local.weatherRules.refreshMinutes)||5)*60000);
 </script>
 </body>
 </html>

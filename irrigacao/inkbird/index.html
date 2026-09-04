@@ -1064,8 +1064,10 @@ async function startSector(zone){
     try{
       const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
       applyCommandRuntimeState(result);
+      state.activeSessions[c.id]={kind:'zone',zone,sector,duration_minutes:minutes,started_at:result.started_at||Date.now(),expected_end_at:result.expected_end_at||(Date.now()+minutes*60000),source:'app'};
+      save();renderZones();renderToday();
       toast('Confirmado: Setor '+pad(sector)+' irrigando por '+minutes+' min');
-      refreshStatusBurst();
+      refreshStatusBurst();loadHistory(false);
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -1097,8 +1099,9 @@ async function sendZone(zone,on){
     try{
       const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'stop',zone})});
       applyCommandRuntimeState(result);
+      delete state.activeSessions[c.id];save();renderZones();renderToday();
       toast('Irrigação manual parada');
-      refreshStatusBurst();
+      refreshStatusBurst();loadHistory(false);
     }catch(e){toast('Falha: '+e.message)}
     return;
   }
@@ -1118,7 +1121,7 @@ async function resumeAutomaticMode(){
     const result=await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'auto'})});
     applyCommandRuntimeState(result);
     toast('Controlador voltou ao modo automático');
-    refreshStatusBurst();
+    refreshStatusBurst();loadHistory(false);
   }catch(e){toast('Falha: '+e.message)}
 }
 
@@ -1154,9 +1157,24 @@ $('saveManualMap').onclick=saveManualMapping;
 $('clearManualMap').onclick=clearManualMapping;
 $('checkWeather').onclick=()=>syncWeather(true);
 $('refresh').onclick=refreshAll;
-$('saveWeatherRules').onclick=()=>{
-  state.weatherRules={rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),blockWhileRaining:$('blockWhileRaining').checked};
-  save();renderWeather();toast('Regras meteorológicas salvas');
+$('refreshToday').onclick=refreshAll;
+$('refreshHistory').onclick=()=>loadHistory(true);
+$('saveProfile').onclick=saveCurrentProfile;
+$('applyProfile').onclick=applySelectedProfile;
+$('openGroup').onclick=openGroupDialog;
+$('startGroup').onclick=startGroupNow;
+$('scheduleMode').onchange=updateScheduleModeUI;
+$('saveSchedule').onclick=saveScheduleConfig;
+$('installApp').onclick=installPwa;
+$('saveWeatherRules').onclick=async()=>{
+  state.weatherRules={
+    rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),
+    rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),
+    refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),
+    blockWhileRaining:$('blockWhileRaining').checked,
+    serverGuard:$('serverWeatherGuard').checked
+  };
+  save();renderWeather();await persistUserAutomation();toast('Regras meteorológicas salvas');
 };
 
 function openSettings(){$('apiUrlInput').value=state.settings.apiUrl||DEFAULT_API;$('tokenInput').value=state.settings.token||'';$('settingsDlg').showModal()}
@@ -1168,11 +1186,14 @@ $('rainThreshold').value=state.weatherRules.rainThreshold;
 $('rainHoldHours').value=state.weatherRules.rainHoldHours;
 $('weatherRefreshMinutes').value=state.weatherRules.refreshMinutes;
 $('blockWhileRaining').checked=state.weatherRules.blockWhileRaining!==false;
+$('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 
-renderControllers();renderStatus();renderWeather();renderSystem();
+renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/inkbird/sw.js').catch(()=>null);
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncStatus(false);}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
+setInterval(()=>{if(document.visibilityState==='visible'){renderZones();renderToday();}},1000);
 </script>
 </body>
 </html>

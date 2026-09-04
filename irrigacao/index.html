@@ -28,14 +28,18 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <section class="grid"><div class="stat"><small>Ciclo</small><strong>1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
 <section class="box">
-<div class="head"><h2>Estado real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar</button></div>
+<div class="head"><h2>Estado em tempo real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar agora</button></div>
+<div class="statusLine"><span>Conexão Tuya</span><strong id="connectionState">Não conectada</strong></div>
+<div class="statusLine"><span>Fase atual</span><strong id="phaseState">Desconhecida</strong></div>
+<div class="statusLine"><span>Ciclo detectado</span><strong id="cycleDetected">Aguardando</strong></div>
+<div class="statusLine"><span>Contagem Tuya</span><strong id="countdownState">—</strong></div>
 <p class="note" id="cycleInfo">A programação 1/2 já existente no EKAZA será preservada.</p>
 </section>
 
 <section class="box">
 <div class="head"><h2>Controle manual</h2></div>
-<div class="row"><button id="manualOn" class="btn primary">Ligar agora</button><button id="manualOff" class="btn danger">Desligar agora</button></div>
-<p class="note">Esses botões alteram apenas o estado da saída. Não vamos editar o <b>cycle_time</b> até confirmar o formato exato usado pelo seu EKAZA.</p>
+<div class="row"><button id="manualOn" class="btn primary">Forçar ligado</button><button id="manualOff" class="btn danger">Forçar desligado</button></div>
+<p class="note">Esses comandos atuam somente na saída <b>switch_1</b>. A programação nativa do ciclo continua preservada.</p>
 </section>
 
 <section class="box">
@@ -43,6 +47,8 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <div class="timeline"><div class="step onStep"><b>💧 1 minuto ligado</b><small>Executado pelo próprio EKAZA.</small></div><div class="step offStep"><b>⏸ 2 minutos desligado</b><small>Depois ele volta a ligar conforme a programação existente.</small></div></div>
 <p class="note">O app não recria esse ciclo. Assim, a programação continua funcionando mesmo com o celular ou o site fechados.</p>
 </section>
+
+<section class="box"><div class="head"><h2>Diagnóstico do ciclo</h2></div><p class="note">Leitura somente. Aqui mostramos o <b>cycle_time</b> recebido da Tuya sem modificar a programação.</p><details class="diag"><summary>Ver dados recebidos da Tuya</summary><pre id="cycleRaw">Nenhum dado recebido ainda.</pre></details></section>
 
 <section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
 

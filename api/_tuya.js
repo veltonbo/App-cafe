@@ -33,9 +33,18 @@ export function authorize(req, res) {
   return true;
 }
 
+export function ensureCloudConfig(res) {
+  if (!accessKey || !secretKey) {
+    res.status(500).json({ ok: false, error: 'TUYA_ACCESS_ID/TUYA_ACCESS_SECRET não configurados no servidor.' });
+    return false;
+  }
+  return true;
+}
+
 export function ensureConfig(res) {
-  if (!accessKey || !secretKey || !deviceId) {
-    res.status(500).json({ ok: false, error: 'Credenciais Tuya incompletas no servidor.' });
+  if (!ensureCloudConfig(res)) return false;
+  if (!deviceId) {
+    res.status(500).json({ ok: false, error: 'TUYA_DEVICE_ID do EKAZA não configurado no servidor.' });
     return false;
   }
   return true;

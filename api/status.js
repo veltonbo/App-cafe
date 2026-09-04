@@ -1,4 +1,5 @@
 import { applyCors, authorize, ensureConfig, tuyaRequest, getDeviceId } from './_tuya.js';
+import { decodeCycle } from './_cycle.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -17,6 +18,7 @@ export default async function handler(req, res) {
       switch_1: map.switch_1 ?? null,
       countdown_1: map.countdown_1 ?? null,
       cycle_time: map.cycle_time ?? null,
+      cycle_config: decodeCycle(map.cycle_time),
       relay_status: map.relay_status ?? null,
       switch_inching: map.switch_inching ?? null,
       raw: map

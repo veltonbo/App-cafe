@@ -848,6 +848,114 @@ function renderWeather(){
 
 
 
+
+function openSchedule(zone){
+  const c=selectedController();if(!c)return;
+  const sector=sectorStart(c)+zone-1;
+  const ch=scheduleChannel(zone);
+  const prefs=getPrefs(c);
+  $('scheduleZone').value=zone;
+  $('scheduleTitle').textContent='Programar Setor '+pad(sector);
+  $('scheduleEnabled').checked=ch?.enabled!==false;
+  $('scheduleDuration').value=Math.max(1,Math.min(255,Number(ch?.duration_minutes||prefs[zone-1]?.duration||10)));
+  $('scheduleMode').value=String(Number(ch?.cycle_mode||0));
+  const times=(ch?.start_times||[]).map(x=>x.value||x);
+  document.querySelectorAll('.scheduleTime').forEach((input,i)=>input.value=times[i]||'');
+  const mask=Number(ch?.days_mask ?? 127);
+  document.querySelectorAll('.scheduleDay').forEach(cb=>cb.checked=Boolean(mask&Number(cb.value)));
+  $('scheduleIntervalDays').value=Number(ch?.cycle_mode)===3?Math.max(1,Number(ch?.days_mask||1)):1;
+  $('scheduleRain').checked=ch?.rain_sensor_follow!==false;
+  updateScheduleModeUI();
+  $('scheduleDlg').showModal();
+}
+function updateScheduleModeUI(){
+  const mode=Number($('scheduleMode').value||0);
+  $('scheduleDaysWrap').style.display=mode===0?'':'none';
+  $('intervalDaysWrap').style.display=mode===3?'':'none';
+}
+async function saveScheduleConfig(){
+  const c=selectedController();if(!c)return;
+  const zone=Number($('scheduleZone').value);
+  const enabled=$('scheduleEnabled').checked;
+  const times=Array.from(document.querySelectorAll('.scheduleTime')).map(x=>x.value).filter(Boolean);
+  const daysMask=Array.from(document.querySelectorAll('.scheduleDay:checked')).reduce((m,cb)=>m|Number(cb.value),0);
+  const mode=Number($('scheduleMode').value||0);
+  const duration=Math.max(1,Math.min(255,Math.round(Number($('scheduleDuration').value)||10)));
+  if(enabled&&!times.length)return toast('Informe pelo menos um horário');
+  if(enabled&&mode===0&&!daysMask)return toast('Selecione pelo menos um dia');
+  const now=new Date();
+  const payload={
+    device_id:c.id,
+    zone,
+    enabled,
+    duration_minutes:duration,
+    start_times:times,
+    cycle_mode:mode,
+    days_mask:daysMask,
+    interval_days:Math.max(1,Math.min(9,Number($('scheduleIntervalDays').value)||1)),
+    interval_start:{year_offset:now.getFullYear()-2000,month:now.getMonth()+1,day:now.getDate()},
+    rain_sensor_follow:$('scheduleRain').checked
+  };
+  if(!confirm((enabled?'SALVAR':'DESATIVAR')+' a programação automática deste setor?'))return;
+  try{
+    $('saveSchedule').disabled=true;
+    const r=await api('/api/inkbird/schedule',{method:'POST',body:JSON.stringify(payload)});
+    state.scheduleByController[c.id]=r.channels||state.scheduleByController[c.id]||[];
+    if(enabled){
+      const prefs=getPrefs(c);prefs[zone-1].duration=duration;state.zonePrefs[c.id]=prefs;
+    }
+    save();$('scheduleDlg').close();renderZones();renderToday();
+    toast(enabled?'Programação salva no IIC-800':'Programação desativada');
+    loadHistory(false);
+  }catch(e){toast('Falha: '+e.message)}
+  finally{$('saveSchedule').disabled=false}
+}
+function openGroupDialog(){
+  const c=selectedController();if(!c)return;
+  const prefs=getPrefs(c),start=sectorStart(c);
+  $('groupRows').innerHTML=prefs.map((p,i)=>{
+    const zone=i+1,sector=start+i;
+    return '<div class="groupRow"><input class="groupCheck" type="checkbox" data-zone="'+zone+'"><label>Setor '+pad(sector)+'<br><small>'+escapeHtml(p.name||'')+'</small></label><input class="groupDuration" data-zone="'+zone+'" type="number" min="1" max="1440" value="'+Number(p.duration||10)+'"></div>';
+  }).join('');
+  $('groupName').value='Grupo '+pad(start)+'–'+pad(start+7);
+  $('groupMode').value='order';
+  $('groupDlg').showModal();
+}
+async function startGroupNow(){
+  const c=selectedController();if(!c)return;
+  const checks=Array.from(document.querySelectorAll('.groupCheck:checked'));
+  const zones=checks.map(cb=>{
+    const zone=Number(cb.dataset.zone);
+    const input=document.querySelector('.groupDuration[data-zone="'+zone+'"]');
+    return {zone,duration_minutes:Math.max(1,Math.min(1440,Number(input?.value)||10))};
+  });
+  if(!zones.length)return toast('Selecione pelo menos um setor');
+  const name=$('groupName').value.trim()||'Grupo de irrigação';
+  const mode=$('groupMode').value==='together'?'together':'order';
+  const label=mode==='order'?'em sequência':'ao mesmo tempo';
+  if(!confirm('Iniciar '+name+' '+label+'?\n\nSetores: '+zones.map(x=>x.zone).join(', ')))return;
+  try{
+    $('startGroup').disabled=true;
+    const r=await api('/api/inkbird/group',{method:'POST',body:JSON.stringify({device_id:c.id,name,mode,zones})});
+    state.groups[name]={name,mode,zones,updated_at:Date.now()};
+    state.activeSessions[c.id]={kind:'group',name,mode,zones,started_at:r.started_at,expected_end_at:r.expected_end_at,duration_minutes:(r.expected_end_at-r.started_at)/60000};
+    save();persistUserAutomation();$('groupDlg').close();toast('Grupo iniciado');
+    setTimeout(()=>syncStatus(false),500);refreshStatusBurst();loadHistory(false);renderZones();renderToday();
+  }catch(e){toast('Falha: '+e.message)}
+  finally{$('startGroup').disabled=false}
+}
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e});
+async function installPwa(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(()=>null);
+    deferredInstallPrompt=null;
+    return;
+  }
+  alert('No iPhone:\n\n1. Toque no botão Compartilhar do Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Confirme “Adicionar”.\n\nA Central Fazenda 2E abrirá como aplicativo em tela cheia.');
+}
+
 function booleanFunctionOptions(){
   const s=currentStatus();
   return (s?.functions||[]).filter(fn=>/boolean|bool/i.test(String(fn.type||'')));

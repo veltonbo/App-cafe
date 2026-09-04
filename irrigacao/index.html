@@ -107,22 +107,37 @@ async function syncStatus(showToast=false){
   }
 }
 async function manual(on){
+  const action=on?'LIGAR':'DESLIGAR';
+  if(!confirm(action+' a saída do viveiro agora?\n\nO ciclo nativo 1/2 não será alterado.')) return;
   try{
+    $('manualOn').disabled=true;$('manualOff').disabled=true;
     await api('/api/switch',{method:'POST',body:JSON.stringify({on})});
     log(on?'Viveiro ligado manualmente':'Viveiro desligado manualmente');
-    data.relay=on;render();toast(on?'Comando LIGAR enviado':'Comando DESLIGAR enviado');
+    data.relay=on;render();toast('Comando '+action+' enviado');
     setTimeout(()=>syncStatus(false),1200);
   }catch(e){toast('Falha: '+e.message)}
+  finally{$('manualOn').disabled=false;$('manualOff').disabled=false}
 }
 function render(){
+  const online=data.online===true;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
-  $('connectionState').textContent=data.settings.apiUrl?(data.online===true?'Online':data.online===false?'Offline':'Pronta'):'Não conectada';
-  $('conn').textContent=data.settings.apiUrl?'● Tuya':'● Não conectado';
+  $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
+  $('connectionState').className=online?'ok':data.online===false?'bad':'';
+  $('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Tuya';
   $('heroTitle').textContent=data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':'Ciclo nativo do EKAZA';
-  $('heroSub').textContent=data.relay===true?'Saída EKAZA está ligada agora.':data.relay===false?'Saída EKAZA está desligada agora.':'O próprio dispositivo mantém 1 min ligado / 2 min desligado.';
-  $('phase').textContent=data.relay===true?'LIGADO':data.relay===false?'DESLIGADO':'AGUARDANDO ESTADO';
+  $('heroSub').textContent=data.relay===true?'Saída EKAZA ligada neste momento.':data.relay===false?'Saída EKAZA desligada neste momento.':'O próprio dispositivo mantém 1 min ligado / 2 min desligado.';
+  $('phase').textContent=data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
   $('phase').className='phase '+(data.relay===true?'':'off');
-  $('cycleInfo').textContent=data.cycleTime!=null?'Tuya respondeu cycle_time. A programação existente foi detectada e não será alterada.':'A programação 1/2 já existente no EKAZA será preservada.';
+  $('phaseState').textContent=data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
+  $('cycleDetected').textContent=data.cycleTime!=null?'Sim':'Não reportado';
+  $('countdownState').textContent=(typeof data.countdown==='number'&&data.countdown>0)?data.countdown+' s':'—';
+  $('liveDot').className='liveDot '+(online?'on':'');
+  $('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
+  $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
+  $('autoState').textContent=data.settings.token?'Automática • 10 s':'Aguardando token';
+  $('refresh').disabled=syncing;
+  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(data.cycleTime!=null?'Programação de ciclo detectada pela Tuya. Nenhum valor foi alterado.':'A programação 1/2 já existente no EKAZA será preservada.');
+  $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
   $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }
 $('refresh').onclick=()=>syncStatus(true);
@@ -132,5 +147,7 @@ $('clear').onclick=()=>{data.history=[];save();render()};
 $('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 render();if(data.settings.apiUrl&&data.settings.token)syncStatus();
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncStatus(false)},10000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncStatus(false)});
 </script>
 </body></html>

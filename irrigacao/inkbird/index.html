@@ -294,6 +294,9 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <dialog id="groupDlg">
 <form method="dialog" class="modalForm">
   <div><div class="ey" style="color:var(--green)">GRUPO</div><h2 class="modalTitle">Irrigar vários setores</h2></div>
+  <label class="formField">Grupo salvo
+    <select id="groupSavedSelect"><option value="">Novo grupo</option></select>
+  </label>
   <label class="formField">Nome do grupo<input id="groupName" value="Grupo de irrigação"></label>
   <label class="formField">Execução
     <select id="groupMode"><option value="order">Em sequência</option><option value="together">Ao mesmo tempo</option></select>
@@ -927,6 +930,8 @@ async function saveScheduleConfig(){
 function openGroupDialog(){
   const c=selectedController();if(!c)return;
   const prefs=getPrefs(c),start=sectorStart(c);
+  const saved=Object.keys(state.groups||{});
+  $('groupSavedSelect').innerHTML='<option value="">Novo grupo</option>'+saved.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');
   $('groupRows').innerHTML=prefs.map((p,i)=>{
     const zone=i+1,sector=start+i;
     return '<div class="groupRow"><input class="groupCheck" type="checkbox" data-zone="'+zone+'"><label>Setor '+pad(sector)+'<br><small>'+escapeHtml(p.name||'')+'</small></label><input class="groupDuration" data-zone="'+zone+'" type="number" min="1" max="1440" value="'+Number(p.duration||10)+'"></div>';
@@ -934,6 +939,19 @@ function openGroupDialog(){
   $('groupName').value='Grupo '+pad(start)+'–'+pad(start+7);
   $('groupMode').value='order';
   $('groupDlg').showModal();
+}
+function loadSavedGroup(){
+  const name=$('groupSavedSelect').value;
+  const group=state.groups?.[name];
+  if(!group)return;
+  $('groupName').value=group.name||name;
+  $('groupMode').value=group.mode==='together'?'together':'order';
+  document.querySelectorAll('.groupCheck').forEach(cb=>{
+    const item=(group.zones||[]).find(x=>Number(x.zone)===Number(cb.dataset.zone));
+    cb.checked=Boolean(item);
+    const input=document.querySelector('.groupDuration[data-zone="'+cb.dataset.zone+'"]');
+    if(item&&input)input.value=Number(item.duration_minutes||10);
+  });
 }
 async function startGroupNow(){
   const c=selectedController();if(!c)return;
@@ -1177,6 +1195,7 @@ $('saveProfile').onclick=saveCurrentProfile;
 $('applyProfile').onclick=applySelectedProfile;
 $('openGroup').onclick=openGroupDialog;
 $('startGroup').onclick=startGroupNow;
+$('groupSavedSelect').onchange=loadSavedGroup;
 $('scheduleMode').onchange=updateScheduleModeUI;
 $('saveSchedule').onclick=saveScheduleConfig;
 $('installApp').onclick=installPwa;

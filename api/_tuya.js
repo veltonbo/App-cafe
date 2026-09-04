@@ -1,10 +1,10 @@
 import { TuyaContext } from '@tuya/tuya-connector-nodejs';
 
-const baseUrl = process.env.TUYA_BASE_URL || 'https://openapi.tuyaus.com';
-const accessKey = process.env.TUYA_ACCESS_ID;
-const secretKey = process.env.TUYA_ACCESS_SECRET;
-const deviceId = process.env.TUYA_DEVICE_ID;
-const controlToken = process.env.APP_CONTROL_TOKEN;
+const baseUrl = 'https://openapi.tuyaus.com';
+const accessKey = (process.env.TUYA_ACCESS_ID || '').trim();
+const secretKey = (process.env.TUYA_ACCESS_SECRET || '').trim();
+const deviceId = (process.env.TUYA_DEVICE_ID || '').trim();
+const controlToken = (process.env.APP_CONTROL_TOKEN || '').trim();
 
 export function applyCors(req, res) {
   const origin = req.headers.origin;

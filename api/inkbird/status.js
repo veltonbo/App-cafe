@@ -148,6 +148,85 @@ function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
   };
 }
 
+
+function hasCode(code, functions, statusSpec, statusMap, shadowMap) {
+  return functions.some(x => x.code === code) ||
+    statusSpec.some(x => x.code === code) ||
+    Object.prototype.hasOwnProperty.call(statusMap, code) ||
+    Object.prototype.hasOwnProperty.call(shadowMap, code);
+}
+
+function applyNativeIic800Profile(mapping, functions, statusSpec, statusMap, shadowMap, info) {
+  const signatureCodes = ['irrigation_time_all', 'operation_mode', 'zonerun_state'];
+  const signatureHits = signatureCodes.filter(code => hasCode(code, functions, statusSpec, statusMap, shadowMap)).length;
+  const productId = String(info?.product_id || '');
+  const category = String(info?.category || '');
+
+  const native = signatureHits >= 2 || productId === 'h71ip90tp4mfd6mx' ||
+    (category === 'ggq' && hasCode('irrigation_time_all', functions, statusSpec, statusMap, shadowMap));
+
+  if (!native) return mapping;
+
+  const activeRaw = Object.prototype.hasOwnProperty.call(statusMap, 'zonerun_state')
+    ? statusMap.zonerun_state
+    : shadowMap.zonerun_state;
+  const activeMask = Number.isFinite(Number(activeRaw)) ? Number(activeRaw) : 0;
+
+  const controls = Array.from({ length: 8 }, (_, i) => ({
+    zone: i + 1,
+    code: 'irrigation_time_all',
+    name: 'Zona ' + (i + 1) + ' • DP45 RAW',
+    current: Boolean(activeMask & (1 << i)),
+    native_raw: true
+  }));
+
+  const durations = Array.from({ length: 8 }, (_, i) => ({
+    zone: i + 1,
+    code: 'irrigation_time_all',
+    name: 'Duração da zona ' + (i + 1) + ' • DP45 RAW',
+    current: null,
+    min: 1,
+    max: 1440,
+    step: 1,
+    scale: 0,
+    unit: 'min',
+    native_raw: true
+  }));
+
+  const scheduleCandidates = [...(mapping.schedule_candidates || [])];
+  if (hasCode('normal_time', functions, statusSpec, statusMap, shadowMap) &&
+      !scheduleCandidates.some(x => x.code === 'normal_time')) {
+    scheduleCandidates.push({
+      code: 'normal_time',
+      name: 'Programação por zona • DP38',
+      type: 'string',
+      values: {}
+    });
+  }
+
+  return {
+    ...mapping,
+    native_profile: 'IIC-800-DP45',
+    native_dp45: true,
+    active_mask: activeMask,
+    operation_mode: Object.prototype.hasOwnProperty.call(statusMap, 'operation_mode')
+      ? statusMap.operation_mode
+      : shadowMap.operation_mode ?? null,
+    irrigation_mode: Object.prototype.hasOwnProperty.call(statusMap, 'irrigation_mode')
+      ? statusMap.irrigation_mode
+      : shadowMap.irrigation_mode ?? null,
+    controls,
+    durations,
+    schedule_candidates: scheduleCandidates,
+    zones_found: [1,2,3,4,5,6,7,8],
+    mapped_count: 8,
+    duration_mapped_count: 8,
+    ready: true,
+    control_ready: true,
+    duration_ready: true
+  };
+}
+
 function classifyAccess(errors, linked) {
   if (linked) {
     return {
@@ -262,7 +341,8 @@ export default async function handler(req, res) {
   );
 
   const access = classifyAccess(errors, linked);
-  const mapping = buildZoneCandidates(functions, statusSpec, statusMap, shadowMap);
+  const genericMapping = buildZoneCandidates(functions, statusSpec, statusMap, shadowMap);
+  const mapping = applyNativeIic800Profile(genericMapping, functions, statusSpec, statusMap, shadowMap, info);
   const controllerIndex = Math.max(1, resolved.devices.findIndex(d => d.id === deviceId) + 1);
   const sectorStart = (controllerIndex - 1) * 8 + 1;
 

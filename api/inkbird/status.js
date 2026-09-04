@@ -1,4 +1,4 @@
-import { applyCors, authorize, ensureConfig, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { resolveInkbirdDevice } from './_device.js';
 
 function settleValue(result, fallback = null) {
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ ok:false, error:'Método não permitido.' });
-  if (!authorize(req, res) || !ensureConfig(res)) return;
+  if (!authorize(req, res) || !ensureCloudConfig(res)) return;
 
   let resolved;
   try {

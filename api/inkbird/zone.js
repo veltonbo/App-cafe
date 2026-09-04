@@ -185,12 +185,34 @@ export default async function handler(req, res) {
       String(info?.product_id || '') === 'h71ip90tp4mfd6mx';
 
     const meta = controllerMeta(resolved, deviceId, Number.isInteger(zone) ? zone : 0);
+    const initialMap = Object.fromEntries(statusList.map(item => [item.code,item.value]));
+    const initialActive = Number(initialMap.zonerun_state || 0);
+    const initialPending = Number(initialMap.pendingzone_state || 0);
 
     if (!nativeSignature) {
       return res.status(400).json({
         ok:false,
         error:'O dispositivo não apresentou a assinatura esperada do IIC-800 DP45.'
       });
+    }
+
+    if (action === 'start') {
+      if (info?.online === false) {
+        return res.status(409).json({
+          ok:false,
+          error:'Controlador offline. O comando não foi enviado.'
+        });
+      }
+      if (initialActive || initialPending) {
+        const requestedBit = 1 << (zone - 1);
+        return res.status(409).json({
+          ok:false,
+          error:(initialActive & requestedBit)
+            ? 'Este setor já está irrigando.'
+            : 'Já existe uma irrigação ativa ou aguardando neste controlador. Pare o ciclo atual antes de iniciar outro.',
+          state:{ zonerun_state:initialActive,pendingzone_state:initialPending }
+        });
+      }
     }
 
     if (action === 'auto') {

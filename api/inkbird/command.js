@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     }
 
     const functionsResult = await tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/functions`);
-    const functions = Array.isArray(functionsResult?.functions) ? functionsResult.functions : [];
+    const functions = Array.isArray(functionsResult) ? functionsResult : Array.isArray(functionsResult?.functions) ? functionsResult.functions : [];
     const functionMap = Object.fromEntries(functions.map(item => [item.code, item]));
 
     for (const item of normalized) {

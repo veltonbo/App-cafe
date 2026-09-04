@@ -98,6 +98,21 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <div id="globalError" class="errorBanner" hidden></div>
 <div id="tab-overview" class="tabPanel">
 <section class="box" style="margin-top:0">
+  <div class="head"><div><div class="ey" style="color:var(--green)">HOJE</div><h2>Resumo da irrigação</h2></div><button id="refreshToday" class="btn soft">Atualizar</button></div>
+  <div class="todayGrid">
+    <div class="todayCard"><small>Agora</small><strong id="todayActive">Nenhum setor irrigando</strong><em id="todayActiveSub">Aguardando leitura</em></div>
+    <div class="todayCard"><small>Próxima irrigação</small><strong id="todayNext">—</strong><em id="todayNextSub">Agenda ainda não lida</em></div>
+    <div class="todayCard"><small>Clima</small><strong id="todayWeather">Aguardando</strong><em id="todayWeatherSub">Weather2-2</em></div>
+    <div class="todayCard"><small>Última atividade</small><strong id="todayLast">—</strong><em id="todayLastSub">Sem histórico</em></div>
+  </div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Atividade recente</h2><button id="refreshHistory" class="btn soft">Atualizar histórico</button></div>
+  <div id="historyList" class="historyList"><div class="note">Nenhum histórico carregado.</div></div>
+</section>
+
+<section class="box">
   <div class="head"><h2>Controladores da Fazenda 2E</h2></div>
   <div class="controllerBar">
     <label>Controlador selecionado
@@ -166,6 +181,8 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
     <label>Atualizar clima a cada (min)<input id="weatherRefreshMinutes" type="number" min="1" max="60" step="1" value="5"></label>
   </div>
   <label class="checkLine" style="margin-top:12px"><input id="blockWhileRaining" type="checkbox" checked> Bloquear irrigação enquanto estiver chovendo</label>
+  <label class="checkLine" style="margin-top:10px"><input id="serverWeatherGuard" type="checkbox" checked> Aplicar proteção meteorológica também no servidor</label>
+  <p class="note" style="margin-top:7px">O servidor verifica a Weather2-2 antes de qualquer irrigação manual ou em grupo. A proteção automática com o app fechado pode ser ativada separadamente quando o agendador do servidor estiver habilitado.</p>
   <button id="saveWeatherRules" class="btn primary" style="margin-top:12px">Salvar regras meteorológicas</button>
 
   <details><summary>Dados meteorológicos detectados</summary><pre id="weatherRaw">Nenhuma leitura realizada.</pre></details>
@@ -186,17 +203,23 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
     <div class="opCard"><small>Modo</small><strong id="quickMode">—</strong></div>
     <div class="opCard"><small>Clima</small><strong id="quickWeather">Aguardando</strong></div>
   </div>
+  <div class="profileBar">
+    <select id="profileSelect"><option value="">Perfil de irrigação...</option></select>
+    <button id="applyProfile" class="btn soft">Aplicar perfil</button>
+    <button id="saveProfile" class="btn soft">Salvar perfil atual</button>
+    <button id="openGroup" class="btn primary">Irrigar grupo</button>
+  </div>
   <div style="display:none"><span id="durationMapTag"></span><span id="modeTag"></span><button id="manualMapBtn"></button></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
 <section class="box">
   <div class="head"><div><div class="ey" style="color:var(--green)">AUTOMAÇÃO</div><h2>Programação automática</h2></div><span id="scheduleMapTag" class="miniTag">Verificando agenda</span></div>
-  <p class="note" style="margin-top:0">O controle manual dos setores já está ativo. A edição completa dos horários será liberada no app somente depois de validarmos o formato de agenda do seu IIC-800, sem alterar programações existentes por engano.</p>
+  <p class="note" style="margin-top:0">Configure duração, até 6 horários e dias da semana para cada setor. A gravação usa a agenda nativa do IIC-800 e preserva os outros setores.</p>
   <div class="capGrid">
     <div class="cap"><b>Controle manual</b><small>Pronto para irrigar cada setor pelo tempo definido.</small></div>
     <div class="cap"><b>Proteção pelo clima</b><small>A Weather2-2 é consultada antes de iniciar uma irrigação pelo app.</small></div>
-    <div class="cap"><b>Agenda automática</b><small>Em preparação para edição segura de horários e dias.</small></div>
+    <div class="cap"><b>Agenda automática</b><small>Programação nativa por setor, com horários e dias configurados no próprio controlador.</small></div>
     <div class="cap"><b>Vários controladores</b><small>Setores continuam automaticamente em blocos de 8.</small></div>
   </div>
 </section>
@@ -212,10 +235,77 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   <details><summary>Erros de integração</summary><pre id="errorsRaw">Nenhum erro registrado.</pre></details>
 </section>
 
+<section class="box">
+  <div class="head"><h2>Aplicativo no telefone</h2></div>
+  <div class="installCard">
+    <div><b>Instalar Fazenda 2E</b><small>Abra como aplicativo em tela cheia, direto pela Tela de Início.</small></div>
+    <button id="installApp" class="btn primary">Como instalar</button>
+  </div>
+</section>
+
 <section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">app-cafe.vercel.app</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente na Vercel. Neste aparelho fica apenas o token de controle do app.</p></section>
 </div>
 <div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
 </main>
+<dialog id="scheduleDlg">
+<form method="dialog" class="modalForm">
+  <div><div class="ey" style="color:var(--green)">PROGRAMAÇÃO</div><h2 id="scheduleTitle" class="modalTitle">Programar setor</h2></div>
+  <input id="scheduleZone" type="hidden">
+  <label class="checkLine"><input id="scheduleEnabled" type="checkbox" checked> Programação automática ativa</label>
+  <div class="formGrid">
+    <label class="formField">Duração (min)<input id="scheduleDuration" type="number" min="1" max="255" step="1" value="10"></label>
+    <label class="formField">Modo
+      <select id="scheduleMode">
+        <option value="0">Dias da semana</option>
+        <option value="1">Dias ímpares</option>
+        <option value="2">Dias pares</option>
+        <option value="3">Intervalo de dias</option>
+      </select>
+    </label>
+  </div>
+  <div>
+    <div class="note" style="margin-bottom:7px">Horários de início • até 6</div>
+    <div class="timeSlots">
+      <input class="scheduleTime" type="time"><input class="scheduleTime" type="time"><input class="scheduleTime" type="time">
+      <input class="scheduleTime" type="time"><input class="scheduleTime" type="time"><input class="scheduleTime" type="time">
+    </div>
+  </div>
+  <div id="scheduleDaysWrap">
+    <div class="note" style="margin-bottom:7px">Dias da semana</div>
+    <div class="daysGrid">
+      <label><input class="scheduleDay" type="checkbox" value="1"><span>Dom</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="2"><span>Seg</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="4"><span>Ter</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="8"><span>Qua</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="16"><span>Qui</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="32"><span>Sex</span></label>
+      <label><input class="scheduleDay" type="checkbox" value="64"><span>Sáb</span></label>
+    </div>
+  </div>
+  <label id="intervalDaysWrap" class="formField" style="display:none">Repetir a cada (dias)<input id="scheduleIntervalDays" type="number" min="1" max="9" value="1"></label>
+  <label class="checkLine"><input id="scheduleRain" type="checkbox" checked> Respeitar sensor de chuva do controlador</label>
+  <div style="display:flex;gap:8px">
+    <button value="cancel" class="btn soft" style="flex:1">Cancelar</button>
+    <button id="saveSchedule" type="button" class="btn primary" style="flex:1">Salvar programação</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="groupDlg">
+<form method="dialog" class="modalForm">
+  <div><div class="ey" style="color:var(--green)">GRUPO</div><h2 class="modalTitle">Irrigar vários setores</h2></div>
+  <label class="formField">Nome do grupo<input id="groupName" value="Grupo de irrigação"></label>
+  <label class="formField">Execução
+    <select id="groupMode"><option value="order">Em sequência</option><option value="together">Ao mesmo tempo</option></select>
+  </label>
+  <div id="groupRows" class="groupRows"></div>
+  <div style="display:flex;gap:8px">
+    <button value="cancel" class="btn soft" style="flex:1">Cancelar</button>
+    <button id="startGroup" type="button" class="btn primary" style="flex:1">Iniciar grupo</button>
+  </div>
+</form>
+</dialog>
+
 <dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão da Central</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
 <dialog id="mappingDlg"><form method="dialog" style="padding:20px;display:grid;gap:14px;min-width:min(92vw,560px)">
   <div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Configurar saídas do IIC-800</h2></div>

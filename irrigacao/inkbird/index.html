@@ -57,6 +57,8 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <div class="statusLine"><span>Online na Tuya</span><strong id="onlineState">—</strong></div>
   <div class="statusLine"><span>Categoria Tuya</span><strong id="categoryState">—</strong></div>
   <div class="statusLine"><span>Funções encontradas</span><strong id="functionsState">—</strong></div>
+  <div class="statusLine"><span>Diagnóstico remoto</span><strong id="accessState">Aguardando</strong></div>
+  <p id="accessDetail" class="note" style="margin-top:8px"></p>
   <p id="integrationNote" class="note">O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.</p>
 </section>
 
@@ -214,7 +216,7 @@ async function check(){
   try{
     const s=await api('/api/inkbird/status');
     local.last={at:Date.now(),data:s};save();renderStatus(s);
-    toast(s.linked?'INKBIRD encontrado':'Controlador ainda não disponível na Tuya');
+    toast(s.linked?'INKBIRD encontrado':(s?.access?.title||'Acesso remoto não confirmado'));
   }catch(e){
     renderError(e.message||String(e));toast('Falha: '+(e.message||String(e)));
   }finally{
@@ -230,6 +232,9 @@ function renderStatus(s){
   $('onlineState').className=online===true?'ok':online===false?'bad':'';
   $('categoryState').textContent=s?.device?.category||'—';
   $('functionsState').textContent=Array.isArray(s?.functions)?String(s.functions.length):'0';
+  $('accessState').textContent=s?.access?.title||'Não identificado';
+  $('accessState').className=s?.access?.state==='accessible'?'ok':(s?.access?.state==='oem_locked'||s?.access?.state==='not_found'?'bad':'');
+  $('accessDetail').textContent=s?.access?.detail||'';
   $('cloudState').textContent=linked?(online===false?'Offline':'Vinculado'):'Não vinculado';
   $('mappingState').textContent=linked&&Array.isArray(s?.functions)&&s.functions.length?'Em diagnóstico':'Pendente';
   $('heroBadge').textContent=linked?'CONTROLADOR ENCONTRADO':'AGUARDANDO VÍNCULO';
@@ -247,6 +252,8 @@ function renderStatus(s){
 function renderError(msg){
   $('cloudState').textContent='Erro';$('cloudState').className='bad';
   $('liveText').textContent='Falha na consulta';
+  $('accessState').textContent='Falha na consulta';$('accessState').className='bad';
+  $('accessDetail').textContent=msg;
   $('errorsRaw').textContent=msg;
 }
 $('checkDevice').onclick=check;$('refresh').onclick=()=>{check();checkWeather(false)};

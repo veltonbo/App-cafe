@@ -481,8 +481,8 @@ async function startSector(zone){
     if(!confirm('IRRIGAR o Setor '+pad(sector)+' por '+minutes+' min?'+warning))return;
     try{
       await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
-      toast('Setor '+pad(sector)+' iniciado por '+minutes+' min');
-      setTimeout(()=>syncStatus(false),1200);
+      toast('Confirmado: Setor '+pad(sector)+' irrigando por '+minutes+' min');
+      setTimeout(()=>syncStatus(false),300);
     }catch(e){toast('Falha: '+e.message)}
     return;
   }

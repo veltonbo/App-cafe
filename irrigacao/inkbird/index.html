@@ -481,16 +481,21 @@ function renderHistory(){
 function renderToday(){
   if(!$('todayActive'))return;
   const c=selectedController(),s=currentStatus();
-  const mask=Number(s?.mapping?.active_mask||0);
-  const activeZone=[1,2,3,4,5,6,7,8].find(z=>mask&(1<<(z-1)));
-  const session=activeSession();
-  if(activeZone&&c){
-    const sector=sectorStart(c)+activeZone-1;
+  let activeInfo=null;
+  for(const ctrl of state.controllers||[]){
+    const st=state.statusByController[ctrl.id];
+    const mask=Number(st?.mapping?.active_mask||0);
+    const zone=[1,2,3,4,5,6,7,8].find(z=>mask&(1<<(z-1)));
+    if(zone){activeInfo={ctrl,zone,session:state.activeSessions[ctrl.id]||st?.runtime?.active_session||null};break;}
+  }
+  if(activeInfo){
+    const sector=sectorStart(activeInfo.ctrl)+activeInfo.zone-1;
     $('todayActive').textContent='Setor '+pad(sector)+' irrigando';
-    $('todayActiveSub').textContent=session?.expected_end_at?'Término estimado '+clockText(session.expected_end_at):'Controlador em modo manual';
+    $('todayActiveSub').textContent=activeInfo.session?.expected_end_at?'Término estimado '+clockText(activeInfo.session.expected_end_at):'Controlador '+controllerIndex(activeInfo.ctrl)+' em operação';
   }else{
     $('todayActive').textContent='Nenhum setor irrigando';
-    $('todayActiveSub').textContent=s?.device?.online===false?'Controlador offline':'Sistema em espera';
+    const offline=(state.controllers||[]).filter(ctrl=>state.statusByController[ctrl.id]?.device?.online===false).length;
+    $('todayActiveSub').textContent=offline?offline+' controlador(es) offline':'Sistema em espera';
   }
   const next=nextScheduled();
   if(next){
@@ -755,17 +760,23 @@ async function syncControllers(showToast=true){
   }catch(e){showError(e.message);if(showToast)toast('Falha ao buscar controladores');return[]}
 }
 
-async function syncStatus(showToast=false){
-  const c=selectedController();
+async function syncStatus(showToast=false,controller=null){
+  const c=controller||selectedController();
   if(!c)return;
   try{
     const s=await api('/api/inkbird/status?device_id='+encodeURIComponent(c.id));
     state.statusByController[c.id]=s;
     if(s?.runtime?.active_session)state.activeSessions[c.id]=s.runtime.active_session;
     else if(Number(s?.mapping?.active_mask||0)===0)delete state.activeSessions[c.id];
-    save();renderStatus();renderToday();
+    save();
+    if(c.id===selectedController()?.id)renderStatus();
+    renderToday();
     if(showToast)toast('Controlador atualizado');
-  }catch(e){showError(e.message);if(showToast)toast('Falha ao ler controlador')}
+  }catch(e){if(c.id===selectedController()?.id)showError(e.message);if(showToast)toast('Falha ao ler controlador')}
+}
+async function syncAllStatuses(){
+  await Promise.all((state.controllers||[]).map(c=>syncStatus(false,c)));
+  renderToday();
 }
 
 function renderStatus(){
@@ -1172,7 +1183,7 @@ async function refreshAll(){
   if(busy)return;busy=true;$('refresh').textContent='● Atualizando';showError('');
   try{
     await syncControllers(false);
-    await Promise.all([syncStatus(false),syncWeather(false),loadServerConfig(),loadHistory(false),syncAllSchedules()]);
+    await Promise.all([syncAllStatuses(),syncWeather(false),loadServerConfig(),loadHistory(false),syncAllSchedules()]);
     renderToday();renderProfiles();
     toast('Central atualizada');
   }finally{busy=false;$('refresh').textContent='● Atualizar'}

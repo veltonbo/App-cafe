@@ -150,6 +150,81 @@ async function manual(on){
   }catch(e){toast('Falha: '+e.message)}
   finally{$('manualOn').disabled=false;$('manualOff').disabled=false}
 }
+
+function minutesToClock(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return '--:--';
+  const h=Math.floor(n/60),m=n%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function clockToMinutes(value){
+  const parts=String(value||'').split(':').map(Number);
+  if(parts.length!==2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1])) return NaN;
+  return parts[0]*60+parts[1];
+}
+function daysLabel(mask){
+  const names=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const selected=names.filter((_,i)=>mask&(1<<i));
+  if(selected.length===7) return 'Todos os dias';
+  return selected.length?selected.join(', '):'Nenhum';
+}
+function openCycleEditor(){
+  const cfg=data.cycleConfig||{
+    enabled:true,
+    daysMask:127,
+    startMinutes:0,
+    endMinutes:1439,
+    onMinutes:1,
+    offMinutes:2
+  };
+  $('cycleOn').value=cfg.onMinutes||1;
+  $('cycleOff').value=cfg.offMinutes||2;
+  $('cycleStart').value=minutesToClock(cfg.startMinutes??0);
+  $('cycleEnd').value=minutesToClock(cfg.endMinutes??1439);
+  $('cycleEnabled').checked=cfg.enabled!==false;
+  document.querySelectorAll('#cycleDays input').forEach(cb=>{
+    cb.checked=Boolean((cfg.daysMask??127)&Number(cb.value));
+  });
+  $('cycleDlg').showModal();
+}
+async function saveCycleConfig(config, label){
+  try{
+    $('saveCycle').disabled=true;
+    $('toggleCycle').disabled=true;
+    const result=await api('/api/cycle',{method:'POST',body:JSON.stringify(config)});
+    data.cycleTime=result.cycle_time??data.cycleTime;
+    data.cycleConfig=result.cycle_config??data.cycleConfig;
+    log(label||'Programação da irrigação atualizada');
+    save();
+    render();
+    toast('Programação salva no EKAZA');
+    setTimeout(()=>syncStatus(false),1200);
+    return true;
+  }catch(e){
+    toast('Falha: '+(e.message||String(e)));
+    return false;
+  }finally{
+    $('saveCycle').disabled=false;
+    $('toggleCycle').disabled=false;
+  }
+}
+async function toggleCycleState(){
+  if(!data.cycleConfig){
+    toast('Atualize o estado antes de pausar ou retomar o ciclo');
+    return;
+  }
+  const next=!data.cycleConfig.enabled;
+  if(!confirm((next?'RETOMAR':'PAUSAR')+' o ciclo automático do viveiro?')) return;
+  await saveCycleConfig({
+    enabled:next,
+    daysMask:data.cycleConfig.daysMask,
+    startMinutes:data.cycleConfig.startMinutes,
+    endMinutes:data.cycleConfig.endMinutes,
+    onMinutes:data.cycleConfig.onMinutes,
+    offMinutes:data.cycleConfig.offMinutes
+  },next?'Ciclo automático retomado':'Ciclo automático pausado');
+}
+
 function render(){
   const online=data.online===true;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
@@ -161,22 +236,62 @@ function render(){
   $('phase').textContent=data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
   $('phase').className='phase '+(data.relay===true?'':'off');
   $('phaseState').textContent=data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
-  $('cycleDetected').textContent=data.cycleTime!=null?'Sim':'Não reportado';
+  $('cycleDetected').textContent=data.cycleConfig?'Sim':'Não reportado';
+  if(data.cycleConfig){
+    $('cycleCard').textContent=data.cycleConfig.onMinutes+' min / '+data.cycleConfig.offMinutes+' min';
+    $('cycleEnabledState').textContent=data.cycleConfig.enabled?'Ativo':'Pausado';
+    $('cycleEnabledState').className=data.cycleConfig.enabled?'ok':'bad';
+    $('cycleOnState').textContent=data.cycleConfig.onMinutes+' min';
+    $('cycleOffState').textContent=data.cycleConfig.offMinutes+' min';
+    $('cycleWindowState').textContent=minutesToClock(data.cycleConfig.startMinutes)+' às '+minutesToClock(data.cycleConfig.endMinutes);
+    $('cycleDaysState').textContent=daysLabel(data.cycleConfig.daysMask);
+    $('toggleCycle').textContent=data.cycleConfig.enabled?'Pausar ciclo':'Retomar ciclo';
+  }else{
+    $('cycleCard').textContent='Aguardando leitura';
+    $('cycleEnabledState').textContent='Aguardando';
+    $('cycleOnState').textContent='—';
+    $('cycleOffState').textContent='—';
+    $('cycleWindowState').textContent='—';
+    $('cycleDaysState').textContent='—';
+    $('toggleCycle').textContent='Pausar / retomar ciclo';
+  }
   $('countdownState').textContent=(typeof data.countdown==='number'&&data.countdown>0)?data.countdown+' s':'—';
   $('liveDot').className='liveDot '+(online?'on':'');
   $('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
   $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
   $('autoState').textContent=data.settings.token?'Automática • 10 s':'Aguardando token';
   $('refresh').disabled=syncing;
-  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(data.cycleTime!=null?'Programação de ciclo detectada pela Tuya. Nenhum valor foi alterado.':'A programação 1/2 já existente no EKAZA será preservada.');
+  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
   $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
   $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }
 $('refresh').onclick=()=>syncStatus(true);
+$('editCycle').onclick=openCycleEditor;
+$('toggleCycle').onclick=toggleCycleState;
 $('manualOn').onclick=()=>manual(true);
 $('manualOff').onclick=()=>manual(false);
 $('clear').onclick=()=>{data.history=[];save();render()};
 $('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};
+$('saveCycle').onclick=async e=>{
+  e.preventDefault();
+  const daysMask=Array.from(document.querySelectorAll('#cycleDays input:checked')).reduce((m,cb)=>m|Number(cb.value),0);
+  const config={
+    enabled:$('cycleEnabled').checked,
+    daysMask,
+    startMinutes:clockToMinutes($('cycleStart').value),
+    endMinutes:clockToMinutes($('cycleEnd').value),
+    onMinutes:Number($('cycleOn').value),
+    offMinutes:Number($('cycleOff').value)
+  };
+  if(!Number.isInteger(config.onMinutes)||config.onMinutes<1||config.onMinutes>1440)return toast('Tempo ligado deve ficar entre 1 e 1440 minutos');
+  if(!Number.isInteger(config.offMinutes)||config.offMinutes<1||config.offMinutes>1440)return toast('Tempo desligado deve ficar entre 1 e 1440 minutos');
+  if(!Number.isFinite(config.startMinutes)||!Number.isFinite(config.endMinutes)||config.endMinutes<=config.startMinutes)return toast('Confira o horário inicial e final');
+  if(!daysMask)return toast('Selecione pelo menos um dia da semana');
+  const msg='Salvar esta programação no EKAZA?\n\nLigado: '+config.onMinutes+' min\nDesligado: '+config.offMinutes+' min\nHorário: '+$('cycleStart').value+' às '+$('cycleEnd').value+'\nDias: '+daysLabel(daysMask);
+  if(!confirm(msg))return;
+  const ok=await saveCycleConfig(config,'Programação alterada: '+config.onMinutes+' min ligado / '+config.offMinutes+' min desligado');
+  if(ok)$('cycleDlg').close();
+};
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 render();if(data.settings.apiUrl&&data.settings.token)syncStatus();
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncStatus(false)},10000);

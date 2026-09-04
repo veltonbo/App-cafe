@@ -2,6 +2,11 @@ function decodeRawValue(value) {
   if (Buffer.isBuffer(value)) return value;
   if (Array.isArray(value)) return Buffer.from(value);
   if (value == null) return Buffer.alloc(0);
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const b = Buffer.alloc(4);
+    b.writeUInt32BE(value >>> 0,0);
+    return b;
+  }
 
   const text = String(value).trim();
   if (!text) return Buffer.alloc(0);

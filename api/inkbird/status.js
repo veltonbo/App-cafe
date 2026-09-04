@@ -79,11 +79,30 @@ function buildZoneCandidates(functions, statusSpec, statusMap, shadowMap) {
   candidates.sort((a, b) => a.zone - b.zone || a.code.localeCompare(b.code));
   const zonesFound = [...new Set(candidates.filter(x => !x.status_only).map(x => x.zone))];
 
+  const controls = [];
+  for (let zone = 1; zone <= 8; zone++) {
+    const booleanControls = candidates.filter(x =>
+      !x.status_only &&
+      x.zone === zone &&
+      /boolean|bool/i.test(String(x.type || ''))
+    );
+    if (booleanControls.length === 1) {
+      controls.push({
+        zone,
+        code: booleanControls[0].code,
+        name: booleanControls[0].name,
+        current: booleanControls[0].current
+      });
+    }
+  }
+
   return {
     candidates,
+    controls,
     zones_found: zonesFound,
     mapped_count: zonesFound.length,
-    ready: zonesFound.length === 8
+    ready: zonesFound.length === 8,
+    control_ready: controls.length === 8
   };
 }
 

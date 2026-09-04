@@ -352,6 +352,7 @@ if(state.weatherRules.serverGuard===undefined)state.weatherRules.serverGuard=tru
 
 const $=id=>document.getElementById(id);
 let busy=false;
+let overdueSyncAt=0;
 
 function save(){localStorage.setItem(APP_KEY,JSON.stringify(state))}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
@@ -1226,7 +1227,14 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/ink
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncStatus(false);}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
-setInterval(()=>{if(document.visibilityState==='visible'){renderZones();renderToday();}},1000);
+setInterval(()=>{
+  if(document.visibilityState!=='visible')return;
+  renderZones();renderToday();
+  const session=activeSession();
+  if(session?.expected_end_at&&Date.now()>Number(session.expected_end_at)+1500&&Date.now()-overdueSyncAt>10000){
+    overdueSyncAt=Date.now();syncStatus(false);
+  }
+},1000);
 </script>
 </body>
 </html>

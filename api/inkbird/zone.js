@@ -10,8 +10,22 @@ function encodeStartPayload(zone, durationMinutes) {
   return payload.toString('hex');
 }
 
-function hasFunction(functions, code) {
-  return functions.some(item => item.code === code);
+function normalizeFunctions(result) {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.functions)) return result.functions;
+  if (Array.isArray(result?.result)) return result.result;
+  return [];
+}
+
+function normalizeStatus(result) {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.status)) return result.status;
+  if (Array.isArray(result?.result)) return result.result;
+  return [];
+}
+
+function fulfilled(result, fallback = null) {
+  return result.status === 'fulfilled' ? result.value : fallback;
 }
 
 export default async function handler(req, res) {
@@ -42,11 +56,37 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok:false, error:'IIC-800 não sincronizado com o projeto Tuya.' });
     }
 
-    const functionsResult = await tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/functions`);
-    const functions = Array.isArray(functionsResult?.functions) ? functionsResult.functions : [];
+    const [functionsR, specificationR, statusR, infoR] = await Promise.allSettled([
+      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/functions`),
+      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/specification`),
+      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/status`),
+      tuyaRequest('GET', `/v1.0/devices/${deviceId}`)
+    ]);
 
-    if (!hasFunction(functions, 'operation_mode')) {
-      return res.status(400).json({ ok:false, error:'O controlador não expôs operation_mode.' });
+    const functions = normalizeFunctions(fulfilled(functionsR));
+    const specification = fulfilled(specificationR, {});
+    const specFunctions = normalizeFunctions(specification);
+    const specStatus = Array.isArray(specification?.status) ? specification.status : [];
+    const statusList = normalizeStatus(fulfilled(statusR, []));
+    const info = fulfilled(infoR, {});
+
+    const knownCodes = new Set([
+      ...functions.map(x => x?.code),
+      ...specFunctions.map(x => x?.code),
+      ...specStatus.map(x => x?.code),
+      ...statusList.map(x => x?.code)
+    ].filter(Boolean));
+
+    const nativeSignature =
+      knownCodes.has('irrigation_time_all') ||
+      knownCodes.has('zonerun_state') ||
+      String(info?.product_id || '') === 'h71ip90tp4mfd6mx';
+
+    if (!nativeSignature) {
+      return res.status(400).json({
+        ok:false,
+        error:'O dispositivo não apresentou a assinatura esperada do IIC-800 DP45.'
+      });
     }
 
     if (action === 'auto') {
@@ -73,11 +113,15 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!hasFunction(functions, 'irrigation_time_all')) {
-      return res.status(400).json({ ok:false, error:'O controlador não expôs irrigation_time_all (DP45).' });
+    if (!knownCodes.has('irrigation_time_all') && String(info?.product_id || '') !== 'h71ip90tp4mfd6mx') {
+      return res.status(400).json({
+        ok:false,
+        error:'O controlador não apresentou irrigation_time_all (DP45).'
+      });
     }
 
     const rawHex = encodeStartPayload(zone, duration);
+
     await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
       commands: [
         { code:'irrigation_time_all', value:rawHex },
@@ -90,7 +134,8 @@ export default async function handler(req, res) {
       device_id:deviceId,
       action:'start',
       zone,
-      duration_minutes:duration
+      duration_minutes:duration,
+      profile:'IIC-800-DP45'
     });
   } catch (error) {
     return res.status(502).json({

@@ -36,6 +36,26 @@ async function readNormalTime(deviceId) {
   };
 }
 
+async function writeNormalTime(deviceId,value) {
+  try {
+    await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+      commands:[{ code:'normal_time', value }]
+    });
+    return 'standard_command';
+  } catch (firstError) {
+    try {
+      await tuyaRequest('POST', `/v2.0/cloud/thing/${deviceId}/shadow/properties/issue`, {
+        properties:JSON.stringify({ normal_time:value })
+      });
+      return 'shadow_property';
+    } catch (secondError) {
+      const error = new Error(secondError?.message || firstError?.message || 'Falha ao enviar normal_time.');
+      error.primary = firstError?.message || String(firstError);
+      throw error;
+    }
+  }
+}
+
 function validTimes(times) {
   if (!Array.isArray(times)) return [];
   return times.slice(0,6).map(x => String(typeof x === 'string' ? x : x?.value || '').trim())
@@ -124,9 +144,7 @@ export default async function handler(req, res) {
 
     const encoded = updateDp38Zone(current.value, config.zone, config);
 
-    await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-      commands:[{ code:'normal_time', value:encoded.raw }]
-    });
+    const transport = await writeNormalTime(deviceId,encoded.raw);
 
     await new Promise(resolve => setTimeout(resolve,700));
     const verify = await readNormalTime(deviceId);
@@ -162,7 +180,8 @@ export default async function handler(req, res) {
       verified:true,
       device_id:deviceId,
       channel:zoneAfter,
-      channels:verify.decoded.channels
+      channels:verify.decoded.channels,
+      transport
     });
   } catch (error) {
     return res.status(502).json({

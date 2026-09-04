@@ -1,13 +1,5 @@
 export function cleanCycleRaw(value) {
-  return typeof value === 'string' ? value.trim().replace(/\s+/g, '').toLowerCase() : '';
-}
-
-function read16(hex, byteIndex, endian) {
-  const p = byteIndex * 2;
-  const a = parseInt(hex.slice(p, p + 2), 16);
-  const b = parseInt(hex.slice(p + 2, p + 4), 16);
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
-  return endian === 'le' ? (b << 8) | a : (a << 8) | b;
+  return typeof value === 'string' ? value.trim().replace(/\s+/g, '') : '';
 }
 
 function validValues(v) {
@@ -17,48 +9,58 @@ function validValues(v) {
     Number.isInteger(v.offMinutes) && v.offMinutes >= 1 && v.offMinutes <= 1440;
 }
 
-export function decodeCycle(value) {
+function parseNodes(value) {
   const raw = cleanCycleRaw(value);
-  if (!/^[0-9a-f]+$/.test(raw) || raw.length < 20) return null;
+  if (!raw) return { raw: '', buffer: Buffer.alloc(0), nodes: [] };
 
-  const switchByte = parseInt(raw.slice(0, 2), 16);
-  const daysMask = parseInt(raw.slice(2, 4), 16) & 0x7f;
-
-  for (const endian of ['be', 'le']) {
-    const values = {
-      startMinutes: read16(raw, 2, endian),
-      endMinutes: read16(raw, 4, endian),
-      onMinutes: read16(raw, 6, endian),
-      offMinutes: read16(raw, 8, endian),
-    };
-    if (validValues(values)) {
-      return {
-        raw,
-        endian,
-        enabled: Boolean(switchByte & 0x01),
-        switchByte,
-        daysMask,
-        ...values,
-        extraNodesRaw: raw.slice(20)
-      };
-    }
+  let buffer;
+  try {
+    buffer = Buffer.from(raw, 'base64');
+  } catch {
+    return null;
   }
-  return null;
+
+  if (!buffer.length || buffer.length % 10 !== 0) return null;
+
+  const nodes = [];
+  for (let offset = 0; offset < buffer.length; offset += 10) {
+    const switchByte = buffer[offset];
+    const node = {
+      index: offset / 10,
+      switchByte,
+      enabled: Boolean(switchByte & 0x01),
+      daysMask: buffer[offset + 1] & 0x7f,
+      startMinutes: buffer.readUInt16BE(offset + 2),
+      endMinutes: buffer.readUInt16BE(offset + 4),
+      onMinutes: buffer.readUInt16BE(offset + 6),
+      offMinutes: buffer.readUInt16BE(offset + 8)
+    };
+    if (!validValues(node)) return null;
+    nodes.push(node);
+  }
+
+  return { raw, buffer, nodes };
 }
 
-function hexByte(n) {
-  return (n & 0xff).toString(16).padStart(2, '0');
-}
+export function decodeCycle(value) {
+  const parsed = parseNodes(value);
+  if (!parsed || !parsed.nodes.length) return null;
 
-function hex16(n, endian) {
-  const hi = (n >> 8) & 0xff;
-  const lo = n & 0xff;
-  return endian === 'le' ? hexByte(lo) + hexByte(hi) : hexByte(hi) + hexByte(lo);
+  const first = parsed.nodes[0];
+  return {
+    raw: parsed.raw,
+    encoding: 'base64',
+    ...first,
+    nodes: parsed.nodes,
+    extraNodesRaw: parsed.nodes.length > 1
+      ? parsed.buffer.subarray(10).toString('base64')
+      : ''
+  };
 }
 
 export function encodeCycle(config, currentRaw = '') {
-  const decoded = decodeCycle(currentRaw);
-  const endian = decoded?.endian || 'be';
+  const parsed = parseNodes(currentRaw);
+  const current = parsed?.nodes?.[0] || null;
 
   const onMinutes = Number(config.onMinutes);
   const offMinutes = Number(config.offMinutes);
@@ -76,27 +78,32 @@ export function encodeCycle(config, currentRaw = '') {
     throw new Error('O horário final deve ser depois do horário inicial.');
   }
 
-  const currentSwitch = decoded?.switchByte ?? 0x03;
+  const node = Buffer.alloc(10);
+  const currentSwitch = current?.switchByte ?? 0x03;
   const switchByte = enabled ? (currentSwitch | 0x01) : (currentSwitch & 0xfe);
 
-  const node =
-    hexByte(switchByte) +
-    hexByte(daysMask) +
-    hex16(startMinutes, endian) +
-    hex16(endMinutes, endian) +
-    hex16(onMinutes, endian) +
-    hex16(offMinutes, endian);
+  node[0] = switchByte;
+  node[1] = daysMask & 0x7f;
+  node.writeUInt16BE(startMinutes, 2);
+  node.writeUInt16BE(endMinutes, 4);
+  node.writeUInt16BE(onMinutes, 6);
+  node.writeUInt16BE(offMinutes, 8);
+
+  const extra = parsed?.buffer?.length > 10 ? parsed.buffer.subarray(10) : Buffer.alloc(0);
+  const output = Buffer.concat([node, extra]);
 
   return {
-    raw: node + (decoded?.extraNodesRaw || ''),
-    nodeRaw: node,
-    endian,
+    raw: output.toString('base64'),
+    nodeRaw: node.toString('base64'),
+    encoding: 'base64',
     enabled,
+    switchByte,
     daysMask,
     startMinutes,
     endMinutes,
     onMinutes,
-    offMinutes
+    offMinutes,
+    nodesPreserved: extra.length / 10
   };
 }
 

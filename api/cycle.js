@@ -6,6 +6,26 @@ async function getStatusMap(deviceId) {
   return Object.fromEntries((Array.isArray(result) ? result : []).map(item => [item.code, item.value]));
 }
 
+async function getShadowMap(deviceId) {
+  try {
+    const shadow = await tuyaRequest('GET', `/v2.0/cloud/thing/${deviceId}/shadow/properties`);
+    const properties = Array.isArray(shadow?.properties) ? shadow.properties : [];
+    return Object.fromEntries(properties.map(item => [item.code, item.value]));
+  } catch (_) {
+    return {};
+  }
+}
+
+async function getCycleRaw(deviceId) {
+  const [statusMap, shadowMap] = await Promise.all([
+    getStatusMap(deviceId),
+    getShadowMap(deviceId)
+  ]);
+  if (typeof shadowMap.cycle_time === 'string') return shadowMap.cycle_time;
+  if (typeof statusMap.cycle_time === 'string') return statusMap.cycle_time;
+  return '';
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -15,11 +35,11 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const map = await getStatusMap(deviceId);
+      const currentRaw = await getCycleRaw(deviceId);
       return res.status(200).json({
         ok: true,
-        cycle_time: map.cycle_time ?? null,
-        cycle_config: decodeCycle(map.cycle_time)
+        cycle_time: currentRaw || null,
+        cycle_config: decodeCycle(currentRaw)
       });
     } catch (error) {
       return res.status(502).json({ ok:false, error:error.message || 'Falha ao consultar ciclo Tuya.' });
@@ -31,8 +51,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const map = await getStatusMap(deviceId);
-    const currentRaw = typeof map.cycle_time === 'string' ? map.cycle_time : '';
+    const currentRaw = await getCycleRaw(deviceId);
     if (currentRaw && !decodeCycle(currentRaw)) {
       throw new Error('Formato atual do cycle_time não reconhecido. Nenhuma alteração foi enviada.');
     }

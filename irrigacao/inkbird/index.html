@@ -568,6 +568,11 @@ async function loadServerConfig(){
     if(r.config?.profiles)state.profiles=r.config.profiles;
     if(r.config?.groups)state.groups=r.config.groups;
     save();renderProfiles();
+    if($('rainThreshold'))$('rainThreshold').value=state.weatherRules.rainThreshold;
+    if($('rainHoldHours'))$('rainHoldHours').value=state.weatherRules.rainHoldHours;
+    if($('blockWhileRaining'))$('blockWhileRaining').checked=state.weatherRules.blockWhileRaining!==false;
+    if($('serverWeatherGuard'))$('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
+    renderWeather();
   }catch{}
 }
 async function persistUserAutomation(){

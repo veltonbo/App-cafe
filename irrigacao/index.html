@@ -65,9 +65,12 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <script>
 const KEY='viveiroEkazaRealV1';
 const DEFAULT_API='https://app-cafe.vercel.app';
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,countdown:null,history:[]};
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,countdown:null,lastSync:null,lastError:null,history:[]};
 if(!data.settings) data.settings={apiUrl:DEFAULT_API,token:''};
 if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;
+if(!('lastSync' in data)) data.lastSync=null;
+if(!('lastError' in data)) data.lastError=null;
+let syncing=false;
 const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
@@ -84,15 +87,24 @@ async function api(path,opt={}){
   }finally{clearTimeout(tm)}
 }
 async function syncStatus(showToast=false){
+  if(syncing) return;
+  syncing=true;render();
   try{
-    $('connectionState').textContent='Consultando';
     const s=await api('/api/status');
     data.online=s.online!==false;
     data.relay=typeof s.relay==='boolean'?s.relay:null;
     data.cycleTime=s.cycle_time??null;
     data.countdown=s.countdown_1??null;
+    data.lastSync=Date.now();
+    data.lastError=null;
     save();render();if(showToast)toast('Estado atualizado');
-  }catch(e){data.online=false;render();if(showToast)toast('Falha: '+e.message)}
+  }catch(e){
+    data.online=false;
+    data.lastError=e.message||String(e);
+    save();render();if(showToast)toast('Falha: '+data.lastError);
+  }finally{
+    syncing=false;render();
+  }
 }
 async function manual(on){
   try{

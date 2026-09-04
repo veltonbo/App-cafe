@@ -165,43 +165,67 @@ export default async function handler(req, res) {
 
     const rawBase64 = encodeStartPayload(zone, duration);
 
-    // RAW DPs na Tuya Cloud usam Base64.
-    // Primeiro carregamos a duração do setor e depois colocamos o controlador em Manual.
+    // O IIC-800 pode entrar em Manual automaticamente quando recebe o DP45.
+    // Portanto, primeiro enviamos SOMENTE o RAW e confirmamos zonerun_state.
     await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
       commands: [{ code:'irrigation_time_all', value:rawBase64 }]
     });
 
-    await sleep(350);
+    let verification = await waitForZoneState(deviceId, zone, true, 5);
 
-    await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-      commands: [{ code:'operation_mode', value:'Manual' }]
-    });
-
-    const verification = await waitForZoneState(deviceId, zone, true, 6);
-
-    if (!verification.confirmed) {
-      // Não deixar o controlador preso em Manual se o pacote RAW não iniciou nenhuma zona.
-      if (verification.state?.operation_mode === 'Manual' && verification.state?.zonerun_state === 0) {
-        await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-          commands: [{ code:'operation_mode', value:'Auto' }]
-        }).catch(() => null);
-      }
-
-      return res.status(409).json({
-        ok:false,
-        error:'A Tuya recebeu o comando, mas o IIC-800 não confirmou a abertura do setor.',
+    if (verification.confirmed) {
+      return res.status(200).json({
+        ok:true,
+        verified:true,
         device_id:deviceId,
         action:'start',
         zone,
         duration_minutes:duration,
         state:verification.state,
-        profile:'IIC-800-DP45'
+        profile:'IIC-800-DP45',
+        path:'dp45-only'
       });
     }
 
-    return res.status(200).json({
-      ok:true,
-      verified:true,
+    // Alguns firmwares exigem a troca explícita para Manual.
+    // Se a Tuya rejeitar esse comando (ex.: 2008), ainda verificamos o estado
+    // porque o DP45 pode ter iniciado a irrigação mesmo assim.
+    let manualCommandError = null;
+    try {
+      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+        commands: [{ code:'operation_mode', value:'Manual' }]
+      });
+    } catch (error) {
+      manualCommandError = error?.message || String(error);
+    }
+
+    verification = await waitForZoneState(deviceId, zone, true, 5);
+
+    if (verification.confirmed) {
+      return res.status(200).json({
+        ok:true,
+        verified:true,
+        device_id:deviceId,
+        action:'start',
+        zone,
+        duration_minutes:duration,
+        state:verification.state,
+        profile:'IIC-800-DP45',
+        path:'dp45-plus-manual',
+        warning:manualCommandError || null
+      });
+    }
+
+    if (verification.state?.operation_mode === 'Manual' && verification.state?.zonerun_state === 0) {
+      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+        commands: [{ code:'operation_mode', value:'Auto' }]
+      }).catch(() => null);
+    }
+
+    return res.status(409).json({
+      ok:false,
+      error:'O IIC-800 não confirmou a abertura do setor após o comando.',
+      detail:manualCommandError,
       device_id:deviceId,
       action:'start',
       zone,

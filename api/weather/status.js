@@ -67,13 +67,13 @@ function collectMetrics(statusMap, shadowMap, spec) {
   };
 
   const stateText = rainState ? String(rainState.value).toLowerCase() : '';
-  const numericRain = [rainRate, rainToday, rain24h, rainGeneric]
+  const currentRain = [rainRate, rainGeneric]
     .map(scaled)
     .filter(Boolean);
 
   const rainDetected =
     /rain|raining|wet|yes|true|1/.test(stateText) ||
-    numericRain.some(x => x.value > 0);
+    currentRain.some(x => x.value > 0);
 
   return {
     rainDetected,

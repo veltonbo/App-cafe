@@ -12,6 +12,7 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
+    "@tuya/tuya-connector-nodejs": "^2.1.2",
     "firebase": "^11.8.0"
   }
 }

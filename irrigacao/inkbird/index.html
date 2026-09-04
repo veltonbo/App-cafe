@@ -236,6 +236,12 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </section>
 
 <section class="box">
+  <div class="head"><h2>Automação Weather2-2 ↔ INKBIRD</h2><button id="checkLinkage" class="btn soft">Verificar nuvem Tuya</button></div>
+  <p class="note">O app verifica se a própria nuvem Tuya permite criar uma regra direta entre a estação meteorológica e os controladores. Se disponível, essa é a melhor opção para proteção com o telefone fechado.</p>
+  <details><summary>Compatibilidade da automação cloud</summary><pre id="linkageRaw">Ainda não verificado.</pre></details>
+</section>
+
+<section class="box">
   <div class="head"><h2>Aplicativo no telefone</h2></div>
   <div class="installCard">
     <div><b>Instalar Fazenda 2E</b><small>Abra como aplicativo em tela cheia, direto pela Tela de Início.</small></div>
@@ -1214,6 +1220,7 @@ $('groupSavedSelect').onchange=loadSavedGroup;
 $('scheduleMode').onchange=updateScheduleModeUI;
 $('saveSchedule').onclick=saveScheduleConfig;
 $('installApp').onclick=installPwa;
+$('checkLinkage').onclick=checkCloudLinkage;
 $('saveWeatherRules').onclick=async()=>{
   state.weatherRules={
     rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),
@@ -1224,6 +1231,18 @@ $('saveWeatherRules').onclick=async()=>{
   };
   save();renderWeather();await persistUserAutomation();toast('Regras meteorológicas salvas');
 };
+
+async function checkCloudLinkage(){
+  try{
+    $('checkLinkage').disabled=true;
+    const r=await api('/api/irrigation/linkage');
+    $('linkageRaw').textContent=JSON.stringify(r,null,2);
+    const hasWeather=Boolean(r?.weather?.linkage);
+    const hasController=(r?.controllers||[]).some(x=>x.linkage);
+    toast(hasWeather&&hasController?'Automação Tuya compatível detectada':'Diagnóstico da automação concluído');
+  }catch(e){$('linkageRaw').textContent='Falha: '+e.message;toast('Falha ao verificar automação Tuya')}
+  finally{$('checkLinkage').disabled=false}
+}
 
 function openSettings(){$('apiUrlInput').value=state.settings.apiUrl||DEFAULT_API;$('tokenInput').value=state.settings.token||'';$('settingsDlg').showModal()}
 $('settingsBtn').onclick=openSettings;$('settingsBtn2').onclick=openSettings;

@@ -112,7 +112,7 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </div>
 <div id="tab-sectors" class="tabPanel">
 <section class="box">
-  <div class="head"><h2>Setores de irrigação</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="miniTag">8 setores por controlador</span><span id="durationMapTag" class="miniTag">Duração: aguardando</span><button id="manualMapBtn" class="btn soft" style="padding:8px 11px">Configurar saídas</button></div></div>
+  <div class="head"><h2>Setores de irrigação</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="miniTag">8 setores por controlador</span><span id="durationMapTag" class="miniTag">Duração: aguardando</span><span id="modeTag" class="miniTag">Modo: —</span><button id="resumeAutoBtn" class="btn soft" style="padding:8px 11px">Voltar ao automático</button><button id="manualMapBtn" class="btn soft" style="padding:8px 11px">Configurar saídas</button></div></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
@@ -288,7 +288,8 @@ function renderZones(){
   const prefs=getPrefs(c),status=currentStatus(),start=sectorStart(c);
   const manualMap=manualMapForController();
   const manualReady=Array.from({length:8},(_,i)=>Boolean(manualMap[i+1])).every(Boolean);
-  const controlReady=Boolean(status?.mapping?.control_ready)||manualReady;
+  const nativeReady=status?.mapping?.native_dp45===true;
+  const controlReady=Boolean(status?.mapping?.control_ready)||manualReady||nativeReady;
 
   $('zones').innerHTML=prefs.map((p,i)=>{
     const zone=i+1,sector=start+i,control=controlForZone(status,zone),durationMeta=durationForZone(status,zone);
@@ -296,16 +297,16 @@ function renderZones(){
     const running=current===true;
     const mapped=Boolean(control);
     const timedReady=Boolean(durationMeta);
-    const durationLabel=timedReady?('Nativa • '+escapeHtml(durationMeta.code)):'Somente controle manual';
+    const durationLabel=status?.mapping?.native_dp45?'DP45 nativo':timedReady?('Nativa • '+escapeHtml(durationMeta.code)):'Somente controle manual';
     return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
       '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
       '<div class="zoneState">Setor '+pad(sector)+' • saída '+zone+' do Controlador '+controllerIndex(c)+'</div></div><strong>'+(running?'Ligado':current===false?'Desligado':'—')+'</strong></div>'+
       '<div class="zoneMeta"><span>Duração configurada</span><b>'+Number(p.duration||10)+' min</b></div>'+
       '<div class="zoneMeta"><span>Temporização</span><b>'+durationLabel+'</b></div>'+
-      '<div class="zoneMeta"><span>Saída Tuya</span><b>'+escapeHtml(control?.code||'Pendente')+'</b></div>'+
+      '<div class="zoneMeta"><span>Controle</span><b>'+(status?.mapping?.native_dp45?'Perfil IIC-800 • DP45':escapeHtml(control?.code||'Pendente'))+'</b></div>'+
       '<div class="sectorActions">'+
-      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">'+(timedReady?'Irrigar '+Number(p.duration||10)+' min':'Ligar')+'</button>'+
-      '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Desligar</button>'+
+      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">Irrigar '+Number(p.duration||10)+' min</button>'+
+      '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Parar</button>'+
       '</div><button class="btn soft" style="width:100%;margin-top:8px" onclick="editSector('+zone+')">Ajustar setor</button></div>';
   }).join('');
 }
@@ -356,19 +357,23 @@ function renderStatus(){
   $('cloudState').textContent=linked?(online===false?'Offline':'Online'):'Não vinculado';
   const manualMap=manualMapForController();
   const manualCount=Object.values(manualMap).filter(Boolean).length;
-  const mapped=Math.max(Number(s?.mapping?.mapped_count||0),manualCount);
-  const effectiveReady=Boolean(s?.mapping?.control_ready)||manualCount===8;
-  const durationMapped=Number(s?.mapping?.duration_mapped_count||0);
-  $('mappingState').textContent=effectiveReady?('8/8 pronto • duração '+durationMapped+'/8'):(mapped+'/8 identificado');
-  $('durationMapTag').textContent='Duração: '+durationMapped+'/8';
-  $('scheduleMapTag').textContent='Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
+  const nativeReady=s?.mapping?.native_dp45===true;
+  const mapped=nativeReady?8:Math.max(Number(s?.mapping?.mapped_count||0),manualCount);
+  const effectiveReady=nativeReady||Boolean(s?.mapping?.control_ready)||manualCount===8;
+  const durationMapped=nativeReady?8:Number(s?.mapping?.duration_mapped_count||0);
+  $('mappingState').textContent=nativeReady?'Perfil nativo IIC-800':effectiveReady?('8/8 pronto • duração '+durationMapped+'/8'):(mapped+'/8 identificado');
+  $('durationMapTag').textContent=nativeReady?'Duração: DP45 nativo':'Duração: '+durationMapped+'/8';
+  $('modeTag').textContent='Modo: '+(s?.mapping?.operation_mode||'—');
+  $('resumeAutoBtn').disabled=!nativeReady||s?.mapping?.operation_mode==='Auto';
+  $('manualMapBtn').style.display=nativeReady?'none':'';
+  $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda: DP38 detectável':'Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
   $('heroBadge').textContent=effectiveReady?'PRONTO PARA CONTROLE':linked?'MAPEAMENTO INCOMPLETO':'AGUARDANDO VÍNCULO';
   $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' conectado':'Controlador da lavoura';
-  $('heroSub').textContent=effectiveReady?'As 8 saídas foram identificadas. O controle dos setores está liberado.':linked?'O IIC-800 está conectado, mas o mapeamento automático não fechou 8/8. Use “Configurar saídas” em Setores para concluir.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
+  $('heroSub').textContent=nativeReady?'Perfil nativo do IIC-800 identificado. Os 8 setores são controlados pelo DP45 e o estado vem do zonerun_state.':effectiveReady?'As 8 saídas foram identificadas. O controle dos setores está liberado.':linked?'O IIC-800 está conectado, mas o mapeamento automático não fechou 8/8.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
   $('liveDot').className='dot '+(linked?'on':'');
   $('liveText').textContent=linked?'Tuya respondendo':'Sem conexão';
   $('lastCheck').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  $('integrationNote').textContent=effectiveReady?'Controle das 8 saídas configurado.':'Mapeamento automático incompleto. Abra Setores > Configurar saídas para concluir sem esperar.';
+  $('integrationNote').textContent=nativeReady?'IIC-800 reconhecido pelo protocolo nativo DP45. Não é necessário mapear oito chaves separadas.':effectiveReady?'Controle das 8 saídas configurado.':'Mapeamento automático incompleto.';
   $('functionsRaw').textContent=JSON.stringify(s.functions||[],null,2);
   $('statusRaw').textContent=JSON.stringify(s.status||{},null,2);
   $('shadowRaw').textContent=JSON.stringify(s.shadow||{},null,2);
@@ -460,48 +465,75 @@ function clearManualMapping(){
 }
 
 async function startSector(zone){
-  const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone),durationMeta=durationForZone(s,zone);
-  if(!c||!control)return toast('Saída ainda não mapeada');
+  const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone);
+  if(!c||!control)return toast('Setor ainda não disponível');
 
   const d=weatherDecision();
   if(d.blocked){alert(d.title+'\n\n'+d.reason);return;}
 
-  const prefs=getPrefs(c),minutes=Math.max(1,Number(prefs[zone-1]?.duration)||10);
+  const prefs=getPrefs(c),minutes=Math.max(1,Math.min(1440,Number(prefs[zone-1]?.duration)||10));
   const sector=sectorStart(c)+zone-1;
-  const commands=[];
+  const native=s?.mapping?.native_dp45===true;
 
+  if(native){
+    const active=Number(s?.mapping?.active_mask||0);
+    const warning=active?'\n\nJá existe irrigação manual ativa neste controlador. O novo comando pode substituir/reiniciar o ciclo manual atual.':'';
+    if(!confirm('IRRIGAR o Setor '+pad(sector)+' por '+minutes+' min?'+warning))return;
+    try{
+      await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'start',zone,duration_minutes:minutes})});
+      toast('Setor '+pad(sector)+' iniciado por '+minutes+' min');
+      setTimeout(()=>syncStatus(false),1200);
+    }catch(e){toast('Falha: '+e.message)}
+    return;
+  }
+
+  const durationMeta=durationForZone(s,zone);
+  const commands=[];
   if(durationMeta){
     const rawDuration=durationValueForMinutes(durationMeta,minutes);
-    if(rawDuration===null){
-      alert('A duração de '+minutes+' min está fora do limite aceito pelo controlador para este setor.');
-      return;
-    }
+    if(rawDuration===null)return alert('A duração de '+minutes+' min está fora do limite aceito pelo controlador.');
     commands.push({code:durationMeta.code,value:rawDuration});
   }
   commands.push({code:control.code,value:true});
-
-  const mode=durationMeta?(' por '+minutes+' min'):'';
-  if(!confirm('LIGAR o Setor '+pad(sector)+mode+'?'))return;
-
+  if(!confirm('LIGAR o Setor '+pad(sector)+' por '+minutes+' min?'))return;
   try{
     await api('/api/inkbird/command',{method:'POST',body:JSON.stringify({device_id:c.id,commands})});
-    toast(durationMeta?('Setor '+pad(sector)+' iniciado por '+minutes+' min'):('Setor '+pad(sector)+' ligado'));
+    toast('Setor '+pad(sector)+' iniciado');
     setTimeout(()=>syncStatus(false),1200);
   }catch(e){toast('Falha: '+e.message)}
 }
 
 async function sendZone(zone,on){
   const c=selectedController(),s=currentStatus(),control=controlForZone(s,zone);
-  if(!c||!control)return toast('Saída ainda não mapeada');
-  if(on){
-    const d=weatherDecision();
-    if(d.blocked){alert(d.title+'\n\n'+d.reason);return;}
-  }
+  if(!c||!control)return toast('Setor ainda não disponível');
   const sector=sectorStart(c)+zone-1;
+
+  if(s?.mapping?.native_dp45){
+    if(on)return startSector(zone);
+    if(!confirm('PARAR a irrigação manual do Controlador '+controllerIndex(c)+'?\n\nNo IIC-800, o comando OFF encerra qualquer setor manual ativo nesse controlador.'))return;
+    try{
+      await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'stop',zone})});
+      toast('Irrigação manual parada');
+      setTimeout(()=>syncStatus(false),1200);
+    }catch(e){toast('Falha: '+e.message)}
+    return;
+  }
+
   if(!confirm((on?'LIGAR':'DESLIGAR')+' o Setor '+pad(sector)+' agora?'))return;
   try{
     await api('/api/inkbird/command',{method:'POST',body:JSON.stringify({device_id:c.id,code:control.code,value:on})});
     toast('Comando enviado ao Setor '+pad(sector));setTimeout(()=>syncStatus(false),1200);
+  }catch(e){toast('Falha: '+e.message)}
+}
+
+async function resumeAutomaticMode(){
+  const c=selectedController(),s=currentStatus();
+  if(!c||!s?.mapping?.native_dp45)return;
+  if(!confirm('Voltar o Controlador '+controllerIndex(c)+' para o modo AUTOMÁTICO?'))return;
+  try{
+    await api('/api/inkbird/zone',{method:'POST',body:JSON.stringify({device_id:c.id,action:'auto'})});
+    toast('Controlador voltou ao modo automático');
+    setTimeout(()=>syncStatus(false),1000);
   }catch(e){toast('Falha: '+e.message)}
 }
 
@@ -524,6 +556,7 @@ $('syncControllers').onclick=()=>syncControllers(true);
 $('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador na mesma conta Smart Life.\n2. Sincronize a conta com o projeto Tuya “Irrigação Café”.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente: 01–08, 09–16, 17–24...');
 $('checkDevice').onclick=()=>syncStatus(true);
 $('manualMapBtn').onclick=openManualMapping;
+$('resumeAutoBtn').onclick=resumeAutomaticMode;
 $('saveManualMap').onclick=saveManualMapping;
 $('clearManualMap').onclick=clearManualMapping;
 $('checkWeather').onclick=()=>syncWeather(true);

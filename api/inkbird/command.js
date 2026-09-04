@@ -1,7 +1,5 @@
 import { applyCors, authorize, ensureConfig, tuyaRequest } from '../_tuya.js';
-
-const DEFAULT_DEVICE_ID = 'eb7f32868bdffc559bkgyh';
-const deviceId = (process.env.INKBIRD_DEVICE_ID || DEFAULT_DEVICE_ID).trim();
+import { resolveInkbirdDevice } from './_device.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -15,6 +13,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    const resolved = await resolveInkbirdDevice();
+    const deviceId = resolved.id;
+    if (!deviceId) return res.status(400).json({ ok:false, error:'IIC-800 ainda não sincronizado com o projeto Tuya.' });
+
     const functionsResult = await tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/functions`);
     const functions = Array.isArray(functionsResult?.functions) ? functionsResult.functions : [];
     const allowed = functions.some(item => item.code === code);
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
       commands: [{ code, value: req.body.value }]
     });
 
-    return res.status(200).json({ ok:true, code, value:req.body.value });
+    return res.status(200).json({ ok:true, device_id:deviceId, code, value:req.body.value });
   } catch (error) {
     return res.status(502).json({ ok:false, error:error.message || 'Falha ao enviar comando ao INKBIRD.' });
   }

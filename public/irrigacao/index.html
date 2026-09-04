@@ -46,11 +46,11 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
 
-<section class="box"><div class="head"><h2>Conexão segura</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">A tela conversa com um backend seguro. O Access Secret da Tuya fica somente no servidor e nunca é publicado no GitHub Pages.</p></section>
+<section class="box"><div class="head"><h2>Conexão segura</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">Backend configurado em <b>app-cafe.vercel.app</b>. O Access Secret da Tuya fica somente no servidor e nunca é publicado no GitHub Pages.</p></section>
 </main>
 
 <dialog id="settingsDlg"><form method="dialog" class="modal"><div class="ey">CONEXÃO</div><h2>Servidor Tuya</h2>
-<label>URL do backend<input id="apiUrl" type="url" placeholder="https://seu-projeto.vercel.app"></label>
+<label>URL do backend<input id="apiUrl" type="url" value="https://app-cafe.vercel.app"></label>
 <label>Token de controle<input id="controlToken" type="password" placeholder="token privado"></label>
 <p class="note">O token é salvo somente neste aparelho. Use um valor longo e aleatório no servidor.</p>
 <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div></form></dialog>
@@ -58,7 +58,10 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <script>
 const KEY='viveiroEkazaRealV1';
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:'',token:''},relay:null,online:null,cycleTime:null,countdown:null,history:[]};
+const DEFAULT_API='https://app-cafe.vercel.app';
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,countdown:null,history:[]};
+if(!data.settings) data.settings={apiUrl:DEFAULT_API,token:''};
+if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;
 const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}

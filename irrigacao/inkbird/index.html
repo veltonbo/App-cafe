@@ -326,8 +326,9 @@ const oldShared=JSON.parse(localStorage.getItem(VIVEIRO_KEY)||'null')||{};
 let state=JSON.parse(localStorage.getItem(APP_KEY)||'null')||{
   settings:{apiUrl:oldShared?.settings?.apiUrl||DEFAULT_API,token:oldShared?.settings?.token||''},
   controllers:[],selectedControllerId:null,statusByController:{},zonePrefs:{},manualControlMap:{},
+  scheduleByController:{},activeSessions:{},history:[],profiles:{},groups:{},serverConfig:{},
   weather:null,weatherAt:null,lastRainAt:null,
-  weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true}
+  weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true,serverGuard:true}
 };
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
@@ -337,7 +338,14 @@ if(!state.controllers)state.controllers=[];
 if(!state.statusByController)state.statusByController={};
 if(!state.zonePrefs)state.zonePrefs={};
 if(!state.manualControlMap)state.manualControlMap={};
-if(!state.weatherRules)state.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true};
+if(!state.scheduleByController)state.scheduleByController={};
+if(!state.activeSessions)state.activeSessions={};
+if(!Array.isArray(state.history))state.history=[];
+if(!state.profiles)state.profiles={};
+if(!state.groups)state.groups={};
+if(!state.serverConfig)state.serverConfig={};
+if(!state.weatherRules)state.weatherRules={rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true,serverGuard:true};
+if(state.weatherRules.serverGuard===undefined)state.weatherRules.serverGuard=true;
 
 const $=id=>document.getElementById(id);
 let busy=false;

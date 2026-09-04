@@ -10,6 +10,13 @@ function encodeStartPayload(zone, durationMinutes) {
   return payload.toString('base64');
 }
 
+function encodeStopPayload() {
+  const payload = Buffer.alloc(34);
+  payload[0] = 0x01;
+  payload[1] = 0x01;
+  return payload.toString('base64');
+}
+
 function normalizeFunctions(result) {
   if (Array.isArray(result)) return result;
   if (Array.isArray(result?.functions)) return result.functions;
@@ -139,20 +146,47 @@ export default async function handler(req, res) {
     }
 
     if (action === 'stop') {
-      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-        commands: [{ code:'operation_mode', value:'OFF' }]
-      });
+      let offCommandError = null;
+      try {
+        await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+          commands: [{ code:'operation_mode', value:'OFF' }]
+        });
+      } catch (error) {
+        offCommandError = error?.message || String(error);
+      }
 
-      const verification = await waitForZoneState(deviceId, zone, false, 4);
+      let verification = await waitForZoneState(deviceId, zone, false, 4);
+
+      if (!verification.confirmed) {
+        try {
+          await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
+            commands: [{ code:'irrigation_time_all', value:encodeStopPayload() }]
+          });
+        } catch {}
+
+        verification = await waitForZoneState(deviceId, zone, false, 4);
+      }
+
+      if (!verification.confirmed) {
+        return res.status(409).json({
+          ok:false,
+          error:'O IIC-800 não confirmou a parada da irrigação.',
+          detail:offCommandError,
+          device_id:deviceId,
+          action:'stop',
+          zone,
+          state:verification.state
+        });
+      }
 
       return res.status(200).json({
         ok:true,
         device_id:deviceId,
         action:'stop',
         zone,
-        verified:verification.confirmed,
+        verified:true,
         state:verification.state,
-        note:'No IIC-800, OFF encerra a irrigação manual ativa no controlador.'
+        warning:offCommandError || null
       });
     }
 

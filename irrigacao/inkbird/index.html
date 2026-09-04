@@ -441,9 +441,12 @@ function nextChannelDate(ch,now=new Date()){
 }
 function nextScheduled(){
   let best=null;
-  for(const ch of currentSchedule()){
-    const date=nextChannelDate(ch);
-    if(date&&(!best||date<best.date))best={ch,date};
+  for(const ctrl of state.controllers||[]){
+    const channels=state.scheduleByController[ctrl.id]||[];
+    for(const ch of channels){
+      const date=nextChannelDate(ch);
+      if(date&&(!best||date<best.date))best={ch,date,controller:ctrl};
+    }
   }
   return best;
 }
@@ -484,7 +487,8 @@ function renderToday(){
   }
   const next=nextScheduled();
   if(next){
-    const sector=c?sectorStart(c)+Number(next.ch.zone)-1:Number(next.ch.zone);
+    const ctrl=next.controller||c;
+    const sector=ctrl?sectorStart(ctrl)+Number(next.ch.zone)-1:Number(next.ch.zone);
     $('todayNext').textContent='Setor '+pad(sector)+' • '+next.date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     $('todayNextSub').textContent=next.date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
   }else{
@@ -507,18 +511,28 @@ async function loadHistory(showToast=false){
     if(showToast)toast('Histórico atualizado');
   }catch(e){if(showToast)toast('Falha ao carregar histórico')}
 }
-async function syncSchedule(showToast=false){
-  const c=selectedController();if(!c)return[];
+async function syncSchedule(showToast=false,controller=null){
+  const c=controller||selectedController();if(!c)return[];
   try{
     const r=await api('/api/inkbird/schedule?device_id='+encodeURIComponent(c.id));
     state.scheduleByController[c.id]=Array.isArray(r.channels)?r.channels:[];
-    save();renderZones();renderToday();
+    save();
+    if(c.id===selectedController()?.id)renderZones();
+    renderToday();
+    if($('scheduleMapTag')&&c.id===selectedController()?.id){
+      const count=state.scheduleByController[c.id].filter(x=>x.enabled).length;
+      $('scheduleMapTag').textContent=count?count+' setor(es) programado(s)':'Nenhum setor programado';
+    }
     if(showToast)toast('Programação atualizada');
     return state.scheduleByController[c.id];
   }catch(e){
     if(showToast)toast('Agenda: '+e.message);
     return [];
   }
+}
+async function syncAllSchedules(){
+  await Promise.all((state.controllers||[]).map(c=>syncSchedule(false,c)));
+  renderToday();
 }
 async function loadServerConfig(){
   try{
@@ -1136,7 +1150,7 @@ async function refreshAll(){
   if(busy)return;busy=true;$('refresh').textContent='● Atualizando';showError('');
   try{
     await syncControllers(false);
-    await Promise.all([syncStatus(false),syncWeather(false),loadServerConfig(),loadHistory(false),syncSchedule(false)]);
+    await Promise.all([syncStatus(false),syncWeather(false),loadServerConfig(),loadHistory(false),syncAllSchedules()]);
     renderToday();renderProfiles();
     toast('Central atualizada');
   }finally{busy=false;$('refresh').textContent='● Atualizar'}

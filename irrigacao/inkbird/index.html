@@ -24,17 +24,60 @@
 details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.tabBtn{border:1px solid var(--l);background:#fff;color:var(--m);border-radius:14px;padding:11px 8px;font-weight:850}.tabBtn.active{background:var(--g);color:#fff;border-color:var(--g)}.tabPanel{display:none}.tabPanel.active{display:block}.errorBanner{background:#fff0ef;border:1px solid #efbbb7;color:#9f352f;border-radius:16px;padding:12px 14px;margin-bottom:12px;font-weight:750}.sectorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sectorActions .btn{width:100%}.zone.mapped{border-color:#a9d8ca}.zone.running{background:#edf9f5}.sysGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sysCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.sysCard small{display:block;color:var(--m);margin-bottom:5px}.mapGrid{display:grid;gap:10px}.mapRow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center}.mapRow b{font-size:.9rem}.mapRow select{width:100%;border:1px solid var(--l);border-radius:11px;padding:10px;background:#fff}.mappingHelp{background:#eef9f5;border:1px solid #b6dfd2;border-radius:14px;padding:12px;color:#385d52;font-size:.84rem;line-height:1.45}.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
 @media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar,.sysGrid{grid-template-columns:1fr}.tabs{grid-template-columns:1fr 1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}.quickTimes{grid-template-columns:repeat(3,1fr)}}
+
+/* Fazenda 2E • Central de Irrigação V4 */
+:root{--bg:#f4f7f5;--surface:#ffffff;--surface2:#f8fbf9;--ink:#173d33;--muted:#778881;--border:#dce9e4;--green:#0d765b;--green2:#0b604b;--greenSoft:#e9f6f1;--danger:#bd443e;--dangerSoft:#fff0ef;--shadow:0 10px 28px rgba(24,65,53,.07)}
+body{background:var(--bg);color:var(--ink)}
+.top{padding:calc(10px + env(safe-area-inset-top)) max(16px,calc((100vw - 1040px)/2 + 14px)) 10px;background:rgba(244,247,245,.94);border-bottom:1px solid var(--border);box-shadow:0 4px 18px rgba(24,65,53,.04)}
+.brand small{font-size:.66rem;letter-spacing:.16em}.brand h1{font-size:1.08rem;letter-spacing:-.02em}
+.actions{align-items:center}.pill,.navbtn{box-shadow:none;border-color:var(--border);padding:8px 11px;font-size:.82rem;background:#fff}.pill:active,.navbtn:active,.btn:active,.tabBtn:active{transform:scale(.98)}
+.wrap{padding-top:16px;max-width:1040px}
+.tabs{position:sticky;top:calc(64px + env(safe-area-inset-top));z-index:7;background:rgba(244,247,245,.92);backdrop-filter:blur(12px);padding:5px;border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 20px rgba(24,65,53,.04)}
+.tabBtn{border:0;border-radius:11px;padding:10px 8px;background:transparent;font-size:.82rem;color:var(--muted);transition:.18s}.tabBtn.active{background:#fff;color:var(--green);box-shadow:0 3px 12px rgba(24,65,53,.08)}
+.box,.zone,.stat{border-color:var(--border);box-shadow:var(--shadow)}
+.box{border-radius:20px;padding:18px}.head h2{font-size:1.08rem;letter-spacing:-.015em}
+.hero{background:linear-gradient(145deg,#0c654f,#0f8062);border-radius:22px;box-shadow:0 18px 38px rgba(11,96,75,.22);padding:22px}.hero h2{font-size:1.5rem}.hero p{font-size:.9rem;max-width:600px}.badge{font-size:.76rem;letter-spacing:.02em}
+.grid{gap:9px}.stat{border-radius:16px;padding:14px}.stat small{font-size:.75rem}.stat strong{font-size:.98rem}
+.btn{border-radius:12px;padding:11px 13px;transition:.15s}.primary{background:var(--green)}.soft{background:var(--greenSoft);color:var(--green)}.danger{background:var(--dangerSoft);color:var(--danger)}
+.controllerBar{grid-template-columns:minmax(200px,1fr) auto auto}.controllerBar select,.quickController select{border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:#fff;color:var(--ink);font-weight:750}
+.controllerSummary{margin-top:8px}.miniTag{background:var(--greenSoft);color:var(--green);font-size:.75rem;padding:6px 9px}
+.techOnly{display:none!important}
+.sectorToolbar{display:grid;grid-template-columns:minmax(190px,1fr) auto;gap:10px;align-items:end;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;margin-bottom:12px}.quickController{display:grid;gap:5px;font-size:.74rem;color:var(--muted);font-weight:800}.healthBadge{display:flex;align-items:center;gap:7px;min-height:42px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font-size:.8rem;font-weight:850}.healthDot{width:9px;height:9px;border-radius:50%;background:#a6b2ad}.healthDot.on{background:#25a77d;box-shadow:0 0 0 4px rgba(37,167,125,.12)}
+.operationStrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.opCard{padding:11px 12px;background:#fff;border:1px solid var(--border);border-radius:14px}.opCard small{display:block;color:var(--muted);font-size:.69rem;margin-bottom:4px}.opCard strong{font-size:.86rem}
+.zoneGrid{gap:12px}.zone{border-radius:18px;padding:16px;position:relative;overflow:hidden}.zone.running{background:#effaf6;border-color:#91d3bd;box-shadow:0 12px 28px rgba(21,129,96,.12)}.zone.running:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#19a174}.zoneTop{align-items:flex-start}.zoneName{font-size:1.06rem;letter-spacing:-.015em}.zoneState{font-size:.73rem;margin-top:2px}.zoneStatus{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#f0f4f2;color:#62726c;font-size:.74rem;font-weight:900}.zoneStatus.on{background:#dff5ed;color:#087451}.zoneStatusDot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.timeLabel{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #e9efec}.timeLabel span{font-size:.77rem;color:var(--muted)}.timeLabel b{font-size:.9rem}
+.durationControl{grid-template-columns:44px 1fr 44px;margin-top:8px}.durationControl button{height:44px;padding:0;border:1px solid var(--border);background:#fff;font-size:1.25rem}.durationControl input{height:44px;border-color:var(--border);font-size:1rem}.quickTimes{gap:5px}.quickTimes button{padding:7px 3px;font-size:.72rem;border-color:var(--border)}.quickTimes button.active{background:var(--green);border-color:var(--green)}
+.sectorActions{margin-top:12px}.sectorActions .btn{margin-top:0!important;min-height:46px}.renameBtn{width:auto!important;margin:8px 0 0!important;padding:8px 10px!important;font-size:.76rem;background:transparent!important;color:var(--muted)!important}
+.statusLine{padding:10px 0}.statusLine span{font-size:.83rem}.statusLine strong{font-size:.86rem}
+.weatherGrid{gap:8px}.weatherCard{background:var(--surface2);border-color:var(--border)}.guard{border-radius:14px}
+.capGrid{gap:8px}.cap{background:var(--surface2);border-color:var(--border)}
+details{border-color:var(--border);background:var(--surface2)}
+.errorBanner{border-radius:14px}
+dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.22)}dialog::backdrop{background:rgba(8,31,24,.45);backdrop-filter:blur(3px)}
+.toast{bottom:calc(84px + env(safe-area-inset-bottom));border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.2);font-size:.86rem}
+@media(max-width:760px){
+  .top{flex-direction:row;align-items:center;padding-left:14px;padding-right:14px}.brand h1{font-size:1rem;white-space:nowrap}.brand small{font-size:.61rem}.actions{width:auto;margin-left:auto}.actions>*{flex:0}.actions #settingsBtn{display:none}.navbtn{font-size:0;padding:8px 9px}.navbtn:after{content:"Viveiro";font-size:.75rem}.pill{font-size:.75rem;padding:8px 9px}
+  .wrap{padding:12px 11px calc(92px + env(safe-area-inset-bottom))}
+  .tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));top:auto;z-index:20;grid-template-columns:repeat(4,1fr);margin:0;padding:6px;background:rgba(247,250,248,.96);box-shadow:0 12px 35px rgba(20,58,48,.18);border-radius:18px}.tabBtn{padding:10px 3px;font-size:.73rem}.tabBtn.active{background:var(--green);color:#fff;box-shadow:none}
+  .grid{grid-template-columns:1fr 1fr}.box{padding:15px;border-radius:18px}.hero{padding:19px;border-radius:20px}.hero h2{font-size:1.35rem}.hero p{font-size:.84rem}
+  .controllerBar{grid-template-columns:1fr}.controllerBar .btn{width:100%}.sectorToolbar{grid-template-columns:1fr}.healthBadge{justify-content:center}.operationStrip{grid-template-columns:repeat(3,1fr)}.opCard{padding:9px 8px}.opCard strong{font-size:.78rem}
+  .zoneGrid{grid-template-columns:1fr}.zone{padding:14px}.quickTimes{grid-template-columns:repeat(6,1fr)}.quickTimes button{font-size:.67rem;padding:7px 1px}.sectorActions{grid-template-columns:1.35fr .8fr}
+  .weatherGrid{grid-template-columns:1fr 1fr}.ruleGrid,.capGrid,.sysGrid{grid-template-columns:1fr}
+  .head{align-items:flex-start}.head h2{margin-bottom:8px}.head>div{width:100%}
+}
+@media(max-width:390px){.brand h1{font-size:.92rem}.navbtn{display:none}.quickTimes{grid-template-columns:repeat(3,1fr)}.operationStrip{grid-template-columns:1fr 1fr}.operationStrip .opCard:last-child{grid-column:1/-1}}
+
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação • INKBIRD</h1></div>
+  <div class="brand"><small>FAZENDA 2E • IRRIGAÇÃO</small><h1>Central INKBIRD</h1></div>
   <div class="actions"><a class="navbtn" href="/irrigacao/">Viveiro EKAZA</a><button id="settingsBtn" class="pill">Configurar</button><button id="refresh" class="pill">● Atualizar</button></div>
 </header>
 <main class="wrap">
-<div class="tabs"><button class="tabBtn active" data-tab="overview">Geral</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
+<div class="tabs"><button class="tabBtn" data-tab="overview">Visão geral</button><button class="tabBtn active" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
 <div id="globalError" class="errorBanner" hidden></div>
-<div id="tab-overview" class="tabPanel active">
+<div id="tab-overview" class="tabPanel">
 <section class="box" style="margin-top:0">
   <div class="head"><h2>Controladores da Fazenda 2E</h2></div>
   <div class="controllerBar">
@@ -64,16 +107,16 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
   <div class="stat"><small>Controlador</small><strong id="controllerNumber">IIC-800-WIFI</strong></div>
   <div class="stat"><small>Setores deste controlador</small><strong id="sectorRange">01–08</strong></div>
   <div class="stat"><small>Conexão Tuya</small><strong id="cloudState">Aguardando</strong></div>
-  <div class="stat"><small>Mapeamento</small><strong id="mappingState">Pendente</strong></div>
+  <div class="stat"><small>Integração</small><strong id="mappingState">Pendente</strong></div>
 </section>
 
 <section class="box">
   <div class="head"><h2>Status da integração</h2><button id="checkDevice" class="btn primary">Ler controlador</button></div>
   <div class="statusLine"><span>Dispositivo localizado</span><strong id="linkedState">Aguardando</strong></div>
   <div class="statusLine"><span>Online na Tuya</span><strong id="onlineState">—</strong></div>
-  <div class="statusLine"><span>Categoria Tuya</span><strong id="categoryState">—</strong></div>
-  <div class="statusLine"><span>Funções encontradas</span><strong id="functionsState">—</strong></div>
-  <div class="statusLine"><span>Diagnóstico remoto</span><strong id="accessState">Aguardando</strong></div>
+  <div class="statusLine techOnly"><span>Categoria Tuya</span><strong id="categoryState">—</strong></div>
+  <div class="statusLine techOnly"><span>Funções encontradas</span><strong id="functionsState">—</strong></div>
+  <div class="statusLine"><span>Acesso remoto</span><strong id="accessState">Aguardando</strong></div>
   <p id="accessDetail" class="note" style="margin-top:8px"></p>
   <p id="integrationNote" class="note">O painel não envia comandos enquanto os DPs reais do seu IIC-800 não forem identificados. Isso evita acionar uma zona errada.</p>
 </section>
@@ -110,21 +153,32 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </section>
 
 </div>
-<div id="tab-sectors" class="tabPanel">
-<section class="box">
-  <div class="head"><h2>Setores de irrigação</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="miniTag">8 setores por controlador</span><span id="durationMapTag" class="miniTag">Duração: aguardando</span><span id="modeTag" class="miniTag">Modo: —</span><button id="resumeAutoBtn" class="btn soft" style="padding:8px 11px">Voltar ao automático</button><button id="manualMapBtn" class="btn soft" style="padding:8px 11px">Configurar saídas</button></div></div>
+<div id="tab-sectors" class="tabPanel active">
+<section class="box" style="margin-top:0">
+  <div class="head"><div><div class="ey" style="color:var(--green)">OPERAÇÃO</div><h2>Setores de irrigação</h2></div><button id="resumeAutoBtn" class="btn soft">Voltar ao automático</button></div>
+  <div class="sectorToolbar">
+    <label class="quickController">Controlador em operação
+      <select id="quickControllerSelect"><option value="">Carregando...</option></select>
+    </label>
+    <div class="healthBadge"><span id="quickConnectionDot" class="healthDot"></span><span id="quickConnection">Aguardando controlador</span></div>
+  </div>
+  <div class="operationStrip">
+    <div class="opCard"><small>Setores</small><strong id="quickSectorRange">01–08</strong></div>
+    <div class="opCard"><small>Modo</small><strong id="quickMode">—</strong></div>
+    <div class="opCard"><small>Clima</small><strong id="quickWeather">Aguardando</strong></div>
+  </div>
+  <div style="display:none"><span id="durationMapTag"></span><span id="modeTag"></span><button id="manualMapBtn"></button></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
 <section class="box">
-  <div class="head"><h2>Programação disponível no IIC-800</h2><span id="scheduleMapTag" class="miniTag">Agenda: aguardando</span></div>
+  <div class="head"><div><div class="ey" style="color:var(--green)">AUTOMAÇÃO</div><h2>Programação automática</h2></div><span id="scheduleMapTag" class="miniTag">Verificando agenda</span></div>
+  <p class="note" style="margin-top:0">O controle manual dos setores já está ativo. A edição completa dos horários será liberada no app somente depois de validarmos o formato de agenda do seu IIC-800, sem alterar programações existentes por engano.</p>
   <div class="capGrid">
-    <div class="cap"><b>Calendário por zona</b><small>Dias pares, dias ímpares, dias personalizados ou intervalo.</small></div>
-    <div class="cap"><b>Até 6 partidas por dia</b><small>Vários horários de início para a mesma zona.</small></div>
-    <div class="cap"><b>Duração individual</b><small>Tempo de irrigação configurado separadamente para cada zona.</small></div>
-    <div class="cap"><b>Sensor de chuva</b><small>Opção para obedecer ou ignorar o sensor em cada programação.</small></div>
-    <div class="cap"><b>Multi-zona</b><small>Execução sequencial das zonas selecionadas.</small></div>
-    <div class="cap"><b>Modo manual</b><small>Acionamento temporizado de uma ou várias zonas.</small></div>
+    <div class="cap"><b>Controle manual</b><small>Pronto para irrigar cada setor pelo tempo definido.</small></div>
+    <div class="cap"><b>Proteção pelo clima</b><small>A Weather2-2 é consultada antes de iniciar uma irrigação pelo app.</small></div>
+    <div class="cap"><b>Agenda automática</b><small>Em preparação para edição segura de horários e dias.</small></div>
+    <div class="cap"><b>Vários controladores</b><small>Setores continuam automaticamente em blocos de 8.</small></div>
   </div>
 </section>
 
@@ -224,21 +278,26 @@ document.querySelectorAll('.tabBtn').forEach(b=>b.onclick=()=>activateTab(b.data
 
 function renderControllers(){
   const select=$('controllerSelect');
+  const quick=$('quickControllerSelect');
   if(!state.controllers.length){
     select.innerHTML='<option value="">Nenhum IIC-800 encontrado</option>';
+    if(quick)quick.innerHTML='<option value="">Nenhum controlador</option>';
     $('controllerSummary').innerHTML='<span class="miniTag">0 controladores</span>';
     $('controllerNumber').textContent='IIC-800-WIFI';
     $('sectorRange').textContent='—';
+    if($('quickSectorRange'))$('quickSectorRange').textContent='—';
     renderZones();
     return;
   }
   if(!state.selectedControllerId||!state.controllers.some(c=>c.id===state.selectedControllerId)){
     state.selectedControllerId=state.controllers[0].id;save();
   }
-  select.innerHTML=state.controllers.map(c=>{
+  const controllerOptions=state.controllers.map(c=>{
     const i=controllerIndex(c),s=sectorStart(c),e=s+7;
     return '<option value="'+c.id+'"'+(c.id===state.selectedControllerId?' selected':'')+'>Controlador '+i+' • Setores '+pad(s)+'–'+pad(e)+'</option>';
   }).join('');
+  select.innerHTML=controllerOptions;
+  if(quick)quick.innerHTML=controllerOptions;
   $('controllerSummary').innerHTML=state.controllers.map(c=>{
     const i=controllerIndex(c),s=sectorStart(c);
     return '<span class="miniTag">C'+i+': '+pad(s)+'–'+pad(s+7)+(c.online===false?' • offline':'')+'</span>';
@@ -246,6 +305,7 @@ function renderControllers(){
   const c=selectedController(),i=controllerIndex(c),s=sectorStart(c);
   $('controllerNumber').textContent='Controlador '+i+' • IIC-800';
   $('sectorRange').textContent=pad(s)+'–'+pad(s+7);
+  if($('quickSectorRange'))$('quickSectorRange').textContent=pad(s)+'–'+pad(s+7);
   renderZones();
 }
 
@@ -284,7 +344,7 @@ function durationValueForMinutes(meta,minutes){
 
 function renderZones(){
   const c=selectedController();
-  if(!c){$('zones').innerHTML='<div class="zone"><div class="zoneName">Nenhum controlador encontrado</div><p class="note">Adicione o IIC-800 ao Smart Life e toque em Buscar controladores.</p></div>';return;}
+  if(!c){$('zones').innerHTML='<div class="zone"><div class="zoneName">Nenhum controlador disponível</div><p class="note">Adicione um IIC-800 no Smart Life e sincronize os controladores.</p></div>';return;}
   const prefs=getPrefs(c),status=currentStatus(),start=sectorStart(c);
   const manualMap=manualMapForController();
   const manualReady=Array.from({length:8},(_,i)=>Boolean(manualMap[i+1])).every(Boolean);
@@ -292,28 +352,27 @@ function renderZones(){
   const controlReady=Boolean(status?.mapping?.control_ready)||manualReady||nativeReady;
 
   $('zones').innerHTML=prefs.map((p,i)=>{
-    const zone=i+1,sector=start+i,control=controlForZone(status,zone),durationMeta=durationForZone(status,zone);
+    const zone=i+1,sector=start+i,control=controlForZone(status,zone);
     const current=control?.current;
     const running=current===true;
     const mapped=Boolean(control);
-    const timedReady=Boolean(durationMeta);
-    const durationLabel=status?.mapping?.native_dp45?'DP45 nativo':timedReady?('Nativa • '+escapeHtml(durationMeta.code)):'Somente controle manual';
+    const minutes=Number(p.duration||10);
+    const stateLabel=running?'Irrigando':current===false?'Parado':'Aguardando';
     return '<div class="zone '+(mapped?'mapped ':'')+(running?'running':'')+'">'+
       '<div class="zoneTop"><div><div class="zoneName">'+escapeHtml(p.name||('Setor '+pad(sector)))+'</div>'+
-      '<div class="zoneState">Setor '+pad(sector)+' • saída '+zone+' do Controlador '+controllerIndex(c)+'</div></div><strong>'+(running?'Ligado':current===false?'Desligado':'—')+'</strong></div>'+
-      '<div class="zoneMeta"><span>Duração configurada</span><b>'+Number(p.duration||10)+' min</b></div>'+
+      '<div class="zoneState">Setor '+pad(sector)+' • Controlador '+controllerIndex(c)+'</div></div>'+
+      '<span class="zoneStatus '+(running?'on':'')+'"><span class="zoneStatusDot"></span>'+stateLabel+'</span></div>'+
+      '<div class="timeLabel"><span>Tempo de irrigação</span><b>'+minutes+' min</b></div>'+
       '<div class="durationControl">'+
-        '<button type="button" onclick="adjustDuration('+zone+',-1)">−</button>'+
-        '<input id="duration-'+zone+'" type="number" min="1" max="1440" step="1" value="'+Number(p.duration||10)+'" onchange="setDuration('+zone+',this.value)">'+
-        '<button type="button" onclick="adjustDuration('+zone+',1)">+</button>'+
+        '<button type="button" aria-label="Diminuir tempo" onclick="adjustDuration('+zone+',-1)">−</button>'+
+        '<input id="duration-'+zone+'" aria-label="Tempo em minutos" type="number" min="1" max="1440" step="1" value="'+minutes+'" onchange="setDuration('+zone+',this.value)">'+
+        '<button type="button" aria-label="Aumentar tempo" onclick="adjustDuration('+zone+',1)">+</button>'+
       '</div>'+
-      '<div class="quickTimes">'+[1,5,10,15,20,30].map(v=>'<button type="button" class="'+(Number(p.duration||10)===v?'active':'')+'" onclick="setDuration('+zone+','+v+')">'+v+' min</button>').join('')+'</div>'+
-      '<div class="zoneMeta"><span>Temporização</span><b>'+durationLabel+'</b></div>'+
-      '<div class="zoneMeta"><span>Controle</span><b>'+(status?.mapping?.native_dp45?'Perfil IIC-800 • DP45':escapeHtml(control?.code||'Pendente'))+'</b></div>'+
+      '<div class="quickTimes">'+[1,5,10,15,20,30].map(v=>'<button type="button" class="'+(minutes===v?'active':'')+'" onclick="setDuration('+zone+','+v+')">'+v+'m</button>').join('')+'</div>'+
       '<div class="sectorActions">'+
-      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">Irrigar '+Number(p.duration||10)+' min</button>'+
+      '<button class="btn primary" '+(!controlReady||!control||running?'disabled':'')+' onclick="startSector('+zone+')">Irrigar • '+minutes+' min</button>'+
       '<button class="btn danger" '+(!controlReady||!control||current===false?'disabled':'')+' onclick="sendZone('+zone+',false)">Parar</button>'+
-      '</div><button class="btn soft" style="width:100%;margin-top:8px" onclick="editSector('+zone+')">Ajustar setor</button></div>';
+      '</div><button class="btn renameBtn" onclick="editSector('+zone+')">Renomear setor</button></div>';
   }).join('');
 }
 
@@ -350,7 +409,11 @@ function renderStatus(){
     $('functionsState').textContent='—';$('accessState').textContent='Aguardando';$('accessDetail').textContent='';
     $('cloudState').textContent='Aguardando';$('mappingState').textContent='Pendente';
     $('heroBadge').textContent='AGUARDANDO LEITURA';$('heroTitle').textContent='Controlador da lavoura';
-    $('liveDot').className='dot';$('liveText').textContent='Ainda não verificado';renderZones();return;
+    $('liveDot').className='dot';$('liveText').textContent='Ainda não verificado';
+    if($('quickConnection'))$('quickConnection').textContent='Aguardando controlador';
+    if($('quickConnectionDot'))$('quickConnectionDot').className='healthDot';
+    if($('quickMode'))$('quickMode').textContent='—';
+    renderZones();return;
   }
   const linked=Boolean(s.linked),online=s?.device?.online;
   $('linkedState').textContent=linked?'Sim':'Não';$('linkedState').className=linked?'ok':'bad';
@@ -367,21 +430,25 @@ function renderStatus(){
   const mapped=nativeReady?8:Math.max(Number(s?.mapping?.mapped_count||0),manualCount);
   const effectiveReady=nativeReady||Boolean(s?.mapping?.control_ready)||manualCount===8;
   const durationMapped=nativeReady?8:Number(s?.mapping?.duration_mapped_count||0);
-  $('mappingState').textContent=nativeReady?'Perfil nativo IIC-800':effectiveReady?('8/8 pronto • duração '+durationMapped+'/8'):(mapped+'/8 identificado');
-  $('durationMapTag').textContent=nativeReady?'Duração: DP45 nativo':'Duração: '+durationMapped+'/8';
+  $('mappingState').textContent=nativeReady?'Pronto':effectiveReady?'Pronto':(mapped+'/8 identificado');
+  $('durationMapTag').textContent=nativeReady?'Temporização pronta':'Duração: '+durationMapped+'/8';
   const operationMode=s?.mapping?.operation_mode||'—';
   const activeMask=Number(s?.mapping?.active_mask||0);
-  $('modeTag').textContent='Modo: '+(operationMode==='Manual'&&activeMask===0?'Manual • parado':operationMode);
+  const friendlyMode=operationMode==='Manual'?(activeMask?'Manual • irrigando':'Manual • parado'):operationMode;
+  $('modeTag').textContent='Modo: '+friendlyMode;
+  if($('quickMode'))$('quickMode').textContent=friendlyMode;
+  if($('quickConnection'))$('quickConnection').textContent=linked?(online===false?'Controlador offline':'Controlador online'):'Sem conexão';
+  if($('quickConnectionDot'))$('quickConnectionDot').className='healthDot '+(linked&&online!==false?'on':'');
   $('resumeAutoBtn').disabled=!nativeReady||s?.mapping?.operation_mode==='Auto';
   $('manualMapBtn').style.display=nativeReady?'none':'';
-  $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda: DP38 detectável':'Agenda: '+Number(s?.mapping?.schedule_candidates?.length||0)+' função(ões)';
-  $('heroBadge').textContent=effectiveReady?'PRONTO PARA CONTROLE':linked?'MAPEAMENTO INCOMPLETO':'AGUARDANDO VÍNCULO';
-  $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' conectado':'Controlador da lavoura';
-  $('heroSub').textContent=nativeReady?'Perfil nativo do IIC-800 identificado. Os 8 setores são controlados pelo DP45 e o estado vem do zonerun_state.':effectiveReady?'As 8 saídas foram identificadas. O controle dos setores está liberado.':linked?'O IIC-800 está conectado, mas o mapeamento automático não fechou 8/8.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
+  $('scheduleMapTag').textContent=s?.mapping?.native_dp45?'Agenda detectada':'Agenda em análise';
+  $('heroBadge').textContent=effectiveReady?'SISTEMA PRONTO':linked?'CONFIGURAÇÃO PENDENTE':'AGUARDANDO VÍNCULO';
+  $('heroTitle').textContent=linked?'Controlador '+controllerIndex(c)+' online':'Controlador da lavoura';
+  $('heroSub').textContent=nativeReady?'Controle remoto disponível para os 8 setores deste controlador.':effectiveReady?'Os setores estão disponíveis para controle remoto.':linked?'Controlador conectado; finalize a configuração das saídas.':'Sincronize o controlador do Smart Life com o projeto Tuya.';
   $('liveDot').className='dot '+(linked?'on':'');
   $('liveText').textContent=linked?'Tuya respondendo':'Sem conexão';
   $('lastCheck').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  $('integrationNote').textContent=nativeReady?'IIC-800 reconhecido pelo protocolo nativo DP45. Não é necessário mapear oito chaves separadas.':effectiveReady?'Controle das 8 saídas configurado.':'Mapeamento automático incompleto.';
+  $('integrationNote').textContent=nativeReady?'Controlador reconhecido e pronto para operação. Os detalhes técnicos permanecem disponíveis na aba Sistema.':effectiveReady?'Controle das 8 saídas configurado.':'Configuração das saídas ainda incompleta.';
   $('functionsRaw').textContent=JSON.stringify(s.functions||[],null,2);
   $('statusRaw').textContent=JSON.stringify(s.status||{},null,2);
   $('shadowRaw').textContent=JSON.stringify(s.shadow||{},null,2);
@@ -427,6 +494,10 @@ function renderWeather(){
   $('weatherTemp').textContent=metricText(m.temperature,'°C');$('weatherHum').textContent=metricText(m.humidity,'%');$('weatherWind').textContent=metricText(m.windSpeed);
   $('weatherUpdated').textContent=state.weatherAt?new Date(state.weatherAt).toLocaleString('pt-BR'):'Nunca';
   const d=weatherDecision();$('weatherGuard').className='guard '+(d.blocked?'blocked':'');$('guardTitle').textContent=d.title;$('guardReason').textContent=d.reason;
+  if($('quickWeather')){
+    if(!w?.linked||!w?.metrics){$('quickWeather').textContent='Sem dados';$('quickWeather').className='';}
+    else{$('quickWeather').textContent=d.blocked?'Bloqueado':'Liberado';$('quickWeather').className=d.blocked?'bad':'ok';}
+  }
   $('weatherRaw').textContent=JSON.stringify({metrics:m,status:w?.status||{},shadow:w?.shadow||{}},null,2);
 }
 
@@ -611,7 +682,11 @@ async function refreshAll(){
   finally{busy=false;$('refresh').textContent='● Atualizar'}
 }
 
-$('controllerSelect').onchange=()=>{state.selectedControllerId=$('controllerSelect').value||null;save();renderControllers();renderStatus();syncStatus(false)};
+function changeController(id){
+  state.selectedControllerId=id||null;save();renderControllers();renderStatus();syncStatus(false);
+}
+$('controllerSelect').onchange=()=>changeController($('controllerSelect').value);
+if($('quickControllerSelect'))$('quickControllerSelect').onchange=()=>changeController($('quickControllerSelect').value);
 $('syncControllers').onclick=()=>syncControllers(true);
 $('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador na mesma conta Smart Life.\n2. Sincronize a conta com o projeto Tuya “Irrigação Café”.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente: 01–08, 09–16, 17–24...');
 $('checkDevice').onclick=()=>syncStatus(true);

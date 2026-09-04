@@ -112,7 +112,7 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 </div>
 <div id="tab-sectors" class="tabPanel">
 <section class="box">
-  <div class="head"><h2>Setores de irrigação</h2><button id="renameZones" class="btn soft">Editar nomes</button></div>
+  <div class="head"><h2>Setores de irrigação</h2><span class="miniTag">8 setores por controlador</span></div>
   <div id="zones" class="zoneGrid"></div>
 </section>
 
@@ -158,6 +158,8 @@ let state=JSON.parse(localStorage.getItem(APP_KEY)||'null')||{
 };
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
+if(!state.settings.token&&oldShared?.settings?.token)state.settings.token=oldShared.settings.token;
+if((!state.settings.apiUrl||state.settings.apiUrl===DEFAULT_API)&&oldShared?.settings?.apiUrl)state.settings.apiUrl=oldShared.settings.apiUrl;
 if(!state.controllers)state.controllers=[];
 if(!state.statusByController)state.statusByController={};
 if(!state.zonePrefs)state.zonePrefs={};
@@ -400,7 +402,6 @@ $('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicio
 $('checkDevice').onclick=()=>syncStatus(true);
 $('checkWeather').onclick=()=>syncWeather(true);
 $('refresh').onclick=refreshAll;
-$('renameZones').onclick=()=>{activateTab('sectors');const c=selectedController();if(c)editSector(1)};
 $('saveWeatherRules').onclick=()=>{
   state.weatherRules={rainThreshold:Math.max(0,Number($('rainThreshold').value)||0),rainHoldHours:Math.max(0,Number($('rainHoldHours').value)||0),refreshMinutes:Math.min(60,Math.max(1,Number($('weatherRefreshMinutes').value)||5)),blockWhileRaining:$('blockWhileRaining').checked};
   save();renderWeather();toast('Regras meteorológicas salvas');

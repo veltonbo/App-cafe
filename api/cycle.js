@@ -33,6 +33,9 @@ export default async function handler(req, res) {
   try {
     const map = await getStatusMap(deviceId);
     const currentRaw = typeof map.cycle_time === 'string' ? map.cycle_time : '';
+    if (currentRaw && !decodeCycle(currentRaw)) {
+      throw new Error('Formato atual do cycle_time não reconhecido. Nenhuma alteração foi enviada.');
+    }
 
     const encoded = encodeCycle({
       enabled: req.body?.enabled,

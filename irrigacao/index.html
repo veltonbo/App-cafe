@@ -124,7 +124,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveCycle" value="default" class="btn primary">Salvar programação</button></div></form></dialog>
 
 <dialog id="settingsDlg"><form method="dialog" class="modal"><div class="ey">CONEXÃO</div><h2>Servidor Tuya</h2>
-<label>URL do backend<input id="apiUrl" type="url" value="https://app-cafe.vercel.app"></label>
+<label>URL do backend<input id="apiUrl" type="url" value=""></label>
 <label>Token de controle<input id="controlToken" type="password" placeholder="token privado"></label>
 <p class="note">O token é salvo somente neste aparelho. Use um valor longo e aleatório no servidor.</p>
 <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div></form></dialog>
@@ -132,7 +132,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <script>
 const KEY='viveiroEkazaRealV1';
-const DEFAULT_API='https://app-cafe.vercel.app';
+const DEFAULT_API=window.location.origin;
 let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,cycleConfig:null,countdown:null,lastSync:null,lastError:null,history:[],weatherProtection:null,secondsMode:null};
 if(!data.settings) data.settings={apiUrl:DEFAULT_API,token:''};
 if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;

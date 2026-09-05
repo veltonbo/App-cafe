@@ -31,9 +31,10 @@ export default async function handler(req,res){
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){
     const message=error?.message||'Falha no modo rápido em segundos.';
-    const friendly=/1106|permission|unauthorized/i.test(message)
-      ?'A Tuya recusou um comando do próprio EKAZA. O modo 30 s / 90 s usa apenas cycle_time e switch_inching, sem Scene Automation.'
-      :message;
-    return res.status(502).json({ok:false,error:friendly,detail:message});
+    return res.status(502).json({
+      ok:false,
+      error:'Não foi possível ativar o modo em segundos.',
+      detail:message
+    });
   }
 }

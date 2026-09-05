@@ -51,15 +51,64 @@ async function readDevice(deviceId){
     relay:typeof sm.switch_1==='boolean'?sm.switch_1:null
   };
 }
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function sendDp(deviceId,code,value){
+  const attempts=[];
+  const paths=[
+    {
+      name:'iot-03 commands',
+      run:()=>tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
+        commands:[{code,value}]
+      })
+    },
+    {
+      name:'legacy commands',
+      run:()=>tuyaRequest('POST',`/v1.0/devices/${deviceId}/commands`,{
+        commands:[{code,value}]
+      })
+    },
+    {
+      name:'shadow property',
+      run:()=>tuyaRequest('POST',`/v2.0/cloud/thing/${deviceId}/shadow/properties/issue`,{
+        properties:JSON.stringify({[code]:value})
+      })
+    }
+  ];
+  for(const p of paths){
+    try{
+      await p.run();
+      return{transport:p.name,attempts};
+    }catch(error){
+      attempts.push(p.name+': '+(error?.message||String(error)));
+    }
+  }
+  throw new Error(code+' recusado. '+attempts.join(' | '));
+}
+async function waitProperty(deviceId,key,target,attempts=5){
+  let last='';
+  for(let i=0;i<attempts;i++){
+    if(i)await sleep(500);
+    const d=await readDevice(deviceId).catch(()=>null);
+    last=key==='switch_inching'?String(d?.inchingRaw||''):String(d?.cycleRaw||'');
+    if(last===String(target||''))return{confirmed:true,last};
+  }
+  return{confirmed:false,last};
+}
 async function writeInching(deviceId,raw){
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'switch_inching',value:raw}]
-  });
+  const sent=await sendDp(deviceId,'switch_inching',raw);
+  const verify=await waitProperty(deviceId,'switch_inching',raw,6);
+  if(!verify.confirmed){
+    throw new Error('switch_inching enviado por '+sent.transport+', mas o EKAZA não confirmou os 30 segundos. Último valor: '+(verify.last||'vazio'));
+  }
+  return{...sent,verified:true};
 }
 async function writeCycle(deviceId,raw){
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'cycle_time',value:raw}]
-  });
+  const sent=await sendDp(deviceId,'cycle_time',raw);
+  const verify=await waitProperty(deviceId,'cycle_time',raw,6);
+  if(!verify.confirmed){
+    throw new Error('cycle_time enviado por '+sent.transport+', mas o EKAZA não confirmou a nova programação.');
+  }
+  return{...sent,verified:true};
 }
 function modeCycleRaw(currentRaw,currentConfig,enabled,onSeconds,offSeconds){
   const fullSeconds=Number(onSeconds)+Number(offSeconds);

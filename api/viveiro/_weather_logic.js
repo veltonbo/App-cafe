@@ -242,6 +242,9 @@ export async function runViveiroWeatherCheck(){
       result.cycle_config=restored;
       result.action=position.insideWindow?'cycle_resumed_inside_window':'cycle_restored_for_next_window';
     }
+    if(!position.insideWindow){
+      await setRelay(deviceId,false).catch(()=>null);
+    }
     next.status=position.insideWindow?'resumed_inside_window':'restored_outside_window';
     await record(
       position.insideWindow?'viveiro_rain_resume':'viveiro_rain_restore',

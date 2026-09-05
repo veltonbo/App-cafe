@@ -1,0 +1,7 @@
+const CACHE='fazenda2e-central-v1';
+const SHELL=['/irrigacao/central/','/irrigacao/central/manifest.webmanifest','/irrigacao/inkbird/icon.svg'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).catch(()=>null));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(u.pathname.startsWith('/api/'))return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>caches.match('/irrigacao/central/')));return}if(u.origin===location.origin&&u.pathname.startsWith('/irrigacao/'))e.respondWith(caches.match(e.request).then(x=>x||fetch(e.request)))});
+self.addEventListener('push',e=>{let d={};try{d=e.data?e.data.json():{}}catch{};e.waitUntil(self.registration.showNotification(d.title||'Fazenda 2E',{body:d.body||'Atualização da irrigação.',tag:d.tag||'fazenda2e',icon:'/irrigacao/inkbird/icon.svg',badge:'/irrigacao/inkbird/icon.svg',data:{url:d.url||'/irrigacao/central/'}}))});
+self.addEventListener('notificationclick',e=>{e.notification.close();const url=e.notification.data?.url||'/irrigacao/central/';e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if('focus'in w){w.navigate(url);return w.focus()}}return clients.openWindow(url)}))});

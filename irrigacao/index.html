@@ -40,24 +40,23 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <section class="box secondsBox">
 <div class="head"><h2>Modo rápido • segundos</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
-<p class="note" style="margin-top:0">Para pulsos curtos do viveiro. O <b>cycle_time</b> marca o próximo pulso e o <b>Inching Switch</b> do próprio EKAZA faz o desligamento em segundos.</p>
+<p class="note" style="margin-top:0">Os pulsos são comandados pelo <b>servidor da Fazenda 2E</b>. Não é necessário configurar segundos no EKAZA.</p>
 <div class="secondsHero">
-  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="60" step="1" value="30"><small>segundos</small></label>
-  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="65535" step="1" value="90"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="3600" step="1" value="30"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="3600" step="1" value="90"><small>segundos</small></label>
 </div>
 <div id="secondsStatus" class="secondsStatus"><span>Configuração</span><strong>30 s ligado / 90 s desligado</strong></div>
-<div id="secondsAssist" class="assistBox">
-  <b>Configuração única necessária no app EKAZA</b>
+<div class="assistBox">
+  <b>Como funciona</b>
   <ol>
-    <li>Abra o dispositivo do viveiro no app <b>EKAZA</b>.</li>
-    <li>Entre em <b>Temporizador / Timer</b>.</li>
-    <li>Abra <b>Inching Switch / Interruptor Pulsante</b>.</li>
-    <li>Defina o mesmo tempo ligado acima — para o seu caso, <b>30 segundos</b> — e deixe ativado.</li>
-    <li>Volte para este painel e toque em <b>Verificar e ativar</b>. O app só ativa se o EKAZA confirmar os 30 s.</li>
+    <li>O servidor liga a saída do viveiro.</li>
+    <li>Após <b>30 segundos</b>, manda desligar e confirma o desligamento.</li>
+    <li>Espera <b>90 segundos</b> e inicia o próximo pulso.</li>
+    <li>Ao chegar ao horário final, para. Se chover, a Weather2-2 interrompe os pulsos.</li>
   </ol>
 </div>
-<div class="row" style="margin-top:12px"><button id="enableSeconds" class="btn primary">Verificar e ativar</button><button id="disableSeconds" class="btn danger">Desativar e voltar ao ciclo nativo</button></div>
-<p class="note" style="margin-top:10px">A Weather2-2 continua protegendo o viveiro. O modo rápido não será ativado se o EKAZA não confirmar o tempo em segundos.</p>
+<div class="row" style="margin-top:12px"><button id="enableSeconds" class="btn primary">Ativar 30 s / 90 s</button><button id="disableSeconds" class="btn danger">Parar modo rápido</button></div>
+<p class="note" style="margin-top:10px">Como o comando passa pela internet/Tuya, pode haver pequena variação de alguns segundos. O app verifica o estado da saída e prioriza o desligamento em caso de falha.</p>
 </section>
 
 <section class="box weatherProtect">
@@ -251,32 +250,27 @@ async function saveWeatherProtectionConfig(){
 function secondsActive(){return Boolean(data.secondsMode?.enabled)}
 async function enableSecondsMode(){
   if(isWeatherProtected())return toast('Aguarde a proteção por chuva liberar o viveiro');
-  const on=Math.max(1,Math.min(18000,Math.round(Number($('secondsOn').value)||30)));
-  const off=Math.max(1,Math.min(18000,Math.round(Number($('secondsOff').value)||90)));
-  if((on+off)%60!==0)return toast('Ligado + desligado precisa totalizar múltiplos de 60 s. 30 + 90 está correto.');
-  if(!confirm('Verificar o Inching do EKAZA e ativar o modo rápido?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos'))return;
+  const on=Math.max(1,Math.min(3600,Math.round(Number($('secondsOn').value)||30)));
+  const off=Math.max(1,Math.min(3600,Math.round(Number($('secondsOff').value)||90)));
+  if(!confirm('Ativar o modo rápido pelo servidor?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos'))return;
   try{
     $('enableSeconds').disabled=true;
     const r=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'configure',on_seconds:on,off_seconds:off})});
-    data.secondsMode=r.state;log('Modo rápido verificado e ativado: '+on+' s ligado / '+off+' s desligado');save();render();toast('EKAZA confirmou '+on+' s • modo ativado');
-    setTimeout(()=>{syncStatus(false);syncWeatherProtection(false)},1200);
-  }catch(e){
-    const msg=String(e.message||'Falha');
-    if(/Configure primeiro no app EKAZA/i.test(msg)){
-      $('secondsAssist')?.scrollIntoView({behavior:'smooth',block:'center'});
-      toast('Configure primeiro o Inching no app EKAZA e tente novamente');
-    }else toast('Não foi possível ativar: '+msg);
-  }
+    data.secondsMode=r.state;
+    log('Modo rápido pelo servidor ativado: '+on+' s ligado / '+off+' s desligado');
+    save();render();toast('Modo rápido ativado');
+    setTimeout(()=>{syncStatus(false);syncWeatherProtection(false)},1000);
+  }catch(e){toast('Não foi possível ativar: '+String(e.message||'Falha'))}
   finally{$('enableSeconds').disabled=false}
 }
 async function disableSecondsMode(){
   if(!secondsActive())return;
-  if(!confirm('Desativar o modo em segundos e restaurar o ciclo nativo anterior?'))return;
+  if(!confirm('Parar o modo rápido e restaurar a programação nativa anterior?'))return;
   try{
     $('disableSeconds').disabled=true;
     const r=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'disable',restore_native:true})});
-    data.secondsMode=r.state;log('Modo rápido em segundos desativado');save();render();toast('Ciclo nativo restaurado');
-    setTimeout(()=>syncStatus(false),1200);
+    data.secondsMode=r.state;log('Modo rápido pelo servidor desativado');save();render();toast('Modo rápido parado');
+    setTimeout(()=>syncStatus(false),900);
   }catch(e){toast('Falha: '+e.message)}
   finally{$('disableSeconds').disabled=false}
 }
@@ -394,9 +388,8 @@ function render(){
   if($('secondsOn')&&document.activeElement!==$('secondsOn'))$('secondsOn').value=Number(sec.on_seconds||30);
   if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(sec.off_seconds||90);
   if($('secondsBadge')){$('secondsBadge').textContent=secActive?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';$('secondsBadge').className='phase '+(secActive&&!sec.paused_by_weather?'':'off')}
-  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?'Inching confirmado • ativo':'Configuração')+'</span><strong>'+Number(sec.on_seconds||30)+' s ligado / '+Number(sec.off_seconds||90)+' s desligado</strong>'}
-  if($('secondsAssist'))$('secondsAssist').style.display=secActive?'none':'';
-  if($('enableSeconds'))$('enableSeconds').textContent=secActive?'Verificado • reconfigurar':'Verificar e ativar';
+  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Servidor • '+String(sec.phase||'ativo').replaceAll('_',' ')):'Configuração')+'</span><strong>'+Number(sec.on_seconds||30)+' s ligado / '+Number(sec.off_seconds||90)+' s desligado</strong>'}
+  if($('enableSeconds'))$('enableSeconds').textContent=secActive?'Reconfigurar modo rápido':'Ativar '+Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||90)+' s';
   if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
 
   if($('viveiroRainState'))$('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
@@ -476,7 +469,7 @@ function render(){
   if($('timelineOff'))$('timelineOff').textContent=secActive?'⏸ '+Number(sec.off_seconds||90)+' segundos desligado':'⏸ '+(data.cycleConfig?.offMinutes||2)+' minutos desligado';
   if($('timelineOnSub'))$('timelineOnSub').textContent=secActive?'Desligamento em segundos feito pelo próprio EKAZA.':'Executado pelo ciclo nativo do EKAZA.';
   if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O próximo pulso é iniciado pelo cycle_time nativo do EKAZA.':'Depois ele volta a ligar conforme a programação existente.';
-  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo: o cycle_time nativo define o período total e o switch_inching faz o desligamento curto em segundos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
+  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo pelo servidor Fazenda 2E; o cycle_time nativo fica pausado para não conflitar com os pulsos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
   $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
   $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }

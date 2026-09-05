@@ -1,6 +1,11 @@
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
-import { getSecondsState, prepareServerPulse, rollbackPreparedPulse, stopServerPulse } from './_seconds.js';
+import {
+  prepareServerPulse,
+  probeServerPulse,
+  rollbackPreparedPulse,
+  stopServerPulse
+} from './_seconds.js';
 
 function baseUrl(req){
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim();
@@ -8,13 +13,13 @@ function baseUrl(req){
   return proto+'://'+host;
 }
 
-async function queuePulse(req,generation){
+async function queuePulse(req,state){
   const token=(process.env.APP_CONTROL_TOKEN||'').trim();
   if(!token)throw new Error('APP_CONTROL_TOKEN não configurado no servidor.');
   const r=await fetch(baseUrl(req)+'/api/viveiro/pulse',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body:JSON.stringify({generation})
+    body:JSON.stringify({state})
   });
   const body=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(body?.error||('Falha ao iniciar worker: HTTP '+r.status));
@@ -29,10 +34,18 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      return res.status(200).json({ok:true,state:await getSecondsState()});
+      return res.status(200).json({
+        ok:true,
+        state:{enabled:false,phase:'stateless'}
+      });
     }
 
     const action=String(req.body?.action||'configure');
+
+    if(action==='status'){
+      const state=await probeServerPulse(req.body?.state||{});
+      return res.status(200).json({ok:true,state});
+    }
 
     if(action==='configure'){
       const weather=await fetchWeatherSnapshot().catch(()=>null);
@@ -53,16 +66,16 @@ export default async function handler(req,res){
 
       const state=await prepareServerPulse({
         onSeconds:req.body?.on_seconds,
-        offSeconds:req.body?.off_seconds
+        offSeconds:req.body?.off_seconds,
+        resumeDelayMinutes:req.body?.resume_delay_minutes
       });
 
       try{
-        const queued=await queuePulse(req,state.generation);
-        const current=await getSecondsState();
+        const queued=await queuePulse(req,state);
         return res.status(200).json({
           ok:true,
           worker_queued:Boolean(queued?.queued),
-          state:current
+          state
         });
       }catch(error){
         await rollbackPreparedPulse(
@@ -74,7 +87,11 @@ export default async function handler(req,res){
     }
 
     if(action==='disable'){
-      const state=await stopServerPulse({restoreNative:req.body?.restore_native!==false});
+      const state=await stopServerPulse({
+        restoreNative:req.body?.restore_native!==false,
+        nativeCycleRaw:String(req.body?.native_cycle_raw||''),
+        disabledCycleRaw:String(req.body?.disabled_cycle_raw||'')
+      });
       return res.status(200).json({ok:true,state});
     }
 

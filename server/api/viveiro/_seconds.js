@@ -93,7 +93,7 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
   const generation=randomUUID();
   const state={
     enabled:true,
-    engine:'vercel_workflow',
+    engine:'vercel_queue',
     on_seconds:onSeconds,
     off_seconds:offSeconds,
     start_minutes:cycle.startMinutes,
@@ -102,8 +102,10 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
     native_cycle_raw:nativeRaw,
     native_cycle_was_enabled:nativeWasEnabled,
     generation,
-    workflow_run_id:null,
+    queue_message_id:null,
     relay_expected:false,
+    expected_action:'on',
+    transition_seq:0,
     phase:'starting',
     paused_by_weather:false,
     pulse_count:Number(previous?.pulse_count||0),
@@ -113,12 +115,6 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
   };
   await storeSet(PATH,state);
   return state;
-}
-
-export async function setWorkflowRun(generation,runId){
-  const state=await getSecondsState();
-  if(!state.enabled||state.generation!==generation)return state;
-  return patchSecondsState({workflow_run_id:String(runId||''),phase:'waiting'});
 }
 
 export async function disableSecondsMode({restoreNative=true}={}){
@@ -142,12 +138,14 @@ export async function disableSecondsMode({restoreNative=true}={}){
   const next={
     ...state,
     enabled:false,
-    engine:'vercel_workflow',
+    engine:'vercel_queue',
     automations_enabled:false,
     paused_by_weather:false,
-    workflow_run_id:null,
+    queue_message_id:null,
     relay_expected:false,
     phase:'stopped',
+    expected_action:null,
+    transition_seq:Number(state.transition_seq||0)+1,
     generation:randomUUID(),
     disabled_at:Date.now()
   };

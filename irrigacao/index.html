@@ -40,7 +40,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <section class="box secondsBox">
 <div class="head"><h2>Modo rápido • segundos</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
-<p class="note" style="margin-top:0">Para pulsos curtos do viveiro. O EKAZA faz o desligamento local em segundos e a Tuya agenda os próximos pulsos dentro do mesmo horário inicial/final da programação.</p>
+<p class="note" style="margin-top:0">Para pulsos curtos do viveiro. O próprio EKAZA usa o cycle_time para marcar o próximo pulso e o switch_inching para cortar a água em segundos.</p>
 <div class="secondsHero">
   <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="18000" step="1" value="30"><small>segundos</small></label>
   <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="18000" step="1" value="90"><small>segundos</small></label>
@@ -457,8 +457,8 @@ function render(){
   if($('timelineOn'))$('timelineOn').textContent=secActive?'💧 '+Number(sec.on_seconds||30)+' segundos ligado':'💧 '+(data.cycleConfig?.onMinutes||1)+' minuto'+((data.cycleConfig?.onMinutes||1)===1?'':'s')+' ligado';
   if($('timelineOff'))$('timelineOff').textContent=secActive?'⏸ '+Number(sec.off_seconds||90)+' segundos desligado':'⏸ '+(data.cycleConfig?.offMinutes||2)+' minutos desligado';
   if($('timelineOnSub'))$('timelineOnSub').textContent=secActive?'Desligamento em segundos feito pelo próprio EKAZA.':'Executado pelo ciclo nativo do EKAZA.';
-  if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O próximo pulso é iniciado pelo temporizador Tuya.':'Depois ele volta a ligar conforme a programação existente.';
-  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo com auto-desligamento local e temporizadores Tuya; o cycle_time nativo fica pausado enquanto este modo estiver ligado.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
+  if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O próximo pulso é iniciado pelo cycle_time nativo do EKAZA.':'Depois ele volta a ligar conforme a programação existente.';
+  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo: o cycle_time nativo define o período total e o switch_inching faz o desligamento curto em segundos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
   $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
   $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }

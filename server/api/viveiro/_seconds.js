@@ -3,14 +3,16 @@ import { decodeCycle } from '../_cycle.js';
 import { storeGet, storeSet } from '../irrigation/_store.js';
 
 const PATH='IrrigacaoFazenda2E/viveiroSeconds';
+const CATEGORY='fazenda2e_seconds';
 const TZ='America/Porto_Velho';
+const TZ_OFFSET='-04:00';
 
 function hhmm(mins){
   const n=Math.max(0,Math.min(1439,Number(mins)||0));
   return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 }
-function days(mask){
-  return [0,1,2,3,4,5,6].filter(i=>Number(mask||0)&(1<<i)).join(',');
+function loopsFromMask(mask){
+  return [0,1,2,3,4,5,6].map(i=>(Number(mask||0)&(1<<i))?'1':'0').join('');
 }
 function localTime(){
   const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
@@ -24,59 +26,10 @@ function insideWindow(cfg){
   const t=localTime();
   return Boolean(Number(cfg.daysMask||0)&(1<<t.day))&&t.minutes>=Number(cfg.startMinutes)&&t.minutes<Number(cfg.endMinutes);
 }
-function bodyDeviceTrigger(name,deviceId,statusValue,delaySeconds,nextValue,preStart,preEnd,dayList){
-  return{
-    name,
-    dsl:{
-      conditions:[{
-        trigger_type:'deviceReport',
-        trigger_id:deviceId,
-        trigger_rule:{status_code:'switch_1',comparator:'==',status_value:statusValue},
-        rule_num:1
-      }],
-      conditions_rule:'all',
-      actions:[
-        {execution_type:'delay',execution_rule:{delay_seconds:delaySeconds}},
-        {execution_type:'deviceIssue',execution_rule:{execution_id:deviceId,function_code:'switch_1',function_value:nextValue}}
-      ]
-    },
-    preconditions:{
-      trigger_type:'timeCheck',
-      precondition_trigger_rule:{timer_format:`${preStart}-${preEnd} * * ${dayList} *`}
-    }
-  };
-}
-function bodyTimer(name,deviceId,time,dayList,value){
-  return{
-    name,
-    dsl:{
-      conditions:[{
-        trigger_type:'timer',
-        trigger_id:'timer',
-        trigger_rule:{timer_format:`${time} * * ${dayList} *`},
-        rule_num:1
-      }],
-      conditions_rule:'all',
-      actions:[{
-        execution_type:'deviceIssue',
-        execution_rule:{execution_id:deviceId,function_code:'switch_1',function_value:value}
-      }]
-    }
-  };
-}
-async function createAutomation(body){
-  return tuyaRequest('POST','/v2.0/iot-03/automations',body);
-}
-async function enableAutomation(id,enabled){
-  if(!id)return;
-  return tuyaRequest('PUT',`/v2.0/iot-03/automations/${id}/${enabled?'enable':'disable'}`);
-}
-async function deleteAutomation(id){
-  if(!id)return;
-  try{return await tuyaRequest('DELETE',`/v2.0/iot-03/automations/${id}`)}catch{return null}
-}
 async function setRelay(deviceId,on){
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{commands:[{code:'switch_1',value:Boolean(on)}]});
+  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
+    commands:[{code:'switch_1',value:Boolean(on)}]
+  });
 }
 function encodeInching(currentRaw,enabled,seconds){
   let b=Buffer.alloc(3);
@@ -103,11 +56,15 @@ async function getCycle(deviceId){
   return{raw,config:decodeCycle(raw),inchingRaw:inching};
 }
 async function writeInching(deviceId,raw){
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{commands:[{code:'switch_inching',value:raw}]});
+  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
+    commands:[{code:'switch_inching',value:raw}]
+  });
 }
 async function writeCycle(deviceId,raw){
   if(!raw)return;
-  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{commands:[{code:'cycle_time',value:raw}]});
+  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
+    commands:[{code:'cycle_time',value:raw}]
+  });
 }
 function disabledCycleRaw(current){
   if(!current?.raw||!current?.config)return current?.raw||'';
@@ -115,43 +72,93 @@ function disabledCycleRaw(current){
   if(b.length>=1)b[0]=b[0]&0xfe;
   return b.toString('base64');
 }
+function buildPulseMinutes(startMinutes,endMinutes,intervalMinutes){
+  const out=[];
+  for(let m=Number(startMinutes);m<Number(endMinutes);m+=intervalMinutes)out.push(m);
+  return out;
+}
+async function deleteTimerCategory(deviceId){
+  try{
+    await tuyaRequest('DELETE',`/v1.0/devices/${deviceId}/timers/categories/${CATEGORY}`);
+  }catch{}
+}
+async function addTimerGroup(deviceId,loops,times,index){
+  const instruct=times.map(minute=>({
+    functions:[{code:'switch_1',value:true}],
+    date:'',
+    time:hhmm(minute)
+  }));
+  return tuyaRequest('POST',`/v1.0/devices/${deviceId}/timers`,{
+    category:CATEGORY,
+    loops,
+    time_zone:TZ_OFFSET,
+    timezone_id:TZ,
+    alias_name:`F2E Viveiro pulsos ${index+1}`,
+    instruct
+  });
+}
+async function setTimerGroupEnabled(deviceId,groupId,enabled){
+  if(!groupId)return;
+  return tuyaRequest('PUT',`/v1.0/devices/${deviceId}/timers/categories/${CATEGORY}/groups/${groupId}/status`,{
+    value:enabled?'1':'0'
+  });
+}
+async function cleanLegacySceneAutomations(state){
+  const ids=Object.values(state?.automation_ids||{});
+  for(const id of ids){
+    try{await tuyaRequest('DELETE',`/v2.0/iot-03/automations/${id}`)}catch{}
+  }
+}
+
 export async function getSecondsState(){
   return(await storeGet(PATH).catch(()=>null))||{enabled:false};
 }
+
 export async function setSecondsAutomationsEnabled(enabled){
   const s=await getSecondsState();
-  const ids=s.automation_ids||{};
-  await Promise.allSettled(Object.values(ids).map(id=>enableAutomation(id,enabled)));
+  const deviceId=getDeviceId();
+  const groups=Array.isArray(s.timer_group_ids)?s.timer_group_ids:[];
+  await Promise.allSettled(groups.map(id=>setTimerGroupEnabled(deviceId,id,enabled)));
   s.automations_enabled=Boolean(enabled);
   s.updated_at=Date.now();
   await storeSet(PATH,s);
   return s;
 }
+
 export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
   const deviceId=getDeviceId();
   const cycle=await getCycle(deviceId);
   if(!cycle.config)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
 
   onSeconds=Math.max(1,Math.min(65535,Math.round(Number(onSeconds)||30)));
-  offSeconds=Math.max(1,Math.min(18000,Math.round(Number(offSeconds)||90)));
-  const dayList=days(cycle.config.daysMask);
-  if(!dayList)throw new Error('Nenhum dia da semana está selecionado no ciclo atual.');
+  offSeconds=Math.max(1,Math.min(65535,Math.round(Number(offSeconds)||90)));
 
-  const start=hhmm(cycle.config.startMinutes),end=hhmm(cycle.config.endMinutes);
-  const safeEndMinutes=Math.max(Number(cycle.config.startMinutes)+1,Number(cycle.config.endMinutes)-Math.max(1,Math.ceil(offSeconds/60)));
-  const safeEnd=hhmm(safeEndMinutes);
+  const fullCycleSeconds=onSeconds+offSeconds;
+  if(fullCycleSeconds%60!==0){
+    throw new Error('Para repetir continuamente sem Scene Automation, a soma ligado + desligado precisa ser múltipla de 60 segundos. Exemplo: 30 + 90 = 120 s.');
+  }
+  const intervalMinutes=fullCycleSeconds/60;
+  if(intervalMinutes<1)throw new Error('Intervalo inválido.');
 
-  const created=[];
+  const loops=loopsFromMask(cycle.config.daysMask);
+  if(!loops.includes('1'))throw new Error('Nenhum dia da semana está selecionado no ciclo atual.');
+
+  const pulseMinutes=buildPulseMinutes(cycle.config.startMinutes,cycle.config.endMinutes,intervalMinutes);
+  if(!pulseMinutes.length)throw new Error('A janela programada é curta demais para criar os pulsos.');
+
+  const previous=await getSecondsState();
+  await cleanLegacySceneAutomations(previous);
+  await deleteTimerCategory(deviceId);
+
+  const createdGroups=[];
+  const chunkSize=25;
   try{
-    const offToOn=await createAutomation(bodyDeviceTrigger('F2E Viveiro • OFF→ON',deviceId,false,offSeconds,true,start,safeEnd,dayList));created.push(offToOn);
-    const startId=await createAutomation(bodyTimer('F2E Viveiro • início',deviceId,start,dayList,true));created.push(startId);
-    const endId=await createAutomation(bodyTimer('F2E Viveiro • fim',deviceId,end,dayList,false));created.push(endId);
-
-    await Promise.allSettled(created.map(id=>enableAutomation(id,false)));
-
-    const previous=await getSecondsState();
-    if(previous?.automation_ids){
-      await Promise.allSettled(Object.values(previous.automation_ids).map(deleteAutomation));
+    for(let i=0;i<pulseMinutes.length;i+=chunkSize){
+      const chunk=pulseMinutes.slice(i,i+chunkSize);
+      const result=await addTimerGroup(deviceId,loops,chunk,createdGroups.length);
+      const groupId=String(result?.group_id||result?.id||result||'').trim();
+      if(!groupId)throw new Error('A Tuya não retornou o ID do grupo de temporização.');
+      createdGroups.push(groupId);
     }
 
     const inchingRaw=encodeInching(cycle.inchingRaw,true,onSeconds);
@@ -164,8 +171,10 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
 
     const state={
       enabled:true,
+      engine:'device_timer+inching',
       on_seconds:onSeconds,
       off_seconds:offSeconds,
+      interval_minutes:intervalMinutes,
       start_minutes:cycle.config.startMinutes,
       end_minutes:cycle.config.endMinutes,
       days_mask:cycle.config.daysMask,
@@ -174,12 +183,13 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
       native_inching_raw:cycle.inchingRaw||'',
       inching_raw:inchingRaw,
       auto_off_local:true,
-      automation_ids:{off_to_on:offToOn,start:startId,end:endId},
+      timer_category:CATEGORY,
+      timer_group_ids:createdGroups,
+      pulse_count:pulseMinutes.length,
       automations_enabled:true,
       configured_at:Date.now()
     };
     await storeSet(PATH,state);
-    await Promise.all(Object.values(state.automation_ids).map(id=>enableAutomation(id,true)));
 
     if(insideWindow(cycle.config)){
       await setRelay(deviceId,true);
@@ -188,15 +198,19 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
     }
     return state;
   }catch(error){
-    await Promise.allSettled(created.map(deleteAutomation));
+    await deleteTimerCategory(deviceId).catch(()=>null);
     throw error;
   }
 }
+
 export async function disableSecondsMode({restoreNative=true}={}){
   const deviceId=getDeviceId();
   const state=await getSecondsState();
-  await Promise.allSettled(Object.values(state.automation_ids||{}).map(id=>enableAutomation(id,false)));
+
+  await deleteTimerCategory(deviceId);
+  await cleanLegacySceneAutomations(state);
   await setRelay(deviceId,false).catch(()=>null);
+
   if(state.native_inching_raw){
     await writeInching(deviceId,state.native_inching_raw).catch(()=>null);
   }else if(state.inching_raw){
@@ -205,25 +219,37 @@ export async function disableSecondsMode({restoreNative=true}={}){
   if(restoreNative&&state.native_cycle_raw){
     await writeCycle(deviceId,state.native_cycle_raw).catch(()=>null);
   }
-  await Promise.allSettled(Object.values(state.automation_ids||{}).map(deleteAutomation));
-  const next={...state,enabled:false,automations_enabled:false,automation_ids:{},disabled_at:Date.now()};
+
+  const next={
+    ...state,
+    enabled:false,
+    automations_enabled:false,
+    timer_group_ids:[],
+    automation_ids:{},
+    disabled_at:Date.now()
+  };
   await storeSet(PATH,next);
   return next;
 }
+
 export async function pauseSecondsForWeather(){
   const state=await getSecondsState();
   if(!state.enabled)return state;
   await setSecondsAutomationsEnabled(false);
   await setRelay(getDeviceId(),false).catch(()=>null);
   const next={...(await getSecondsState()),paused_by_weather:true,weather_paused_at:Date.now()};
-  await storeSet(PATH,next);return next;
+  await storeSet(PATH,next);
+  return next;
 }
+
 export async function resumeSecondsAfterWeather(){
   const state=await getSecondsState();
   if(!state.enabled)return state;
   await setSecondsAutomationsEnabled(true);
   const cfg={daysMask:state.days_mask,startMinutes:state.start_minutes,endMinutes:state.end_minutes};
-  if(insideWindow(cfg))await setRelay(getDeviceId(),true);else await setRelay(getDeviceId(),false);
+  if(insideWindow(cfg))await setRelay(getDeviceId(),true);
+  else await setRelay(getDeviceId(),false);
   const next={...(await getSecondsState()),paused_by_weather:false,weather_resumed_at:Date.now()};
-  await storeSet(PATH,next);return next;
+  await storeSet(PATH,next);
+  return next;
 }

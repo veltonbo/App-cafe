@@ -4,6 +4,7 @@ import rootSwitch from '../server/api/switch.js';
 import weatherStatus from '../server/api/weather/status.js';
 import viveiroWeather from '../server/api/viveiro/weather.js';
 import viveiroSeconds from '../server/api/viveiro/seconds.js';
+import viveiroPulse from '../server/api/viveiro/pulse.js';
 import irrigationPush from '../server/api/irrigation/push.js';
 import irrigationConfig from '../server/api/irrigation/config.js';
 import irrigationHistory from '../server/api/irrigation/history.js';
@@ -25,6 +26,7 @@ const ROUTES={
   'weather/status':weatherStatus,
   'viveiro/weather':viveiroWeather,
   'viveiro/seconds':viveiroSeconds,
+  'viveiro/pulse':viveiroPulse,
   'irrigation/push':irrigationPush,
   'irrigation/config':irrigationConfig,
   'irrigation/history':irrigationHistory,

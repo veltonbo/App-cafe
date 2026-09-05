@@ -1,4 +1,4 @@
-import { handleCallback, send } from '@vercel/queue';
+import { QueueClient } from '@vercel/queue';
 import { getDeviceId, tuyaRequest } from '../server/api/_tuya.js';
 import { appendHistory, storePatch } from '../server/api/irrigation/_store.js';
 import { getSecondsState } from '../server/api/viveiro/_seconds.js';
@@ -6,6 +6,8 @@ import { runViveiroWeatherCheck } from '../server/api/viveiro/_weather_logic.js'
 
 const TOPIC='viveiro-pulse';
 const STATE_PATH='IrrigacaoFazenda2E/viveiroSeconds';
+const queue=new QueueClient();
+const {send,handleNodeCallback}=queue;
 const TZ='America/Porto_Velho';
 
 function normalizeStatus(result){
@@ -82,8 +84,8 @@ async function relay(on){
 async function enqueue(message,delaySeconds){
   const key=['viveiro',message.generation,message.action,message.seq,message.attempt||0].join(':');
   return send(TOPIC,message,{
-    delaySeconds:Math.max(0,Math.min(604800,Math.round(Number(delaySeconds)||0))),
-    retentionSeconds:604800,
+    delaySeconds:Math.max(0,Math.min(3600,Math.round(Number(delaySeconds)||0))),
+    retentionSeconds:86400,
     idempotencyKey:key
   });
 }
@@ -285,6 +287,6 @@ async function processMessage(message){
   }
 }
 
-export const POST=handleCallback(async(message)=>{
+export default handleNodeCallback(async(message)=>{
   await processMessage(message);
 },{visibilityTimeoutSeconds:45});

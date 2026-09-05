@@ -170,11 +170,11 @@ export default async function handler(req,res){
       storeGet('IrrigacaoFazenda2E/history').catch(()=>null)
     ]);
     const controllers=await Promise.all(inkbirds.map((c,i)=>readController(c,i)));
-    const history=historyArray(historyRaw).slice(0,250);
-    const volume=waterSummary(volumeEvents(history,config));
+    const allHistory=historyArray(historyRaw);
+    const volume=waterSummary(volumeEvents(allHistory,config));
     const alerts=buildAlerts({weather,viveiro,controllers,config});
     return res.status(200).json({
-      ok:true,checked_at:Date.now(),weather,viveiro,controllers,config,history:history.slice(0,80),volume,alerts
+      ok:true,checked_at:Date.now(),weather,viveiro,controllers,config,history:allHistory.slice(0,80),volume,alerts
     });
   }catch(error){
     return res.status(502).json({ok:false,error:error?.message||'Falha ao montar a Central Fazenda 2E.'});

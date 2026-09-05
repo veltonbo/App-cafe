@@ -28,3 +28,7 @@ jobs:
           OIDC_TOKEN="$(printf '%s' "$OIDC_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
 
           curl --fail --silent --show-error             --retry 2 --retry-delay 3             -H "Authorization: Bearer ${OIDC_TOKEN}"             "https://app-cafe.vercel.app/api/viveiro/weather"
+
+          echo
+
+          curl --fail --silent --show-error             --retry 2 --retry-delay 3             -H "Authorization: Bearer ${OIDC_TOKEN}"             "https://app-cafe.vercel.app/api/irrigation/monitor"

@@ -8,11 +8,13 @@ const controlToken = (process.env.APP_CONTROL_TOKEN || '').trim();
 
 export function applyCors(req, res) {
   const origin = req.headers.origin;
+  const publicUrl=(process.env.PUBLIC_APP_URL||'').trim().replace(/\/$/,'');
   const allowed = new Set([
     'https://veltonbo.github.io',
     'https://app-cafe.vercel.app',
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    ...(publicUrl?[publicUrl]:[])
   ]);
   if (origin && allowed.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Vary', 'Origin');

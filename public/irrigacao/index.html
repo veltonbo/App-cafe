@@ -249,14 +249,24 @@ async function saveWeatherProtectionConfig(){
 
 function secondsActive(){return Boolean(data.secondsMode?.enabled)}
 async function syncSecondsMode(showToast=false){
-  const runId=String(data.secondsMode?.workflow_run_id||'').trim();
-  if(!runId)return;
+  if(!secondsActive())return;
   try{
-    const r=await api('/api/viveiro/seconds?run_id='+encodeURIComponent(runId));
+    const r=await api('/api/viveiro/seconds',{
+      method:'POST',
+      body:JSON.stringify({
+        action:'status',
+        state:data.secondsMode||{}
+      })
+    });
     if(r?.state){
+      const wasActive=secondsActive();
       data.secondsMode={...data.secondsMode,...r.state};
       save();render();
-      if(showToast)toast('Modo rápido: '+String(r.state.phase||'atualizado'));
+      if(wasActive&&!data.secondsMode.enabled){
+        log('Modo rápido encerrado e programação nativa restaurada');
+        save();render();
+      }
+      if(showToast)toast('Modo rápido: '+String(r.state.phase||'atualizado').replaceAll('_',' '));
     }
   }catch(e){
     if(showToast)toast('Modo rápido: '+String(e.message||'falha ao consultar'));
@@ -305,7 +315,8 @@ async function disableSecondsMode(){
         action:'disable',
         restore_native:true,
         run_id:data.secondsMode?.workflow_run_id||'',
-        native_cycle_raw:data.secondsMode?.native_cycle_raw||''
+        native_cycle_raw:data.secondsMode?.native_cycle_raw||'',
+        disabled_cycle_raw:data.secondsMode?.disabled_cycle_raw||''
       })
     });
     data.secondsMode=r.state;

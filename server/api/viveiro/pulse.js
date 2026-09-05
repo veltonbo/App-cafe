@@ -156,8 +156,9 @@ async function runPulse(generation,token,url){
 
     state=await getSecondsState();
     if(!state.enabled||state.generation!==generation){
-      interrupted=true;
-      break;
+      // A ação de parar/reconfigurar já colocou a saída em estado seguro.
+      // O worker antigo não deve enviar mais comandos ao EKAZA.
+      return;
     }
 
     if(!localSchedule(state).inside){

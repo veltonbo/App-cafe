@@ -33,6 +33,23 @@ function encodeInching(currentRaw,enabled,seconds){
   b.writeUInt16BE(Math.max(1,Math.min(65535,Math.round(Number(seconds)||30))),1);
   return b.toString('base64');
 }
+function decodeInching(raw){
+  const text=String(raw||'').trim();
+  if(!text)return{available:false,enabled:false,seconds:null,raw:''};
+  let b=Buffer.alloc(0);
+  try{
+    if(/^[0-9a-f]+$/i.test(text)&&text.length%2===0)b=Buffer.from(text,'hex');
+    else b=Buffer.from(text,'base64');
+  }catch{}
+  if(b.length<3)return{available:false,enabled:false,seconds:null,raw:text};
+  return{
+    available:true,
+    enabled:Boolean(b[0]&0x01),
+    seconds:b.readUInt16BE(1),
+    raw:text,
+    first_byte:b[0]
+  };
+}
 async function readDevice(deviceId){
   const [statusR,shadowR]=await Promise.allSettled([
     tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
@@ -48,6 +65,7 @@ async function readDevice(deviceId){
     cycleRaw,
     cycleConfig:decodeCycle(cycleRaw),
     inchingRaw,
+    inchingConfig:decodeInching(inchingRaw),
     relay:typeof sm.switch_1==='boolean'?sm.switch_1:null
   };
 }
@@ -179,14 +197,20 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
   offSeconds=Math.max(1,Math.min(65535,Math.round(Number(offSeconds)||90)));
 
   const modeCycle=modeCycleRaw(current.cycleRaw,cycle,true,onSeconds,offSeconds);
-  const inchingRaw=encodeInching(current.inchingRaw,true,onSeconds);
+  const inching=current.inchingConfig||decodeInching(current.inchingRaw);
+
+  if(!inching.available||!inching.enabled||Number(inching.seconds)!==onSeconds){
+    const error=new Error(
+      'Configure primeiro no app EKAZA: Viveiro → Temporizador/Timer → Inching Switch (Interruptor Pulsante) → '+onSeconds+' segundos → Ativar. Depois volte aqui e toque novamente em “Verificar e ativar”.'
+    );
+    error.code='MANUAL_INCHING_REQUIRED';
+    error.currentInching=inching;
+    throw error;
+  }
 
   const previous=await getSecondsState();
   try{
-    // Primeiro garante o desligamento local curto.
-    await writeInching(deviceId,inchingRaw);
-
-    // Depois troca o ciclo nativo para o período total desejado.
+    // O inching já foi confirmado no próprio EKAZA; aqui alteramos somente o cycle_time.
     await writeCycle(deviceId,modeCycle.raw);
 
     const state={
@@ -202,8 +226,10 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
       days_mask:cycle.daysMask,
       native_cycle_raw:previous?.enabled?previous.native_cycle_raw:current.cycleRaw,
       native_cycle_was_enabled:previous?.enabled?Boolean(previous.native_cycle_was_enabled):Boolean(cycle.enabled),
-      native_inching_raw:previous?.enabled?(previous.native_inching_raw||''):(current.inchingRaw||''),
-      inching_raw:inchingRaw,
+      native_inching_raw:'',
+      inching_raw:current.inchingRaw,
+      inching_verified:true,
+      managed_inching:false,
       mode_cycle_raw:modeCycle.raw,
       auto_off_local:true,
       automations_enabled:true,
@@ -219,8 +245,7 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
     }
     return state;
   }catch(error){
-    // Se algo falhar, restaura imediatamente as configurações anteriores.
-    if(current.inchingRaw)await writeInching(deviceId,current.inchingRaw).catch(()=>null);
+    // O app não altera o inching no modo assistido. Se o cycle_time falhar, restaura o ciclo anterior.
     if(current.cycleRaw)await writeCycle(deviceId,current.cycleRaw).catch(()=>null);
     throw error;
   }
@@ -229,17 +254,23 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
 export async function disableSecondsMode({restoreNative=true}={}){
   const deviceId=getDeviceId();
   const state=await getSecondsState();
+  const current=await readDevice(deviceId);
+
+  // Como a Tuya Cloud não permite gravar switch_inching neste EKAZA,
+  // exigimos que o inching seja desligado no app EKAZA antes de restaurar o ciclo antigo.
+  if(state.enabled&&state.managed_inching===false&&current.inchingConfig?.enabled){
+    const error=new Error(
+      'Antes de voltar ao ciclo nativo, desative o Inching Switch no app EKAZA. Depois volte aqui e toque novamente em “Desativar e voltar ao ciclo nativo”.'
+    );
+    error.code='MANUAL_INCHING_DISABLE_REQUIRED';
+    error.currentInching=current.inchingConfig;
+    throw error;
+  }
 
   await setRelay(deviceId,false).catch(()=>null);
 
-  if(state.native_inching_raw){
-    await writeInching(deviceId,state.native_inching_raw).catch(()=>null);
-  }else if(state.inching_raw){
-    await writeInching(deviceId,encodeInching(state.inching_raw,false,state.on_seconds||30)).catch(()=>null);
-  }
-
   if(restoreNative&&state.native_cycle_raw){
-    await writeCycle(deviceId,state.native_cycle_raw).catch(()=>null);
+    await writeCycle(deviceId,state.native_cycle_raw);
   }
 
   const next={
@@ -247,6 +278,7 @@ export async function disableSecondsMode({restoreNative=true}={}){
     enabled:false,
     automations_enabled:false,
     paused_by_weather:false,
+    inching_verified:false,
     disabled_at:Date.now()
   };
   await storeSet(PATH,next);

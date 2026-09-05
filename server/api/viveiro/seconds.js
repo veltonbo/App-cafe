@@ -1,13 +1,23 @@
-import { start } from 'workflow/api';
+import { send } from '@vercel/queue';
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import {
   configureSecondsMode,
   disableSecondsMode,
   getSecondsState,
-  setWorkflowRun
+  patchSecondsState
 } from './_seconds.js';
 import { runViveiroWeatherCheck } from './_weather_logic.js';
-import { viveiroPulseWorkflow } from '../../../workflows/viveiro-pulse.js';
+
+const TOPIC='viveiro-pulse';
+
+async function enqueue(message,delaySeconds=0){
+  const key=['viveiro',message.generation,message.action,message.seq,message.attempt||0].join(':');
+  return send(TOPIC,message,{
+    delaySeconds:Math.max(0,Math.round(Number(delaySeconds)||0)),
+    retentionSeconds:604800,
+    idempotencyKey:key
+  });
+}
 
 export default async function handler(req,res){
   applyCors(req,res);
@@ -40,18 +50,24 @@ export default async function handler(req,res){
       });
 
       try{
-        const run=await start(viveiroPulseWorkflow,[state.generation]);
-        const runId=run?.runId||run?.id||run?.workflowRunId||'';
-        const saved=await setWorkflowRun(state.generation,runId);
+        const msg={generation:state.generation,action:'on',seq:0,attempt:0};
+        const queued=await enqueue(msg,0);
+        const saved=await patchSecondsState({
+          engine:'vercel_queue',
+          phase:'queued',
+          expected_action:'on',
+          transition_seq:0,
+          queue_message_id:queued?.messageId||null
+        });
         return res.status(200).json({
           ok:true,
           state:saved,
-          workflow_started:true,
-          workflow_run_id:runId||null
+          queue_started:true,
+          queue_message_id:queued?.messageId||null
         });
       }catch(error){
         await disableSecondsMode({restoreNative:true}).catch(()=>null);
-        throw new Error('Não foi possível iniciar o controlador de pulsos no servidor. '+(error?.message||String(error)));
+        throw new Error('Não foi possível iniciar a fila de pulsos no servidor. '+(error?.message||String(error)));
       }
     }
 
@@ -63,10 +79,6 @@ export default async function handler(req,res){
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){
     const message=error?.message||'Falha no modo rápido em segundos.';
-    return res.status(502).json({
-      ok:false,
-      error:message,
-      detail:message
-    });
+    return res.status(502).json({ok:false,error:message,detail:message});
   }
 }

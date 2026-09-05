@@ -1,6 +1,6 @@
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
-import { getSecondsState, prepareServerPulse, stopServerPulse } from './_seconds.js';
+import { getSecondsState, prepareServerPulse, rollbackPreparedPulse, stopServerPulse } from './_seconds.js';
 
 function baseUrl(req){
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim();
@@ -65,7 +65,10 @@ export default async function handler(req,res){
           state:current
         });
       }catch(error){
-        await stopServerPulse({restoreNative:true}).catch(()=>null);
+        await rollbackPreparedPulse(
+          state,
+          'Falha ao iniciar o worker do modo em segundos: '+(error?.message||String(error))
+        ).catch(()=>null);
         throw new Error('Não foi possível iniciar o controlador de pulsos no servidor. '+(error?.message||String(error)));
       }
     }

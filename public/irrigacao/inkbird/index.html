@@ -328,7 +328,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </form></dialog>
 <div id="toast" class="toast"></div>
 <script>
-const DEFAULT_API='https://app-cafe.vercel.app';
+const DEFAULT_API=window.location.origin;
 const APP_KEY='fazenda2eCentralIrrigacaoV3';
 const VIVEIRO_KEY='viveiroEkazaRealV1';
 const oldShared=JSON.parse(localStorage.getItem(VIVEIRO_KEY)||'null')||{};

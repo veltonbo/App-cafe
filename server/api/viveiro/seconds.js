@@ -14,7 +14,7 @@ async function enqueue(message,delaySeconds=0){
   const key=['viveiro',message.generation,message.action,message.seq,message.attempt||0].join(':');
   return send(TOPIC,message,{
     delaySeconds:Math.max(0,Math.round(Number(delaySeconds)||0)),
-    retentionSeconds:604800,
+    retentionSeconds:86400,
     idempotencyKey:key
   });
 }

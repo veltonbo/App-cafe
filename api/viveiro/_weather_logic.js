@@ -2,6 +2,7 @@ import { getDeviceId, tuyaRequest } from '../_tuya.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { appendHistory, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
+import { getSecondsState, pauseSecondsForWeather, resumeSecondsAfterWeather } from './_seconds.js';
 
 const TZ='America/Porto_Velho';
 const CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
@@ -133,7 +134,11 @@ export async function runViveiroWeatherCheck(){
   }
 
   const ekaza=await readEkaza(deviceId);
-  const position=schedulePosition(ekaza.cycleConfig);
+  const seconds=await getSecondsState();
+  const scheduleConfig=seconds.enabled
+    ? {daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
+    : ekaza.cycleConfig;
+  const position=schedulePosition(scheduleConfig);
   const next={...previous,lastCheckedAt:checkedAt};
   const result={
     ok:true,
@@ -141,6 +146,7 @@ export async function runViveiroWeatherCheck(){
     weather,
     relay:ekaza.relay,
     cycle_config:ekaza.cycleConfig,
+    seconds_mode:seconds,
     schedule_position:position,
     action:'none'
   };
@@ -176,13 +182,17 @@ export async function runViveiroWeatherCheck(){
 
     const wasEnabled=previous.pausedByWeather
       ? Boolean(previous.wasCycleEnabled)
-      : Boolean(ekaza.cycleConfig?.enabled);
+      : Boolean(seconds.enabled||ekaza.cycleConfig?.enabled);
 
     next.wasCycleEnabled=wasEnabled;
     next.pausedByWeather=Boolean(previous.pausedByWeather||wasEnabled);
+    next.secondsMode=Boolean(seconds.enabled);
     next.status='paused_rain';
 
-    if(ekaza.cycleConfig?.enabled){
+    if(seconds.enabled){
+      await pauseSecondsForWeather();
+      result.action='seconds_mode_paused_rain';
+    }else if(ekaza.cycleConfig?.enabled){
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_paused_rain';
     }
@@ -223,7 +233,10 @@ export async function runViveiroWeatherCheck(){
 
   if(checkedAt<resumeAt){
     next.status='waiting_resume_delay';
-    if(ekaza.cycleConfig?.enabled){
+    if(seconds.enabled){
+      await pauseSecondsForWeather();
+      result.action='seconds_mode_kept_paused_delay';
+    }else if(ekaza.cycleConfig?.enabled){
       // Alguém reativou manualmente durante a espera: mantém a proteção.
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_kept_paused_delay';
@@ -237,7 +250,11 @@ export async function runViveiroWeatherCheck(){
   }
 
   if(previous.wasCycleEnabled){
-    if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
+    if(seconds.enabled||previous.secondsMode){
+      const resumed=await resumeSecondsAfterWeather();
+      result.seconds_mode=resumed;
+      result.action=position.insideWindow?'seconds_mode_resumed_inside_window':'seconds_mode_restored_for_next_window';
+    }else if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
       const restored=await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,true);
       result.cycle_config=restored;
       result.action=position.insideWindow?'cycle_resumed_inside_window':'cycle_restored_for_next_window';

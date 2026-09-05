@@ -30,6 +30,10 @@ export default async function handler(req,res){
     }
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){
-    return res.status(502).json({ok:false,error:error?.message||'Falha no modo rápido em segundos.'});
+    const message=error?.message||'Falha no modo rápido em segundos.';
+    const friendly=/1106|permission|unauthorized/i.test(message)
+      ?'A Tuya ainda não autorizou o serviço de automações deste projeto. O modo em segundos precisa da permissão Scene Automation na Tuya Cloud.'
+      :message;
+    return res.status(502).json({ok:false,error:friendly,detail:message});
   }
 }

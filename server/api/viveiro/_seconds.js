@@ -176,13 +176,44 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90}={}){
     last_error:null,
     configured_at:Date.now()
   };
-  await storeSet(PATH,state);
+  try{
+    await storeSet(PATH,state);
+  }catch(error){
+    // Segurança: nunca deixar o ciclo nativo pausado se a persistência falhar.
+    await setViveiroRelay(false).catch(()=>null);
+    if(nativeCycleRaw){
+      await writeViveiroCycle(nativeCycleRaw).catch(()=>null);
+    }
+    throw new Error(
+      'O ciclo normal foi restaurado porque o servidor não conseguiu salvar o modo em segundos. '+
+      (error?.message||String(error))
+    );
+  }
   return state;
+}
+
+export async function rollbackPreparedPulse(state={},detail=''){
+  await setViveiroRelay(false).catch(()=>null);
+  if(state?.native_cycle_raw){
+    await writeViveiroCycle(state.native_cycle_raw).catch(()=>null);
+  }
+  await storePatch(PATH,{
+    enabled:false,
+    generation:randomUUID(),
+    relay_expected:false,
+    phase:'rollback',
+    worker_lease_until:0,
+    worker_token:null,
+    last_error:detail||'Falha ao iniciar o controlador em segundos.',
+    rollback_at:Date.now()
+  }).catch(()=>null);
+  return{...state,enabled:false,phase:'rollback',relay_expected:false,last_error:detail||null};
 }
 
 export async function stopServerPulse({restoreNative=true}={}){
   const current=await getSecondsState();
 
+  // A parada física tem prioridade sobre a persistência.
   await storePatch(PATH,{
     enabled:false,
     generation:randomUUID(),
@@ -191,7 +222,7 @@ export async function stopServerPulse({restoreNative=true}={}){
     worker_lease_until:0,
     worker_token:null,
     stopped_at:Date.now()
-  });
+  }).catch(()=>null);
 
   await setViveiroRelay(false).catch(()=>null);
 
@@ -210,7 +241,7 @@ export async function stopServerPulse({restoreNative=true}={}){
     worker_token:null,
     disabled_at:Date.now()
   };
-  await storeSet(PATH,next);
+  await storeSet(PATH,next).catch(()=>null);
   return next;
 }
 

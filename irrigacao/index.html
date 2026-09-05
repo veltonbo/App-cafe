@@ -42,8 +42,8 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <div class="head"><h2>Modo rápido • segundos</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
 <p class="note" style="margin-top:0">Os pulsos são comandados pelo <b>servidor da Fazenda 2E</b>. Não é necessário configurar segundos no EKAZA.</p>
 <div class="secondsHero">
-  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="3600" step="1" value="30"><small>segundos</small></label>
-  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="3600" step="1" value="90"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="60" step="1" value="30"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="180" step="1" value="90"><small>segundos</small></label>
 </div>
 <div id="secondsStatus" class="secondsStatus"><span>Configuração</span><strong>30 s ligado / 90 s desligado</strong></div>
 <div class="assistBox">
@@ -266,8 +266,9 @@ async function enableSecondsMode(){
   if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
   if(isWeatherProtected())return toast('Aguarde a proteção por chuva liberar o viveiro');
 
-  const on=Math.max(1,Math.min(3600,Math.round(Number($('secondsOn').value)||30)));
-  const off=Math.max(1,Math.min(3600,Math.round(Number($('secondsOff').value)||90)));
+  const on=Math.max(1,Math.min(60,Math.round(Number($('secondsOn').value)||30)));
+  const off=Math.max(1,Math.min(180,Math.round(Number($('secondsOff').value)||90)));
+  if(on+off>240)return toast('O ciclo total deve ficar em até 240 segundos.');
   const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
 
   if(!confirm('Ativar o modo rápido pelo servidor?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos\nEspera após chuva: '+resumeDelay+' min'))return;

@@ -100,15 +100,19 @@ export default async function handler(req,res){
     let lastEventTs=Number(state.lastEventTs||0);
     if(current.prefs.irrigation){
       const history=historyArray(await storeGet('IrrigacaoFazenda2E/history').catch(()=>null));
-      const newer=history.filter(h=>Number(h.ts||0)>lastEventTs).slice(-8);
-      for(const h of newer){
-        const p=eventPush(h);
-        if(p){
-          const result=await sendPushAlert(p);
-          sent.push({key:'event-'+h.id,type:'event',...result});
+      if(!lastEventTs&&history.length){
+        lastEventTs=Math.max(...history.map(h=>Number(h.ts||0)));
+      }else{
+        const newer=history.filter(h=>Number(h.ts||0)>lastEventTs).slice(-8);
+        for(const h of newer){
+          const p=eventPush(h);
+          if(p){
+            const result=await sendPushAlert(p);
+            sent.push({key:'event-'+h.id,type:'event',...result});
+          }
         }
+        if(history.length)lastEventTs=Math.max(lastEventTs,...history.map(h=>Number(h.ts||0)));
       }
-      if(history.length)lastEventTs=Math.max(lastEventTs,...history.map(h=>Number(h.ts||0)));
     }
 
     await storeSet('IrrigacaoFazenda2E/alertMonitor',{

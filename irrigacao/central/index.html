@@ -29,7 +29,7 @@
 <body>
 <header class="top">
   <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação</h1></div>
-  <div class="topActions"><button id="installBtn" class="iconBtn">Instalar app</button><button id="refreshBtn" class="iconBtn">Atualizar</button></div>
+  <div class="topActions"><button id="installBtn" class="iconBtn">Instalar app</button><button id="connectionBtn" class="iconBtn">Conexão</button><button id="refreshBtn" class="iconBtn">Atualizar</button></div>
 </header>
 <main class="wrap">
 <section class="hero">
@@ -216,6 +216,7 @@ function urlB64ToUint8Array(base64String){const padding='='.repeat((4-base64Stri
 async function swReg(){if(!('serviceWorker'in navigator))throw new Error('Este navegador não suporta notificações web.');return navigator.serviceWorker.register('/irrigacao/central/sw.js')}
 async function enableNotifications(){
   try{
+    if(!('Notification' in window)||!('PushManager' in window))throw new Error('Instale a Central na Tela de Início para ativar notificações neste aparelho.');
     const reg=await swReg();
     const info=await api('/api/irrigation/push');
     let perm=Notification.permission;
@@ -228,12 +229,20 @@ async function enableNotifications(){
   }catch(e){toast('Notificações: '+e.message)}
 }
 $('notificationBtn').onclick=enableNotifications;
+async function refreshPushState(){
+  try{
+    if(!('serviceWorker'in navigator)||!('PushManager'in window))return;
+    const reg=await swReg(),sub=await reg.pushManager.getSubscription();
+    if(sub&&Notification.permission==='granted')$('notificationBtn').textContent='Notificações ativas';
+  }catch{}
+}
 $('testNotification').onclick=async()=>{try{await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'test'})});toast('Alerta de teste enviado')}catch(e){toast('Falha: '+e.message)}};
 
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
 $('installBtn').onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else alert('No iPhone:\n\n1. Toque em Compartilhar no Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Abra a Central pela Tela de Início.\n\nDepois toque em “Ativar notificações”.')};
 $('refreshBtn').onclick=()=>refresh(true);
-if('serviceWorker'in navigator)swReg().catch(()=>null);
+$('connectionBtn').onclick=openSettings;
+if('serviceWorker'in navigator){swReg().then(()=>refreshPushState()).catch(()=>null)}
 render();
 if(state.settings.token)refresh(false);else openSettings();
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)},20000);

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fazenda 2E">
+<link rel="manifest" href="/irrigacao/central/manifest.webmanifest">
+<link rel="icon" href="/irrigacao/inkbird/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/irrigacao/inkbird/icon.svg">
+<title>Fazenda 2E • Central</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;--bg:#f4f7f5;--card:#fff;--ink:#173d33;--muted:#75867f;--line:#dce8e3;--green:#0c7258;--green2:#0a604b;--soft:#e8f5f0;--red:#bd443e;--redsoft:#fff0ef;--amber:#986511;--ambersoft:#fff7e8;--shadow:0 10px 28px rgba(23,61,51,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}button,input{font:inherit}.top{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) max(14px,calc((100vw - 1080px)/2 + 14px)) 10px;background:#f4f7f5f2;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.brand small{display:block;font-size:.63rem;letter-spacing:.15em;font-weight:900;color:var(--green)}.brand h1{font-size:1.08rem;margin:2px 0}.topActions{display:flex;gap:7px}.iconBtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 11px;font-weight:850;color:var(--ink)}
+.wrap{max-width:1080px;margin:auto;padding:14px 12px calc(90px + env(safe-area-inset-bottom))}.hero{background:linear-gradient(145deg,#0b624d,#0f8062);color:#fff;border-radius:22px;padding:20px;box-shadow:0 18px 38px rgba(11,96,75,.2)}.heroTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.ey{font-size:.67rem;letter-spacing:.13em;font-weight:900;color:#bcebdc}.hero h2{font-size:1.48rem;margin:6px 0 4px}.hero p{margin:0;color:#dcf3eb;font-size:.86rem}.heroStatus{display:inline-flex;margin-top:12px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-size:.75rem;font-weight:900}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px;box-shadow:var(--shadow)}.stat small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:4px}.stat strong{font-size:.95rem}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}
+.box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:17px;margin-top:12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px}.head h2{margin:2px 0 11px;font-size:1.05rem}.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:850}.primary{background:var(--green);color:#fff}.soft{background:var(--soft);color:var(--green)}.danger{background:var(--redsoft);color:var(--red)}.btn:disabled{opacity:.5}
+.systemGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.systemCard{border:1px solid var(--line);border-radius:17px;padding:14px;background:#fbfdfc}.systemTop{display:flex;justify-content:space-between;gap:8px}.systemCard h3{font-size:.98rem;margin:0}.badge{font-size:.7rem;font-weight:900;padding:5px 8px;border-radius:999px;background:#eff4f2;color:#64736d}.badge.on{background:#ddf3eb;color:var(--green)}.badge.alert{background:var(--redsoft);color:var(--red)}.systemMeta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}.mini{background:#fff;border:1px solid #e8efec;border-radius:11px;padding:9px}.mini small{display:block;color:var(--muted);font-size:.67rem}.mini b{font-size:.8rem}.actions{display:flex;gap:7px;margin-top:11px}.actions a{flex:1;text-align:center;text-decoration:none}
+.alertList{display:grid;gap:8px}.alert{display:grid;grid-template-columns:36px 1fr;gap:10px;padding:11px;border:1px solid var(--line);border-radius:13px;background:#fbfdfc}.alert.warning{background:var(--ambersoft);border-color:#ead6ae}.alert.critical{background:var(--redsoft);border-color:#efc0bc}.alertIcon{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:#fff;font-weight:900}.alert b{display:block;font-size:.84rem}.alert small{display:block;color:var(--muted);font-size:.73rem;margin-top:2px}.empty{padding:14px;border:1px dashed var(--line);border-radius:13px;text-align:center;color:var(--muted);font-size:.82rem}
+.waterHero{display:grid;grid-template-columns:1.1fr 1fr;gap:10px}.waterBig{padding:16px;border-radius:16px;background:linear-gradient(135deg,#e8f6f1,#f9fcfb);border:1px solid #cfe8df}.waterBig small{display:block;color:var(--muted)}.waterBig strong{display:block;font-size:1.65rem;margin:4px 0}.waterTable{display:grid;gap:6px;margin-top:11px}.waterRow{display:grid;grid-template-columns:80px 1fr 90px 90px;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid #edf2ef;font-size:.78rem}.waterRow:last-child{border-bottom:0}.flowMissing{color:var(--amber);font-weight:800}
+.history{display:grid;gap:7px}.hist{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #edf2ef}.hist:last-child{border-bottom:0}.histIcon{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;color:var(--green);font-weight:900}.hist b{font-size:.81rem}.hist small{display:block;color:var(--muted);font-size:.7rem}.hist time{font-size:.68rem;color:var(--muted)}
+.modal{padding:20px;display:grid;gap:13px;min-width:min(92vw,620px)}dialog{border:0;padding:0;border-radius:21px;box-shadow:0 24px 70px rgba(0,0,0,.23)}dialog::backdrop{background:#092a225c}.flowGrid{display:grid;gap:8px;max-height:55vh;overflow:auto}.flowRow{display:grid;grid-template-columns:1fr 120px;gap:9px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:11px}.flowRow label{font-size:.8rem;font-weight:850}.flowRow small{display:block;color:var(--muted)}.flowRow input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px}.check{display:flex;gap:8px;align-items:center;font-size:.82rem;font-weight:800}.check input{width:auto}.note{color:var(--muted);font-size:.78rem;line-height:1.45}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translate(-50%,100px);background:#16372e;color:#fff;padding:10px 14px;border-radius:12px;transition:.2s;z-index:30;font-size:.8rem}.toast.show{transform:translate(-50%,0)}
+.bottom{display:none}
+@media(max-width:760px){.topActions .iconBtn:first-child{display:none}.summary{grid-template-columns:1fr 1fr}.systemGrid{grid-template-columns:1fr}.waterHero{grid-template-columns:1fr}.waterRow{grid-template-columns:65px 1fr 74px}.waterRow .events{display:none}.bottom{display:grid;position:fixed;z-index:20;left:9px;right:9px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(3,1fr);gap:5px;padding:6px;background:#f8faf9f5;border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 35px rgba(20,58,48,.18)}.bottom a{padding:10px 4px;text-align:center;text-decoration:none;color:var(--muted);font-size:.71rem;font-weight:850;border-radius:11px}.bottom a.active{background:var(--green);color:#fff}.wrap{padding-bottom:100px}.hero h2{font-size:1.3rem}.head{align-items:flex-start}.head .btn{white-space:nowrap}.flowRow{grid-template-columns:1fr 100px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação</h1></div>
+  <div class="topActions"><button id="installBtn" class="iconBtn">Instalar app</button><button id="refreshBtn" class="iconBtn">Atualizar</button></div>
+</header>
+<main class="wrap">
+<section class="hero">
+  <div class="heroTop"><div><div class="ey">VISÃO GERAL • FAZENDA 2E</div><h2 id="heroTitle">Sistema de irrigação</h2><p id="heroSub">Viveiro, café e clima em uma única central.</p><span id="heroStatus" class="heroStatus">AGUARDANDO LEITURA</span></div></div>
+</section>
+<section class="summary">
+  <div class="stat"><small>Weather2-2</small><strong id="sumWeather">Aguardando</strong></div>
+  <div class="stat"><small>Viveiro</small><strong id="sumViveiro">Aguardando</strong></div>
+  <div class="stat"><small>Controladores café</small><strong id="sumControllers">—</strong></div>
+  <div class="stat"><small>Água estimada hoje</small><strong id="sumWater">—</strong></div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Sistemas da Fazenda 2E</h2></div>
+  <div id="systems" class="systemGrid"></div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Alertas</h2><button id="notificationBtn" class="btn soft">Ativar notificações</button></div>
+  <div id="alerts" class="alertList"></div>
+  <div class="actions"><button id="testNotification" class="btn soft">Testar alerta</button><button id="alertSettings" class="btn soft">Configurar alertas</button></div>
+  <p id="pushNote" class="note">Instale a Central na Tela de Início para receber alertas no iPhone mesmo com o app fechado.</p>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Volume de água estimado</h2><button id="flowSettings" class="btn soft">Configurar vazões</button></div>
+  <div class="waterHero">
+    <div class="waterBig"><small>Aplicado hoje</small><strong id="waterToday">0 L</strong><span id="waterTodaySub" class="note">Baseado nas vazões cadastradas.</span></div>
+    <div class="waterBig"><small>Acumulado registrado</small><strong id="waterTotal">0 L</strong><span class="note">Estimativa a partir do histórico de irrigação.</span></div>
+  </div>
+  <div id="waterRows" class="waterTable"></div>
+</section>
+
+<section class="box">
+  <div class="head"><h2>Atividade recente</h2></div>
+  <div id="history" class="history"></div>
+</section>
+</main>
+
+<nav class="bottom"><a class="active" href="/irrigacao/central/">Central</a><a href="/irrigacao/">Viveiro</a><a href="/irrigacao/inkbird/">Café</a></nav>
+
+<dialog id="flowDlg"><div class="modal">
+  <div><div class="ey" style="color:var(--green)">VOLUME DE ÁGUA</div><h2 style="margin:2px 0">Vazão dos setores</h2></div>
+  <p class="note">Informe a vazão total de cada setor em litros por minuto (L/min). O sistema multiplica a vazão pelo tempo de irrigação para estimar o volume aplicado.</p>
+  <div id="flowGrid" class="flowGrid"></div>
+  <div style="display:flex;gap:8px"><button id="cancelFlow" class="btn soft" style="flex:1">Cancelar</button><button id="saveFlow" class="btn primary" style="flex:1">Salvar vazões</button></div>
+</div></dialog>
+
+<dialog id="alertDlg"><div class="modal">
+  <div><div class="ey" style="color:var(--green)">ALERTAS</div><h2 style="margin:2px 0">O que deve avisar</h2></div>
+  <label class="check"><input id="alertWeather" type="checkbox" checked> Chuva e bloqueio climático</label>
+  <label class="check"><input id="alertOffline" type="checkbox" checked> Controlador ou viveiro offline</label>
+  <label class="check"><input id="alertOverdue" type="checkbox" checked> Irrigação que passou do tempo previsto</label>
+  <label class="check"><input id="alertIrrigation" type="checkbox" checked> Início, parada e conclusão da irrigação</label>
+  <div style="display:flex;gap:8px"><button id="cancelAlerts" class="btn soft" style="flex:1">Cancelar</button><button id="saveAlerts" class="btn primary" style="flex:1">Salvar alertas</button></div>
+</div></dialog>
+
+<dialog id="settingsDlg"><div class="modal">
+  <div><div class="ey" style="color:var(--green)">CONEXÃO</div><h2 style="margin:2px 0">Token de controle</h2></div>
+  <label style="display:grid;gap:5px;font-size:.8rem;font-weight:800">Backend<input id="apiUrl" type="url" value="https://app-cafe.vercel.app" style="border:1px solid var(--line);border-radius:10px;padding:10px"></label>
+  <label style="display:grid;gap:5px;font-size:.8rem;font-weight:800">Token<input id="token" type="password" style="border:1px solid var(--line);border-radius:10px;padding:10px"></label>
+  <div style="display:flex;gap:8px"><button id="cancelSettings" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" class="btn primary" style="flex:1">Salvar</button></div>
+</div></dialog>
+
+<div id="toast" class="toast"></div>
+<script>
+const KEY='fazenda2eUnifiedCentralV1',DEFAULT_API='https://app-cafe.vercel.app';
+const inkbird=JSON.parse(localStorage.getItem('fazenda2eCentralIrrigacaoV3')||'null')||{};
+const viveiro=JSON.parse(localStorage.getItem('viveiroEkazaRealV1')||'null')||{};
+let state=JSON.parse(localStorage.getItem(KEY)||'null')||{
+  settings:{apiUrl:inkbird?.settings?.apiUrl||viveiro?.settings?.apiUrl||DEFAULT_API,token:inkbird?.settings?.token||viveiro?.settings?.token||''},
+  overview:null,lastUpdate:null
+};
+if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
+if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
+if(!state.settings.token)state.settings.token=inkbird?.settings?.token||viveiro?.settings?.token||'';
+const $=id=>document.getElementById(id);
+let busy=false,deferredPrompt=null;
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
+function pad(n){return String(n).padStart(2,'0')}
+function fmtL(v){const n=Number(v||0);return n>=1000?(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:2})+' mil L':n.toLocaleString('pt-BR',{maximumFractionDigits:0})+' L'}
+async function api(path,opt={}){
+  if(!state.settings.token)throw new Error('Configure o token de controle.');
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),15000);
+  try{
+    const r=await fetch((state.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.settings.token,...(opt.headers||{})},signal:ctl.signal});
+    const body=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(body.error||('HTTP '+r.status));
+    return body;
+  }finally{clearTimeout(tm)}
+}
+function weatherLabel(){
+  const w=state.overview?.weather;
+  if(!w?.linked)return['Sem dados','bad'];
+  if(w?.metrics?.rainDetected)return['Chovendo','warn'];
+  return['Sem chuva','ok'];
+}
+function render(){
+  const o=state.overview;
+  if(!o){
+    $('systems').innerHTML='<div class="empty">Aguardando primeira leitura.</div>';
+    $('alerts').innerHTML='<div class="empty">Nenhum dado carregado.</div>';
+    $('history').innerHTML='<div class="empty">Nenhuma atividade carregada.</div>';
+    return;
+  }
+  const [wl,wc]=weatherLabel();$('sumWeather').textContent=wl;$('sumWeather').className=wc;
+  const vw=o.viveiro||{},vs=vw.weather_state||{};
+  const viveiroBlocked=['paused_rain','waiting_resume_delay','paused_waiting_weather'].includes(String(vs.status||''));
+  $('sumViveiro').textContent=vw.online===false?'Offline':viveiroBlocked?'Protegido':vw.relay?'Irrigando':'Em espera';
+  $('sumViveiro').className=vw.online===false?'bad':viveiroBlocked?'warn':'ok';
+  const online=(o.controllers||[]).filter(c=>c.online!==false).length,total=(o.controllers||[]).length;
+  $('sumControllers').textContent=online+'/'+total+' online';$('sumControllers').className=online===total?'ok':'bad';
+  $('sumWater').textContent=fmtL(o.volume?.today_liters);
+  const critical=(o.alerts||[]).some(a=>a.level==='critical');
+  $('heroTitle').textContent=critical?'Atenção necessária':'Sistema de irrigação';
+  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s) neste momento.'):'Viveiro, café e clima operando em uma única central.';
+  $('heroStatus').textContent=critical?'VERIFICAR ALERTAS':(o.alerts||[]).length?'ATENÇÃO':'SISTEMA NORMAL';
+
+  const cards=[];
+  cards.push('<div class="systemCard"><div class="systemTop"><div><h3>Viveiro • EKAZA</h3><div class="note">Proteção Weather2-2</div></div><span class="badge '+(vw.online===false?'alert':'on')+'">'+(vw.online===false?'OFFLINE':viveiroBlocked?'PROTEGIDO':vw.relay?'IRRIGANDO':'ONLINE')+'</span></div><div class="systemMeta"><div class="mini"><small>Saída</small><b>'+(vw.relay?'Ligada':'Desligada')+'</b></div><div class="mini"><small>Proteção</small><b>'+String(vs.status||'—').replaceAll('_',' ')+'</b></div></div><div class="actions"><a class="btn soft" href="/irrigacao/">Abrir viveiro</a></div></div>');
+  for(const c of o.controllers||[]){
+    const active=(c.active_zones||[]).map(z=>pad(c.sector_start+z-1)).join(', ');
+    cards.push('<div class="systemCard"><div class="systemTop"><div><h3>Controlador '+c.controller_index+' • Café</h3><div class="note">Setores '+pad(c.sector_start)+'–'+pad(c.sector_end)+'</div></div><span class="badge '+(c.online===false?'alert':'on')+'">'+(c.online===false?'OFFLINE':c.active_mask?'IRRIGANDO':'ONLINE')+'</span></div><div class="systemMeta"><div class="mini"><small>Modo</small><b>'+(c.operation_mode||'—')+'</b></div><div class="mini"><small>Ativo agora</small><b>'+(active||'Nenhum')+'</b></div></div><div class="actions"><a class="btn soft" href="/irrigacao/inkbird/">Abrir controlador</a></div></div>');
+  }
+  $('systems').innerHTML=cards.join('');
+
+  $('alerts').innerHTML=(o.alerts||[]).length?(o.alerts||[]).map(a=>'<div class="alert '+a.level+'"><div class="alertIcon">'+(a.level==='critical'?'!':'●')+'</div><div><b>'+a.title+'</b><small>'+a.body+'</small></div></div>').join(''):'<div class="empty">Nenhum alerta ativo. Sistema normal.</div>';
+
+  $('waterToday').textContent=fmtL(o.volume?.today_liters);$('waterTotal').textContent=fmtL(o.volume?.total_liters);
+  const bySector=o.volume?.by_sector||[];
+  $('waterRows').innerHTML=bySector.length?bySector.map(r=>'<div class="waterRow"><b>Setor '+pad(r.sector)+'</b><span class="'+(r.flow_lpm?'':'flowMissing')+'">'+(r.flow_lpm?Number(r.flow_lpm).toLocaleString('pt-BR',{maximumFractionDigits:2})+' L/min':'Vazão não cadastrada')+'</span><b>'+fmtL(r.liters)+'</b><span class="events">'+r.events+' irrig.</span></div>').join(''):'<div class="empty">Cadastre as vazões para começar a estimar o consumo de água.</div>';
+
+  const hist=o.history||[];
+  $('history').innerHTML=hist.length?hist.slice(0,14).map(h=>{
+    const when=new Date(Number(h.ts||Date.now()));
+    const sec=Number(h.sector||0)?'Setor '+pad(h.sector):'Irrigação';
+    const names={start:'iniciado',stop:'parado',complete:'concluído',group_start:'grupo iniciado',blocked:'bloqueado',viveiro_rain_pause:'viveiro pausado por chuva',viveiro_rain_resume:'viveiro retomado'};
+    return '<div class="hist"><div class="histIcon">•</div><div><b>'+sec+' • '+(names[h.type]||h.detail||h.type||'evento')+'</b><small>'+(h.duration_minutes?Number(h.duration_minutes)+' min':'')+'</small></div><time>'+when.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+when.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></div>';
+  }).join(''):'<div class="empty">Nenhuma atividade registrada.</div>';
+}
+async function refresh(show=true){
+  if(busy)return;busy=true;$('refreshBtn').disabled=true;
+  try{
+    const o=await api('/api/irrigation/overview');
+    state.overview=o;state.lastUpdate=Date.now();save();render();
+    if(show)toast('Central atualizada');
+  }catch(e){toast('Falha: '+e.message)}
+  finally{busy=false;$('refreshBtn').disabled=false}
+}
+function openSettings(){$('apiUrl').value=state.settings.apiUrl||DEFAULT_API;$('token').value=state.settings.token||'';$('settingsDlg').showModal()}
+$('saveSettings').onclick=()=>{state.settings.apiUrl=$('apiUrl').value.trim()||DEFAULT_API;state.settings.token=$('token').value.trim();save();$('settingsDlg').close();refresh(false)};
+$('cancelSettings').onclick=()=>$('settingsDlg').close();
+
+function openFlow(){
+  const o=state.overview;if(!o)return toast('Atualize a Central primeiro');
+  const wf=o.config?.waterFlow||{};
+  $('flowGrid').innerHTML=(o.controllers||[]).flatMap(c=>Array.from({length:8},(_,i)=>{
+    const z=i+1,sector=c.sector_start+i,val=Number(wf?.[c.id]?.[z]||0);
+    return '<div class="flowRow"><label>Setor '+pad(sector)+'<small>Controlador '+c.controller_index+' • saída '+z+'</small></label><input data-controller="'+c.id+'" data-zone="'+z+'" type="number" min="0" step="0.01" value="'+(val||'')+'" placeholder="L/min"></div>';
+  })).join('');
+  $('flowDlg').showModal();
+}
+$('flowSettings').onclick=openFlow;$('cancelFlow').onclick=()=>$('flowDlg').close();
+$('saveFlow').onclick=async()=>{
+  const waterFlow={};
+  document.querySelectorAll('#flowGrid input').forEach(i=>{
+    const v=Math.max(0,Number(i.value)||0);if(!waterFlow[i.dataset.controller])waterFlow[i.dataset.controller]={};waterFlow[i.dataset.controller][i.dataset.zone]=v;
+  });
+  try{await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({waterFlow})});$('flowDlg').close();toast('Vazões salvas');refresh(false)}catch(e){toast('Falha: '+e.message)}
+};
+
+function openAlerts(){
+  const a={weather:true,offline:true,overdue:true,irrigation:true,...(state.overview?.config?.alerts||{})};
+  $('alertWeather').checked=a.weather;$('alertOffline').checked=a.offline;$('alertOverdue').checked=a.overdue;$('alertIrrigation').checked=a.irrigation;$('alertDlg').showModal();
+}
+$('alertSettings').onclick=openAlerts;$('cancelAlerts').onclick=()=>$('alertDlg').close();
+$('saveAlerts').onclick=async()=>{
+  const alerts={weather:$('alertWeather').checked,offline:$('alertOffline').checked,overdue:$('alertOverdue').checked,irrigation:$('alertIrrigation').checked};
+  try{await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({alerts})});$('alertDlg').close();toast('Alertas salvos');refresh(false)}catch(e){toast('Falha: '+e.message)}
+};
+
+function urlB64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+async function swReg(){if(!('serviceWorker'in navigator))throw new Error('Este navegador não suporta notificações web.');return navigator.serviceWorker.register('/irrigacao/central/sw.js')}
+async function enableNotifications(){
+  try{
+    const reg=await swReg();
+    const info=await api('/api/irrigation/push');
+    let perm=Notification.permission;
+    if(perm!=='granted')perm=await Notification.requestPermission();
+    if(perm!=='granted')throw new Error('Permissão de notificação não concedida.');
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(info.publicKey)});
+    await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'subscribe',subscription:sub.toJSON(),platform:navigator.platform||''})});
+    $('notificationBtn').textContent='Notificações ativas';toast('Alertas ativados neste aparelho');
+  }catch(e){toast('Notificações: '+e.message)}
+}
+$('notificationBtn').onclick=enableNotifications;
+$('testNotification').onclick=async()=>{try{await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'test'})});toast('Alerta de teste enviado')}catch(e){toast('Falha: '+e.message)}};
+
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+$('installBtn').onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else alert('No iPhone:\n\n1. Toque em Compartilhar no Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Abra a Central pela Tela de Início.\n\nDepois toque em “Ativar notificações”.')};
+$('refreshBtn').onclick=()=>refresh(true);
+if('serviceWorker'in navigator)swReg().catch(()=>null);
+render();
+if(state.settings.token)refresh(false);else openSettings();
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)},20000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)});
+</script>
+</body>
+</html>

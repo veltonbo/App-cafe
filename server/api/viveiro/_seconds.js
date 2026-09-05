@@ -1,10 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { getDeviceId, tuyaRequest } from '../_tuya.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
-import { storeGet, storePatch, storeSet } from '../irrigation/_store.js';
-import { getViveiroWeatherConfig } from './_weather_logic.js';
 
-const PATH='IrrigacaoFazenda2E/viveiroSeconds';
 const TZ='America/Porto_Velho';
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
@@ -36,10 +33,14 @@ export function localSchedule(state,nowDate=new Date()){
 
   return{
     inside:todayAllowed&&nowSec>=startSec&&nowSec<endSec,
+    today_allowed:todayAllowed,
+    before_start:todayAllowed&&nowSec<startSec,
+    after_end:todayAllowed&&nowSec>=endSec,
     day,
     now_seconds:nowSec,
     start_seconds:startSec,
     end_seconds:endSec,
+    seconds_until_start:todayAllowed&&nowSec<startSec?Math.max(0,startSec-nowSec):0,
     seconds_until_end:todayAllowed&&nowSec<endSec?Math.max(0,endSec-nowSec):0
   };
 }
@@ -123,16 +124,13 @@ function disabledCycle(currentRaw,cfg){
   },currentRaw).raw;
 }
 
-export async function getSecondsState(){
-  return(await storeGet(PATH).catch(()=>null))||{enabled:false,phase:'idle'};
+export async function pulseStillActive(state={}){
+  if(!state?.enabled||!state?.disabled_cycle_raw)return false;
+  const current=await readViveiroDevice().catch(()=>null);
+  return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
 }
 
-export async function patchSecondsState(patch={}){
-  await storePatch(PATH,{...patch,updated_at:Date.now()});
-  return getSecondsState();
-}
-
-export async function prepareServerPulse({onSeconds=30,offSeconds=90}={}){
+export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelayMinutes=30}={}){
   const current=await readViveiroDevice();
   const cycle=current.cycleConfig;
   if(!cycle)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
@@ -140,140 +138,109 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90}={}){
   const on=Math.max(1,Math.min(60,Math.round(Number(onSeconds)||30)));
   const off=Math.max(1,Math.min(180,Math.round(Number(offSeconds)||90)));
   if(on+off>240)throw new Error('Neste servidor, ligado + desligado deve totalizar no máximo 240 segundos.');
-  const weatherCfg=await getViveiroWeatherConfig().catch(()=>({resumeDelayMinutes:30}));
 
-  const previous=await getSecondsState();
-  const nativeCycleRaw=previous?.enabled&&previous?.native_cycle_raw?previous.native_cycle_raw:current.cycleRaw;
-  const nativeCycleWasEnabled=previous?.enabled
-    ?Boolean(previous.native_cycle_was_enabled)
-    :Boolean(cycle.enabled);
+  const nativeCycleRaw=current.cycleRaw;
+  const disabledRaw=disabledCycle(current.cycleRaw,cycle);
 
   if(cycle.enabled){
-    await writeViveiroCycle(disabledCycle(current.cycleRaw,cycle));
+    await writeViveiroCycle(disabledRaw);
+  }else if(String(current.cycleRaw||'')!==String(disabledRaw||'')){
+    await writeViveiroCycle(disabledRaw);
   }
+
   await setViveiroRelay(false).catch(()=>null);
 
-  const generation=randomUUID();
-  const state={
+  return{
     enabled:true,
-    engine:'vercel_chained_function',
-    generation,
+    engine:'vercel_stateless_chain',
+    generation:randomUUID(),
     on_seconds:on,
     off_seconds:off,
-    resume_delay_minutes:Math.max(0,Math.min(1440,Number(weatherCfg.resumeDelayMinutes||0))),
+    resume_delay_minutes:Math.max(0,Math.min(1440,Math.round(Number(resumeDelayMinutes)||0))),
     start_minutes:Number(cycle.startMinutes),
     end_minutes:Number(cycle.endMinutes),
     days_mask:Number(cycle.daysMask),
     native_cycle_raw:nativeCycleRaw,
-    native_cycle_was_enabled:nativeCycleWasEnabled,
+    native_cycle_was_enabled:Boolean(cycle.enabled),
+    disabled_cycle_raw:disabledRaw,
     relay_expected:false,
     phase:'queued',
-    worker_lease_until:0,
-    worker_token:null,
-    rain_last_at:Number(previous?.rain_last_at||0),
-    pulse_count:Number(previous?.pulse_count||0),
-    last_pulse_at:previous?.last_pulse_at||null,
-    last_error:null,
+    rain_last_at:0,
+    paused_by_weather:false,
+    pulse_count:0,
     configured_at:Date.now()
   };
-  try{
-    await storeSet(PATH,state);
-  }catch(error){
-    // Segurança: nunca deixar o ciclo nativo pausado se a persistência falhar.
-    await setViveiroRelay(false).catch(()=>null);
-    if(nativeCycleRaw){
-      await writeViveiroCycle(nativeCycleRaw).catch(()=>null);
-    }
-    throw new Error(
-      'O ciclo normal foi restaurado porque o servidor não conseguiu salvar o modo em segundos. '+
-      (error?.message||String(error))
-    );
-  }
-  return state;
 }
 
 export async function rollbackPreparedPulse(state={},detail=''){
   await setViveiroRelay(false).catch(()=>null);
-  if(state?.native_cycle_raw){
+  const current=await readViveiroDevice().catch(()=>null);
+  const ownsCycle=current&&state?.disabled_cycle_raw&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw);
+  if(ownsCycle&&state?.native_cycle_raw){
     await writeViveiroCycle(state.native_cycle_raw).catch(()=>null);
   }
-  await storePatch(PATH,{
+  return{
+    ...state,
     enabled:false,
-    generation:randomUUID(),
     relay_expected:false,
     phase:'rollback',
-    worker_lease_until:0,
-    worker_token:null,
     last_error:detail||'Falha ao iniciar o controlador em segundos.',
     rollback_at:Date.now()
-  }).catch(()=>null);
-  return{...state,enabled:false,phase:'rollback',relay_expected:false,last_error:detail||null};
+  };
 }
 
-export async function stopServerPulse({restoreNative=true}={}){
-  const current=await getSecondsState();
-
-  // A parada física tem prioridade sobre a persistência.
-  await storePatch(PATH,{
-    enabled:false,
-    generation:randomUUID(),
-    relay_expected:false,
-    phase:'stopping',
-    worker_lease_until:0,
-    worker_token:null,
-    stopped_at:Date.now()
-  }).catch(()=>null);
-
+export async function stopServerPulse({restoreNative=true,nativeCycleRaw='',disabledCycleRaw=''}={}){
   await setViveiroRelay(false).catch(()=>null);
 
-  if(restoreNative&&current.native_cycle_raw){
-    await writeViveiroCycle(current.native_cycle_raw);
+  const current=await readViveiroDevice().catch(()=>null);
+  const canRestore=!disabledCycleRaw||(
+    current&&String(current.cycleRaw||'')===String(disabledCycleRaw||'')
+  );
+
+  if(restoreNative&&nativeCycleRaw&&canRestore){
+    await writeViveiroCycle(nativeCycleRaw);
   }
 
-  const next={
-    ...current,
+  return{
     enabled:false,
-    engine:'vercel_chained_function',
+    engine:'vercel_stateless_chain',
     generation:randomUUID(),
     relay_expected:false,
     phase:'stopped',
-    worker_lease_until:0,
-    worker_token:null,
     disabled_at:Date.now()
   };
-  await storeSet(PATH,next).catch(()=>null);
-  return next;
 }
 
-export async function tryClaimWorker(generation,leaseMs){
-  const state=await getSecondsState();
-  const now=Date.now();
-  if(!state.enabled||state.generation!==generation)return{claimed:false,state,reason:'inactive'};
-  if(Number(state.worker_lease_until||0)>now)return{claimed:false,state,reason:'busy'};
+export async function probeServerPulse(state={}){
+  if(!state?.enabled||!state?.disabled_cycle_raw){
+    return{...state,enabled:false,phase:'stopped',relay_expected:false};
+  }
 
-  const token=randomUUID();
-  await storePatch(PATH,{
-    worker_token:token,
-    worker_lease_until:now+Math.max(30000,Number(leaseMs||180000)),
-    phase:'running'
-  });
+  const current=await readViveiroDevice();
+  const active=String(current.cycleRaw||'')===String(state.disabled_cycle_raw||'');
+  if(!active){
+    return{
+      ...state,
+      enabled:false,
+      relay_expected:false,
+      phase:'stopped',
+      stopped_at:Date.now()
+    };
+  }
 
-  const verify=await getSecondsState();
+  const schedule=localSchedule(state);
   return{
-    claimed:Boolean(verify.enabled&&verify.generation===generation&&verify.worker_token===token),
-    token,
-    state:verify,
-    reason:verify.worker_token===token?'claimed':'race'
+    ...state,
+    enabled:true,
+    relay_expected:current.relay===true,
+    phase:schedule.inside?'running':(schedule.before_start?'waiting_window':'finishing'),
+    device_relay:current.relay,
+    checked_at:Date.now()
   };
 }
 
-export async function releaseWorker(generation,token,patch={}){
-  const state=await getSecondsState();
-  if(state.generation!==generation||state.worker_token!==token)return state;
-  await storePatch(PATH,{
-    ...patch,
-    worker_token:null,
-    worker_lease_until:0
-  });
-  return getSecondsState();
+// Compatibilidade com telas antigas. O modo rápido atual é intencionalmente
+// sem Firebase; o estado é validado diretamente contra o cycle_time do EKAZA.
+export async function getSecondsState(){
+  return null;
 }

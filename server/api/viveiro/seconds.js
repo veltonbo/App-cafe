@@ -32,7 +32,7 @@ export default async function handler(req,res){
   }catch(error){
     const message=error?.message||'Falha no modo rápido em segundos.';
     const friendly=/1106|permission|unauthorized/i.test(message)
-      ?'A Tuya ainda não autorizou o serviço de automações deste projeto. O modo em segundos precisa da permissão Scene Automation na Tuya Cloud.'
+      ?'A Tuya não autorizou o serviço de temporização deste projeto. O modo em segundos agora usa Device Timer + auto-desligamento local do EKAZA.'
       :message;
     return res.status(502).json({ok:false,error:friendly,detail:message});
   }

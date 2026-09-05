@@ -29,7 +29,7 @@ export function getVapidPublicKey(){
 
 function setup(){
   const keys=deriveKeys();
-  webpush.setVapidDetails('https://app-cafe.vercel.app',keys.publicKey,keys.privateKey);
+  webpush.setVapidDetails((process.env.PUBLIC_APP_URL||'https://app-cafe.vercel.app').trim(),keys.publicKey,keys.privateKey);
   return keys;
 }
 

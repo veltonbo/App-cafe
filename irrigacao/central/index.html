@@ -89,14 +89,14 @@
 
 <dialog id="settingsDlg"><div class="modal">
   <div><div class="ey" style="color:var(--green)">CONEXÃO</div><h2 style="margin:2px 0">Token de controle</h2></div>
-  <label style="display:grid;gap:5px;font-size:.8rem;font-weight:800">Backend<input id="apiUrl" type="url" value="https://app-cafe.vercel.app" style="border:1px solid var(--line);border-radius:10px;padding:10px"></label>
+  <label style="display:grid;gap:5px;font-size:.8rem;font-weight:800">Backend<input id="apiUrl" type="url" value="" style="border:1px solid var(--line);border-radius:10px;padding:10px"></label>
   <label style="display:grid;gap:5px;font-size:.8rem;font-weight:800">Token<input id="token" type="password" style="border:1px solid var(--line);border-radius:10px;padding:10px"></label>
   <div style="display:flex;gap:8px"><button id="cancelSettings" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" class="btn primary" style="flex:1">Salvar</button></div>
 </div></dialog>
 
 <div id="toast" class="toast"></div>
 <script>
-const KEY='fazenda2eUnifiedCentralV1',DEFAULT_API='https://app-cafe.vercel.app';
+const KEY='fazenda2eUnifiedCentralV1',DEFAULT_API=window.location.origin;
 const inkbird=JSON.parse(localStorage.getItem('fazenda2eCentralIrrigacaoV3')||'null')||{};
 const viveiro=JSON.parse(localStorage.getItem('viveiroEkazaRealV1')||'null')||{};
 let state=JSON.parse(localStorage.getItem(KEY)||'null')||{

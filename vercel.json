@@ -26,6 +26,10 @@
       "destination": "/api/router?route=viveiro/seconds"
     },
     {
+      "source": "/api/viveiro/pulse",
+      "destination": "/api/router?route=viveiro/pulse"
+    },
+    {
       "source": "/api/irrigation/push",
       "destination": "/api/router?route=irrigation/push"
     },
@@ -77,5 +81,10 @@
       "source": "/api/inkbird/status",
       "destination": "/api/router?route=inkbird/status"
     }
-  ]
+  ],
+  "functions": {
+    "api/router.js": {
+      "maxDuration": 300
+    }
+  }
 }

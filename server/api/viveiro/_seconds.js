@@ -152,21 +152,24 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
 
   const createdGroups=[];
   const chunkSize=25;
+  let nativeCycleDisabled=false;
+  let inchingRaw='';
   try{
+    if(cycle.config.enabled){
+      const disabled=disabledCycleRaw(cycle);
+      await writeCycle(deviceId,disabled);
+      nativeCycleDisabled=true;
+    }
+
+    inchingRaw=encodeInching(cycle.inchingRaw,true,onSeconds);
+    await writeInching(deviceId,inchingRaw);
+
     for(let i=0;i<pulseMinutes.length;i+=chunkSize){
       const chunk=pulseMinutes.slice(i,i+chunkSize);
       const result=await addTimerGroup(deviceId,loops,chunk,createdGroups.length);
       const groupId=String(result?.group_id||result?.id||result||'').trim();
       if(!groupId)throw new Error('A Tuya não retornou o ID do grupo de temporização.');
       createdGroups.push(groupId);
-    }
-
-    const inchingRaw=encodeInching(cycle.inchingRaw,true,onSeconds);
-    await writeInching(deviceId,inchingRaw);
-
-    if(cycle.config.enabled){
-      const disabled=disabledCycleRaw(cycle);
-      await writeCycle(deviceId,disabled);
     }
 
     const state={
@@ -199,6 +202,9 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
     return state;
   }catch(error){
     await deleteTimerCategory(deviceId).catch(()=>null);
+    if(cycle.inchingRaw)await writeInching(deviceId,cycle.inchingRaw).catch(()=>null);
+    else if(inchingRaw)await writeInching(deviceId,encodeInching(inchingRaw,false,onSeconds)).catch(()=>null);
+    if(nativeCycleDisabled&&cycle.raw)await writeCycle(deviceId,cycle.raw).catch(()=>null);
     throw error;
   }
 }

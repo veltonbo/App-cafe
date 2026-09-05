@@ -120,6 +120,7 @@ if(!('lastError' in data)) data.lastError=null;
 if(!('cycleConfig' in data)) data.cycleConfig=null;
 if(!('weatherProtection' in data)) data.weatherProtection=null;
 let syncing=false;
+let weatherSyncing=false;
 const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
@@ -156,7 +157,77 @@ async function syncStatus(showToast=false){
     syncing=false;render();
   }
 }
+
+function isWeatherProtected(){
+  const status=data.weatherProtection?.state?.status||'';
+  return ['paused_rain','waiting_resume_delay','paused_waiting_weather'].includes(status)
+    || Boolean(data.weatherProtection?.state?.rainActive);
+}
+function weatherStatusLabel(status){
+  const labels={
+    disabled:'Desativada',
+    clear:'Liberada',
+    paused_rain:'Pausado por chuva',
+    paused_waiting_weather:'Pausado • aguardando clima',
+    weather_unavailable:'Weather2-2 sem dados',
+    waiting_resume_delay:'Aguardando retomada',
+    resumed_inside_window:'Retomado nesta janela',
+    restored_outside_window:'Próxima janela',
+    manual_pause_preserved:'Pausa manual preservada'
+  };
+  return labels[status]||'Aguardando';
+}
+function formatResumeTime(ts){
+  const n=Number(ts);
+  if(!Number.isFinite(n)||n<=0)return '—';
+  const left=n-Date.now();
+  if(left>0){
+    const min=Math.max(1,Math.ceil(left/60000));
+    return min+' min • '+new Date(n).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+  return 'Liberada';
+}
+async function syncWeatherProtection(showToast=false){
+  if(weatherSyncing||!data.settings.apiUrl||!data.settings.token)return;
+  weatherSyncing=true;
+  try{
+    const r=await api('/api/viveiro/weather');
+    data.weatherProtection=r;
+    save();render();
+    if(showToast){
+      const action=r.action&&r.action!=='none'?' • '+r.action:'';
+      toast('Proteção climática atualizada'+action);
+    }
+  }catch(e){
+    if(showToast)toast('Clima: '+e.message);
+  }finally{
+    weatherSyncing=false;
+  }
+}
+async function saveWeatherProtectionConfig(){
+  try{
+    $('saveWeatherProtection').disabled=true;
+    const config={
+      enabled:$('viveiroWeatherEnabled').checked,
+      resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay').value)||0))),
+      checkMinutes:5,
+      blockWhileRaining:true
+    };
+    const r=await api('/api/viveiro/weather',{
+      method:'POST',
+      body:JSON.stringify({action:'save_config',config})
+    });
+    data.weatherProtection=r;save();render();
+    toast('Proteção por chuva salva');
+  }catch(e){toast('Falha: '+e.message)}
+  finally{$('saveWeatherProtection').disabled=false}
+}
+
 async function manual(on){
+  if(on&&isWeatherProtected()){
+    toast('Ligação bloqueada pela proteção por chuva');
+    return;
+  }
   const action=on?'LIGAR':'DESLIGAR';
   if(!confirm(action+' a saída do viveiro agora?\n\nO ciclo nativo 1/2 não será alterado.')) return;
   try{
@@ -206,6 +277,10 @@ function openCycleEditor(){
   $('cycleDlg').showModal();
 }
 async function saveCycleConfig(config, label){
+  if(isWeatherProtected()){
+    toast('A programação está pausada pela proteção por chuva');
+    return false;
+  }
   try{
     $('saveCycle').disabled=true;
     $('toggleCycle').disabled=true;

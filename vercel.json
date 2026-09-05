@@ -1,0 +1,81 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/cycle",
+      "destination": "/api/router?route=cycle"
+    },
+    {
+      "source": "/api/status",
+      "destination": "/api/router?route=status"
+    },
+    {
+      "source": "/api/switch",
+      "destination": "/api/router?route=switch"
+    },
+    {
+      "source": "/api/weather/status",
+      "destination": "/api/router?route=weather/status"
+    },
+    {
+      "source": "/api/viveiro/weather",
+      "destination": "/api/router?route=viveiro/weather"
+    },
+    {
+      "source": "/api/viveiro/seconds",
+      "destination": "/api/router?route=viveiro/seconds"
+    },
+    {
+      "source": "/api/irrigation/push",
+      "destination": "/api/router?route=irrigation/push"
+    },
+    {
+      "source": "/api/irrigation/config",
+      "destination": "/api/router?route=irrigation/config"
+    },
+    {
+      "source": "/api/irrigation/history",
+      "destination": "/api/router?route=irrigation/history"
+    },
+    {
+      "source": "/api/irrigation/monitor",
+      "destination": "/api/router?route=irrigation/monitor"
+    },
+    {
+      "source": "/api/irrigation/linkage",
+      "destination": "/api/router?route=irrigation/linkage"
+    },
+    {
+      "source": "/api/irrigation/overview",
+      "destination": "/api/router?route=irrigation/overview"
+    },
+    {
+      "source": "/api/irrigation/background",
+      "destination": "/api/router?route=irrigation/background"
+    },
+    {
+      "source": "/api/inkbird/controllers",
+      "destination": "/api/router?route=inkbird/controllers"
+    },
+    {
+      "source": "/api/inkbird/command",
+      "destination": "/api/router?route=inkbird/command"
+    },
+    {
+      "source": "/api/inkbird/group",
+      "destination": "/api/router?route=inkbird/group"
+    },
+    {
+      "source": "/api/inkbird/schedule",
+      "destination": "/api/router?route=inkbird/schedule"
+    },
+    {
+      "source": "/api/inkbird/zone",
+      "destination": "/api/router?route=inkbird/zone"
+    },
+    {
+      "source": "/api/inkbird/status",
+      "destination": "/api/router?route=inkbird/status"
+    }
+  ]
+}

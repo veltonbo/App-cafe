@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite'
-import { workflow } from 'workflow/vite'
 
 function firebaseEnvironmentPlugin() {
   const firebaseConfig = {
@@ -41,5 +40,5 @@ function firebaseEnvironmentPlugin() {
 }
 
 export default defineConfig({
-  plugins: [workflow(), firebaseEnvironmentPlugin()],
+  plugins: [firebaseEnvironmentPlugin()],
 })

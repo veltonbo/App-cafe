@@ -133,7 +133,10 @@ export async function runViveiroWeatherCheck(){
   }
 
   const ekaza=await readEkaza(deviceId);
-  const position=schedulePosition(ekaza.cycleConfig);
+  const seconds=(await storeGet('IrrigacaoFazenda2E/viveiroSeconds').catch(()=>null))||{};
+  const position=schedulePosition(seconds.enabled
+    ?{daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
+    :ekaza.cycleConfig);
   const next={...previous,lastCheckedAt:checkedAt};
   const result={
     ok:true,
@@ -176,13 +179,20 @@ export async function runViveiroWeatherCheck(){
 
     const wasEnabled=previous.pausedByWeather
       ? Boolean(previous.wasCycleEnabled)
-      : Boolean(ekaza.cycleConfig?.enabled);
+      : Boolean(seconds.enabled||ekaza.cycleConfig?.enabled);
 
     next.wasCycleEnabled=wasEnabled;
     next.pausedByWeather=Boolean(previous.pausedByWeather||wasEnabled);
     next.status='paused_rain';
 
-    if(ekaza.cycleConfig?.enabled){
+    if(seconds.enabled){
+      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
+        rain_last_at:checkedAt,
+        phase:'weather_blocked',
+        relay_expected:false
+      }).catch(()=>null);
+      result.action='server_pulse_paused_rain';
+    }else if(ekaza.cycleConfig?.enabled){
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_paused_rain';
     }
@@ -223,7 +233,14 @@ export async function runViveiroWeatherCheck(){
 
   if(checkedAt<resumeAt){
     next.status='waiting_resume_delay';
-    if(ekaza.cycleConfig?.enabled){
+    if(seconds.enabled){
+      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
+        phase:'waiting_after_rain',
+        relay_expected:false,
+        resume_eligible_at:resumeAt
+      }).catch(()=>null);
+      result.action='server_pulse_waiting_delay';
+    }else if(ekaza.cycleConfig?.enabled){
       // Alguém reativou manualmente durante a espera: mantém a proteção.
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_kept_paused_delay';
@@ -237,7 +254,13 @@ export async function runViveiroWeatherCheck(){
   }
 
   if(previous.wasCycleEnabled){
-    if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
+    if(seconds.enabled){
+      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
+        phase:position.insideWindow?'queued':'waiting_window',
+        relay_expected:false
+      }).catch(()=>null);
+      result.action=position.insideWindow?'server_pulse_ready':'server_pulse_waiting_window';
+    }else if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
       const restored=await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,true);
       result.cycle_config=restored;
       result.action=position.insideWindow?'cycle_resumed_inside_window':'cycle_restored_for_next_window';

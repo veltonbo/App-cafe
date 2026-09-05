@@ -1,11 +1,24 @@
-import { getRun, start } from 'workflow/api';
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
-import { prepareServerPulse, stopServerPulse } from './_seconds.js';
-import { viveiroPulseWorkflow } from '../../../workflows/viveiro-pulse.js';
+import { getSecondsState, prepareServerPulse, stopServerPulse } from './_seconds.js';
 
-function statusIsActive(status){
-  return !['completed','failed','cancelled','canceled'].includes(String(status||'').toLowerCase());
+function baseUrl(req){
+  const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim();
+  const host=String(req.headers['x-forwarded-host']||req.headers.host||'app-cafe.vercel.app').split(',')[0].trim();
+  return proto+'://'+host;
+}
+
+async function queuePulse(req,generation){
+  const token=(process.env.APP_CONTROL_TOKEN||'').trim();
+  if(!token)throw new Error('APP_CONTROL_TOKEN não configurado no servidor.');
+  const r=await fetch(baseUrl(req)+'/api/viveiro/pulse',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({generation})
+  });
+  const body=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(body?.error||('Falha ao iniciar worker: HTTP '+r.status));
+  return body;
 }
 
 export default async function handler(req,res){
@@ -16,45 +29,21 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const runId=String(req.query?.run_id||'').trim();
-      if(!runId){
-        return res.status(200).json({
-          ok:true,
-          state:{enabled:false,engine:'vercel_workflow',phase:'idle'}
-        });
-      }
-
-      try{
-        const run=getRun(runId);
-        const status=await run.status;
-        return res.status(200).json({
-          ok:true,
-          state:{
-            enabled:statusIsActive(status),
-            engine:'vercel_workflow',
-            workflow_run_id:runId,
-            phase:String(status||'unknown')
-          }
-        });
-      }catch(error){
-        return res.status(200).json({
-          ok:true,
-          state:{
-            enabled:false,
-            engine:'vercel_workflow',
-            workflow_run_id:runId,
-            phase:'not_found',
-            error:error?.message||String(error)
-          }
-        });
-      }
+      return res.status(200).json({ok:true,state:await getSecondsState()});
     }
 
     const action=String(req.body?.action||'configure');
 
     if(action==='configure'){
       const weather=await fetchWeatherSnapshot().catch(()=>null);
-      if(weather?.metrics?.rainDetected){
+      if(!weather?.linked||!weather?.metrics){
+        return res.status(423).json({
+          ok:false,
+          blocked:true,
+          error:'Weather2-2 sem dados. O modo rápido não será iniciado por segurança.'
+        });
+      }
+      if(weather.metrics.rainDetected){
         return res.status(423).json({
           ok:false,
           blocked:true,
@@ -64,78 +53,31 @@ export default async function handler(req,res){
 
       const state=await prepareServerPulse({
         onSeconds:req.body?.on_seconds,
-        offSeconds:req.body?.off_seconds,
-        resumeDelayMinutes:req.body?.resume_delay_minutes
+        offSeconds:req.body?.off_seconds
       });
 
       try{
-        const workflowInput={
-          on_seconds:state.on_seconds,
-          off_seconds:state.off_seconds,
-          resume_delay_minutes:state.resume_delay_minutes,
-          start_minutes:state.start_minutes,
-          end_minutes:state.end_minutes,
-          days_mask:state.days_mask
-        };
-        const run=await start(viveiroPulseWorkflow,[workflowInput]);
-        const runId=String(run?.runId||run?.id||run?.workflowRunId||'').trim();
-        if(!runId)throw new Error('A Vercel não retornou o identificador da execução.');
-
+        const queued=await queuePulse(req,state.generation);
+        const current=await getSecondsState();
         return res.status(200).json({
           ok:true,
-          workflow_started:true,
-          workflow_run_id:runId,
-          state:{
-            ...state,
-            workflow_run_id:runId,
-            phase:'running'
-          }
+          worker_queued:Boolean(queued?.queued),
+          state:current
         });
       }catch(error){
-        await stopServerPulse({
-          nativeCycleRaw:state.native_cycle_raw,
-          restoreNative:true
-        }).catch(()=>null);
+        await stopServerPulse({restoreNative:true}).catch(()=>null);
         throw new Error('Não foi possível iniciar o controlador de pulsos no servidor. '+(error?.message||String(error)));
       }
     }
 
     if(action==='disable'){
-      const runId=String(req.body?.run_id||'').trim();
-      let cancelError=null;
-
-      if(runId){
-        try{
-          const run=getRun(runId);
-          if(typeof run.cancel==='function')await run.cancel();
-          else cancelError='A versão atual do Workflow não expôs cancel() para esta execução.';
-        }catch(error){
-          cancelError=error?.message||String(error);
-        }
-      }
-
-      const stopped=await stopServerPulse({
-        nativeCycleRaw:String(req.body?.native_cycle_raw||''),
-        restoreNative:req.body?.restore_native!==false
-      });
-
-      return res.status(200).json({
-        ok:true,
-        state:{
-          ...stopped,
-          workflow_run_id:runId||null,
-          cancel_error:cancelError
-        }
-      });
+      const state=await stopServerPulse({restoreNative:req.body?.restore_native!==false});
+      return res.status(200).json({ok:true,state});
     }
 
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){
     const message=error?.message||'Falha no modo rápido em segundos.';
-    return res.status(502).json({
-      ok:false,
-      error:message,
-      detail:message
-    });
+    return res.status(502).json({ok:false,error:message,detail:message});
   }
 }

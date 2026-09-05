@@ -137,8 +137,9 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90}={}){
   const cycle=current.cycleConfig;
   if(!cycle)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
 
-  const on=Math.max(1,Math.min(180,Math.round(Number(onSeconds)||30)));
-  const off=Math.max(1,Math.min(240,Math.round(Number(offSeconds)||90)));
+  const on=Math.max(1,Math.min(60,Math.round(Number(onSeconds)||30)));
+  const off=Math.max(1,Math.min(180,Math.round(Number(offSeconds)||90)));
+  if(on+off>240)throw new Error('Neste servidor, ligado + desligado deve totalizar no máximo 240 segundos.');
   const weatherCfg=await getViveiroWeatherConfig().catch(()=>({resumeDelayMinutes:30}));
 
   const previous=await getSecondsState();

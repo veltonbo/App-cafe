@@ -33,7 +33,7 @@ export default async function handler(req,res){
     const message=error?.message||'Falha no modo rápido em segundos.';
     return res.status(502).json({
       ok:false,
-      error:'Não foi possível ativar o modo em segundos.',
+      error:message,
       detail:message
     });
   }

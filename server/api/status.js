@@ -1,6 +1,5 @@
 import { applyCors, authorize, ensureConfig, tuyaRequest, getDeviceId } from './_tuya.js';
 import { decodeCycle } from './_cycle.js';
-import { getSecondsState } from './viveiro/_seconds.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -33,7 +32,7 @@ export default async function handler(req, res) {
       cycle_config: decodeCycle(cycleTime),
       relay_status: map.relay_status ?? null,
       switch_inching: map.switch_inching ?? null,
-      seconds_mode: await getSecondsState().catch(() => ({enabled:false,phase:'unknown'})),
+      seconds_mode: null,
       raw: map,
       shadow: shadowMap
     });

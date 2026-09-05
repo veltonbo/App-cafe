@@ -320,15 +320,47 @@ async function toggleCycleState(){
 
 function render(){
   const online=data.online===true;
+  const wp=data.weatherProtection;
+  const wpState=wp?.state||{};
+  const wpConfig=wp?.config||{};
+  const weatherBlocked=isWeatherProtected();
+  const raining=Boolean(wp?.weather?.metrics?.rainDetected);
+
+  if($('viveiroRainState'))$('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
+  if($('viveiroRainState'))$('viveiroRainState').className=raining?'bad':'ok';
+  if($('viveiroProtectState'))$('viveiroProtectState').textContent=weatherStatusLabel(wpState.status);
+  if($('viveiroProtectState'))$('viveiroProtectState').className=weatherBlocked?'bad':wpState.status==='clear'||wpState.status==='resumed_inside_window'||wpState.status==='restored_outside_window'?'ok':'';
+  if($('viveiroResumeState')){
+    $('viveiroResumeState').textContent=wpState.status==='paused_rain'
+      ?'Após parar de chover'
+      :wpState.status==='waiting_resume_delay'
+        ?formatResumeTime(wpState.resumeEligibleAt)
+        :wpState.status==='restored_outside_window'
+          ?'Próxima janela'
+          :wpState.status==='resumed_inside_window'
+            ?'Retomado'
+            :wpState.resumeEligibleAt?formatResumeTime(wpState.resumeEligibleAt):'—';
+  }
+  if($('viveiroMonitorState'))$('viveiroMonitorState').textContent=wpConfig.enabled===false?'Desativado':'Ativo • ~5 min';
+  if($('protectFlag')){
+    $('protectFlag').className='protectFlag '+(weatherBlocked?'blocked':'');
+    $('protectFlag').textContent=weatherBlocked
+      ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
+      :(wpConfig.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
+  }
+  if($('viveiroResumeDelay')&&document.activeElement!==$('viveiroResumeDelay'))$('viveiroResumeDelay').value=Number(wpConfig.resumeDelayMinutes??30);
+  if($('viveiroWeatherEnabled')&&document.activeElement!==$('viveiroWeatherEnabled'))$('viveiroWeatherEnabled').checked=wpConfig.enabled!==false;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
   $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
   $('connectionState').className=online?'ok':data.online===false?'bad':'';
   $('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Tuya';
-  $('heroTitle').textContent=data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':'Ciclo nativo do EKAZA';
-  $('heroSub').textContent=data.relay===true?'Saída EKAZA ligada neste momento.':data.relay===false?'Saída EKAZA desligada neste momento.':'O próprio dispositivo mantém 1 min ligado / 2 min desligado.';
-  $('phase').textContent=data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
-  $('phase').className='phase '+(data.relay===true?'':'off');
-  $('phaseState').textContent=data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
+  $('heroTitle').textContent=weatherBlocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':'Ciclo nativo do EKAZA';
+  $('heroSub').textContent=weatherBlocked
+    ?(raining?'A Weather2-2 detectou chuva e a irrigação foi interrompida.':'Aguardando o tempo configurado para retomar a irrigação.')
+    :data.relay===true?'Saída EKAZA ligada neste momento.':data.relay===false?'Saída EKAZA desligada neste momento.':'O próprio dispositivo mantém 1 min ligado / 2 min desligado.';
+  $('phase').textContent=weatherBlocked?(raining?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA'):data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
+  $('phase').className='phase '+(data.relay===true&&!weatherBlocked?'':'off');
+  $('phaseState').textContent=weatherBlocked?weatherStatusLabel(wpState.status):data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
   $('cycleDetected').textContent=data.cycleConfig?'Sim':'Não reportado';
   if(data.cycleConfig){
     $('cycleCard').textContent=data.cycleConfig.onMinutes+' min / '+data.cycleConfig.offMinutes+' min';
@@ -354,11 +386,16 @@ function render(){
   $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
   $('autoState').textContent=data.settings.token?'Automática • 10 s':'Aguardando token';
   $('refresh').disabled=syncing;
+  $('manualOn').disabled=syncing||weatherBlocked;
+  $('editCycle').disabled=weatherBlocked;
+  $('toggleCycle').disabled=weatherBlocked;
   $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
   $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
   $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }
-$('refresh').onclick=()=>syncStatus(true);
+$('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
+$('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);
+$('saveWeatherProtection').onclick=saveWeatherProtectionConfig;
 $('editCycle').onclick=openCycleEditor;
 $('toggleCycle').onclick=toggleCycleState;
 $('manualOn').onclick=()=>manual(true);
@@ -386,8 +423,9 @@ $('saveCycle').onclick=async e=>{
   if(ok)$('cycleDlg').close();
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-render();if(data.settings.apiUrl&&data.settings.token)syncStatus();
+render();if(data.settings.apiUrl&&data.settings.token){syncStatus();syncWeatherProtection(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncStatus(false)},10000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncStatus(false)});
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncWeatherProtection(false)},30000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncWeatherProtection(false)}});
 </script>
 </body></html>

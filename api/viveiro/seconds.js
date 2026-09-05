@@ -1,5 +1,6 @@
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import { configureSecondsMode, disableSecondsMode, getSecondsState } from './_seconds.js';
+import { runViveiroWeatherCheck } from './_weather_logic.js';
 
 export default async function handler(req,res){
   applyCors(req,res);
@@ -12,6 +13,11 @@ export default async function handler(req,res){
     }
     const action=String(req.body?.action||'configure');
     if(action==='configure'){
+      const weather=await runViveiroWeatherCheck();
+      const blocked=['paused_rain','waiting_resume_delay','paused_waiting_weather'].includes(String(weather?.state?.status||''))||Boolean(weather?.state?.rainActive);
+      if(blocked){
+        return res.status(423).json({ok:false,blocked:true,error:'O modo em segundos não pode ser ativado enquanto a proteção por chuva estiver bloqueando o viveiro.',weather:weather.state});
+      }
       const state=await configureSecondsMode({
         onSeconds:req.body?.on_seconds,
         offSeconds:req.body?.off_seconds

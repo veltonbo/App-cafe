@@ -78,6 +78,17 @@ async function deleteAutomation(id){
 async function setRelay(deviceId,on){
   return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{commands:[{code:'switch_1',value:Boolean(on)}]});
 }
+function encodeInching(currentRaw,enabled,seconds){
+  let b=Buffer.alloc(3);
+  try{
+    const current=Buffer.from(String(currentRaw||''),'base64');
+    if(current.length>=3)b=Buffer.from(current.subarray(0,3));
+  }catch{}
+  const channelBits=b[0]&0xfe;
+  b[0]=enabled?(channelBits|0x01):channelBits;
+  b.writeUInt16BE(Math.max(1,Math.min(65535,Math.round(Number(seconds)||30))),1);
+  return b.toString('base64');
+}
 async function getCycle(deviceId){
   const [statusR,shadowR]=await Promise.allSettled([
     tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
@@ -88,7 +99,11 @@ async function getCycle(deviceId){
   const props=Array.isArray(shadowR.value?.properties)?shadowR.value.properties:[];
   const shm=Object.fromEntries(props.map(x=>[x.code,x.value]));
   const raw=typeof shm.cycle_time==='string'?shm.cycle_time:(typeof sm.cycle_time==='string'?sm.cycle_time:'');
-  return{raw,config:decodeCycle(raw)};
+  const inching=typeof shm.switch_inching==='string'?shm.switch_inching:(typeof sm.switch_inching==='string'?sm.switch_inching:'');
+  return{raw,config:decodeCycle(raw),inchingRaw:inching};
+}
+async function writeInching(deviceId,raw){
+  return tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{commands:[{code:'switch_inching',value:raw}]});
 }
 async function writeCycle(deviceId,raw){
   if(!raw)return;
@@ -117,7 +132,7 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
   const cycle=await getCycle(deviceId);
   if(!cycle.config)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
 
-  onSeconds=Math.max(1,Math.min(18000,Math.round(Number(onSeconds)||30)));
+  onSeconds=Math.max(1,Math.min(65535,Math.round(Number(onSeconds)||30)));
   offSeconds=Math.max(1,Math.min(18000,Math.round(Number(offSeconds)||90)));
   const dayList=days(cycle.config.daysMask);
   if(!dayList)throw new Error('Nenhum dia da semana está selecionado no ciclo atual.');
@@ -128,7 +143,6 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
 
   const created=[];
   try{
-    const onToOff=await createAutomation(bodyDeviceTrigger('F2E Viveiro • ON→OFF',deviceId,true,onSeconds,false,start,end,dayList));created.push(onToOff);
     const offToOn=await createAutomation(bodyDeviceTrigger('F2E Viveiro • OFF→ON',deviceId,false,offSeconds,true,start,safeEnd,dayList));created.push(offToOn);
     const startId=await createAutomation(bodyTimer('F2E Viveiro • início',deviceId,start,dayList,true));created.push(startId);
     const endId=await createAutomation(bodyTimer('F2E Viveiro • fim',deviceId,end,dayList,false));created.push(endId);
@@ -139,6 +153,9 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
     if(previous?.automation_ids){
       await Promise.allSettled(Object.values(previous.automation_ids).map(deleteAutomation));
     }
+
+    const inchingRaw=encodeInching(cycle.inchingRaw,true,onSeconds);
+    await writeInching(deviceId,inchingRaw);
 
     if(cycle.config.enabled){
       const disabled=disabledCycleRaw(cycle);
@@ -154,7 +171,10 @@ export async function configureSecondsMode({onSeconds=30,offSeconds=90}={}){
       days_mask:cycle.config.daysMask,
       native_cycle_raw:cycle.raw,
       native_cycle_was_enabled:Boolean(cycle.config.enabled),
-      automation_ids:{on_to_off:onToOff,off_to_on:offToOn,start:startId,end:endId},
+      native_inching_raw:cycle.inchingRaw||'',
+      inching_raw:inchingRaw,
+      auto_off_local:true,
+      automation_ids:{off_to_on:offToOn,start:startId,end:endId},
       automations_enabled:true,
       configured_at:Date.now()
     };
@@ -177,6 +197,11 @@ export async function disableSecondsMode({restoreNative=true}={}){
   const state=await getSecondsState();
   await Promise.allSettled(Object.values(state.automation_ids||{}).map(id=>enableAutomation(id,false)));
   await setRelay(deviceId,false).catch(()=>null);
+  if(state.native_inching_raw){
+    await writeInching(deviceId,state.native_inching_raw).catch(()=>null);
+  }else if(state.inching_raw){
+    await writeInching(deviceId,encodeInching(state.inching_raw,false,state.on_seconds||30)).catch(()=>null);
+  }
   if(restoreNative&&state.native_cycle_raw){
     await writeCycle(deviceId,state.native_cycle_raw).catch(()=>null);
   }

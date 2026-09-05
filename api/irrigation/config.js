@@ -18,6 +18,31 @@ function sanitize(body = {}) {
   if (body.groups && typeof body.groups === 'object') out.groups = body.groups;
   if (body.controllerPrefs && typeof body.controllerPrefs === 'object') out.controllerPrefs = body.controllerPrefs;
 
+  if (body.waterFlow && typeof body.waterFlow === 'object') {
+    const cleaned = {};
+    for (const [controllerId, zones] of Object.entries(body.waterFlow)) {
+      if (!zones || typeof zones !== 'object') continue;
+      cleaned[controllerId] = {};
+      for (const [zone, value] of Object.entries(zones)) {
+        const z = Number(zone);
+        const flow = Number(value);
+        if (Number.isInteger(z) && z >= 1 && z <= 8 && Number.isFinite(flow) && flow >= 0 && flow <= 100000) {
+          cleaned[controllerId][z] = flow;
+        }
+      }
+    }
+    out.waterFlow = cleaned;
+  }
+
+  if (body.alerts && typeof body.alerts === 'object') {
+    out.alerts = {
+      weather: body.alerts.weather !== false,
+      offline: body.alerts.offline !== false,
+      overdue: body.alerts.overdue !== false,
+      irrigation: body.alerts.irrigation !== false
+    };
+  }
+
   out.updated_at = new Date().toISOString();
   return out;
 }

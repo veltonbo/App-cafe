@@ -31,10 +31,13 @@ export default async function handler(req,res){
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){
     const message=error?.message||'Falha no modo rápido em segundos.';
-    return res.status(502).json({
+    const manual=error?.code==='MANUAL_INCHING_REQUIRED'||error?.code==='MANUAL_INCHING_DISABLE_REQUIRED';
+    return res.status(manual?409:502).json({
       ok:false,
       error:message,
-      detail:message
+      detail:message,
+      code:error?.code||null,
+      current_inching:error?.currentInching||null
     });
   }
 }

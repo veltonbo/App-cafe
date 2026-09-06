@@ -95,10 +95,11 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <div class="protectConfig">
   <label>Limite de chuva acumulada (mm)<input id="viveiroRainThreshold" type="number" min="0" max="500" step="0.1" value="5"></label>
   <label>Esperar após parar de chover (min)<input id="viveiroResumeDelay" type="number" min="0" max="1440" step="1" value="30"></label>
+  <label class="toggleLine"><input id="viveiroBlockWhileRaining" type="checkbox"> Parar imediatamente ao detectar chuva</label>
   <label class="toggleLine"><input id="viveiroWeatherEnabled" type="checkbox" checked> Proteção por chuva ativa</label>
 </div>
 <div class="row" style="margin-top:12px"><button id="saveWeatherProtection" class="btn primary">Salvar proteção</button></div>
-<p class="note" style="margin-top:10px">Se a Weather2-2 detectar chuva, o ciclo do EKAZA é pausado e a saída é desligada. Depois da chuva, o sistema aguarda o tempo acima e reativa o ciclo. Se o horário final da irrigação já tiver passado, ele não irriga novamente naquele dia e aguarda a próxima janela programada.</p>
+<p class="note" style="margin-top:10px">O limite em mm define quanto precisa chover para pausar o viveiro. Se “Parar imediatamente” estiver marcado, qualquer chuva detectada pausa antes de atingir o limite. Quando a chuva termina, a contagem regressiva começa automaticamente e o sistema volta a trabalhar se ainda estiver dentro do horário programado.</p>
 </section>
 
 <section class="box">
@@ -261,10 +262,18 @@ function formatResumeTime(ts){
   if(!Number.isFinite(n)||n<=0)return '—';
   const left=n-Date.now();
   if(left>0){
-    const min=Math.max(1,Math.ceil(left/60000));
-    return min+' min • '+new Date(n).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const total=Math.max(0,Math.ceil(left/1000));
+    const min=Math.floor(total/60);
+    const sec=String(total%60).padStart(2,'0');
+    return (min?min+' min ':'')+sec+' s';
   }
   return 'Liberada';
+}
+function updateWeatherCountdownLive(){
+  const s=data.weatherProtection?.state||{};
+  if($('viveiroResumeState')&&s.status==='waiting_resume_delay'){
+    $('viveiroResumeState').textContent=formatResumeTime(s.resumeEligibleAt);
+  }
 }
 async function syncWeatherProtection(showToast=false){
   if(weatherSyncing||!data.settings.apiUrl||!data.settings.token)return;
@@ -290,7 +299,7 @@ async function saveWeatherProtectionConfig(){
       enabled:$('viveiroWeatherEnabled').checked,
       resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay').value)||0))),
       checkMinutes:5,
-      blockWhileRaining:true,
+      blockWhileRaining:$('viveiroBlockWhileRaining').checked,
       rainThresholdMm:Math.max(0,Math.min(500,Number($('viveiroRainThreshold').value)||0))
     };
     const r=await api('/api/viveiro/weather',{
@@ -572,6 +581,7 @@ function render(){
   }
   if($('viveiroRainThreshold')&&document.activeElement!==$('viveiroRainThreshold'))$('viveiroRainThreshold').value=Number(wpConfig.rainThresholdMm??5);
   if($('viveiroResumeDelay')&&document.activeElement!==$('viveiroResumeDelay'))$('viveiroResumeDelay').value=Number(wpConfig.resumeDelayMinutes??30);
+  if($('viveiroBlockWhileRaining')&&document.activeElement!==$('viveiroBlockWhileRaining'))$('viveiroBlockWhileRaining').checked=wpConfig.blockWhileRaining===true;
   if($('viveiroWeatherEnabled')&&document.activeElement!==$('viveiroWeatherEnabled'))$('viveiroWeatherEnabled').checked=wpConfig.enabled!==false;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
   $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
@@ -672,7 +682,7 @@ $('saveCycle').onclick=async e=>{
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 reorganizeLayout();render();if(data.settings.apiUrl&&data.settings.token){syncStatus();syncSecondsMode(false);syncWeatherProtection(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false)}},10000);
-setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive()},1000);
+setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive()},1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncWeatherProtection(false)},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false);syncWeatherProtection(false)}});
 </script>

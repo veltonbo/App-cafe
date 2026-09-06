@@ -82,10 +82,12 @@ async function weather(){
     ]);
     const rainMm=rainAmountMm(w?.metrics||{});
     const threshold=Math.max(0,Number(cfg?.rainThresholdMm??5));
+    const rainingNow=Boolean(w?.metrics?.rainDetected);
     const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
     return{
       usable:Boolean(w?.linked&&w?.metrics),
-      raining:Boolean(w?.metrics?.rainDetected||thresholdReached),
+      raining:Boolean(rainingNow&&(cfg?.blockWhileRaining!==false||thresholdReached)),
+      rainingNow,
       rainMm,
       thresholdReached,
       snapshot:w

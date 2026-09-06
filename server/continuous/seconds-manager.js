@@ -342,6 +342,20 @@ export async function disableSeconds(){
   return state;
 }
 
+export async function suspendSecondsForRestart(){
+  if(!state.enabled)return state;
+  await safeOff();
+  state={
+    ...state,
+    phase:'server_restarting',
+    relay_expected:false,
+    device_relay:false,
+    restart_suspended_at:Date.now()
+  };
+  await persist();
+  return state;
+}
+
 export async function getSecondsManagerState(){
   if(state.enabled){
     const current=await readViveiroDevice().catch(()=>null);

@@ -6,6 +6,7 @@ import { appendHistory, storeGet, storePatch, storeSet } from '../irrigation/_st
 const TZ='America/Porto_Velho';
 const CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const STATE_PATH='IrrigacaoFazenda2E/viveiroWeather/state';
+const SECONDS_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 
 export const DEFAULT_VIVEIRO_WEATHER_CONFIG={
   enabled:true,
@@ -133,7 +134,7 @@ export async function runViveiroWeatherCheck(){
   }
 
   const ekaza=await readEkaza(deviceId);
-  const seconds=(await storeGet('IrrigacaoFazenda2E/viveiroSeconds').catch(()=>null))||{};
+  const seconds=(await storeGet(SECONDS_STATE_PATH).catch(()=>null))||{};
   const position=schedulePosition(seconds.enabled
     ?{daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
     :ekaza.cycleConfig);
@@ -186,12 +187,9 @@ export async function runViveiroWeatherCheck(){
     next.status='paused_rain';
 
     if(seconds.enabled){
-      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
-        rain_last_at:checkedAt,
-        phase:'weather_blocked',
-        relay_expected:false
-      }).catch(()=>null);
-      result.action='server_pulse_paused_rain';
+      // O servidor contínuo é o único responsável pelo estado do modo rápido.
+      // Esta verificação apenas reforça o desligamento físico em caso de chuva.
+      result.action='continuous_seconds_manager_handles_rain';
     }else if(ekaza.cycleConfig?.enabled){
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_paused_rain';
@@ -234,12 +232,7 @@ export async function runViveiroWeatherCheck(){
   if(checkedAt<resumeAt){
     next.status='waiting_resume_delay';
     if(seconds.enabled){
-      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
-        phase:'waiting_after_rain',
-        relay_expected:false,
-        resume_eligible_at:resumeAt
-      }).catch(()=>null);
-      result.action='server_pulse_waiting_delay';
+      result.action='continuous_seconds_manager_handles_resume_delay';
     }else if(ekaza.cycleConfig?.enabled){
       // Alguém reativou manualmente durante a espera: mantém a proteção.
       await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
@@ -255,11 +248,7 @@ export async function runViveiroWeatherCheck(){
 
   if(previous.wasCycleEnabled){
     if(seconds.enabled){
-      await storePatch('IrrigacaoFazenda2E/viveiroSeconds',{
-        phase:position.insideWindow?'queued':'waiting_window',
-        relay_expected:false
-      }).catch(()=>null);
-      result.action=position.insideWindow?'server_pulse_ready':'server_pulse_waiting_window';
+      result.action=position.insideWindow?'continuous_seconds_ready':'continuous_seconds_waiting_window';
     }else if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
       const restored=await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,true);
       result.cycle_config=restored;

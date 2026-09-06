@@ -102,8 +102,8 @@ function sanitizeConfig(input={}){
   };
 }
 function rainAmountMm(metrics={}){
-  const source=[metrics.rain24h,metrics.rainToday,metrics.rainGeneric].find(x=>x&&Number.isFinite(Number(x.value)));
-  return source?Number(source.value):null;
+  const values=[metrics.rain24h,metrics.rainToday,metrics.rainGeneric].map(x=>Number(x?.value)).filter(Number.isFinite);
+  return values.length?Math.max(...values):null;
 }
 
 export async function getViveiroWeatherConfig(){
@@ -177,7 +177,8 @@ export async function runViveiroWeatherCheck(){
 
   const rainMm=rainAmountMm(weather.metrics);
   const raining=Boolean(config.blockWhileRaining&&weather.metrics.rainDetected);
-  const thresholdReached=Number.isFinite(rainMm)&&rainMm>=Number(config.rainThresholdMm||0);
+  const threshold=Number(config.rainThresholdMm||0);
+  const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
   next.lastWeatherError=null;
   next.rainDetected=raining;
   next.rainAmountMm=rainMm;

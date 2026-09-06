@@ -152,7 +152,7 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelay
 
   return{
     enabled:true,
-    engine:'vercel_stateless_chain',
+    engine:'railway_continuous',
     generation:randomUUID(),
     on_seconds:on,
     off_seconds:off,
@@ -203,7 +203,7 @@ export async function stopServerPulse({restoreNative=true,nativeCycleRaw='',disa
 
   return{
     enabled:false,
-    engine:'vercel_stateless_chain',
+    engine:'railway_continuous',
     generation:randomUUID(),
     relay_expected:false,
     phase:'stopped',
@@ -239,8 +239,8 @@ export async function probeServerPulse(state={}){
   };
 }
 
-// Compatibilidade com telas antigas. O modo rápido atual é intencionalmente
-// sem Firebase; o estado é validado diretamente contra o cycle_time do EKAZA.
+// Compatibilidade com telas antigas. O servidor contínuo mantém o estado
+// persistido no Firebase e valida a posse do cycle_time diretamente no EKAZA.
 export async function getSecondsState(){
   return null;
 }

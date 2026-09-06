@@ -17,6 +17,7 @@ let state={enabled:false,phase:'idle'};
 let loopPromise=null;
 let remoteStoreAvailable=null;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
+const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
@@ -68,12 +69,25 @@ async function load(){
   }catch{}
 }
 
+function rainAmountMm(metrics={}){
+  const values=[metrics.rain24h,metrics.rainToday,metrics.rainGeneric].map(x=>Number(x?.value)).filter(Number.isFinite);
+  return values.length?Math.max(...values):null;
+}
+
 async function weather(){
   try{
-    const w=await fetchWeatherSnapshot();
+    const [w,cfg]=await Promise.all([
+      fetchWeatherSnapshot(),
+      storeGet(WEATHER_CONFIG_PATH).catch(()=>null)
+    ]);
+    const rainMm=rainAmountMm(w?.metrics||{});
+    const threshold=Math.max(0,Number(cfg?.rainThresholdMm??5));
+    const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
     return{
       usable:Boolean(w?.linked&&w?.metrics),
-      raining:Boolean(w?.metrics?.rainDetected),
+      raining:Boolean(w?.metrics?.rainDetected||thresholdReached),
+      rainMm,
+      thresholdReached,
       snapshot:w
     };
   }catch(error){

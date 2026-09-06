@@ -6,6 +6,9 @@ import { fileURLToPath } from 'node:url';
 import apiRouter from '../../api/router.js';
 import secondsHandler from './seconds-handler.js';
 import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.js';
+import { listInkbirdDevices } from '../api/inkbird/_device.js';
+import { tuyaRequest } from '../api/_tuya.js';
+import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 const ROOT=process.cwd();
@@ -163,7 +166,42 @@ console.log('Firebase credential diagnostic',{
   ...splitFirebaseDiag
 });
 
+async function runReadOnlyBootDiagnostics(){
+  try{
+    const controllers=await listInkbirdDevices();
+    const rows=[];
+    for(const ctrl of controllers.slice(0,4)){
+      try{
+        const status=await tuyaRequest('GET',`/v1.0/iot-03/devices/${ctrl.id}/status`);
+        const map=Object.fromEntries((Array.isArray(status)?status:[]).map(x=>[x.code,x.value]));
+        rows.push({
+          name:ctrl.name,
+          online:ctrl.online!==false,
+          activeMask:Number(map.zonerun_state||0),
+          pendingMask:Number(map.pendingzone_state||0),
+          operationMode:map.operation_mode??null,
+          irrigationMode:map.irrigation_mode??null,
+          hasSchedule:typeof map.normal_time==='string'||map.normal_time!=null
+        });
+      }catch(error){
+        rows.push({name:ctrl.name,online:ctrl.online!==false,error:error?.message||String(error)});
+      }
+    }
+    const weather=await fetchWeatherSnapshot().catch(()=>null);
+    console.log('INKBIRD read-only diagnostic',{
+      controllerCount:controllers.length,
+      controllers:rows,
+      weatherLinked:Boolean(weather?.linked),
+      weatherOnline:weather?.device?.online??null,
+      rainDetected:Boolean(weather?.metrics?.rainDetected)
+    });
+  }catch(error){
+    console.warn('INKBIRD read-only diagnostic unavailable:',error?.message||error);
+  }
+}
+
 await initSecondsManager();
+await runReadOnlyBootDiagnostics();
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);

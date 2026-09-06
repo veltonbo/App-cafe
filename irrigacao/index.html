@@ -11,7 +11,7 @@
 .top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
 h1{font-size:1.2rem;margin:2px 0}.ey{font-size:.7rem;font-weight:850;letter-spacing:.12em;color:var(--g)}.pill{border:1px solid var(--l);background:#fff;border-radius:99px;padding:10px 14px;font-weight:850;box-shadow:0 8px 22px #17372e0c}
 .wrap{max-width:980px;margin:auto;padding:18px 14px 110px}.hero{background:linear-gradient(135deg,#0a5a49,#13806a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 22px 46px #0b6b5238;border:1px solid #ffffff20}
-.heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.hero p{margin:0;color:#d8f3ea}.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}.liveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.liveDot{width:9px;height:9px;border-radius:50%;background:#aab7b2}.liveDot.on{background:#7ff0c0;box-shadow:0 0 0 4px #7ff0c025}.mutedWhite{color:#d8f3ea;font-size:.8rem}
+.heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.heroCountdown{margin-top:12px;font-size:2rem;font-weight:950;letter-spacing:-.03em}.heroCountdown small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.08em;color:#bcefe0;text-transform:uppercase;margin-bottom:2px}.emergency{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:20;border:0;border-radius:999px;background:#a61f1f;color:#fff;padding:14px 18px;font-weight:950;box-shadow:0 12px 28px #5b090944;cursor:pointer}.emergency:disabled{opacity:.45}.hero p{margin:0;color:#d8f3ea}.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}.liveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.liveDot{width:9px;height:9px;border-radius:50%;background:#aab7b2}.liveDot.on{background:#7ff0c0;box-shadow:0 0 0 4px #7ff0c025}.mutedWhite{color:#d8f3ea;font-size:.8rem}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.stat,.box{background:#fff;border:1px solid var(--l);box-shadow:0 12px 30px #17372e12}.stat{border-radius:18px;padding:15px}.stat small{display:block;color:var(--m)}.stat strong{font-size:1.08rem}
 .box{border-radius:24px;padding:19px;margin-top:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:14px;padding:13px 15px;font-weight:850;cursor:pointer;flex:1;min-width:135px;transition:.18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}.diag{margin-top:10px;border:1px solid var(--l);border-radius:14px;padding:12px;background:#fbfdfc}.diag pre{white-space:pre-wrap;word-break:break-word;font-size:.76rem;max-height:180px;overflow:auto}
 .scheduleGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.dayGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.dayGrid label{display:block}.dayGrid input{display:none}.dayGrid span{display:block;text-align:center;padding:9px 4px;border:1px solid var(--l);border-radius:10px;color:var(--m);font-weight:800;cursor:pointer}.dayGrid input:checked+span{background:var(--gs);color:var(--g);border-color:#92d2bf}.toggleLine{display:flex;align-items:center;gap:10px;font-weight:800}.toggleLine input{width:auto}.timeline{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.step{border-radius:14px;padding:14px;border:1px solid var(--l);background:#fbfdfc}.step b{display:block}.step small{color:var(--m)}.onStep{background:#edf9f5;border-color:#98d8c5}.offStep{background:#f6f8f7}
@@ -24,7 +24,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <body>
 <header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Painel de Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
 <main class="wrap">
-<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • MONITORAMENTO REMOTO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
+<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • MONITORAMENTO REMOTO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
 <section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Tuya</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
 <section class="box">
@@ -133,7 +133,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <label>Token de controle<input id="controlToken" type="password" placeholder="token privado"></label>
 <p class="note">O token é salvo somente neste aparelho. Use um valor longo e aleatório no servidor.</p>
 <div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div></form></dialog>
-<div id="toast" class="toast"></div>
+<button id="emergencyStop" class="emergency">PARAR IRRIGAÇÃO</button><div id="toast" class="toast"></div>
 
 <script>
 const KEY='viveiroEkazaRealV1';
@@ -277,8 +277,13 @@ function updateSecondsLive(){
   if(sec.phase==='on')target=sec.expected_off_at;
   else if(sec.phase==='off')target=sec.expected_next_on_at;
   else if(sec.phase==='waiting_after_rain'&&sec.rain_last_at)target=Number(sec.rain_last_at)+Number(sec.resume_delay_minutes||0)*60000;
-  if($('secondsNext'))$('secondsNext').textContent=secondsActive()?secondsRemaining(target):'—';
+  const remaining=secondsActive()?secondsRemaining(target):'—';
+  if($('secondsNext'))$('secondsNext').textContent=remaining;
   if($('secondsPulses'))$('secondsPulses').textContent=String(Number(sec.pulse_count||0));
+  if($('heroCountdown')){
+    const label=sec.phase==='on'?'Desliga em':sec.phase==='off'?'Liga novamente em':sec.phase==='waiting_after_rain'?'Retoma em':'Próxima mudança';
+    $('heroCountdown').innerHTML='<small>'+label+'</small><span>'+remaining+'</span>';
+  }
 }
 async function syncSecondsMode(showToast=false){
   try{
@@ -356,6 +361,24 @@ async function disableSecondsMode(){
   }
 }
 
+async function emergencyStop(){
+  if(!confirm('PARAR A IRRIGAÇÃO AGORA?\n\nO modo rápido será encerrado e a saída do viveiro será desligada.'))return;
+  const btn=$('emergencyStop');
+  try{
+    btn.disabled=true;
+    if(secondsActive()){
+      const r=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'disable'})});
+      if(r?.state)data.secondsMode=r.state;
+    }
+    await api('/api/switch',{method:'POST',body:JSON.stringify({on:false})}).catch(()=>{});
+    data.relay=false;
+    log('PARADA DE EMERGÊNCIA acionada');
+    save();render();toast('Irrigação parada');
+    setTimeout(()=>{syncStatus(false);syncSecondsMode(false)},800);
+  }catch(e){
+    toast('Falha ao parar: '+String(e.message||e));
+  }finally{btn.disabled=false}
+}
 async function manual(on){
   if(secondsActive()){
     toast('Desative o modo em segundos para usar o controle manual');
@@ -542,6 +565,7 @@ function render(){
   $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
   $('autoState').textContent=data.settings.token?'Automática • 10 s':'Aguardando token';
   $('refresh').disabled=syncing;
+  if($('emergencyStop'))$('emergencyStop').disabled=syncing;
   $('manualOn').disabled=syncing||weatherBlocked||secActive;
   $('manualOff').disabled=syncing||secActive;
   $('editCycle').disabled=weatherBlocked||secActive;
@@ -562,6 +586,7 @@ $('disableSeconds').onclick=disableSecondsMode;
 $('editCycle').onclick=openCycleEditor;
 $('toggleCycle').onclick=toggleCycleState;
 $('manualOn').onclick=()=>manual(true);
+$('emergencyStop').onclick=emergencyStop;
 $('manualOff').onclick=()=>manual(false);
 $('clear').onclick=()=>{data.history=[];save();render()};
 $('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};

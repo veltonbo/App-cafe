@@ -18,6 +18,7 @@ let loopPromise=null;
 let remoteStoreAvailable=null;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
+// Railway auto-deploy marker
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 

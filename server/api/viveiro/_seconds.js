@@ -130,7 +130,7 @@ export async function pulseStillActive(state={}){
   return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
 }
 
-export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelayMinutes=30}={}){
+export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelayMinutes=30,startMinutes=null,endMinutes=null,daysMask=null}={}){
   const current=await readViveiroDevice();
   const cycle=current.cycleConfig;
   if(!cycle)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
@@ -141,6 +141,12 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelay
 
   const nativeCycleRaw=current.cycleRaw;
   const disabledRaw=disabledCycle(current.cycleRaw,cycle);
+
+  const start=Number.isFinite(Number(startMinutes))?Math.round(Number(startMinutes)):Number(cycle.startMinutes);
+  const end=Number.isFinite(Number(endMinutes))?Math.round(Number(endMinutes)):Number(cycle.endMinutes);
+  const mask=Number.isFinite(Number(daysMask))?Math.round(Number(daysMask)):Number(cycle.daysMask);
+  if(start<0||start>1439||end<1||end>1440||end<=start)throw new Error('Confira o horário inicial e final do ciclo rápido.');
+  if(mask<1||mask>127)throw new Error('Selecione pelo menos um dia para o ciclo rápido.');
 
   if(cycle.enabled){
     await writeViveiroCycle(disabledRaw);
@@ -157,9 +163,9 @@ export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelay
     on_seconds:on,
     off_seconds:off,
     resume_delay_minutes:Math.max(0,Math.min(1440,Math.round(Number(resumeDelayMinutes)||0))),
-    start_minutes:Number(cycle.startMinutes),
-    end_minutes:Number(cycle.endMinutes),
-    days_mask:Number(cycle.daysMask),
+    start_minutes:start,
+    end_minutes:end,
+    days_mask:mask,
     native_cycle_raw:nativeCycleRaw,
     native_cycle_was_enabled:Boolean(cycle.enabled),
     disabled_cycle_raw:disabledRaw,
@@ -189,7 +195,7 @@ export async function rollbackPreparedPulse(state={},detail=''){
   };
 }
 
-export async function stopServerPulse({restoreNative=true,nativeCycleRaw='',disabledCycleRaw=''}={}){
+export async function stopServerPulse({restoreNative=false,nativeCycleRaw='',disabledCycleRaw=''}={}){
   await setViveiroRelay(false).catch(()=>null);
 
   const current=await readViveiroDevice().catch(()=>null);

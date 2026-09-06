@@ -12,7 +12,8 @@ export const DEFAULT_VIVEIRO_WEATHER_CONFIG={
   enabled:true,
   resumeDelayMinutes:30,
   checkMinutes:5,
-  blockWhileRaining:true
+  blockWhileRaining:true,
+  rainThresholdMm:5
 };
 
 function normalizeStatus(result){
@@ -96,9 +97,15 @@ function sanitizeConfig(input={}){
     enabled:input.enabled!==false,
     resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number(input.resumeDelayMinutes??30)))),
     checkMinutes:Math.max(1,Math.min(60,Math.round(Number(input.checkMinutes??5)))),
-    blockWhileRaining:input.blockWhileRaining!==false
+    blockWhileRaining:input.blockWhileRaining!==false,
+    rainThresholdMm:Math.max(0,Math.min(500,Number(input.rainThresholdMm??5)))
   };
 }
+function rainAmountMm(metrics={}){
+  const source=[metrics.rain24h,metrics.rainToday,metrics.rainGeneric].find(x=>x&&Number.isFinite(Number(x.value)));
+  return source?Number(source.value):null;
+}
+
 export async function getViveiroWeatherConfig(){
   const stored=await storeGet(CONFIG_PATH).catch(()=>null);
   return sanitizeConfig({...DEFAULT_VIVEIRO_WEATHER_CONFIG,...(stored||{})});
@@ -168,11 +175,15 @@ export async function runViveiroWeatherCheck(){
     return{...result,state:next};
   }
 
+  const rainMm=rainAmountMm(weather.metrics);
   const raining=Boolean(config.blockWhileRaining&&weather.metrics.rainDetected);
+  const thresholdReached=Number.isFinite(rainMm)&&rainMm>=Number(config.rainThresholdMm||0);
   next.lastWeatherError=null;
   next.rainDetected=raining;
+  next.rainAmountMm=rainMm;
+  next.rainThresholdReached=thresholdReached;
 
-  if(raining){
+  if(raining||thresholdReached){
     next.lastRainAt=checkedAt;
     if(!previous.rainActive)next.rainStartedAt=checkedAt;
     next.rainActive=true;

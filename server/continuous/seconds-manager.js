@@ -185,6 +185,20 @@ async function run(){
       continue;
     }
 
+    // Migração da lógica antiga: versões anteriores podiam atualizar rain_last_at
+    // pelo acumulado diário mesmo sem chuva atual, reiniciando indevidamente os 30 min.
+    // Só limpa uma vez estados antigos; novos eventos de chuva continuam usando o atraso normal.
+    if(state.paused_by_weather&&!state.legacy_weather_hold_cleared_at&&state.rain_last_at){
+      state={
+        ...state,
+        rain_last_at:0,
+        paused_by_weather:false,
+        legacy_weather_hold_cleared_at:Date.now(),
+        phase:'weather_clear'
+      };
+      await persist();
+    }
+
     const holdMs=Math.max(0,Number(state.resume_delay_minutes||0))*60000;
     const rainLast=Number(state.rain_last_at||0);
     if(rainLast&&Date.now()<rainLast+holdMs){

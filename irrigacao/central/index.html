@@ -104,6 +104,7 @@ let state=JSON.parse(localStorage.getItem(KEY)||'null')||{
   overview:null,lastUpdate:null
 };
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
+if(window.location.hostname.endsWith('.up.railway.app'))state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.token)state.settings.token=inkbird?.settings?.token||viveiro?.settings?.token||'';
 const $=id=>document.getElementById(id);

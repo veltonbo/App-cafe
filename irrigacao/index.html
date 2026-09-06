@@ -32,12 +32,71 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 .advancedBox .head h2{color:#52665f}
 
 @media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.secondsLiveGrid{grid-template-columns:1fr 1fr}.secondsLiveGrid .secondsMetric:last-child{grid-column:1/-1}.grid .stat:last-child{grid-column:auto}.heroTop{flex-direction:column}.timeline{grid-template-columns:1fr}.scheduleGrid{grid-template-columns:1fr}.dayGrid{grid-template-columns:repeat(4,1fr)}.row{flex-direction:column}.btn{width:100%}.protectGrid{grid-template-columns:1fr 1fr}.protectConfig{grid-template-columns:1fr}.secondsHero{grid-template-columns:1fr 1fr}}
+
+/* Fazenda 2E • UI profissional v3 */
+:root{
+  --bg:#f4f7f5;--card:#ffffff;--ink:#18352d;--muted:#71817b;
+  --line:#e2ebe7;--brand:#0b6b52;--brand2:#0f8064;--brandSoft:#eaf6f1;
+  --warn:#a56512;--warnSoft:#fff6e7;--danger:#b93b34;--dangerSoft:#fff0ef;
+  --shadow:0 12px 32px rgba(21,55,46,.08);--shadowStrong:0 20px 48px rgba(11,107,82,.18)
+}
+body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);color:var(--ink)}
+.top{background:rgba(248,251,249,.9);border-bottom:1px solid rgba(219,231,226,.9);box-shadow:0 4px 20px rgba(23,55,46,.04)}
+.top h1{font-size:1.08rem;letter-spacing:-.01em}.top .ey{font-size:.64rem}
+.wrap{max-width:920px;padding-top:14px}
+.hero{border-radius:26px;padding:22px;background:linear-gradient(135deg,#075d49 0%,#0d765d 55%,#139275 100%);box-shadow:var(--shadowStrong)}
+.hero h2{font-size:1.45rem;letter-spacing:-.025em}.hero p{font-size:.9rem;max-width:620px}
+.grid{margin-top:10px}.stat{border-radius:16px;padding:13px 14px;box-shadow:none}.stat small{font-size:.74rem}.stat strong{font-size:1rem}
+.box{border-radius:22px;padding:18px;border-color:var(--line);box-shadow:var(--shadow)}
+.box .head h2{letter-spacing:-.015em}
+.secondsBox{background:#fff;border:1px solid #cfe4dc}
+.sectionKicker{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);font-weight:900;margin-bottom:4px}
+.configGroup{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fbfdfc}
+.configGroupTitle{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.configGroupTitle b{font-size:.92rem}.configGroupTitle span{font-size:.75rem;color:var(--muted)}
+.secondsHero{gap:9px;margin:0}
+.secondsField{border-radius:13px;padding:11px;border-color:var(--line);background:#fff}
+.secondsField small{font-size:.72rem}.secondsField input{border:0;background:transparent;padding:4px 0;font-size:1.12rem;color:var(--ink)}
+.secondsField input:focus{outline:none}
+.secondsField:focus-within{border-color:#8bcbb6;box-shadow:0 0 0 3px #0b6b5212}
+.presetRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.presetRow .btn{flex:0 0 auto;min-width:0;padding:9px 12px;border-radius:999px;font-size:.78rem}
+.secondsStatus{border:1px solid var(--line);background:#f7faf8;border-radius:15px}
+.secondsStatus.on{border-color:#b9ddcf}
+.saveState{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:800;color:var(--muted);margin-top:10px}
+.saveDot{width:8px;height:8px;border-radius:50%;background:#9aa9a3}.saveState.dirty{color:var(--warn)}.saveState.dirty .saveDot{background:#e19a28}.saveState.saved{color:var(--brand)}.saveState.saved .saveDot{background:#31a77f}
+.actionBar{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;margin-top:14px}
+.actionBar .btn{min-width:0}
+.windowCard{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 12px;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.windowCard small{display:block;color:var(--muted);font-size:.72rem}.windowCard strong{font-size:.9rem}
+.windowBadge{padding:7px 10px;border-radius:999px;font-size:.75rem;font-weight:900;background:var(--brandSoft);color:var(--brand);white-space:nowrap}
+.windowBadge.out{background:var(--warnSoft);color:var(--warn)}
+.secondsLiveGrid{gap:8px}.secondsMetric{border-radius:13px;padding:11px;box-shadow:none}
+.assistBox{background:#f8faf9;border-color:var(--line);color:var(--muted)}
+.weatherProtect{background:#fff;border-color:var(--line)}
+.protectFlag{border-radius:14px}
+.protectGrid{grid-template-columns:repeat(3,1fr)}
+.protectCard{border-radius:13px;box-shadow:none}
+.weatherAdvanced{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;padding:0 12px}
+.weatherAdvanced summary{cursor:pointer;padding:12px 0;font-weight:850;color:var(--ink)}
+.weatherAdvanced[open] summary{border-bottom:1px solid var(--line)}
+.weatherAdvanced .protectConfig{padding:12px 0;margin:0}
+.advancedBox{opacity:.96}
+#secondsSaveHint{margin-bottom:0}
+@media(max-width:760px){
+  .wrap{padding-left:10px;padding-right:10px}.hero{border-radius:22px;padding:19px}.box{padding:15px;border-radius:19px}
+  .grid{gap:7px}.stat{padding:11px}.stat strong{font-size:.9rem}
+  .secondsHero{grid-template-columns:1fr 1fr}.actionBar{grid-template-columns:1fr}.actionBar .btn{width:100%}
+  .protectGrid{grid-template-columns:1fr 1fr}.protectGrid .protectCard:last-child{grid-column:1/-1}
+  .windowCard{align-items:flex-start}.windowBadge{margin-top:2px}
+}
+
 </style>
 </head>
 <body>
-<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Painel de Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
+<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
 <main class="wrap">
-<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">EKAZA • MONITORAMENTO REMOTO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
+<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">VIVEIRO • CONTROLE AUTOMÁTICO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
 <section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Tuya</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
 <section class="box">
@@ -52,41 +111,62 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 </section>
 
 <section class="box secondsBox">
-<div class="head"><h2>Ciclo rápido do viveiro</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
-<p class="note" style="margin-top:0">Configure aqui todo o funcionamento do viveiro. Este é o <b>único ciclo automático</b>: horário de início, horário final, tempo ligado e tempo desligado.</p>
-<div class="secondsHero">
-  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
-  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="90"><small>segundos</small></label>
-  <label class="secondsField"><small>Início do ciclo</small><input id="secondsStart" type="time" value="06:00"></label>
-  <label class="secondsField"><small>Fim do ciclo</small><input id="secondsEnd" type="time" value="18:00"></label>
+<div class="head">
+  <div><span class="sectionKicker">Automação principal</span><h2>Ciclo rápido</h2></div>
+  <span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span>
 </div>
-<div class="row" style="margin-top:8px">
-  <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15s / 45s</button>
-  <button type="button" class="btn soft secondsPreset" data-on="30" data-off="90">30s / 90s</button>
-  <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60s / 120s</button>
+<p class="note" style="margin-top:0">Defina uma vez o horário e os tempos. O servidor controla o viveiro automaticamente dentro dessa janela.</p>
+
+<div class="configGroup">
+  <div class="configGroupTitle"><b>Tempos do ciclo</b><span>em segundos</span></div>
+  <div class="secondsHero">
+    <label class="secondsField"><small>Ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
+    <label class="secondsField"><small>Desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="90"><small>segundos</small></label>
+  </div>
+  <div class="presetRow">
+    <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15 / 45</button>
+    <button type="button" class="btn soft secondsPreset" data-on="30" data-off="90">30 / 90</button>
+    <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60 / 120</button>
+  </div>
 </div>
-<p class="note" style="margin:8px 0 0">Você pode digitar qualquer valor entre <b>1–300 s ligado</b> e <b>1–900 s desligado</b>.</p>
+
+<div class="configGroup">
+  <div class="configGroupTitle"><b>Horário de funcionamento</b><span>todos os dias</span></div>
+  <div class="secondsHero">
+    <label class="secondsField"><small>Início</small><input id="secondsStart" type="time" value="06:00"></label>
+    <label class="secondsField"><small>Final</small><input id="secondsEnd" type="time" value="18:00"></label>
+  </div>
+  <div class="windowCard">
+    <div><small>Janela salva</small><strong id="windowText">06:00 às 18:00</strong></div>
+    <span id="windowBadge" class="windowBadge">Dentro do horário</span>
+  </div>
+</div>
+
+<div id="secondsSaveState" class="saveState saved"><span class="saveDot"></span><span>Configuração salva</span></div>
 <div id="secondsStatus" class="secondsStatus"><span>Configuração salva</span><strong>30 s / 90 s • 06:00–18:00</strong></div>
+
 <div class="secondsLiveGrid">
   <div class="secondsMetric"><small>Fase atual</small><strong id="secondsPhase">Desativado</strong></div>
   <div class="secondsMetric"><small>Próxima mudança</small><strong id="secondsNext" class="big">—</strong></div>
   <div class="secondsMetric"><small>Pulsos concluídos</small><strong id="secondsPulses">0</strong></div>
 </div>
-<div class="assistBox">
-  <b>Como funciona</b>
-  <ol>
-    <li>O servidor liga a saída do viveiro.</li>
-    <li>Após <b>30 segundos</b>, manda desligar e confirma o desligamento.</li>
-    <li>Espera <b>90 segundos</b> e inicia o próximo pulso.</li>
-    <li>Ao chegar ao horário final, para. Se chover, a Weather2-2 interrompe os pulsos.</li>
-  </ol>
-</div>
-<div class="row" style="margin-top:12px">
-  <button id="saveSecondsConfig" class="btn soft">Salvar configuração</button>
+
+<div class="actionBar">
+  <button id="saveSecondsConfig" class="btn soft">Salvar alterações</button>
   <button id="enableSeconds" class="btn primary">Iniciar ciclo rápido</button>
   <button id="disableSeconds" class="btn danger">Parar ciclo</button>
 </div>
-<p id="secondsSaveHint" class="note" style="margin-top:10px">Defina os valores acima e toque em <b>Salvar configuração</b>. Depois, use <b>Iniciar ciclo rápido</b>.</p>
+<p id="secondsSaveHint" class="note" style="margin-top:10px">Salve a configuração antes de iniciar. Durante o funcionamento, os campos ficam protegidos contra alterações acidentais.</p>
+
+<details class="assistBox">
+  <summary><b>Como funciona</b></summary>
+  <ol>
+    <li>O ciclo só funciona entre o horário de início e o horário final.</li>
+    <li>Dentro da janela, alterna automaticamente entre ligado e desligado.</li>
+    <li>Se chover, a proteção climática pausa o viveiro.</li>
+    <li>Ao chegar no horário final, o ciclo é encerrado.</li>
+  </ol>
+</details>
 </section>
 
 <section class="box weatherProtect">
@@ -96,16 +176,19 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
   <div class="protectCard"><small>Chuva</small><strong id="viveiroRainState">Aguardando</strong></div>
   <div class="protectCard"><small>Proteção</small><strong id="viveiroProtectState">Aguardando</strong></div>
   <div class="protectCard"><small>Retomada</small><strong id="viveiroResumeState">—</strong></div>
-  <div class="protectCard"><small>Monitor automático</small><strong id="viveiroMonitorState">~5 min</strong></div>
 </div>
+<div id="viveiroMonitorState" style="display:none">~5 min</div>
+<details class="weatherAdvanced">
+<summary>Ajustes da proteção por chuva</summary>
 <div class="protectConfig">
   <label>Limite de chuva acumulada (mm)<input id="viveiroRainThreshold" type="number" min="0" max="500" step="0.1" value="5"></label>
   <label>Esperar após parar de chover (min)<input id="viveiroResumeDelay" type="number" min="0" max="1440" step="1" value="30"></label>
   <label class="toggleLine"><input id="viveiroBlockWhileRaining" type="checkbox"> Parar imediatamente ao detectar chuva</label>
   <label class="toggleLine"><input id="viveiroWeatherEnabled" type="checkbox" checked> Proteção por chuva ativa</label>
 </div>
-<div class="row" style="margin-top:12px"><button id="saveWeatherProtection" class="btn primary">Salvar proteção</button></div>
-<p class="note" style="margin-top:10px">O limite em mm define quanto precisa chover para pausar o viveiro. Se “Parar imediatamente” estiver marcado, qualquer chuva detectada pausa antes de atingir o limite. Quando a chuva termina, a contagem regressiva começa automaticamente e o sistema volta a trabalhar se ainda estiver dentro do horário programado.</p>
+<div class="row" style="padding:0 0 12px"><button id="saveWeatherProtection" class="btn primary">Salvar proteção</button></div>
+</details>
+<p class="note" style="margin-top:10px">A Weather2-2 pausa o viveiro quando necessário e permite a retomada automática após a chuva, respeitando o horário do ciclo.</p>
 </section>
 
 <section class="box">
@@ -190,7 +273,7 @@ function reorganizeLayout(){
     if(title)byTitle.set(title,s);
   });
   const order=[
-    'Modo rápido • segundos',
+    'Ciclo rápido',
     'Proteção automática por chuva',
     'Controle manual',
     'Programação da irrigação',
@@ -366,13 +449,50 @@ async function syncSecondsMode(showToast=false){
       if(typeof r.state.device_relay==='boolean')data.relay=r.state.device_relay;
       save();render();
       if(wasActive&&!data.secondsMode.enabled){
-        log('Modo rápido encerrado e programação nativa restaurada');
+        log('Ciclo rápido encerrado');
         save();render();
       }
       if(showToast)toast('Modo rápido: '+secondsPhaseLabel(r.state.phase));
     }
   }catch(e){
     if(showToast)toast('Modo rápido: '+String(e.message||'falha ao consultar'));
+  }
+}
+function fastCycleNowMinutes(){
+  const parts=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Porto_Velho',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
+    .formatToParts(new Date());
+  const h=Number(parts.find(p=>p.type==='hour')?.value||0);
+  const m=Number(parts.find(p=>p.type==='minute')?.value||0);
+  return h*60+m;
+}
+function currentDraftFromInputs(){
+  return{
+    on_seconds:Math.round(Number($('secondsOn')?.value)||0),
+    off_seconds:Math.round(Number($('secondsOff')?.value)||0),
+    start_minutes:clockToMinutes($('secondsStart')?.value),
+    end_minutes:clockToMinutes($('secondsEnd')?.value)
+  };
+}
+function updateFastCycleDraftUI(){
+  const saved=data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080};
+  const cur=currentDraftFromInputs();
+  const dirty=['on_seconds','off_seconds','start_minutes','end_minutes'].some(k=>Number(cur[k])!==Number(saved[k]));
+  const state=$('secondsSaveState');
+  if(state){
+    state.className='saveState '+(dirty?'dirty':'saved');
+    state.innerHTML='<span class="saveDot"></span><span>'+(dirty?'Alterações ainda não salvas':'Configuração salva')+'</span>';
+  }
+  if($('saveSecondsConfig')){
+    $('saveSecondsConfig').textContent=dirty?'Salvar alterações':'Configuração salva';
+    $('saveSecondsConfig').disabled=secondsActive()||!dirty;
+  }
+  const start=Number(saved.start_minutes??360),end=Number(saved.end_minutes??1080);
+  if($('windowText'))$('windowText').textContent=minutesToClock(start)+' às '+minutesToClock(end);
+  const now=fastCycleNowMinutes();
+  const inside=now>=start&&now<end;
+  if($('windowBadge')){
+    $('windowBadge').textContent=inside?'Dentro do horário':'Fora do horário';
+    $('windowBadge').className='windowBadge '+(inside?'':'out');
   }
 }
 function readSecondsDraft(){
@@ -429,8 +549,8 @@ async function enableSecondsMode(){
       })
     });
     data.secondsMode=r.state;
-    log('Modo rápido pelo servidor ativado: '+on+' s ligado / '+off+' s desligado');
-    save();render();toast('Modo rápido ativado');
+    log('Ciclo rápido ativado: '+on+' s ligado / '+off+' s desligado');
+    save();render();toast('Ciclo rápido ativado');
     setTimeout(()=>{syncStatus(false);syncSecondsMode(false)},1000);
   }catch(e){
     toast('Não foi possível ativar: '+String(e.message||'Falha'));
@@ -448,8 +568,8 @@ async function disableSecondsMode(){
       body:JSON.stringify({action:'disable'})
     });
     data.secondsMode=r.state;
-    log('Modo rápido pelo servidor desativado');
-    save();render();toast('Modo rápido parado');
+    log('Ciclo rápido desativado');
+    save();render();toast('Ciclo rápido parado');
     setTimeout(()=>syncStatus(false),900);
   }catch(e){
     toast('Falha: '+e.message);
@@ -599,8 +719,9 @@ function render(){
   if($('enableSeconds')){$('enableSeconds').textContent=secActive?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';$('enableSeconds').disabled=secActive}
   if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
   if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=secActive
-    ?'Para alterar horário ou tempos, toque primeiro em <b>Parar ciclo</b>.'
-    :'Defina os valores acima, toque em <b>Salvar configuração</b> e depois em <b>Iniciar ciclo rápido</b>.';
+    ?'O ciclo está em funcionamento. Para alterar os valores, pare o ciclo primeiro.'
+    :'A configuração fica salva neste aparelho. Depois de salvar, toque em <b>Iniciar ciclo rápido</b>.';
+  updateFastCycleDraftUI();
 
   if($('viveiroRainState'))$('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
   if($('viveiroRainState'))$('viveiroRainState').className=raining?'bad':'ok';
@@ -689,11 +810,15 @@ function render(){
 $('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
 $('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);
 $('saveWeatherProtection').onclick=saveWeatherProtectionConfig;
+['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{
+  $(id)?.addEventListener('input',updateFastCycleDraftUI);
+  $(id)?.addEventListener('change',updateFastCycleDraftUI);
+});
 document.querySelectorAll('.secondsPreset').forEach(btn=>btn.onclick=()=>{
   if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
   $('secondsOn').value=btn.dataset.on;
   $('secondsOff').value=btn.dataset.off;
-  render();
+  updateFastCycleDraftUI();
 });
 $('saveSecondsConfig').onclick=()=>saveSecondsDraft(true);
 $('enableSeconds').onclick=enableSecondsMode;

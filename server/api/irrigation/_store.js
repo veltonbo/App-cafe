@@ -103,7 +103,7 @@ async function request(path, options = {}) {
     const detail=String(body?.error||('Firebase HTTP '+r.status));
     if(/permission denied/i.test(detail)&&!firebaseCredentials()){
       throw new Error(
-        'Firebase recusou a gravação do servidor. Configure a conta de serviço do Firebase na Vercel.'
+        'Firebase recusou a gravação do servidor. Configure a conta de serviço do Firebase no Railway.'
       );
     }
     throw new Error(detail);

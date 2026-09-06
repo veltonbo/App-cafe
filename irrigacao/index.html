@@ -290,7 +290,8 @@ async function saveWeatherProtectionConfig(){
       enabled:$('viveiroWeatherEnabled').checked,
       resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay').value)||0))),
       checkMinutes:5,
-      blockWhileRaining:true
+      blockWhileRaining:true,
+      rainThresholdMm:Math.max(0,Math.min(500,Number($('viveiroRainThreshold').value)||0))
     };
     const r=await api('/api/viveiro/weather',{
       method:'POST',
@@ -569,6 +570,7 @@ function render(){
       ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
       :(wpConfig.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
   }
+  if($('viveiroRainThreshold')&&document.activeElement!==$('viveiroRainThreshold'))$('viveiroRainThreshold').value=Number(wpConfig.rainThresholdMm??5);
   if($('viveiroResumeDelay')&&document.activeElement!==$('viveiroResumeDelay'))$('viveiroResumeDelay').value=Number(wpConfig.resumeDelayMinutes??30);
   if($('viveiroWeatherEnabled')&&document.activeElement!==$('viveiroWeatherEnabled'))$('viveiroWeatherEnabled').checked=wpConfig.enabled!==false;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';

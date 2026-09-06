@@ -53,10 +53,12 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 
 <section class="box secondsBox">
 <div class="head"><h2>Modo rápido • segundos</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
-<p class="note" style="margin-top:0">Os pulsos são comandados pelo <b>servidor da Fazenda 2E</b>. Não é necessário configurar segundos no EKAZA.</p>
+<p class="note" style="margin-top:0">Este é o <b>único ciclo automático do viveiro</b>. Defina o tempo ligado, desligado, horário de início e horário final. O servidor da Fazenda 2E controla os pulsos e mantém o ciclo nativo do EKAZA desativado.</p>
 <div class="secondsHero">
   <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
   <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="90"><small>segundos</small></label>
+  <label class="secondsField"><small>Início do ciclo</small><input id="secondsStart" type="time" value="06:00"></label>
+  <label class="secondsField"><small>Fim do ciclo</small><input id="secondsEnd" type="time" value="18:00"></label>
 </div>
 <div class="row" style="margin-top:8px">
   <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15s / 45s</button>
@@ -196,6 +198,10 @@ function reorganizeLayout(){
   order.forEach(title=>{
     const s=byTitle.get(title);
     if(s)main.appendChild(s);
+  });
+  ['Programação da irrigação','Controle manual','Ciclo já configurado','Diagnóstico do ciclo'].forEach(title=>{
+    const s=byTitle.get(title);
+    if(s)s.style.display='none';
   });
   ['Diagnóstico do ciclo','Histórico do app','Conexão segura • Fazenda 2E'].forEach(title=>{
     const s=byTitle.get(title);
@@ -372,8 +378,11 @@ async function enableSecondsMode(){
   const off=Math.max(1,Math.min(900,Math.round(Number($('secondsOff').value)||90)));
   if(on+off>1200)return toast('O ciclo total deve ficar em até 1200 segundos.');
   const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
+  const start=clockToMinutes($('secondsStart').value);
+  const end=clockToMinutes($('secondsEnd').value);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return toast('Confira o horário inicial e final do ciclo rápido');
 
-  if(!confirm('Ativar o modo rápido pelo servidor?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos\nEspera após chuva: '+resumeDelay+' min'))return;
+  if(!confirm('Ativar o ciclo rápido?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos\nHorário: '+$('secondsStart').value+' às '+$('secondsEnd').value+'\nEspera após chuva: '+resumeDelay+' min'))return;
 
   try{
     $('enableSeconds').disabled=true;
@@ -383,6 +392,9 @@ async function enableSecondsMode(){
         action:'configure',
         on_seconds:on,
         off_seconds:off,
+        start_minutes:start,
+        end_minutes:end,
+        days_mask:127,
         resume_delay_minutes:resumeDelay
       })
     });
@@ -552,8 +564,10 @@ function render(){
   const secActive=Boolean(sec.enabled);
   if($('secondsOn')&&document.activeElement!==$('secondsOn'))$('secondsOn').value=Number(sec.on_seconds||30);
   if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(sec.off_seconds||90);
+  if($('secondsStart')&&document.activeElement!==$('secondsStart')&&Number.isFinite(Number(sec.start_minutes)))$('secondsStart').value=minutesToClock(sec.start_minutes);
+  if($('secondsEnd')&&document.activeElement!==$('secondsEnd')&&Number.isFinite(Number(sec.end_minutes)))$('secondsEnd').value=minutesToClock(sec.end_minutes);
   if($('secondsBadge')){$('secondsBadge').textContent=secActive?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';$('secondsBadge').className='phase '+(secActive&&!sec.paused_by_weather?'':'off')}
-  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Servidor • '+secondsPhaseLabel(sec.phase)):'Configuração')+'</span><strong>'+Number(sec.on_seconds||30)+' s ligado / '+Number(sec.off_seconds||90)+' s desligado</strong>'} updateSecondsLive();
+  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Servidor • '+secondsPhaseLabel(sec.phase)):'Configuração')+'</span><strong>'+Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||90)+' s • '+minutesToClock(sec.start_minutes)+'–'+minutesToClock(sec.end_minutes)+'</strong>'} updateSecondsLive();
   if($('enableSeconds')){$('enableSeconds').textContent=secActive?'Modo rápido ativo':'Ativar '+Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||90)+' s';$('enableSeconds').disabled=secActive}
   if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
 

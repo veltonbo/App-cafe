@@ -15,7 +15,7 @@ function base64Url(value) {
 }
 
 function firebaseCredentials() {
-  const raw=(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||'').trim();
+  const raw=(process.env.FIREBASE_CREDENTIALS_JSON||process.env.FIREBASE_SERVICE_ACCOUNT_JSON||'').trim();
   if(raw){
     try{
       const parsed=JSON.parse(raw);

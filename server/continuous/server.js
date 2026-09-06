@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import apiRouter from '../../api/router.js';
 import secondsHandler from './seconds-handler.js';
-import { disableSeconds, initSecondsManager } from './seconds-manager.js';
+import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 const ROOT=process.cwd();
@@ -174,7 +174,7 @@ async function shutdown(signal){
   if(shuttingDown)return;
   shuttingDown=true;
   console.log('Encerrando servidor:',signal);
-  try{await disableSeconds()}catch(error){console.error('Falha ao encerrar modo rápido:',error)}
+  try{await suspendSecondsForRestart()}catch(error){console.error('Falha ao suspender modo rápido para reinício:',error)}
   server.close(()=>process.exit(0));
   setTimeout(()=>process.exit(1),12000).unref();
 }

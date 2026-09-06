@@ -90,13 +90,13 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </head>
 <body>
 <header class="top">
-  <div class="brand"><small>FAZENDA 2E • IRRIGAÇÃO</small><h1>Central INKBIRD</h1></div>
+  <div class="brand"><small>FAZENDA 2E • INKBIRD IIC-800</small><h1>Irrigação do Café</h1></div>
   <div class="actions"><a class="navbtn" href="/irrigacao/central/">Central</a><a class="navbtn" href="/irrigacao/">Viveiro</a><button id="settingsBtn" class="pill">Configurar</button><button id="refresh" class="pill">● Atualizar</button></div>
 </header>
 <main class="wrap">
-<div class="tabs"><button class="tabBtn" data-tab="overview">Visão geral</button><button class="tabBtn active" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
+<div class="tabs"><button class="tabBtn active" data-tab="overview">Visão geral</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
 <div id="globalError" class="errorBanner" hidden></div>
-<div id="tab-overview" class="tabPanel">
+<div id="tab-overview" class="tabPanel active">
 <section class="box" style="margin-top:0">
   <div class="head"><div><div class="ey" style="color:var(--green)">HOJE</div><h2>Resumo da irrigação</h2></div><button id="refreshToday" class="btn soft">Atualizar</button></div>
   <div class="todayGrid">
@@ -189,7 +189,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </section>
 
 </div>
-<div id="tab-sectors" class="tabPanel active">
+<div id="tab-sectors" class="tabPanel">
 <section class="box" style="margin-top:0">
   <div class="head"><div><div class="ey" style="color:var(--green)">OPERAÇÃO</div><h2>Setores de irrigação</h2></div><button id="resumeAutoBtn" class="btn soft">Voltar ao automático</button></div>
   <div class="sectorToolbar">
@@ -249,7 +249,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   </div>
 </section>
 
-<section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">app-cafe.vercel.app</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente na Vercel. Neste aparelho fica apenas o token de controle do app.</p></section>
+<section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">Railway • Fazenda 2E</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente no servidor Railway. Neste aparelho fica apenas o token de controle do app.</p></section>
 </div>
 <div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
 </main>
@@ -343,7 +343,7 @@ if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
 if(window.location.hostname.endsWith('.up.railway.app'))state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.token&&oldShared?.settings?.token)state.settings.token=oldShared.settings.token;
-if((!state.settings.apiUrl||state.settings.apiUrl===DEFAULT_API)&&oldShared?.settings?.apiUrl)state.settings.apiUrl=oldShared.settings.apiUrl;
+if(!window.location.hostname.endsWith('.up.railway.app')&&(!state.settings.apiUrl||state.settings.apiUrl===DEFAULT_API)&&oldShared?.settings?.apiUrl)state.settings.apiUrl=oldShared.settings.apiUrl;
 if(!state.controllers)state.controllers=[];
 if(!state.statusByController)state.statusByController={};
 if(!state.zonePrefs)state.zonePrefs={};

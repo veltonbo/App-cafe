@@ -4,7 +4,6 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import apiRouter from '../../api/router.js';
-import { storeGet, storeSet } from '../api/irrigation/_store.js';
 import secondsHandler from './seconds-handler.js';
 import { disableSeconds, initSecondsManager } from './seconds-manager.js';
 
@@ -155,40 +154,16 @@ const server=http.createServer(async(req,nativeRes)=>{
   }
 });
 
-const firebaseRaw=String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||'').trim();
-let firebaseDiag={present:Boolean(firebaseRaw),jsonObject:false,hasClientEmail:false,hasPrivateKey:false};
-if(firebaseRaw){
-  try{
-    const parsed=JSON.parse(firebaseRaw);
-    firebaseDiag.jsonObject=Boolean(parsed&&typeof parsed==='object'&&!Array.isArray(parsed));
-    firebaseDiag.hasClientEmail=Boolean(parsed&&String(parsed.client_email||'').trim());
-    firebaseDiag.hasPrivateKey=Boolean(parsed&&String(parsed.private_key||'').trim());
-  }catch{}
-}
-console.log('Firebase credential diagnostic',firebaseDiag);
-
-async function verifyFirebasePersistence(){
-  const path='IrrigacaoFazenda2E/diagnostics/railwayPersistence';
-  try{
-    const previous=await storeGet(path);
-    const marker={
-      ok:true,
-      service:'fazenda-2e-irrigacao',
-      at:new Date().toISOString()
-    };
-    await storeSet(path,marker);
-    const current=await storeGet(path);
-    console.log('Firebase persistence diagnostic',{
-      previousMarkerPresent:Boolean(previous&&previous.ok===true),
-      writeReadbackOk:Boolean(current&&current.ok===true&&current.at===marker.at)
-    });
-  }catch(error){
-    console.error('Firebase persistence diagnostic failed:',error?.message||String(error));
-  }
-}
+const splitFirebaseDiag={
+  hasClientEmail:Boolean(String(process.env.FIREBASE_CLIENT_EMAIL||process.env.GOOGLE_CLIENT_EMAIL||'').trim()),
+  hasPrivateKey:Boolean(String(process.env.FIREBASE_PRIVATE_KEY||process.env.GOOGLE_PRIVATE_KEY||'').trim())
+};
+console.log('Firebase credential diagnostic',{
+  mode:splitFirebaseDiag.hasClientEmail&&splitFirebaseDiag.hasPrivateKey?'split_variables':'json_or_unavailable',
+  ...splitFirebaseDiag
+});
 
 await initSecondsManager();
-await verifyFirebasePersistence();
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);

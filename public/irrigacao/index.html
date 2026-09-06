@@ -140,6 +140,7 @@ const KEY='viveiroEkazaRealV1';
 const DEFAULT_API=window.location.origin;
 let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,cycleConfig:null,countdown:null,lastSync:null,lastError:null,history:[],weatherProtection:null,secondsMode:null};
 if(!data.settings) data.settings={apiUrl:DEFAULT_API,token:''};
+if(window.location.hostname.endsWith('.up.railway.app')) data.settings.apiUrl=DEFAULT_API;
 if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;
 if(!('lastSync' in data)) data.lastSync=null;
 if(!('lastError' in data)) data.lastError=null;

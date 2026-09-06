@@ -154,6 +154,18 @@ const server=http.createServer(async(req,nativeRes)=>{
   }
 });
 
+const firebaseRaw=String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||'').trim();
+let firebaseDiag={present:Boolean(firebaseRaw),jsonObject:false,hasClientEmail:false,hasPrivateKey:false};
+if(firebaseRaw){
+  try{
+    const parsed=JSON.parse(firebaseRaw);
+    firebaseDiag.jsonObject=Boolean(parsed&&typeof parsed==='object'&&!Array.isArray(parsed));
+    firebaseDiag.hasClientEmail=Boolean(parsed&&String(parsed.client_email||'').trim());
+    firebaseDiag.hasPrivateKey=Boolean(parsed&&String(parsed.private_key||'').trim());
+  }catch{}
+}
+console.log('Firebase credential diagnostic',firebaseDiag);
+
 await initSecondsManager();
 
 server.listen(PORT,'0.0.0.0',()=>{

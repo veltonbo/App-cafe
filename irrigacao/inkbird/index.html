@@ -340,6 +340,7 @@ let state=JSON.parse(localStorage.getItem(APP_KEY)||'null')||{
   weatherRules:{rainThreshold:5,rainHoldHours:12,refreshMinutes:5,blockWhileRaining:true,serverGuard:true}
 };
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
+if(window.location.hostname.endsWith('.up.railway.app'))state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.token&&oldShared?.settings?.token)state.settings.token=oldShared.settings.token;
 if((!state.settings.apiUrl||state.settings.apiUrl===DEFAULT_API)&&oldShared?.settings?.apiUrl)state.settings.apiUrl=oldShared.settings.apiUrl;

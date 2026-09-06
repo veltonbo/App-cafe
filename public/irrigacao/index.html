@@ -93,6 +93,7 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
   <div class="protectCard"><small>Monitor automático</small><strong id="viveiroMonitorState">~5 min</strong></div>
 </div>
 <div class="protectConfig">
+  <label>Limite de chuva acumulada (mm)<input id="viveiroRainThreshold" type="number" min="0" max="500" step="0.1" value="5"></label>
   <label>Esperar após parar de chover (min)<input id="viveiroResumeDelay" type="number" min="0" max="1440" step="1" value="30"></label>
   <label class="toggleLine"><input id="viveiroWeatherEnabled" type="checkbox" checked> Proteção por chuva ativa</label>
 </div>
@@ -289,7 +290,8 @@ async function saveWeatherProtectionConfig(){
       enabled:$('viveiroWeatherEnabled').checked,
       resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay').value)||0))),
       checkMinutes:5,
-      blockWhileRaining:true
+      blockWhileRaining:true,
+      rainThresholdMm:Math.max(0,Math.min(500,Number($('viveiroRainThreshold').value)||0))
     };
     const r=await api('/api/viveiro/weather',{
       method:'POST',
@@ -568,6 +570,7 @@ function render(){
       ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
       :(wpConfig.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
   }
+  if($('viveiroRainThreshold')&&document.activeElement!==$('viveiroRainThreshold'))$('viveiroRainThreshold').value=Number(wpConfig.rainThresholdMm??5);
   if($('viveiroResumeDelay')&&document.activeElement!==$('viveiroResumeDelay'))$('viveiroResumeDelay').value=Number(wpConfig.resumeDelayMinutes??30);
   if($('viveiroWeatherEnabled')&&document.activeElement!==$('viveiroWeatherEnabled'))$('viveiroWeatherEnabled').checked=wpConfig.enabled!==false;
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';

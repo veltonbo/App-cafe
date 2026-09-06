@@ -176,15 +176,16 @@ export async function runViveiroWeatherCheck(){
   }
 
   const rainMm=rainAmountMm(weather.metrics);
-  const raining=Boolean(config.blockWhileRaining&&weather.metrics.rainDetected);
+  const rainingNow=Boolean(weather.metrics.rainDetected);
   const threshold=Number(config.rainThresholdMm||0);
   const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
+  const rainBlocksNow=Boolean(rainingNow&&(config.blockWhileRaining||thresholdReached));
   next.lastWeatherError=null;
-  next.rainDetected=raining;
+  next.rainDetected=rainingNow;
   next.rainAmountMm=rainMm;
   next.rainThresholdReached=thresholdReached;
 
-  if(raining||thresholdReached){
+  if(rainBlocksNow){
     next.lastRainAt=checkedAt;
     if(!previous.rainActive)next.rainStartedAt=checkedAt;
     next.rainActive=true;
@@ -213,7 +214,7 @@ export async function runViveiroWeatherCheck(){
 
     if(!previous.rainActive){
       await record('viveiro_rain_pause','Viveiro pausado automaticamente por chuva.',{
-        weather:{rainDetected:true},
+        weather:{rainDetected:rainingNow,rain_mm:rainMm,rain_threshold_mm:threshold},
         duration_minutes:0
       });
     }

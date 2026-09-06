@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
+import { storeGet, storeSet } from '../api/irrigation/_store.js';
 import {
   localSchedule,
   prepareServerPulse,
@@ -14,19 +15,52 @@ import {
 const STATE_FILE=(process.env.IRRIGATION_STATE_FILE||'/data/viveiro-seconds.json').trim();
 let state={enabled:false,phase:'idle'};
 let loopPromise=null;
+let remoteStoreAvailable=null;
+const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
 async function persist(){
+  let localOk=false;
   try{
     await fs.mkdir(path.dirname(STATE_FILE),{recursive:true});
     await fs.writeFile(STATE_FILE,JSON.stringify(state,null,2),'utf8');
+    localOk=true;
   }catch(error){
-    console.error('seconds persist',error?.message||error);
+    console.warn('seconds local persist indisponível:',error?.message||error);
   }
+
+  if(remoteStoreAvailable!==false){
+    try{
+      await storeSet(REMOTE_STATE_PATH,state);
+      remoteStoreAvailable=true;
+    }catch(error){
+      if(remoteStoreAvailable!==false){
+        console.warn('seconds Firebase persist indisponível:',error?.message||error);
+      }
+      remoteStoreAvailable=false;
+    }
+  }
+
+  return localOk||remoteStoreAvailable===true;
 }
 
 async function load(){
+  if(remoteStoreAvailable!==false){
+    try{
+      const remote=await storeGet(REMOTE_STATE_PATH);
+      if(remote&&typeof remote==='object'){
+        state=remote;
+        remoteStoreAvailable=true;
+        return;
+      }
+      remoteStoreAvailable=true;
+    }catch(error){
+      console.warn('seconds Firebase load indisponível:',error?.message||error);
+      remoteStoreAvailable=false;
+    }
+  }
+
   try{
     const raw=await fs.readFile(STATE_FILE,'utf8');
     const parsed=JSON.parse(raw);

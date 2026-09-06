@@ -225,8 +225,13 @@ export async function runViveiroWeatherCheck(){
   // Chuva não está mais sendo detectada.
   next.rainActive=false;
   if(previous.rainActive&&!previous.rainStoppedAt){
-    next.rainStoppedAt=checkedAt;
+    // Usa a última detecção real de chuva como referência. Assim, se o servidor
+    // ficou sem consultar a estação por um tempo, não reinicia os 30 min do zero.
+    const lastRainAt=Number(previous.lastRainAt||0);
+    next.rainStoppedAt=lastRainAt>0&&lastRainAt<=checkedAt?lastRainAt:checkedAt;
     await record('viveiro_rain_stopped','Weather2-2 deixou de detectar chuva.');
+  }else if(!previous.rainStoppedAt&&previous.pausedByWeather&&Number(previous.lastRainAt||0)>0){
+    next.rainStoppedAt=Number(previous.lastRainAt);
   }else{
     next.rainStoppedAt=previous.rainStoppedAt||null;
   }

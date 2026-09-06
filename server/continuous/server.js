@@ -9,6 +9,7 @@ import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.
 import { listInkbirdDevices } from '../api/inkbird/_device.js';
 import { tuyaRequest } from '../api/_tuya.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
+import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 const ROOT=process.cwd();
@@ -203,6 +204,30 @@ async function runReadOnlyBootDiagnostics(){
 await initSecondsManager();
 await runReadOnlyBootDiagnostics();
 
+let weatherWatchTimer=null;
+let weatherWatchBusy=false;
+async function startViveiroWeatherWatch(){
+  const tick=async()=>{
+    if(weatherWatchBusy||shuttingDown)return;
+    weatherWatchBusy=true;
+    try{
+      const cfg=await getViveiroWeatherConfig();
+      if(cfg.enabled!==false)await runViveiroWeatherCheck();
+    }catch(error){
+      console.warn('viveiro weather watch:',error?.message||error);
+    }finally{
+      weatherWatchBusy=false;
+    }
+  };
+  const cfg=await getViveiroWeatherConfig().catch(()=>({checkMinutes:5}));
+  const intervalMs=Math.max(60000,Math.min(3600000,Number(cfg.checkMinutes||5)*60000));
+  weatherWatchTimer=setInterval(tick,intervalMs);
+  weatherWatchTimer.unref();
+  setTimeout(tick,5000).unref();
+}
+
+await startViveiroWeatherWatch();
+
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);
 });
@@ -211,6 +236,7 @@ let shuttingDown=false;
 async function shutdown(signal){
   if(shuttingDown)return;
   shuttingDown=true;
+  if(weatherWatchTimer)clearInterval(weatherWatchTimer);
   console.log('Encerrando servidor:',signal);
   try{await suspendSecondsForRestart()}catch(error){console.error('Falha ao suspender modo rápido para reinício:',error)}
   server.close(()=>process.exit(0));

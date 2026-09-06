@@ -55,9 +55,15 @@ dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backd
 <div class="head"><h2>Modo rápido • segundos</h2><span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span></div>
 <p class="note" style="margin-top:0">Os pulsos são comandados pelo <b>servidor da Fazenda 2E</b>. Não é necessário configurar segundos no EKAZA.</p>
 <div class="secondsHero">
-  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="60" step="1" value="30"><small>segundos</small></label>
-  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="180" step="1" value="90"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
+  <label class="secondsField"><small>Tempo desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="90"><small>segundos</small></label>
 </div>
+<div class="row" style="margin-top:8px">
+  <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15s / 45s</button>
+  <button type="button" class="btn soft secondsPreset" data-on="30" data-off="90">30s / 90s</button>
+  <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60s / 120s</button>
+</div>
+<p class="note" style="margin:8px 0 0">Você pode digitar qualquer valor entre <b>1–300 s ligado</b> e <b>1–900 s desligado</b>.</p>
 <div id="secondsStatus" class="secondsStatus"><span>Configuração</span><strong>30 s ligado / 90 s desligado</strong></div>
 <div class="secondsLiveGrid">
   <div class="secondsMetric"><small>Fase atual</small><strong id="secondsPhase">Desativado</strong></div>
@@ -351,9 +357,9 @@ async function enableSecondsMode(){
   if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
   if(isWeatherProtected())return toast('Aguarde a proteção por chuva liberar o viveiro');
 
-  const on=Math.max(1,Math.min(60,Math.round(Number($('secondsOn').value)||30)));
-  const off=Math.max(1,Math.min(180,Math.round(Number($('secondsOff').value)||90)));
-  if(on+off>240)return toast('O ciclo total deve ficar em até 240 segundos.');
+  const on=Math.max(1,Math.min(300,Math.round(Number($('secondsOn').value)||30)));
+  const off=Math.max(1,Math.min(900,Math.round(Number($('secondsOff').value)||90)));
+  if(on+off>1200)return toast('O ciclo total deve ficar em até 1200 segundos.');
   const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
 
   if(!confirm('Ativar o modo rápido pelo servidor?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos\nEspera após chuva: '+resumeDelay+' min'))return;
@@ -625,6 +631,12 @@ function render(){
 $('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
 $('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);
 $('saveWeatherProtection').onclick=saveWeatherProtectionConfig;
+document.querySelectorAll('.secondsPreset').forEach(btn=>btn.onclick=()=>{
+  if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
+  $('secondsOn').value=btn.dataset.on;
+  $('secondsOff').value=btn.dataset.off;
+  render();
+});
 $('enableSeconds').onclick=enableSecondsMode;
 $('disableSeconds').onclick=disableSecondsMode;
 $('editCycle').onclick=openCycleEditor;

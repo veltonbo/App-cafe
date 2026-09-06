@@ -133,7 +133,7 @@ async function finishAndRestore(reason='stopped'){
   state={...state,enabled:false,phase:reason,relay_expected:false,stopped_at:Date.now()};
   await persist();
   await stopServerPulse({
-    restoreNative:true,
+    restoreNative:false,
     nativeCycleRaw:previous.native_cycle_raw||'',
     disabledCycleRaw:previous.disabled_cycle_raw||''
   }).catch(async()=>{await safeOff()});
@@ -358,7 +358,10 @@ export async function configureSeconds(input={}){
   const prepared=await prepareServerPulse({
     onSeconds:input.on_seconds,
     offSeconds:input.off_seconds,
-    resumeDelayMinutes:input.resume_delay_minutes
+    resumeDelayMinutes:input.resume_delay_minutes,
+    startMinutes:input.start_minutes,
+    endMinutes:input.end_minutes,
+    daysMask:input.days_mask
   });
 
   state={...prepared,phase:'queued'};

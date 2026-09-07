@@ -4,6 +4,7 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import {
   localSchedule,
+  secondsUntilNextWindow,
   prepareServerPulse,
   pulseStillActive,
   readViveiroDevice,
@@ -185,14 +186,29 @@ async function run(){
     const schedule=localSchedule(state);
     if(!schedule.inside){
       await safeOff();
-      if(schedule.before_start){
-        state={...state,phase:'waiting_window',relay_expected:false};
-        await persist();
-        await sleep(Math.min(30000,Math.max(5000,(schedule.seconds_until_start||30)*1000)));
-        continue;
+      const waitSeconds=secondsUntilNextWindow(state);
+      const wasWaiting=state.phase==='waiting_window';
+      state={
+        ...state,
+        phase:'waiting_window',
+        relay_expected:false,
+        next_window_at:Date.now()+waitSeconds*1000,
+        last_error:null
+      };
+      await persist();
+      if(!wasWaiting){
+        await event('viveiro_waiting_window','Ciclo rápido aguardando o próximo horário de início.',{
+          next_window_at:state.next_window_at
+        });
       }
-      await finishAndRestore('window_finished');
-      break;
+      await sleep(Math.min(30000,Math.max(5000,waitSeconds*1000)));
+      continue;
+    }
+
+    if(state.next_window_at){
+      state={...state,next_window_at:0,phase:'starting'};
+      await persist();
+      await event('viveiro_window_start','Horário de início atingido. Ciclo rápido liberado.');
     }
 
     const w=await weather();
@@ -310,8 +326,18 @@ async function run(){
     if(!(await active()))break;
 
     if(!localSchedule(state).inside){
-      await finishAndRestore('window_finished');
-      break;
+      const waitSeconds=secondsUntilNextWindow(state);
+      state={
+        ...state,
+        phase:'waiting_window',
+        relay_expected:false,
+        next_window_at:Date.now()+waitSeconds*1000
+      };
+      await persist();
+      await event('viveiro_window_end','Horário final atingido. Aguardando o próximo horário de início.',{
+        next_window_at:state.next_window_at
+      });
+      continue;
     }
 
     if(interrupted){
@@ -409,7 +435,7 @@ export async function configureSeconds(input={}){
 
   state={...prepared,phase:'queued'};
   await persist();
-  await event('viveiro_cycle_start','Ciclo rápido configurado e iniciado.',{
+  await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,
     start_minutes:state.start_minutes,end_minutes:state.end_minutes,days_mask:state.days_mask
   });

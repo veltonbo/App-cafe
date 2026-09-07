@@ -62,8 +62,10 @@ export default async function handler(req,res){
         storeGet(ROOT+'/history').catch(()=>null),
         storeGet(ROOT+'/config').catch(()=>null)
       ]);
-      const history=historyRows(historyRaw).filter(x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')).slice(0,120);
+      const history=historyRows(historyRaw).filter(x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')).slice(0,160);
       const now=Date.now();
+      const todayKey=localDateKey(now);
+      const auditToday=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey).slice(0,100);
       const maintenanceActive=Boolean(maintenance?.enabled&&Number(maintenance?.until||0)>now);
       return res.status(200).json({
         ok:true,
@@ -73,7 +75,8 @@ export default async function handler(req,res){
         weather:{state:weatherState||{},config:weatherConfig||{}},
         maintenance:{...(maintenance||{}),active:maintenanceActive},
         summary:summarize(history),
-        history:history.slice(0,40),
+        history:history.slice(0,60),
+        audit_today:auditToday,
         presets:config?.profiles?.viveiroPresets||{},
         fast_config:config?.profiles?.viveiroFast||null
       });

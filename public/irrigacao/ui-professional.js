@@ -57,8 +57,14 @@
   }
 
   function bindMissingActions(){
-    bind(byId('climateObserveBtn'),'smartBound',()=>typeof setClimateObservation==='function'&&setClimateObservation());
-    bind(byId('climateAutoBtn'),'smartBound',()=>typeof setClimateAutomatic==='function'&&setClimateAutomatic());
+    bind(byId('climateObserveBtn'),'smartBound',()=>{
+      if(typeof setClimateObservation==='function')setClimateObservation();
+      setTimeout(updateModeState,600);
+    });
+    bind(byId('climateAutoBtn'),'smartBound',()=>{
+      if(typeof setClimateAutomatic==='function')setClimateAutomatic();
+      setTimeout(updateModeState,600);
+    });
     bind(byId('climateApply'),'smartBound',()=>typeof answerClimateSuggestion==='function'&&answerClimateSuggestion(true));
     bind(byId('climateReject'),'smartBound',()=>typeof answerClimateSuggestion==='function'&&answerClimateSuggestion(false));
     bind(byId('enableNotifications'),'smartBound',()=>typeof enableBrowserNotifications==='function'&&enableBrowserNotifications());
@@ -192,8 +198,9 @@
     relayout();
     setTimeout(relayout,250);
     setTimeout(relayout,1200);
-    const climate=byId('climateAdviceBox');
-    if(climate)new MutationObserver(()=>updateModeState()).observe(climate,{subtree:true,attributes:true,attributeFilter:['class'],childList:true,characterData:true});
+    // Não observa mutações do painel climático: no Safari/iPhone isso podia entrar em loop
+    // quando o próprio updateModeState alterava classes/aria e congelar a interface.
+    setInterval(updateModeState,3000);
     window.addEventListener('resize',()=>requestAnimationFrame(auditOverflow),{passive:true});
     window.addEventListener('orientationchange',()=>setTimeout(auditOverflow,250),{passive:true});
     window.addEventListener('error',e=>console.error('[Irrigação UI runtime]',e.message||e.error));

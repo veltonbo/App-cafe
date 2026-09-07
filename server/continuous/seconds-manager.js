@@ -142,6 +142,11 @@ async function safetyCountdown(seconds){
   }
 }
 
+function activeWindowStartAt(schedule){
+  if(!schedule?.inside)return 0;
+  const elapsed=Math.max(0,Number(schedule.now_seconds||0)-Number(schedule.start_seconds||0));
+  return Math.floor((Date.now()-elapsed*1000)/60000)*60000;
+}
 async function active(){
   return Boolean(state.enabled&&await pulseStillActive(state).catch(()=>false));
 }
@@ -205,10 +210,23 @@ async function run(){
       continue;
     }
 
+    const windowStartAt=activeWindowStartAt(schedule);
+    if(Number(state.active_window_start_at||0)!==windowStartAt){
+      state={
+        ...state,
+        active_window_start_at:windowStartAt,
+        first_pulse_window_at:0,
+        start_alert_window_at:0
+      };
+      await persist();
+    }
+
     if(state.next_window_at){
       state={...state,next_window_at:0,phase:'starting'};
       await persist();
-      await event('viveiro_window_start','Horário de início atingido. Ciclo rápido liberado.');
+      await event('viveiro_window_start','Horário de início atingido. Ciclo rápido liberado.',{
+        window_start_at:windowStartAt
+      });
     }
 
     const w=await weather();
@@ -261,8 +279,14 @@ async function run(){
       continue;
     }
 
+    const wasPausedByWeather=Boolean(state.paused_by_weather);
     state={...state,paused_by_weather:false,phase:'starting',last_error:null};
     await persist();
+    if(wasPausedByWeather){
+      await event('viveiro_weather_resume','Proteção por chuva liberada. Irrigação retomada.',{
+        rain_last_at:Number(state.rain_last_at||0)
+      });
+    }
 
     const maxOn=Math.max(1,Math.min(
       Number(state.on_seconds||30),
@@ -274,21 +298,47 @@ async function run(){
       await safetyCountdown(maxOn);
     }catch(error){
       await safeOff();
-      state={...state,phase:'retry_wait',relay_expected:false,last_error:error?.message||String(error)};
+      const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
+      const late=Date.now()-expectedFrom>=30000;
+      const shouldAlert=late&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)&&!Number(state.first_pulse_window_at||0);
+      state={
+        ...state,
+        phase:'retry_wait',
+        relay_expected:false,
+        last_error:error?.message||String(error),
+        ...(shouldAlert?{start_alert_window_at:windowStartAt}: {})
+      };
       await persist();
-      await event('viveiro_error','Falha ao ligar o viveiro.',{error:state.last_error});
+      if(shouldAlert){
+        await event('viveiro_start_failure','Alerta: o ciclo não iniciou até 30 segundos após o horário esperado.',{
+          window_start_at:windowStartAt,
+          error:state.last_error
+        });
+      }else{
+        await event('viveiro_error','Falha ao ligar o viveiro.',{error:state.last_error});
+      }
       await sleep(10000);
       continue;
     }
 
+    const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
+    const delayed=!Number(state.first_pulse_window_at||0)&&Date.now()-expectedFrom>=30000;
     state={
       ...state,
       phase:'on',
       relay_expected:true,
       pulse_started_at:Date.now(),
-      expected_off_at:Date.now()+maxOn*1000
+      expected_off_at:Date.now()+maxOn*1000,
+      first_pulse_window_at:Number(state.first_pulse_window_at||0)||Date.now(),
+      ...(delayed&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)?{start_alert_window_at:windowStartAt}: {})
     };
     await persist();
+    if(delayed){
+      await event('viveiro_start_delay','Alerta: o primeiro pulso iniciou com mais de 30 segundos de atraso.',{
+        window_start_at:windowStartAt,
+        pulse_started_at:state.pulse_started_at
+      });
+    }
     await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn});
 
     let elapsed=0;

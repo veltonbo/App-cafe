@@ -215,19 +215,19 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 </div>
 
 <div class="actionBar">
-  <button id="saveSecondsConfig" class="btn soft">Salvar alterações</button>
-  <button id="enableSeconds" class="btn primary">Iniciar ciclo rápido</button>
+  <button id="saveSecondsConfig" class="btn soft">Salvar e armar</button>
+  <button id="enableSeconds" class="btn primary">Armar programação</button>
   <button id="disableSeconds" class="btn danger">Parar ciclo</button>
 </div>
-<p id="secondsSaveHint" class="note" style="margin-top:10px">Salve a configuração antes de iniciar. Durante o funcionamento, os campos ficam protegidos contra alterações acidentais.</p>
+<p id="secondsSaveHint" class="note" style="margin-top:10px">Ao salvar, a programação já fica armada. O ciclo inicia sozinho no horário configurado. Durante o funcionamento, os campos ficam protegidos contra alterações acidentais.</p>
 
 <details class="assistBox">
   <summary><b>Como funciona</b></summary>
   <ol>
-    <li>O ciclo só funciona entre o horário de início e o horário final.</li>
+    <li>Ao salvar, o ciclo fica armado e inicia sozinho no horário de início.</li><li>O ciclo só funciona entre o horário de início e o horário final.</li>
     <li>Dentro da janela, alterna automaticamente entre ligado e desligado.</li>
     <li>Se chover, a proteção climática pausa o viveiro.</li>
-    <li>Ao chegar no horário final, o ciclo é encerrado.</li>
+    <li>Ao chegar no horário final, os pulsos param e a programação fica armada para o próximo dia selecionado.</li>
   </ol>
 </details>
 </section>
@@ -434,13 +434,13 @@ function renderSecondsControlsOnly(){
     $('secondsBadge').className='phase '+(active&&!sec.paused_by_weather?'':'off');
   }
   if($('enableSeconds')){
-    $('enableSeconds').textContent=active?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';
+    $('enableSeconds').textContent=active?'Programação armada':'Armar programação';
     $('enableSeconds').disabled=active;
   }
   if($('disableSeconds'))$('disableSeconds').disabled=!active;
   if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=active
     ?'O ciclo está em funcionamento. Para alterar os valores, pare o ciclo primeiro.'
-    :'A configuração fica salva e sincronizada. Depois de salvar, toque em <b>Iniciar ciclo rápido</b>.';
+    :'Ao salvar, a programação fica armada e inicia sozinha no horário configurado.';
   updateFastCycleDraftUI();
 }
 function renderSecondsRuntimeOnly(){
@@ -694,7 +694,7 @@ function updateFastCycleDraftUI(){
     state.innerHTML='<span class="saveDot"></span><span>'+(dirty?'Alterações ainda não salvas':'Configuração salva')+'</span>';
   }
   if($('saveSecondsConfig')){
-    $('saveSecondsConfig').textContent=dirty?'Salvar alterações':'Configuração salva';
+    $('saveSecondsConfig').textContent=dirty?'Salvar e armar':'Configuração armada';
     $('saveSecondsConfig').disabled=secondsActive()||!dirty;
   }
   const start=Number(saved.start_minutes??360),end=Number(saved.end_minutes??1080);
@@ -753,7 +753,35 @@ function readSecondsDraft(){
   if(!daysMask)throw new Error('Selecione pelo menos um dia da semana.');
   return{on_seconds:on,off_seconds:off,start_minutes:start,end_minutes:end,days_mask:daysMask};
 }
-async function saveSecondsDraft(showToast=true){
+async function armSecondsSchedule(draft,showToast=true){
+  if(!draft)return null;
+  if(secondsActive())return data.secondsMode;
+  const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
+  const r=await api('/api/viveiro/seconds',{
+    method:'POST',
+    body:JSON.stringify({
+      action:'configure',
+      on_seconds:draft.on_seconds,
+      off_seconds:draft.off_seconds,
+      start_minutes:draft.start_minutes,
+      end_minutes:draft.end_minutes,
+      days_mask:draft.days_mask,
+      resume_delay_minutes:resumeDelay
+    })
+  });
+  data.secondsMode=r.state;
+  log('Programação do ciclo rápido armada');
+  save();renderLiveFields();
+  if(showToast){
+    const phase=String(r?.state?.phase||'');
+    toast(phase==='waiting_window'
+      ?'Programação armada. Vai iniciar no horário configurado.'
+      :'Programação armada.');
+  }
+  setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
+  return r.state;
+}
+async function saveSecondsDraft(showToast=true,autoArm=true){
   if(secondsActive()){
     if(showToast)toast('Pare o ciclo rápido antes de alterar a configuração');
     return null;
@@ -763,14 +791,32 @@ async function saveSecondsDraft(showToast=true){
     data.secondsCloud={...(data.secondsCloud||{}),synced:false};
     save();
     renderSecondsControlsOnly();renderSecondsRuntimeOnly();
+
+    let cloudOk=true;
     try{
       await saveSecondsCloudConfig(data.secondsDraft);
       save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-      if(showToast)toast('Configuração salva e sincronizada');
     }catch(e){
+      cloudOk=false;
       data.secondsCloud={loaded:true,synced:false,lastSync:Date.now(),error:String(e.message||e)};
       save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-      if(showToast)toast('Salvo neste aparelho; falha ao sincronizar');
+    }
+
+    if(autoArm){
+      try{
+        await armSecondsSchedule(data.secondsDraft,false);
+        if(showToast){
+          const phase=String(data.secondsMode?.phase||'');
+          const msg=phase==='waiting_window'
+            ?'Salvo e armado. Vai iniciar no horário configurado.'
+            :'Salvo e armado.';
+          toast(cloudOk?msg:(msg+' Nuvem sem sincronização.'));
+        }
+      }catch(e){
+        if(showToast)toast('Configuração salva, mas não foi possível armar: '+String(e.message||e));
+      }
+    }else if(showToast){
+      toast(cloudOk?'Configuração salva e sincronizada':'Salvo neste aparelho; falha ao sincronizar');
     }
     return data.secondsDraft;
   }catch(e){
@@ -779,41 +825,12 @@ async function saveSecondsDraft(showToast=true){
   }
 }
 async function enableSecondsMode(){
-  if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
-  if(isWeatherProtected())return toast('Aguarde a proteção por chuva liberar o viveiro');
-
-  const draft=await saveSecondsDraft(false);
-  if(!draft)return toast('Confira a configuração do ciclo rápido');
-  const on=draft.on_seconds;
-  const off=draft.off_seconds;
-  const start=draft.start_minutes;
-  const end=draft.end_minutes;
-  const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
-
-  if(!confirm('Iniciar o ciclo rápido?\n\nLigado: '+on+' segundos\nDesligado: '+off+' segundos\nHorário: '+minutesToClock(start)+' às '+minutesToClock(end)+'\nEspera após chuva: '+resumeDelay+' min'))return;
-
+  if(secondsActive())return toast('A programação já está armada');
   try{
-    $('enableSeconds').disabled=true;
-    const r=await api('/api/viveiro/seconds',{
-      method:'POST',
-      body:JSON.stringify({
-        action:'configure',
-        on_seconds:on,
-        off_seconds:off,
-        start_minutes:start,
-        end_minutes:end,
-        days_mask:draft.days_mask,
-        resume_delay_minutes:resumeDelay
-      })
-    });
-    data.secondsMode=r.state;
-    log('Ciclo rápido ativado: '+on+' s ligado / '+off+' s desligado');
-    save();renderLiveFields();toast('Ciclo rápido ativado');
-    setTimeout(()=>{syncStatus(false);syncSecondsMode(false)},1000);
+    const draft=readSecondsDraft();
+    await armSecondsSchedule(draft,true);
   }catch(e){
-    toast('Não foi possível ativar: '+String(e.message||'Falha'));
-  }finally{
-    $('enableSeconds').disabled=secondsActive();
+    toast('Não foi possível armar: '+String(e.message||e));
   }
 }
 async function disableSecondsMode(){

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
+import { sendPushAlert } from '../api/irrigation/_push.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -31,6 +32,14 @@ async function event(type,detail,extra={}){
     status:String(state.phase||''),
     ...extra
   }).catch(()=>null);
+}
+async function pushNotice(title,body,tag,level='info'){
+  await sendPushAlert({title,body,tag,url:'/irrigacao/',level}).catch(()=>null);
+}
+function localDayKey(ts=Date.now()){
+  return new Intl.DateTimeFormat('en-CA',{
+    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
+  }).format(new Date(ts));
 }
 async function maintenance(){
   try{
@@ -250,7 +259,10 @@ async function run(){
         last_error:null
       };
       await persist();
-      if(firstRainPause)await event('viveiro_weather_pause','Irrigação pausada por chuva.',{rain_mm:w.rainMm});
+      if(firstRainPause){
+        await event('viveiro_weather_pause','Irrigação pausada por chuva.',{rain_mm:w.rainMm});
+        await pushNotice('Viveiro pausado pela chuva','A Weather2-2 detectou chuva e a irrigação foi pausada.','viveiro-rain-'+localDayKey(),'warning');
+      }
       await sleep(30000);
       continue;
     }
@@ -280,8 +292,20 @@ async function run(){
     }
 
     const wasPausedByWeather=Boolean(state.paused_by_weather);
+    const resumedFromRain=Boolean(state.paused_by_weather||state.phase==='waiting_after_rain'||state.phase==='weather_blocked');
     state={...state,paused_by_weather:false,phase:'starting',last_error:null};
     await persist();
+    if(resumedFromRain){
+      await event('viveiro_weather_resume','Proteção por chuva liberada. Ciclo pronto para retomar.');
+      await pushNotice('Viveiro liberado após chuva','A proteção climática liberou a irrigação novamente.','viveiro-rain-resume-'+localDayKey());
+    }
+
+    if(!state.first_pulse_at&&!state.start_delay_alerted&&state.window_opened_at&&Date.now()>Number(state.window_opened_at)+30000){
+      state={...state,start_delay_alerted:true};
+      await persist();
+      await event('viveiro_start_delay','Ciclo não confirmou o primeiro pulso em até 30 segundos após o horário de início.');
+      await pushNotice('Atenção • viveiro não iniciou','O primeiro pulso não foi confirmado em até 30 segundos após o horário programado.','viveiro-start-delay-'+String(state.window_day_key||localDayKey()),'critical');
+    }
     if(wasPausedByWeather){
       await event('viveiro_weather_resume','Proteção por chuva liberada. Irrigação retomada.',{
         rain_last_at:Number(state.rain_last_at||0)
@@ -387,6 +411,12 @@ async function run(){
       await event('viveiro_window_end','Horário final atingido. Aguardando o próximo horário de início.',{
         next_window_at:state.next_window_at
       });
+      const irrigatedSeconds=Number(state.pulse_count||0)*Number(state.on_seconds||0);
+      await pushNotice(
+        'Resumo do viveiro',
+        'Horário encerrado • '+Number(state.pulse_count||0)+' pulsos • '+Math.round(irrigatedSeconds/60)+' min irrigados.',
+        'viveiro-summary-'+localDayKey()
+      );
       continue;
     }
 

@@ -349,9 +349,104 @@ async function api(path,opt={}){
     return body;
   }finally{clearTimeout(tm)}
 }
+function renderSecondsControlsOnly(){
+  const sec=data.secondsMode||{};
+  const active=Boolean(sec.enabled);
+  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=active});
+  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.disabled=active});
+  if($('secondsBadge')){
+    $('secondsBadge').textContent=active?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';
+    $('secondsBadge').className='phase '+(active&&!sec.paused_by_weather?'':'off');
+  }
+  if($('enableSeconds')){
+    $('enableSeconds').textContent=active?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';
+    $('enableSeconds').disabled=active;
+  }
+  if($('disableSeconds'))$('disableSeconds').disabled=!active;
+  if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=active
+    ?'O ciclo está em funcionamento. Para alterar os valores, pare o ciclo primeiro.'
+    :'A configuração fica salva e sincronizada. Depois de salvar, toque em <b>Iniciar ciclo rápido</b>.';
+  updateFastCycleDraftUI();
+}
+function renderSecondsRuntimeOnly(){
+  const sec=data.secondsMode||{};
+  const active=Boolean(sec.enabled);
+  const draft=data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
+  const cfg=active?sec:draft;
+  if($('secondsStatus')){
+    $('secondsStatus').className='secondsStatus '+(active?'on':'');
+    $('secondsStatus').innerHTML='<span>'+(active?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+
+      Number(cfg.on_seconds||30)+' s / '+Number(cfg.off_seconds||90)+' s • '+minutesToClock(cfg.start_minutes)+'–'+minutesToClock(cfg.end_minutes)+'</strong>';
+  }
+  if($('secondsCloudState')){
+    const cs=data.secondsCloud||{};
+    $('secondsCloudState').textContent=cs.synced?'☁ sincronizado':'☁ não sincronizado';
+    $('secondsCloudState').className='cloudState '+(cs.synced?'ok':'bad');
+  }
+  updateSecondsLive();
+  updateTodaySummary();
+}
+function renderWeatherRuntimeOnly(){
+  const wp=data.weatherProtection;
+  const s=wp?.state||{};
+  const cfg=wp?.config||{};
+  const blocked=isWeatherProtected();
+  const raining=Boolean(wp?.weather?.metrics?.rainDetected);
+  if($('viveiroRainState')){
+    $('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
+    $('viveiroRainState').className=raining?'bad':'ok';
+  }
+  if($('viveiroProtectState')){
+    $('viveiroProtectState').textContent=weatherStatusLabel(s.status);
+    $('viveiroProtectState').className=blocked?'bad':(['clear','resumed_inside_window','restored_outside_window'].includes(s.status)?'ok':'');
+  }
+  if($('viveiroResumeState')){
+    $('viveiroResumeState').textContent=s.status==='paused_rain'?'Após parar de chover'
+      :s.status==='waiting_resume_delay'?formatResumeTime(s.resumeEligibleAt)
+      :s.status==='restored_outside_window'?'Próxima janela'
+      :s.status==='resumed_inside_window'?'Retomado'
+      :s.resumeEligibleAt?formatResumeTime(s.resumeEligibleAt):'—';
+  }
+  if($('protectFlag')){
+    $('protectFlag').className='protectFlag '+(blocked?'blocked':'');
+    $('protectFlag').textContent=blocked
+      ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
+      :(cfg.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
+  }
+}
+function renderConnectionRuntimeOnly(){
+  const online=data.online===true;
+  const blocked=isWeatherProtected();
+  const secActive=secondsActive();
+  if($('relayState'))$('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
+  if($('connectionState')){
+    $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
+    $('connectionState').className=online?'ok':data.online===false?'bad':'';
+  }
+  if($('conn'))$('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Tuya';
+  if($('liveDot'))$('liveDot').className='liveDot '+(online?'on':'');
+  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
+  if($('lastSync'))$('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
+  if($('phase')){
+    $('phase').textContent=blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA')
+      :data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
+    $('phase').className='phase '+(data.relay===true&&!blocked?'':'off');
+  }
+  if($('heroTitle'))$('heroTitle').textContent=blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
+  if($('heroSub'))$('heroSub').textContent=blocked
+    ?(data.weatherProtection?.weather?.metrics?.rainDetected?'A chuva interrompeu a irrigação.':'Aguardando o tempo configurado para retomar.')
+    :data.relay===true?'Saída do viveiro ligada neste momento.':data.relay===false?'Saída desligada neste momento.':'Aguardando leitura do equipamento.';
+  if($('refresh'))$('refresh').disabled=syncing;
+}
+function renderLiveFields(){
+  renderConnectionRuntimeOnly();
+  renderWeatherRuntimeOnly();
+  renderSecondsControlsOnly();
+  renderSecondsRuntimeOnly();
+}
 async function syncStatus(showToast=false){
   if(syncing) return;
-  syncing=true;render();
+  syncing=true;renderConnectionRuntimeOnly();
   try{
     const s=await api('/api/status');
     data.online=s.online!==false;
@@ -362,13 +457,13 @@ async function syncStatus(showToast=false){
     data.secondsMode=s.seconds_mode??data.secondsMode;
     data.lastSync=Date.now();
     data.lastError=null;
-    save();render();if(showToast)toast('Estado atualizado');
+    save();renderLiveFields();if(showToast)toast('Estado atualizado');
   }catch(e){
     data.online=false;
     data.lastError=e.message||String(e);
-    save();render();if(showToast)toast('Falha: '+data.lastError);
+    save();renderLiveFields();if(showToast)toast('Falha: '+data.lastError);
   }finally{
-    syncing=false;render();
+    syncing=false;renderConnectionRuntimeOnly();
   }
 }
 
@@ -415,7 +510,7 @@ async function syncWeatherProtection(showToast=false){
   try{
     const r=await api('/api/viveiro/weather');
     data.weatherProtection=r;
-    save();render();
+    save();renderWeatherRuntimeOnly();renderConnectionRuntimeOnly();updateTodaySummary();
     if(showToast){
       const action=r.action&&r.action!=='none'?' • '+r.action:'';
       toast('Proteção climática atualizada'+action);
@@ -487,10 +582,10 @@ async function syncSecondsMode(showToast=false){
       const wasActive=secondsActive();
       data.secondsMode={...data.secondsMode,...r.state};
       if(typeof r.state.device_relay==='boolean')data.relay=r.state.device_relay;
-      save();render();
+      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();renderConnectionRuntimeOnly();
       if(wasActive&&!data.secondsMode.enabled){
         log('Ciclo rápido encerrado');
-        save();render();
+        save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
       }
       if(showToast)toast('Modo rápido: '+secondsPhaseLabel(r.state.phase));
     }
@@ -551,10 +646,19 @@ async function loadSecondsCloudConfig(){
       if(!secondsActive())data.secondsDraft=normalized;
     }
     data.secondsCloud={loaded:true,synced:true,lastSync:Date.now()};
-    save();render();
+    save();
+    if(!secondsActive()){
+      const d=data.secondsDraft;
+      if($('secondsOn'))$('secondsOn').value=Number(d.on_seconds||30);
+      if($('secondsOff'))$('secondsOff').value=Number(d.off_seconds||90);
+      if($('secondsStart'))$('secondsStart').value=minutesToClock(Number(d.start_minutes??360));
+      if($('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(d.end_minutes??1080));
+      document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(d.days_mask||127)&Number(cb.value))});
+    }
+    renderSecondsControlsOnly();renderSecondsRuntimeOnly();
   }catch(e){
     data.secondsCloud={loaded:true,synced:false,lastSync:Date.now(),error:String(e.message||e)};
-    save();render();
+    save();renderSecondsRuntimeOnly();
   }
 }
 async function saveSecondsCloudConfig(draft){
@@ -583,14 +687,14 @@ async function saveSecondsDraft(showToast=true){
     data.secondsDraft=readSecondsDraft();
     data.secondsCloud={...(data.secondsCloud||{}),synced:false};
     save();
-    render();
+    renderSecondsControlsOnly();renderSecondsRuntimeOnly();
     try{
       await saveSecondsCloudConfig(data.secondsDraft);
-      save();render();
+      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
       if(showToast)toast('Configuração salva e sincronizada');
     }catch(e){
       data.secondsCloud={loaded:true,synced:false,lastSync:Date.now(),error:String(e.message||e)};
-      save();render();
+      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
       if(showToast)toast('Salvo neste aparelho; falha ao sincronizar');
     }
     return data.secondsDraft;
@@ -629,7 +733,7 @@ async function enableSecondsMode(){
     });
     data.secondsMode=r.state;
     log('Ciclo rápido ativado: '+on+' s ligado / '+off+' s desligado');
-    save();render();toast('Ciclo rápido ativado');
+    save();renderLiveFields();toast('Ciclo rápido ativado');
     setTimeout(()=>{syncStatus(false);syncSecondsMode(false)},1000);
   }catch(e){
     toast('Não foi possível ativar: '+String(e.message||'Falha'));
@@ -648,7 +752,7 @@ async function disableSecondsMode(){
     });
     data.secondsMode=r.state;
     log('Ciclo rápido desativado');
-    save();render();toast('Ciclo rápido parado');
+    save();renderLiveFields();toast('Ciclo rápido parado');
     setTimeout(()=>syncStatus(false),900);
   }catch(e){
     toast('Falha: '+e.message);

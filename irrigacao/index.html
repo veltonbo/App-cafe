@@ -169,6 +169,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   </div>
   <div class="presetTools">
     <select id="fastPresetSelect"><option value="">Perfis salvos</option></select>
+    <input id="fastPresetName" type="text" maxlength="30" placeholder="Nome do perfil" style="flex:1;min-width:130px;border:1px solid var(--line);border-radius:11px;padding:10px">
     <button type="button" id="saveFastPreset" class="btn soft" style="flex:0 0 auto;min-width:0">Salvar perfil</button>
   </div>
 </div>
@@ -622,7 +623,7 @@ function secondsPhaseLabel(phase){
     idle:'Desativado',queued:'Preparando',starting:'Ligando',on:'Irrigando',off:'Intervalo',
     waiting_window:'Aguardando horário',weather_unavailable:'Clima indisponível',
     weather_blocked:'Pausado por chuva',waiting_after_rain:'Aguardando após chuva',
-    retry_wait:'Tentando novamente',window_finished:'Janela encerrada',stopped:'Parado',
+    retry_wait:'Tentando novamente',maintenance:'Em manutenção',window_finished:'Janela encerrada',stopped:'Parado',
     stopped_external:'Interrompido',stopped_after_restart:'Parado após reinício',error:'Erro'
   };
   return labels[String(phase||'')]||String(phase||'Desativado').replaceAll('_',' ');
@@ -1101,13 +1102,14 @@ async function saveNamedPreset(){
   if(secondsActive())return toast('Pare o ciclo antes de salvar um perfil');
   const draft=readSecondsDraft();
   const existing=data.dashboard?.presets||{};
-  let base='Perfil '+(Object.keys(existing).length+1);
-  const name=prompt('Nome do perfil:',base);
+  const fallback='Perfil '+(Object.keys(existing).length+1);
+  const name=String($('fastPresetName')?.value||fallback).trim().slice(0,30);
   if(!name)return;
   const current=await api('/api/irrigation/config').catch(()=>({config:{}}));
   const profiles={...(current?.config?.profiles||{})};
   profiles.viveiroPresets={...(profiles.viveiroPresets||{}),[name]:{...draft,updated_at:new Date().toISOString()}};
   await api('/api/irrigation/config',{method:'PATCH',body:JSON.stringify({profiles})});
+  if($('fastPresetName'))$('fastPresetName').value='';
   toast('Perfil salvo');await syncDashboard(false);
 }
 function applyNamedPreset(name){

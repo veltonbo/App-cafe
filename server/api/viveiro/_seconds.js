@@ -45,6 +45,34 @@ export function localSchedule(state,nowDate=new Date()){
   };
 }
 
+export function secondsUntilNextWindow(state,nowDate=new Date()){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
+    timeZone:TZ,
+    weekday:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hourCycle:'h23'
+  }).formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+
+  const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  const day=dayMap[parts.weekday]??0;
+  const nowSec=Number(parts.hour)*3600+Number(parts.minute)*60+Number(parts.second);
+  const startSec=Math.max(0,Number(state.start_minutes||0)*60);
+  const mask=Number(state.days_mask||0);
+
+  for(let add=0;add<8;add++){
+    const targetDay=(day+add)%7;
+    if(!(mask&(1<<targetDay)))continue;
+    if(add===0){
+      if(nowSec<startSec)return Math.max(1,startSec-nowSec);
+      continue;
+    }
+    return Math.max(1,(86400-nowSec)+((add-1)*86400)+startSec);
+  }
+  return 86400;
+}
+
 export async function readViveiroDevice(){
   const deviceId=getDeviceId();
   const [statusR,shadowR]=await Promise.allSettled([

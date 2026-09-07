@@ -12,6 +12,7 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
+// Publish marker: climate auto v8
 // Publish marker: viveiro full intelligence v7
 // Publish marker: alerts audit notifications v6
 // Publish marker: auto-arm fast cycle on save

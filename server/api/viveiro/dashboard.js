@@ -2,6 +2,7 @@ import { applyCors, authorize } from '../_tuya.js';
 import { storeGet, storeSet } from '../irrigation/_store.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
+import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -169,6 +170,9 @@ export default async function handler(req,res){
         climate:{
           config:climateConfig||{},
           state:climateState||{}
+        },
+        notifications:{
+          whatsapp:whatsappNotificationStatus()
         }
       });
     }
@@ -196,7 +200,11 @@ export default async function handler(req,res){
           trend_minutes:req.body?.trend_minutes,
           evaluation_minutes:req.body?.evaluation_minutes,
           max_adjust_percent:req.body?.max_adjust_percent,
-          min_change_seconds:req.body?.min_change_seconds
+          min_change_seconds:req.body?.min_change_seconds,
+          min_change_off_seconds:req.body?.min_change_off_seconds,
+          cooldown_minutes:req.body?.cooldown_minutes,
+          normal_confirmations:req.body?.normal_confirmations,
+          post_rain_hold_minutes:req.body?.post_rain_hold_minutes
         });
         return res.status(200).json({ok:true,climate_config:cfg});
       }

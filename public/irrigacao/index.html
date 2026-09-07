@@ -138,6 +138,16 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 .notifyBtn{min-width:auto!important;flex:0 0 auto!important}
 .notifyState{font-size:.72rem;color:var(--muted);margin-top:7px}
 .criticalEvent{border-color:#efb9b4!important;background:#fff7f6!important}
+
+/* Viveiro Intelligence v7 */
+.reportGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.reportCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+.reportCard small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.reportCard strong{font-size:.98rem}
+.scheduleList{display:grid;gap:7px;margin-top:10px}.scheduleRow{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}.scheduleRow.active{border-color:#8dcdb7;background:#f1fbf7}.scheduleRow small{color:var(--muted)}
+.climateAdvice{padding:13px;border-radius:14px;background:var(--brandSoft);color:var(--ink);margin-top:10px}.climateAdvice.attention{background:var(--warnSoft)}
+.climateMetrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.climateMetrics span{padding:7px 9px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:.75rem;font-weight:800}
+.notifyHint{font-size:.72rem;color:var(--muted);margin-top:6px}
+@media(max-width:760px){.reportGrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -275,6 +285,27 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   </div>
 </section>
 
+<section class="box" id="dailyReportBox">
+  <div class="head"><div><span class="sectionKicker">Resumo automático</span><h2>Relatório de hoje</h2></div></div>
+  <div class="reportGrid">
+    <div class="reportCard"><small>Primeiro pulso</small><strong id="reportFirstPulse">—</strong></div>
+    <div class="reportCard"><small>Pulsos</small><strong id="reportPulses">0</strong></div>
+    <div class="reportCard"><small>Tempo irrigado</small><strong id="reportWater">0 s</strong></div>
+    <div class="reportCard"><small>Falhas / atrasos</small><strong id="reportErrors">0</strong></div>
+  </div>
+</section>
+
+<section class="box" id="calendarBox">
+  <div class="head"><div><span class="sectionKicker">Programação</span><h2>Próximas irrigações</h2></div></div>
+  <div id="upcomingSchedule" class="scheduleList"><div class="empty">Aguardando programação...</div></div>
+</section>
+
+<section class="box" id="climateAdviceBox">
+  <div class="head"><div><span class="sectionKicker">Apoio à decisão</span><h2>Sugestão pelo clima</h2></div><span class="phase off">SÓ SUGESTÃO</span></div>
+  <div id="climateAdvice" class="climateAdvice">Aguardando temperatura e umidade da Weather2-2.</div>
+  <p class="note">O sistema não altera a irrigação sozinho com base nessa sugestão.</p>
+</section>
+
 <section class="box" id="weeklyBox">
   <div class="head"><div><span class="sectionKicker">Acompanhamento</span><h2>Últimos 7 dias</h2></div></div>
   <div id="weekGrid" class="weekGrid"><div class="empty">Aguardando histórico...</div></div>
@@ -288,7 +319,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
       <button id="refreshDashboard" class="btn soft notifyBtn">Atualizar</button>
     </div>
   </div>
-  <div id="notifyState" class="notifyState">Avisos do navegador desativados.</div>
+  <div id="notifyState" class="notifyState">Notificações desativadas.</div><div class="notifyHint">Quando ativadas, os alertas podem chegar mesmo com o painel fechado.</div>
   <div class="auditFilters">
     <button type="button" class="btn soft auditFilter active" data-filter="all">Todos</button>
     <button type="button" class="btn soft auditFilter" data-filter="irrigation">Irrigação</button>
@@ -1077,38 +1108,57 @@ function notificationTitle(type){
 function notificationsSupported(){
   return typeof Notification!=='undefined';
 }
-function updateNotificationState(){
+function urlB64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  return Uint8Array.from([...raw].map(ch=>ch.charCodeAt(0)));
+}
+async function viveiroSwReg(){
+  if(!('serviceWorker' in navigator))throw new Error('Este navegador não suporta notificações em segundo plano.');
+  return navigator.serviceWorker.register('/irrigacao/central/sw.js');
+}
+async function updateNotificationState(){
   if(!$('notifyState')||!$('enableNotifications'))return;
-  if(!notificationsSupported()){
-    $('notifyState').textContent='Este navegador não oferece avisos de sistema.';
-    $('enableNotifications').disabled=true;
+  if(!notificationsSupported()||!('PushManager' in window)){
+    $('notifyState').textContent='Instale o app na Tela de Início para usar notificações neste aparelho.';
+    $('enableNotifications').disabled=false;
     return;
   }
-  const p=Notification.permission;
-  $('notifyState').textContent=p==='granted'?'Avisos do navegador ativados.':p==='denied'?'Avisos bloqueados nas configurações do navegador.':'Avisos do navegador desativados.';
-  $('enableNotifications').textContent=p==='granted'?'Avisos ativados':'Ativar avisos';
-  $('enableNotifications').disabled=p==='denied'||p==='granted';
+  try{
+    const reg=await viveiroSwReg();
+    const sub=await reg.pushManager.getSubscription();
+    const active=Boolean(sub&&Notification.permission==='granted');
+    $('notifyState').textContent=active?'Notificações em segundo plano ativas.':Notification.permission==='denied'?'Notificações bloqueadas nas configurações do navegador.':'Notificações desativadas.';
+    $('enableNotifications').textContent=active?'Notificações ativas':'Ativar notificações';
+    $('enableNotifications').disabled=active||Notification.permission==='denied';
+  }catch{
+    $('notifyState').textContent='Notificações disponíveis ao instalar o app na Tela de Início.';
+  }
 }
 async function enableBrowserNotifications(){
-  if(!notificationsSupported())return toast('Avisos não disponíveis neste navegador');
   try{
-    const p=await Notification.requestPermission();
-    updateNotificationState();
-    if(p==='granted'){
-      data.notificationsPrimed=false;
-      save();
-      toast('Avisos ativados');
-      syncDashboard(false);
-    }else toast('Avisos não foram ativados');
-  }catch(e){toast('Não foi possível ativar os avisos')}
+    if(!notificationsSupported()||!('PushManager' in window))throw new Error('Instale o app na Tela de Início para ativar notificações.');
+    const reg=await viveiroSwReg();
+    const info=await api('/api/irrigation/push');
+    let perm=Notification.permission;
+    if(perm!=='granted')perm=await Notification.requestPermission();
+    if(perm!=='granted')throw new Error('Permissão não concedida.');
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(info.publicKey)});
+    await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'subscribe',subscription:sub.toJSON(),platform:navigator.platform||''})});
+    data.notificationsPrimed=false;save();
+    await updateNotificationState();
+    toast('Notificações em segundo plano ativadas');
+  }catch(e){toast('Notificações: '+String(e.message||e))}
 }
 function processDashboardNotifications(payload){
   if(!notificationsSupported()||Notification.permission!=='granted')return;
   const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
   const important=new Set([
-    'viveiro_window_start','viveiro_weather_pause','viveiro_weather_resume',
+    'viveiro_window_start','viveiro_pulse_start','viveiro_weather_pause','viveiro_weather_resume',
     'viveiro_start_failure','viveiro_start_delay','viveiro_error',
-    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop'
+    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop','viveiro_window_end'
   ]);
   if(!data.notificationsPrimed){
     data.notifiedEventIds=rows.slice(0,80).map(x=>String(x.id||x.ts||''));
@@ -1170,6 +1220,26 @@ function renderDashboard(){
   if($('maintenanceState')){
     $('maintenanceState').style.display=maint.active?'block':'none';
     $('maintenanceState').textContent=maint.active?'Manutenção ativa até '+shortTime(maint.until):'';
+  }
+
+
+  if($('reportFirstPulse'))$('reportFirstPulse').textContent=shortTime(sum.first_pulse_at);
+  if($('reportPulses'))$('reportPulses').textContent=String(Number(sum.pulses||0));
+  if($('reportWater'))$('reportWater').textContent=humanDurationSeconds(Number(sum.irrigated_seconds||0));
+  if($('reportErrors'))$('reportErrors').textContent=String(Number(sum.errors||0)+Number(sum.start_delays||0));
+
+  const upcoming=Array.isArray(d.upcoming)?d.upcoming:[];
+  if($('upcomingSchedule'))$('upcomingSchedule').innerHTML=upcoming.length?upcoming.map(x=>
+    '<div class="scheduleRow '+(x.active_now?'active':'')+'"><div><b>'+x.label+'</b><small>'+(x.active_now?' • em andamento':'')+'</small></div><strong>'+x.start+'–'+x.end+'</strong></div>'
+  ).join(''):'<div class="empty">Nenhum próximo dia ativo encontrado.</div>';
+
+  const advice=d.suggestion||{};
+  if($('climateAdvice')){
+    const metrics=[];
+    if(advice.temperature!=null)metrics.push('<span>🌡 '+Number(advice.temperature).toFixed(1)+' °C</span>');
+    if(advice.humidity!=null)metrics.push('<span>💧 '+Number(advice.humidity).toFixed(0)+'% UR</span>');
+    $('climateAdvice').className='climateAdvice '+(advice.level==='attention'?'attention':'');
+    $('climateAdvice').innerHTML='<b>'+String(advice.note||'Sem sugestão disponível.')+'</b>'+(metrics.length?'<div class="climateMetrics">'+metrics.join('')+'</div>':'');
   }
 
   const week=Array.isArray(d.summary?.week)?d.summary.week:[];
@@ -1434,7 +1504,7 @@ $('saveCycle').onclick=async e=>{
   if(ok)$('cycleDlg').close();
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-reorganizeLayout();render();renderDashboard();updateNotificationState();if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
+reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false)}},10000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},30000);

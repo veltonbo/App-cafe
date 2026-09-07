@@ -65,10 +65,8 @@ function metricValue(row){
 
 export function updateClimateSamples(existing=[],snapshot={},config={},now=Date.now()){
   const cfg=normalizeClimateConfig(config);
-  const instantTemperature=metricValue(snapshot?.metrics?.temperature);
-  const instantHumidity=metricValue(snapshot?.metrics?.humidity);
-  const temperature=Number.isFinite(Number(trendData?.temperature))?Number(trendData.temperature):instantTemperature;
-  const humidity=Number.isFinite(Number(trendData?.humidity))?Number(trendData.humidity):instantHumidity;
+  const temperature=metricValue(snapshot?.metrics?.temperature);
+  const humidity=metricValue(snapshot?.metrics?.humidity);
   const samples=Array.isArray(existing)?existing.filter(x=>x&&Number(x.ts)>0):[];
   if(temperature!=null&&humidity!=null)samples.push({ts:now,temperature,humidity});
   const cutoff=now-Math.max(15,Number(cfg.trend_minutes||30))*60000;
@@ -98,8 +96,10 @@ export function climateTrend(samples=[]){
 
 export function climateSuggestion(snapshot={},secondsState={},config={},trendData=null){
   const cfg=normalizeClimateConfig(config);
-  const temperature=metricValue(snapshot?.metrics?.temperature);
-  const humidity=metricValue(snapshot?.metrics?.humidity);
+  const instantTemperature=metricValue(snapshot?.metrics?.temperature);
+  const instantHumidity=metricValue(snapshot?.metrics?.humidity);
+  const temperature=Number.isFinite(Number(trendData?.temperature))?Number(trendData.temperature):instantTemperature;
+  const humidity=Number.isFinite(Number(trendData?.humidity))?Number(trendData.humidity):instantHumidity;
   const raining=Boolean(snapshot?.metrics?.rainDetected);
   const current=Math.max(1,Math.min(300,Math.round(Number(secondsState.on_seconds)||30)));
   const base=Math.max(1,Math.min(300,Math.round(Number(secondsState.base_on_seconds)||current)));

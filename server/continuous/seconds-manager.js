@@ -87,9 +87,7 @@ async function evaluateClimateControl(){
     const suggestion=climateSuggestion(snapshot||{},state,cfg);
     const suggestionId=[
       localDayKey(),
-      suggestion.target_on_seconds,
-      suggestion.temperature??'x',
-      suggestion.humidity??'x'
+      suggestion.target_on_seconds
     ].join('-');
 
     await patchClimateState({

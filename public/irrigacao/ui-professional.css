@@ -130,3 +130,5 @@ body.smartIrrigationV5{min-width:0;background:linear-gradient(180deg,#edf7f3 0,#
   .smartIrrigationV5 .actionBar,.smartIrrigationV5 .presetTools,.smartIrrigationV5 .maintenanceBar,.smartIrrigationV5 #eventsBox .head>div:last-child{grid-template-columns:1fr!important}
   .smartIrrigationV5 .actionBar #saveSecondsConfig{grid-column:auto}
 }
+
+/* deploy-marker-20260907-1450 */

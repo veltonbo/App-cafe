@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
-import { storeGet, storeSet } from '../api/irrigation/_store.js';
+import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import {
   localSchedule,
   prepareServerPulse,
@@ -18,9 +18,26 @@ let loopPromise=null;
 let remoteStoreAvailable=null;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
+const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 // Railway auto-deploy marker v2
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function event(type,detail,extra={}){
+  await appendHistory({
+    type,
+    detail,
+    source:'viveiro_fast',
+    status:String(state.phase||''),
+    ...extra
+  }).catch(()=>null);
+}
+async function maintenance(){
+  try{
+    const m=await storeGet(MAINTENANCE_PATH);
+    const active=Boolean(m?.enabled&&Number(m?.until||0)>Date.now());
+    return{...(m||{}),active};
+  }catch{return{active:false}}
+}
 
 async function persist(){
   let localOk=false;
@@ -132,6 +149,7 @@ async function finishAndRestore(reason='stopped'){
   const previous={...state};
   state={...state,enabled:false,phase:reason,relay_expected:false,stopped_at:Date.now()};
   await persist();
+  await event('viveiro_cycle_stop','Ciclo rápido encerrado.',{reason});
   await stopServerPulse({
     restoreNative:false,
     nativeCycleRaw:previous.native_cycle_raw||'',
@@ -145,7 +163,23 @@ async function run(){
     if(!(await active())){
       state={...state,enabled:false,phase:'stopped_external',relay_expected:false};
       await persist();
+      await event('viveiro_cycle_stop','Ciclo rápido interrompido externamente.',{reason:'stopped_external'});
       break;
+    }
+
+    const maint=await maintenance();
+    if(maint.active){
+      await safeOff();
+      const wasMaintenance=state.phase==='maintenance';
+      state={...state,phase:'maintenance',relay_expected:false,maintenance_until:Number(maint.until||0),last_error:null};
+      await persist();
+      if(!wasMaintenance)await event('viveiro_maintenance_start','Modo manutenção ativo.',{until:Number(maint.until||0)});
+      await sleep(10000);
+      continue;
+    }else if(state.phase==='maintenance'){
+      state={...state,phase:'starting',maintenance_until:0};
+      await persist();
+      await event('viveiro_maintenance_end','Modo manutenção encerrado.');
     }
 
     const schedule=localSchedule(state);
@@ -171,6 +205,7 @@ async function run(){
     }
 
     if(w.raining){
+      const firstRainPause=state.phase!=='weather_blocked';
       await safeOff();
       state={
         ...state,
@@ -181,6 +216,7 @@ async function run(){
         last_error:null
       };
       await persist();
+      if(firstRainPause)await event('viveiro_weather_pause','Irrigação pausada por chuva.',{rain_mm:w.rainMm});
       await sleep(30000);
       continue;
     }
@@ -224,6 +260,7 @@ async function run(){
       await safeOff();
       state={...state,phase:'retry_wait',relay_expected:false,last_error:error?.message||String(error)};
       await persist();
+      await event('viveiro_error','Falha ao ligar o viveiro.',{error:state.last_error});
       await sleep(10000);
       continue;
     }
@@ -236,6 +273,7 @@ async function run(){
       expected_off_at:Date.now()+maxOn*1000
     };
     await persist();
+    await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn});
 
     let elapsed=0;
     let interrupted=false;
@@ -292,6 +330,10 @@ async function run(){
       expected_next_on_at:Date.now()+Number(state.off_seconds||90)*1000
     };
     await persist();
+    await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
+      duration_seconds:maxOn,
+      pulse_count:Number(state.pulse_count||0)
+    });
 
     let offElapsed=0;
     const offSeconds=Math.max(1,Number(state.off_seconds||90));
@@ -333,6 +375,7 @@ function ensureLoop(){
       await safeOff();
       state={...state,phase:'error',relay_expected:false,last_error:error?.message||String(error)};
       await persist();
+      await event('viveiro_error','Erro no controlador do ciclo rápido.',{error:state.last_error});
     })
     .finally(()=>{loopPromise=null});
 }
@@ -366,6 +409,10 @@ export async function configureSeconds(input={}){
 
   state={...prepared,phase:'queued'};
   await persist();
+  await event('viveiro_cycle_start','Ciclo rápido configurado e iniciado.',{
+    on_seconds:state.on_seconds,off_seconds:state.off_seconds,
+    start_minutes:state.start_minutes,end_minutes:state.end_minutes,days_mask:state.days_mask
+  });
   ensureLoop();
   return state;
 }

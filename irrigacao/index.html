@@ -483,8 +483,8 @@ async function api(path,opt={}){
 function renderSecondsControlsOnly(){
   const sec=data.secondsMode||{};
   const active=Boolean(sec.enabled);
-  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=active});
-  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.disabled=active});
+  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=false});
+  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.disabled=false});
   if($('secondsBadge')){
     $('secondsBadge').textContent=active?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';
     $('secondsBadge').className='phase '+(active&&!sec.paused_by_weather?'':'off');
@@ -495,7 +495,7 @@ function renderSecondsControlsOnly(){
   }
   if($('disableSeconds'))$('disableSeconds').disabled=!active;
   if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=active
-    ?'O ciclo está em funcionamento. Para alterar os valores, pare o ciclo primeiro.'
+    ?'A programação está armada. Você pode alterar os valores; ao salvar, o servidor rearma automaticamente.'
     :'Ao salvar, a programação fica armada e inicia sozinha no horário configurado.';
   updateFastCycleDraftUI();
 }
@@ -750,8 +750,8 @@ function updateFastCycleDraftUI(){
     state.innerHTML='<span class="saveDot"></span><span>'+(dirty?'Alterações ainda não salvas':'Configuração salva')+'</span>';
   }
   if($('saveSecondsConfig')){
-    $('saveSecondsConfig').textContent=dirty?'Salvar e armar':'Configuração armada';
-    $('saveSecondsConfig').disabled=secondsActive()||!dirty;
+    $('saveSecondsConfig').textContent=dirty?(secondsActive()?'Salvar e rearmar':'Salvar e armar'):'Configuração armada';
+    $('saveSecondsConfig').disabled=!dirty;
   }
   const start=Number(saved.start_minutes??360),end=Number(saved.end_minutes??1080);
   if($('windowText'))$('windowText').textContent=minutesToClock(start)+' às '+minutesToClock(end);
@@ -838,12 +838,18 @@ async function armSecondsSchedule(draft,showToast=true){
   return r.state;
 }
 async function saveSecondsDraft(showToast=true,autoArm=true){
-  if(secondsActive()){
-    if(showToast)toast('Pare o ciclo rápido antes de alterar a configuração');
-    return null;
-  }
+  const wasActive=secondsActive();
   try{
     data.secondsDraft=readSecondsDraft();
+    if(wasActive){
+      try{
+        const stopped=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'disable'})});
+        if(stopped?.state)data.secondsMode=stopped.state;
+      }catch(e){
+        if(showToast)toast('Não foi possível rearmar: '+String(e.message||e));
+        return null;
+      }
+    }
     data.secondsCloud={...(data.secondsCloud||{}),synced:false};
     save();
     renderSecondsControlsOnly();renderSecondsRuntimeOnly();
@@ -864,8 +870,8 @@ async function saveSecondsDraft(showToast=true,autoArm=true){
         if(showToast){
           const phase=String(data.secondsMode?.phase||'');
           const msg=phase==='waiting_window'
-            ?'Salvo e armado. Vai iniciar no horário configurado.'
-            :'Salvo e armado.';
+            ?(wasActive?'Alterações salvas. Programação rearmada para o horário configurado.':'Salvo e armado. Vai iniciar no horário configurado.')
+            :(wasActive?'Alterações salvas e programação rearmada.':'Salvo e armado.');
           toast(cloudOk?msg:(msg+' Nuvem sem sincronização.'));
         }
       }catch(e){
@@ -1129,6 +1135,7 @@ async function updateNotificationState(){
     const reg=await viveiroSwReg();
     const sub=await reg.pushManager.getSubscription();
     const active=Boolean(sub&&Notification.permission==='granted');
+    data.pushActive=active;save();
     $('notifyState').textContent=active?'Notificações em segundo plano ativas.':Notification.permission==='denied'?'Notificações bloqueadas nas configurações do navegador.':'Notificações desativadas.';
     $('enableNotifications').textContent=active?'Notificações ativas':'Ativar notificações';
     $('enableNotifications').disabled=active||Notification.permission==='denied';
@@ -1153,6 +1160,7 @@ async function enableBrowserNotifications(){
   }catch(e){toast('Notificações: '+String(e.message||e))}
 }
 function processDashboardNotifications(payload){
+  if(data.pushActive)return;
   if(!notificationsSupported()||Notification.permission!=='granted')return;
   const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
   const important=new Set([
@@ -1358,11 +1366,11 @@ function render(){
   if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(secCfg.off_seconds||90);
   if($('secondsStart')&&document.activeElement!==$('secondsStart'))$('secondsStart').value=minutesToClock(Number(secCfg.start_minutes??360));
   if($('secondsEnd')&&document.activeElement!==$('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(secCfg.end_minutes??1080));
-  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=secActive});
-  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(secCfg.days_mask??127)&Number(cb.value));cb.disabled=secActive});
+  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=false});
+  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(secCfg.days_mask??127)&Number(cb.value));cb.disabled=false});
   if($('secondsBadge')){$('secondsBadge').textContent=secActive?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';$('secondsBadge').className='phase '+(secActive&&!sec.paused_by_weather?'':'off')}
   if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+Number(secCfg.on_seconds||30)+' s / '+Number(secCfg.off_seconds||90)+' s • '+minutesToClock(secCfg.start_minutes)+'–'+minutesToClock(secCfg.end_minutes)+'</strong>'} updateSecondsLive();
-  if($('saveSecondsConfig'))$('saveSecondsConfig').disabled=secActive;
+  if($('saveSecondsConfig'))$('saveSecondsConfig').disabled=false;
   if($('enableSeconds')){$('enableSeconds').textContent=secActive?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';$('enableSeconds').disabled=secActive}
   if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
   if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=secActive

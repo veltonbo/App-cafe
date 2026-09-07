@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { sendPushAlert } from '../api/irrigation/_push.js';
+import { climateSuggestion, getClimateConfig, getClimateState, patchClimateState } from '../api/viveiro/_climate.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -47,6 +48,112 @@ async function maintenance(){
     const active=Boolean(m?.enabled&&Number(m?.until||0)>Date.now());
     return{...(m||{}),active};
   }catch{return{active:false}}
+}
+async function evaluateClimateControl(){
+  if(!state.enabled)return;
+  try{
+    const [cfg,climateState]=await Promise.all([getClimateConfig(),getClimateState()]);
+    if(cfg.enabled===false)return;
+
+    const pending=climateState?.pending||null;
+    if(pending&&String(climateState?.approved_id||'')===String(pending.id||'')){
+      const oldOn=Math.max(1,Number(state.on_seconds||30));
+      const target=Math.max(1,Math.min(300,Math.round(Number(pending.target_on_seconds)||oldOn)));
+      state={...state,on_seconds:target,climate_adjusted_at:Date.now(),climate_reason:String(pending.reason||'Ajuste climático aprovado.')};
+      await persist();
+      await patchClimateState({
+        pending:null,
+        approved_id:null,
+        last_applied_at:Date.now(),
+        last_applied_from:oldOn,
+        last_applied_to:target,
+        last_reason:String(pending.reason||'Ajuste climático aprovado.')
+      });
+      await event('viveiro_climate_applied','Ajuste climático aplicado após aprovação.',{
+        from_seconds:oldOn,to_seconds:target,reason:pending.reason||''
+      });
+      await pushNotice(
+        'Tempo de irrigação alterado',
+        'Alterado de '+oldOn+' s para '+target+' s. '+String(pending.reason||''),
+        'viveiro-climate-applied-'+Date.now()
+      );
+      return;
+    }
+
+    const lastEval=Number(climateState?.last_evaluated_at||0);
+    if(Date.now()-lastEval<Math.max(5,Number(cfg.evaluation_minutes||15))*60000)return;
+
+    const snapshot=await fetchWeatherSnapshot().catch(()=>null);
+    const suggestion=climateSuggestion(snapshot||{},state,cfg);
+    const suggestionId=[
+      localDayKey(),
+      suggestion.target_on_seconds,
+      suggestion.temperature??'x',
+      suggestion.humidity??'x'
+    ].join('-');
+
+    await patchClimateState({
+      last_evaluated_at:Date.now(),
+      last_temperature:suggestion.temperature,
+      last_humidity:suggestion.humidity,
+      last_reason:suggestion.reason,
+      last_target_on_seconds:suggestion.target_on_seconds
+    });
+
+    if(!suggestion.useful)return;
+
+    if(cfg.automatic){
+      const oldOn=Math.max(1,Number(state.on_seconds||30));
+      const target=Math.max(1,Math.min(300,Math.round(Number(suggestion.target_on_seconds)||oldOn)));
+      if(target===oldOn)return;
+      state={...state,on_seconds:target,climate_adjusted_at:Date.now(),climate_reason:suggestion.reason};
+      await persist();
+      await patchClimateState({
+        pending:null,
+        approved_id:null,
+        rejected_id:null,
+        last_applied_at:Date.now(),
+        last_applied_from:oldOn,
+        last_applied_to:target,
+        last_reason:suggestion.reason,
+        automatic:true
+      });
+      await event('viveiro_climate_auto_change','Tempo do ciclo alterado automaticamente pelo clima.',{
+        from_seconds:oldOn,to_seconds:target,
+        temperature:suggestion.temperature,humidity:suggestion.humidity,
+        reason:suggestion.reason
+      });
+      await pushNotice(
+        'Ajuste climático automático',
+        'Tempo ligado: '+oldOn+' s → '+target+' s. '+suggestion.reason,
+        'viveiro-climate-auto-'+suggestionId
+      );
+      return;
+    }
+
+    const samePending=String(pending?.id||'')===String(suggestionId);
+    const alreadyRejected=String(climateState?.rejected_id||'')===String(suggestionId);
+    if(samePending||alreadyRejected)return;
+
+    const newPending={
+      id:suggestionId,
+      created_at:Date.now(),
+      current_on_seconds:suggestion.current_on_seconds,
+      target_on_seconds:suggestion.target_on_seconds,
+      temperature:suggestion.temperature,
+      humidity:suggestion.humidity,
+      reason:suggestion.reason
+    };
+    await patchClimateState({pending:newPending,approved_id:null});
+    await event('viveiro_climate_suggestion','Sugestão de ajuste climático aguardando aprovação.',newPending);
+    await pushNotice(
+      'Sugestão de ajuste no viveiro',
+      'Sugestão: '+suggestion.current_on_seconds+' s → '+suggestion.target_on_seconds+' s. '+suggestion.reason,
+      'viveiro-climate-suggest-'+suggestionId
+    );
+  }catch(error){
+    console.warn('climate control:',error?.message||error);
+  }
 }
 
 async function persist(){
@@ -196,6 +303,8 @@ async function run(){
       await persist();
       await event('viveiro_maintenance_end','Modo manutenção encerrado.');
     }
+
+    await evaluateClimateControl();
 
     const schedule=localSchedule(state);
     if(!schedule.inside){
@@ -511,7 +620,7 @@ export async function configureSeconds(input={}){
     daysMask:input.days_mask
   });
 
-  state={...prepared,phase:'queued'};
+  state={...prepared,base_on_seconds:Number(prepared.on_seconds||30),phase:'queued'};
   await persist();
   await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,

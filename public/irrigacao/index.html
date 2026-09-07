@@ -130,6 +130,14 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 .offlineBanner{display:none;position:sticky;top:74px;z-index:4;padding:9px 12px;border-radius:12px;background:#fff4dd;color:#8a5b10;font-size:.8rem;font-weight:850;margin-bottom:9px;border:1px solid #f0d59d}
 .offlineBanner.show{display:block}
 @media(max-width:760px){.opsGrid{grid-template-columns:1fr 1fr}.weekGrid{grid-template-columns:repeat(4,1fr)}.eventRow{grid-template-columns:auto 1fr}.eventRow>small:last-child{grid-column:2}.offlineBanner{top:70px}}
+
+/* Viveiro Alerts v6 */
+.auditFilters{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.auditFilters .btn{flex:0 0 auto;min-width:0;padding:8px 10px;font-size:.74rem}
+.auditFilters .btn.active{background:var(--brand);color:#fff}
+.notifyBtn{min-width:auto!important;flex:0 0 auto!important}
+.notifyState{font-size:.72rem;color:var(--muted);margin-top:7px}
+.criticalEvent{border-color:#efb9b4!important;background:#fff7f6!important}
 </style>
 </head>
 <body>
@@ -273,7 +281,21 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 </section>
 
 <section class="box" id="eventsBox">
-  <div class="head"><div><span class="sectionKicker">Registro automático</span><h2>Eventos do viveiro</h2></div><button id="refreshDashboard" class="btn soft" style="min-width:auto;flex:0">Atualizar</button></div>
+  <div class="head">
+    <div><span class="sectionKicker">Registro automático</span><h2>Auditoria de hoje</h2></div>
+    <div style="display:flex;gap:6px">
+      <button id="enableNotifications" class="btn soft notifyBtn">Ativar avisos</button>
+      <button id="refreshDashboard" class="btn soft notifyBtn">Atualizar</button>
+    </div>
+  </div>
+  <div id="notifyState" class="notifyState">Avisos do navegador desativados.</div>
+  <div class="auditFilters">
+    <button type="button" class="btn soft auditFilter active" data-filter="all">Todos</button>
+    <button type="button" class="btn soft auditFilter" data-filter="irrigation">Irrigação</button>
+    <button type="button" class="btn soft auditFilter" data-filter="rain">Chuva</button>
+    <button type="button" class="btn soft auditFilter" data-filter="error">Erros</button>
+    <button type="button" class="btn soft auditFilter" data-filter="config">Configuração</button>
+  </div>
   <div id="eventList" class="eventList"><div class="empty">Aguardando eventos...</div></div>
 </section>
 
@@ -369,6 +391,9 @@ if(!('secondsMode' in data)) data.secondsMode=null;
 if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
 if(!('secondsCloud' in data))data.secondsCloud={loaded:false,synced:false,lastSync:0};
 if(!('dashboard' in data))data.dashboard=null;
+if(!('auditFilter' in data))data.auditFilter='all';
+if(!Array.isArray(data.notifiedEventIds))data.notifiedEventIds=[];
+if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
 let syncing=false;
 let weatherSyncing=false;
 const $=id=>document.getElementById(id);
@@ -1030,6 +1055,80 @@ function validateFastCycle(){
   box.textContent=msg;
   box.className='alertBox '+(msg?'show ':'')+(bad?'bad':'');
 }
+function auditCategory(type){
+  const t=String(type||'');
+  if(t.includes('weather')||t.includes('rain'))return 'rain';
+  if(t.includes('error')||t.includes('failure')||t.includes('delay'))return 'error';
+  if(t.includes('cycle_start')||t.includes('waiting_window')||t.includes('window_start')||t.includes('window_end')||t.includes('preset')||t.includes('config'))return 'config';
+  return 'irrigation';
+}
+function notificationTitle(type){
+  const t=String(type||'');
+  if(t==='viveiro_window_start')return 'Irrigação liberada';
+  if(t==='viveiro_weather_pause')return 'Irrigação pausada por chuva';
+  if(t==='viveiro_weather_resume')return 'Irrigação retomada';
+  if(t==='viveiro_start_failure')return 'Falha no início do ciclo';
+  if(t==='viveiro_start_delay')return 'Ciclo iniciou com atraso';
+  if(t.includes('error'))return 'Erro no viveiro';
+  if(t==='viveiro_maintenance_start')return 'Modo manutenção';
+  if(t==='viveiro_maintenance_end')return 'Manutenção encerrada';
+  return 'Fazenda 2E • Viveiro';
+}
+function notificationsSupported(){
+  return typeof Notification!=='undefined';
+}
+function updateNotificationState(){
+  if(!$('notifyState')||!$('enableNotifications'))return;
+  if(!notificationsSupported()){
+    $('notifyState').textContent='Este navegador não oferece avisos de sistema.';
+    $('enableNotifications').disabled=true;
+    return;
+  }
+  const p=Notification.permission;
+  $('notifyState').textContent=p==='granted'?'Avisos do navegador ativados.':p==='denied'?'Avisos bloqueados nas configurações do navegador.':'Avisos do navegador desativados.';
+  $('enableNotifications').textContent=p==='granted'?'Avisos ativados':'Ativar avisos';
+  $('enableNotifications').disabled=p==='denied'||p==='granted';
+}
+async function enableBrowserNotifications(){
+  if(!notificationsSupported())return toast('Avisos não disponíveis neste navegador');
+  try{
+    const p=await Notification.requestPermission();
+    updateNotificationState();
+    if(p==='granted'){
+      data.notificationsPrimed=false;
+      save();
+      toast('Avisos ativados');
+      syncDashboard(false);
+    }else toast('Avisos não foram ativados');
+  }catch(e){toast('Não foi possível ativar os avisos')}
+}
+function processDashboardNotifications(payload){
+  if(!notificationsSupported()||Notification.permission!=='granted')return;
+  const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
+  const important=new Set([
+    'viveiro_window_start','viveiro_weather_pause','viveiro_weather_resume',
+    'viveiro_start_failure','viveiro_start_delay','viveiro_error',
+    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop'
+  ]);
+  if(!data.notificationsPrimed){
+    data.notifiedEventIds=rows.slice(0,80).map(x=>String(x.id||x.ts||''));
+    data.notificationsPrimed=true;
+    save();
+    return;
+  }
+  const seen=new Set(data.notifiedEventIds||[]);
+  const fresh=rows.filter(x=>important.has(String(x.type||''))&&!seen.has(String(x.id||x.ts||''))).reverse();
+  fresh.forEach(x=>{
+    try{
+      new Notification(notificationTitle(x.type),{
+        body:String(x.detail||'Novo evento no viveiro.'),
+        tag:'viveiro-'+String(x.id||x.ts||Date.now())
+      });
+    }catch{}
+  });
+  data.notifiedEventIds=[...rows.slice(0,80).map(x=>String(x.id||x.ts||'')),...(data.notifiedEventIds||[])].slice(0,120);
+  save();
+}
 function renderDashboard(){
   const d=data.dashboard||{};
   const sum=d.summary?.today||{};
@@ -1060,6 +1159,11 @@ function renderDashboard(){
   else if(sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
   else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
   else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
+  const latestCritical=(Array.isArray(d.audit_today)?d.audit_today:[]).find(x=>
+    ['viveiro_start_failure','viveiro_start_delay','viveiro_error'].includes(String(x.type||'')) &&
+    Date.now()-Number(x.ts||0)<10*60*1000
+  );
+  if(latestCritical)alert=String(latestCritical.detail||'Falha recente no viveiro.');
   if($('systemAlert')){$('systemAlert').textContent=alert;$('systemAlert').className='alertBox '+(alert?'show bad':'')}
 
   const maint=d.maintenance||{};
@@ -1073,11 +1177,15 @@ function renderDashboard(){
     '<div class="weekDay"><small>'+x.label+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+x.pulses+' pulsos</small></div>'
   ).join(''):'<div class="empty">Sem histórico ainda.</div>';
 
-  const events=Array.isArray(d.history)?d.history:[];
-  if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,20).map(x=>{
+  const audit=Array.isArray(d.audit_today)?d.audit_today:(Array.isArray(d.history)?d.history:[]);
+  const filter=String(data.auditFilter||'all');
+  const events=filter==='all'?audit:audit.filter(x=>auditCategory(x.type)===filter);
+  if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,40).map(x=>{
     const at=Number(x.ts||Date.parse(x.at||0));
-    return '<div class="eventRow"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+String(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
-  }).join(''):'<div class="empty">Nenhum evento registrado.</div>';
+    const critical=auditCategory(x.type)==='error';
+    return '<div class="eventRow '+(critical?'criticalEvent':'')+'"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+String(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
+  }).join(''):'<div class="empty">Nenhum evento nesta categoria hoje.</div>';
+  document.querySelectorAll('.auditFilter').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===filter));
 
   const diag={phase:sec.phase||null,relay:data.relay,seconds_state:sec,weather:data.weatherProtection?.state||null,maintenance:maint,last_sync:data.lastSync};
   if($('systemDiag'))$('systemDiag').textContent=JSON.stringify(diag,null,2);
@@ -1098,6 +1206,7 @@ function renderDashboard(){
 async function syncDashboard(showToast=false){
   try{
     const r=await api('/api/viveiro/dashboard');
+    processDashboardNotifications(r);
     data.dashboard=r;
     save();renderDashboard();
     if(showToast)toast('Painel atualizado');
@@ -1325,7 +1434,7 @@ $('saveCycle').onclick=async e=>{
   if(ok)$('cycleDlg').close();
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-reorganizeLayout();render();renderDashboard();if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
+reorganizeLayout();render();renderDashboard();updateNotificationState();if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false)}},10000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},30000);

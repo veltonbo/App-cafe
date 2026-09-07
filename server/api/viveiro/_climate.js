@@ -6,6 +6,8 @@ const STATE_PATH='IrrigacaoFazenda2E/viveiroClimate/state';
 export function normalizeClimateConfig(raw={}){
   return{
     automatic:Boolean(raw.automatic),
+    observation:Boolean(raw.observation),
+    trend_minutes:Math.max(15,Math.min(60,Math.round(Number(raw.trend_minutes)||30))),
     evaluation_minutes:Math.max(5,Math.min(60,Math.round(Number(raw.evaluation_minutes)||15))),
     max_adjust_percent:Math.max(10,Math.min(40,Math.round(Number(raw.max_adjust_percent)||30))),
     min_change_seconds:Math.max(2,Math.min(20,Math.round(Number(raw.min_change_seconds)||3))),
@@ -61,7 +63,40 @@ function metricValue(row){
   return Number.isFinite(n)?n:null;
 }
 
-export function climateSuggestion(snapshot={},secondsState={},config={}){
+export function updateClimateSamples(existing=[],snapshot={},config={},now=Date.now()){
+  const cfg=normalizeClimateConfig(config);
+  const instantTemperature=metricValue(snapshot?.metrics?.temperature);
+  const instantHumidity=metricValue(snapshot?.metrics?.humidity);
+  const temperature=Number.isFinite(Number(trendData?.temperature))?Number(trendData.temperature):instantTemperature;
+  const humidity=Number.isFinite(Number(trendData?.humidity))?Number(trendData.humidity):instantHumidity;
+  const samples=Array.isArray(existing)?existing.filter(x=>x&&Number(x.ts)>0):[];
+  if(temperature!=null&&humidity!=null)samples.push({ts:now,temperature,humidity});
+  const cutoff=now-Math.max(15,Number(cfg.trend_minutes||30))*60000;
+  return samples.filter(x=>Number(x.ts)>=cutoff).slice(-48);
+}
+
+export function climateTrend(samples=[]){
+  const rows=(Array.isArray(samples)?samples:[]).filter(x=>Number.isFinite(Number(x.temperature))&&Number.isFinite(Number(x.humidity)));
+  if(!rows.length)return{samples:0,temperature:null,humidity:null,temp_range:null,humidity_range:null,confidence:'low',confidence_label:'Baixa'};
+  const temps=rows.map(x=>Number(x.temperature)),hums=rows.map(x=>Number(x.humidity));
+  const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
+  const tempRange=Math.max(...temps)-Math.min(...temps);
+  const humRange=Math.max(...hums)-Math.min(...hums);
+  let confidence='low';
+  if(rows.length>=3&&tempRange<=3&&humRange<=12)confidence='high';
+  else if(rows.length>=2&&tempRange<=5&&humRange<=20)confidence='medium';
+  return{
+    samples:rows.length,
+    temperature:avg(temps),
+    humidity:avg(hums),
+    temp_range:tempRange,
+    humidity_range:humRange,
+    confidence,
+    confidence_label:confidence==='high'?'Alta':confidence==='medium'?'Média':'Baixa'
+  };
+}
+
+export function climateSuggestion(snapshot={},secondsState={},config={},trendData=null){
   const cfg=normalizeClimateConfig(config);
   const temperature=metricValue(snapshot?.metrics?.temperature);
   const humidity=metricValue(snapshot?.metrics?.humidity);
@@ -76,6 +111,9 @@ export function climateSuggestion(snapshot={},secondsState={},config={}){
       base_on_seconds:base,
       target_on_seconds:current,
       temperature,humidity,
+      confidence:trendData?.confidence||'low',
+      confidence_label:trendData?.confidence_label||'Baixa',
+      trend:trendData||null,
       reason:'Chuva detectada. A proteção por chuva tem prioridade e o tempo de pulso não será alterado.'
     };
   }
@@ -86,6 +124,9 @@ export function climateSuggestion(snapshot={},secondsState={},config={}){
       base_on_seconds:base,
       target_on_seconds:current,
       temperature,humidity,
+      confidence:trendData?.confidence||'low',
+      confidence_label:trendData?.confidence_label||'Baixa',
+      trend:trendData||null,
       reason:'Sem temperatura e umidade suficientes para calcular um ajuste seguro.'
     };
   }
@@ -109,17 +150,23 @@ export function climateSuggestion(snapshot={},secondsState={},config={}){
   const maxTarget=Math.min(300,Math.round(base*(1+maxPct)));
   const target=Math.max(minTarget,Math.min(maxTarget,Math.round(base*factor)));
   const delta=Math.abs(target-current);
-  const useful=delta>=cfg.min_change_seconds&&target!==current;
+  const returningToBase=target===base&&current!==base;
+  const useful=(delta>=cfg.min_change_seconds||returningToBase)&&target!==current;
 
   return{
     useful,
+    returning_to_base:returningToBase,
     current_on_seconds:current,
     base_on_seconds:base,
     target_on_seconds:target,
     temperature,
     humidity,
     factor,
-    reason,
-    automatic:cfg.automatic
+    confidence:trendData?.confidence||'low',
+    confidence_label:trendData?.confidence_label||'Baixa',
+    trend:trendData||null,
+    reason:returningToBase?'As condições voltaram à faixa normal. Recomendo retornar ao tempo-base de '+base+' s.':reason,
+    automatic:cfg.automatic,
+    observation:cfg.observation
   };
 }

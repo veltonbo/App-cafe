@@ -2,8 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
-import { sendPushAlert } from '../api/irrigation/_push.js';
-import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples } from '../api/viveiro/_climate.js';
+import { notifyIrrigation } from '../api/irrigation/_notify.js';
+import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, setClimateConfig, updateClimateSamples } from '../api/viveiro/_climate.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -34,8 +34,8 @@ async function event(type,detail,extra={}){
     ...extra
   }).catch(()=>null);
 }
-async function pushNotice(title,body,tag,level='info'){
-  await sendPushAlert({title,body,tag,url:'/irrigacao/',level}).catch(()=>null);
+async function pushNotice(title,body,tag,level='info',cooldownMinutes=0,whatsapp=true){
+  await notifyIrrigation({title,body,tag,url:'/irrigacao/',level,cooldownMinutes,whatsapp}).catch(()=>null);
 }
 function localDayKey(ts=Date.now()){
   return new Intl.DateTimeFormat('en-CA',{
@@ -54,47 +54,79 @@ async function evaluateClimateControl(){
   try{
     const [cfg,climateState]=await Promise.all([getClimateConfig(),getClimateState()]);
     if(cfg.enabled===false)return;
+    if(state.paused_by_weather||['weather_blocked','waiting_after_rain'].includes(String(state.phase||'')))return;
+    if(Number(state.climate_post_rain_hold_until||0)>Date.now())return;
 
     const pending=climateState?.pending||null;
     if(pending&&String(climateState?.approved_id||'')===String(pending.id||'')){
       const oldOn=Math.max(1,Number(state.on_seconds||30));
-      const target=Math.max(1,Math.min(300,Math.round(Number(pending.target_on_seconds)||oldOn)));
-      state={...state,on_seconds:target,climate_adjusted_at:Date.now(),climate_reason:String(pending.reason||'Ajuste climático aprovado.')};
+      const oldOff=Math.max(1,Number(state.off_seconds||120));
+      const targetOn=Math.max(1,Math.min(300,Math.round(Number(pending.target_on_seconds)||oldOn)));
+      const targetOff=Math.max(1,Math.min(900,Math.round(Number(pending.target_off_seconds)||oldOff)));
+      state={
+        ...state,on_seconds:targetOn,off_seconds:targetOff,
+        climate_adjusted_at:Date.now(),climate_reason:String(pending.reason||'Ajuste climático aprovado.')
+      };
       await persist();
       await patchClimateState({
         pending:null,approved_id:null,last_applied_at:Date.now(),
-        last_applied_from:oldOn,last_applied_to:target,last_reason:String(pending.reason||'Ajuste climático aprovado.')
+        last_applied_from:oldOn,last_applied_to:targetOn,
+        last_applied_off_from:oldOff,last_applied_off_to:targetOff,
+        normal_streak:0,last_reason:String(pending.reason||'Ajuste climático aprovado.')
       });
       await event('viveiro_climate_applied','Ajuste climático aplicado após aprovação.',{
-        from_seconds:oldOn,to_seconds:target,reason:pending.reason||'',confidence:pending.confidence||''
+        from_seconds:oldOn,to_seconds:targetOn,from_off_seconds:oldOff,to_off_seconds:targetOff,
+        reason:pending.reason||'',confidence:pending.confidence||''
       });
-      await pushNotice('Tempo de irrigação alterado','Alterado de '+oldOn+' s para '+target+' s. '+String(pending.reason||''),'viveiro-climate-applied-'+Date.now());
+      await pushNotice(
+        'Irrigação ajustada',
+        oldOn+'s/'+oldOff+'s → '+targetOn+'s/'+targetOff+'s. '+String(pending.reason||''),
+        'viveiro-climate-applied-'+Date.now()
+      );
       return;
     }
 
     const lastEval=Number(climateState?.last_evaluated_at||0);
-    if(Date.now()-lastEval<Math.max(5,Number(cfg.evaluation_minutes||15))*60000)return;
+    if(Date.now()-lastEval<Math.max(5,Number(cfg.evaluation_minutes||5))*60000)return;
 
     const snapshot=await fetchWeatherSnapshot().catch(()=>null);
     const samples=updateClimateSamples(climateState?.samples||[],snapshot||{},cfg,Date.now());
-    const trend=climateTrend(samples);
+    const trend=climateTrend(samples,Date.now());
     const suggestion=climateSuggestion(snapshot||{},state,cfg,trend);
-    const suggestionId=[localDayKey(),suggestion.target_on_seconds,suggestion.confidence].join('-');
+    const suggestionId=[
+      localDayKey(),suggestion.target_on_seconds,suggestion.target_off_seconds,
+      suggestion.confidence,suggestion.level
+    ].join('-');
+    const previousNormal=Math.max(0,Number(climateState?.normal_streak||0));
+    const normalCandidate=suggestion.level==='normal'||Boolean(suggestion.returning_to_base);
+    const normalStreak=normalCandidate?previousNormal+1:0;
 
     await patchClimateState({
       samples,
       last_evaluated_at:Date.now(),
       last_temperature:suggestion.temperature,
       last_humidity:suggestion.humidity,
+      last_vpd:suggestion.vpd,
       last_reason:suggestion.reason,
       last_target_on_seconds:suggestion.target_on_seconds,
+      last_target_off_seconds:suggestion.target_off_seconds,
+      drying_level:suggestion.level,
+      drying_level_label:suggestion.level_label,
+      water_factor:suggestion.water_factor,
       confidence:suggestion.confidence,
       confidence_label:suggestion.confidence_label,
       trend_temperature:trend.temperature,
       trend_humidity:trend.humidity,
+      trend_vpd:trend.vpd,
+      trend_vpd_delta:trend.vpd_delta,
+      trend_temp_delta:trend.temp_delta,
+      trend_humidity_delta:trend.humidity_delta,
       trend_samples:trend.samples,
+      sample_age_minutes:trend.age_minutes,
       temp_range:trend.temp_range,
-      humidity_range:trend.humidity_range
+      humidity_range:trend.humidity_range,
+      normal_streak:normalStreak,
+      version:2
     });
 
     if(!suggestion.useful)return;
@@ -103,9 +135,10 @@ async function evaluateClimateControl(){
       const sameObservation=String(climateState?.last_observation_id||'')===String(suggestionId);
       if(!sameObservation){
         await patchClimateState({last_observation_id:suggestionId,last_observation_at:Date.now()});
-        await event('viveiro_climate_observation','Modo observação: ajuste climático identificado, sem alterar o ciclo.',{
+        await event('viveiro_climate_observation','Automático 2.0 em observação: ajuste identificado sem alterar o ciclo.',{
           from_seconds:suggestion.current_on_seconds,to_seconds:suggestion.target_on_seconds,
-          temperature:suggestion.temperature,humidity:suggestion.humidity,
+          from_off_seconds:suggestion.current_off_seconds,to_off_seconds:suggestion.target_off_seconds,
+          temperature:suggestion.temperature,humidity:suggestion.humidity,vpd:suggestion.vpd,
           confidence:suggestion.confidence,reason:suggestion.reason
         });
       }
@@ -113,26 +146,49 @@ async function evaluateClimateControl(){
     }
 
     const lowConfidence=suggestion.confidence==='low';
-    if(cfg.automatic&&!lowConfidence){
+    const cooldownMs=Math.max(20,Number(cfg.cooldown_minutes||30))*60000;
+    const cooldownActive=Date.now()-Number(climateState?.last_applied_at||0)<cooldownMs;
+
+    if(cfg.automatic){
+      if(lowConfidence)return;
+      if(suggestion.returning_to_base&&normalStreak<Math.max(2,Number(cfg.normal_confirmations||2)))return;
+      if(cooldownActive)return;
+
       const oldOn=Math.max(1,Number(state.on_seconds||30));
-      const target=Math.max(1,Math.min(300,Math.round(Number(suggestion.target_on_seconds)||oldOn)));
-      if(target===oldOn)return;
-      state={...state,on_seconds:target,climate_adjusted_at:Date.now(),climate_reason:suggestion.reason};
+      const oldOff=Math.max(1,Number(state.off_seconds||120));
+      const targetOn=Math.max(1,Math.min(300,Math.round(Number(suggestion.target_on_seconds)||oldOn)));
+      const targetOff=Math.max(1,Math.min(900,Math.round(Number(suggestion.target_off_seconds)||oldOff)));
+      if(targetOn===oldOn&&targetOff===oldOff)return;
+
+      state={
+        ...state,
+        on_seconds:targetOn,off_seconds:targetOff,
+        climate_adjusted_at:Date.now(),climate_reason:suggestion.reason,
+        climate_vpd:suggestion.vpd,climate_level:suggestion.level
+      };
       await persist();
       await patchClimateState({
         pending:null,approved_id:null,rejected_id:null,last_applied_at:Date.now(),
-        last_applied_from:oldOn,last_applied_to:target,last_reason:suggestion.reason,
-        automatic:true,confidence:suggestion.confidence
+        last_applied_from:oldOn,last_applied_to:targetOn,
+        last_applied_off_from:oldOff,last_applied_off_to:targetOff,
+        last_reason:suggestion.reason,automatic:true,confidence:suggestion.confidence,
+        normal_streak:0,version:2
       });
       const type=suggestion.returning_to_base?'viveiro_climate_return_base':'viveiro_climate_auto_change';
-      await event(type,suggestion.returning_to_base?'Tempo retornou automaticamente ao valor-base.':'Tempo do ciclo alterado automaticamente pelo clima.',{
-        from_seconds:oldOn,to_seconds:target,temperature:suggestion.temperature,humidity:suggestion.humidity,
+      await event(type,suggestion.returning_to_base?'Automático 2.0 retornou ao ciclo-base.':'Automático 2.0 ajustou o intervalo pelo clima.',{
+        from_seconds:oldOn,to_seconds:targetOn,from_off_seconds:oldOff,to_off_seconds:targetOff,
+        temperature:suggestion.temperature,humidity:suggestion.humidity,vpd:suggestion.vpd,
+        water_factor:suggestion.water_factor,level:suggestion.level,
         confidence:suggestion.confidence,reason:suggestion.reason
       });
       await pushNotice(
-        suggestion.returning_to_base?'Retorno ao tempo-base':'Ajuste climático automático',
-        'Tempo ligado: '+oldOn+' s → '+target+' s. '+suggestion.reason+' Confiança: '+suggestion.confidence_label+'.',
-        'viveiro-climate-auto-'+suggestionId
+        suggestion.returning_to_base?'Irrigação voltou ao padrão':'Automático 2.0 ajustou a irrigação',
+        oldOn+'s ligado / '+oldOff+'s intervalo → '+targetOn+'s / '+targetOff+'s. '+
+          'VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa • '+suggestion.confidence_label+'. '+suggestion.reason,
+        'viveiro-climate-auto-'+suggestionId,
+        suggestion.level==='muito_seco'?'warning':'info',
+        20,
+        true
       );
       return;
     }
@@ -143,17 +199,19 @@ async function evaluateClimateControl(){
 
     const newPending={
       id:suggestionId,created_at:Date.now(),
-      current_on_seconds:suggestion.current_on_seconds,target_on_seconds:suggestion.target_on_seconds,
-      temperature:suggestion.temperature,humidity:suggestion.humidity,
+      current_on_seconds:suggestion.current_on_seconds,current_off_seconds:suggestion.current_off_seconds,
+      target_on_seconds:suggestion.target_on_seconds,target_off_seconds:suggestion.target_off_seconds,
+      temperature:suggestion.temperature,humidity:suggestion.humidity,vpd:suggestion.vpd,
+      level:suggestion.level,level_label:suggestion.level_label,
       confidence:suggestion.confidence,confidence_label:suggestion.confidence_label,
-      reason:(cfg.automatic&&lowConfidence?'Confiança baixa: o automático pede confirmação. ':'')+suggestion.reason,
-      returning_to_base:Boolean(suggestion.returning_to_base)
+      reason:suggestion.reason,returning_to_base:Boolean(suggestion.returning_to_base)
     };
     await patchClimateState({pending:newPending,approved_id:null});
-    await event('viveiro_climate_suggestion','Sugestão de ajuste climático aguardando aprovação.',newPending);
+    await event('viveiro_climate_suggestion','Sugestão do Automático 2.0 aguardando aprovação.',newPending);
     await pushNotice(
       'Sugestão de ajuste no viveiro',
-      'Sugestão: '+suggestion.current_on_seconds+' s → '+suggestion.target_on_seconds+' s. '+newPending.reason,
+      suggestion.current_on_seconds+'s/'+suggestion.current_off_seconds+'s → '+
+      suggestion.target_on_seconds+'s/'+suggestion.target_off_seconds+'s. '+newPending.reason,
       'viveiro-climate-suggest-'+suggestionId
     );
   }catch(error){
@@ -290,6 +348,14 @@ async function run(){
       state={...state,enabled:false,phase:'stopped_external',relay_expected:false};
       await persist();
       await event('viveiro_cycle_stop','Ciclo rápido interrompido externamente.',{reason:'stopped_external'});
+      await pushNotice(
+        'Atenção • irrigação interrompida',
+        'O ciclo automático foi interrompido externamente e ficou parado.',
+        'viveiro-stopped-external-'+localDayKey(),
+        'critical',
+        20,
+        true
+      );
       break;
     }
 
@@ -353,11 +419,35 @@ async function run(){
 
     const w=await weather();
     if(!w.usable){
+      const firstUnavailable=state.phase!=='weather_unavailable';
       await safeOff();
       state={...state,phase:'weather_unavailable',relay_expected:false,last_error:'Weather2-2 sem dados.'};
       await persist();
+      if(firstUnavailable){
+        await event('viveiro_weather_unavailable','Weather2-2 ficou indisponível. Irrigação mantida desligada por segurança.');
+        await pushNotice(
+          'Atenção • sensor climático offline',
+          'A Weather2-2 ficou sem dados. Por segurança, o viveiro foi mantido desligado até o sensor voltar.',
+          'viveiro-weather-unavailable',
+          'critical',
+          30,
+          true
+        );
+      }
       await sleep(30000);
       continue;
+    }
+
+    if(state.phase==='weather_unavailable'){
+      await event('viveiro_weather_recovered','Weather2-2 voltou a responder.');
+      await pushNotice(
+        'Sensor climático recuperado',
+        'A Weather2-2 voltou a responder. O sistema vai retomar conforme chuva, horário e proteção configurados.',
+        'viveiro-weather-recovered',
+        'info',
+        20,
+        true
+      );
     }
 
     if(w.raining){
@@ -406,11 +496,29 @@ async function run(){
 
     const wasPausedByWeather=Boolean(state.paused_by_weather);
     const resumedFromRain=Boolean(state.paused_by_weather||state.phase==='waiting_after_rain'||state.phase==='weather_blocked');
-    state={...state,paused_by_weather:false,phase:'starting',last_error:null};
-    await persist();
     if(resumedFromRain){
-      await event('viveiro_weather_resume','Proteção por chuva liberada. Ciclo pronto para retomar.');
-      await pushNotice('Viveiro liberado após chuva','A proteção climática liberou a irrigação novamente.','viveiro-rain-resume-'+localDayKey());
+      const cc=await getClimateConfig().catch(()=>({post_rain_hold_minutes:30}));
+      state={
+        ...state,
+        paused_by_weather:false,phase:'starting',last_error:null,
+        on_seconds:Number(state.base_on_seconds||30),
+        off_seconds:Number(state.base_off_seconds||120),
+        climate_post_rain_hold_until:Date.now()+Math.max(15,Number(cc.post_rain_hold_minutes||30))*60000,
+        climate_reason:'Pós-chuva: ciclo-base mantido antes de novos ajustes.'
+      };
+      await persist();
+      await event('viveiro_weather_resume','Proteção por chuva liberada. Retomada no ciclo-base antes de novos ajustes climáticos.');
+      await pushNotice(
+        'Viveiro liberado após chuva',
+        'A irrigação foi liberada no padrão 30 s / 120 s. O Automático 2.0 aguardará novas leituras antes de ajustar novamente.',
+        'viveiro-rain-resume-'+localDayKey(),
+        'info',
+        20,
+        true
+      );
+    }else{
+      state={...state,paused_by_weather:false,phase:'starting',last_error:null};
+      await persist();
     }
 
     if(!state.first_pulse_at&&!state.start_delay_alerted&&state.window_opened_at&&Date.now()>Number(state.window_opened_at)+30000){
@@ -451,6 +559,14 @@ async function run(){
           window_start_at:windowStartAt,
           error:state.last_error
         });
+        await pushNotice(
+          'Falha ao iniciar irrigação',
+          'O viveiro não confirmou o primeiro pulso no horário esperado. '+String(state.last_error||''),
+          'viveiro-start-failure-'+String(windowStartAt||localDayKey()),
+          'critical',
+          20,
+          true
+        );
       }else{
         await event('viveiro_error','Falha ao ligar o viveiro.',{error:state.last_error});
       }
@@ -475,6 +591,14 @@ async function run(){
         window_start_at:windowStartAt,
         pulse_started_at:state.pulse_started_at
       });
+      await pushNotice(
+        'Irrigação iniciou com atraso',
+        'O primeiro pulso foi confirmado, mas iniciou com mais de 30 segundos de atraso.',
+        'viveiro-start-delay-'+String(windowStartAt||localDayKey()),
+        'warning',
+        20,
+        true
+      );
     }
     await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn});
 
@@ -601,11 +725,61 @@ function ensureLoop(){
 
 export async function initSecondsManager(){
   await load();
+
+  const currentClimate=await getClimateConfig().catch(()=>({}));
+  await setClimateConfig({
+    ...currentClimate,
+    automatic:true,
+    observation:false,
+    enabled:true,
+    trend_minutes:30,
+    evaluation_minutes:5,
+    max_adjust_percent:30,
+    min_change_seconds:3,
+    min_change_off_seconds:6,
+    cooldown_minutes:30,
+    normal_confirmations:2,
+    post_rain_hold_minutes:30
+  }).catch(()=>null);
+
+  const baseChanged=Number(state.base_on_seconds||0)!==30||Number(state.base_off_seconds||0)!==120;
+  if(baseChanged||state.enabled){
+    state={
+      ...state,
+      base_on_seconds:30,
+      base_off_seconds:120,
+      ...(state.enabled?{
+        on_seconds:30,
+        off_seconds:120,
+        climate_reason:'Automático 2.0 iniciado no ciclo-base 30 s / 120 s.',
+        climate_level:'normal'
+      }:{})
+    };
+    await persist();
+  }
+
   if(state.enabled){
-    if(await active())ensureLoop();
-    else{
+    if(await active()){
+      ensureLoop();
+      await pushNotice(
+        'Irrigação online novamente',
+        'O servidor foi reiniciado e retomou o controle no padrão-base 30 s ligado / 120 s desligado.',
+        'viveiro-server-resumed-'+localDayKey(),
+        'info',
+        10,
+        true
+      );
+    }else{
       state={...state,enabled:false,phase:'stopped_after_restart',relay_expected:false};
       await persist();
+      await pushNotice(
+        'Atenção • ciclo não retomado',
+        'Após o reinício, o servidor não confirmou a posse do ciclo do viveiro. A irrigação automática ficou parada.',
+        'viveiro-server-not-resumed-'+localDayKey(),
+        'critical',
+        30,
+        true
+      );
     }
   }
 }
@@ -624,7 +798,7 @@ export async function configureSeconds(input={}){
     daysMask:input.days_mask
   });
 
-  state={...prepared,base_on_seconds:Number(prepared.on_seconds||30),phase:'queued'};
+  state={...prepared,base_on_seconds:30,base_off_seconds:120,phase:'queued'};
   await persist();
   await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,

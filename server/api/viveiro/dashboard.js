@@ -1,6 +1,7 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { storeGet, storeSet } from '../irrigation/_store.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
+import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -134,14 +135,16 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,weatherSnapshot]=await Promise.all([
+      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,weatherSnapshot,climateConfig,climateState]=await Promise.all([
         storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
         storeGet(ROOT+'/viveiroMaintenance').catch(()=>null),
         storeGet(ROOT+'/history').catch(()=>null),
         storeGet(ROOT+'/config').catch(()=>null),
-        fetchWeatherSnapshot().catch(()=>null)
+        fetchWeatherSnapshot().catch(()=>null),
+        getClimateConfig().catch(()=>null),
+        getClimateState().catch(()=>null)
       ]);
       const history=historyRows(historyRaw).filter(x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')).slice(0,160);
       const now=Date.now();
@@ -162,7 +165,11 @@ export default async function handler(req,res){
         fast_config:config?.profiles?.viveiroFast||null,
         upcoming:upcomingSchedule(seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{}),now),
         current_weather:weatherSnapshot||null,
-        suggestion:irrigationSuggestion(weatherSnapshot||{},seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{}))
+        suggestion:irrigationSuggestion(weatherSnapshot||{},seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{})),
+        climate:{
+          config:climateConfig||{},
+          state:climateState||{}
+        }
       });
     }
 
@@ -180,6 +187,24 @@ export default async function handler(req,res){
         };
         await storeSet(ROOT+'/viveiroMaintenance',payload);
         return res.status(200).json({ok:true,maintenance:{...payload,active:enabled}});
+      }
+      if(action==='climate_config'){
+        const cfg=await setClimateConfig({
+          automatic:Boolean(req.body?.automatic),
+          enabled:req.body?.enabled!==false,
+          evaluation_minutes:req.body?.evaluation_minutes,
+          max_adjust_percent:req.body?.max_adjust_percent,
+          min_change_seconds:req.body?.min_change_seconds
+        });
+        return res.status(200).json({ok:true,climate_config:cfg});
+      }
+      if(action==='climate_apply'){
+        const state=await approveClimateSuggestion(req.body?.id||'');
+        return res.status(200).json({ok:true,climate_state:state});
+      }
+      if(action==='climate_reject'){
+        const state=await rejectClimateSuggestion(req.body?.id||'');
+        return res.status(200).json({ok:true,climate_state:state});
       }
       return res.status(400).json({ok:false,error:'Ação inválida.'});
     }

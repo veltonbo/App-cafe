@@ -420,10 +420,8 @@ export async function initSecondsManager(){
 export async function configureSeconds(input={}){
   if(state.enabled)throw new Error('O modo em segundos já está ativo.');
 
-  const w=await weather();
-  if(!w.usable)throw new Error('Weather2-2 sem dados. O modo rápido não será iniciado por segurança.');
-  if(w.raining)throw new Error('A Weather2-2 está detectando chuva. O modo rápido não será iniciado agora.');
-
+  // A programação pode ser armada mesmo com chuva ou clima temporariamente indisponível.
+  // O laço contínuo mantém a saída desligada e só libera os pulsos quando o clima estiver seguro.
   const prepared=await prepareServerPulse({
     onSeconds:input.on_seconds,
     offSeconds:input.off_seconds,

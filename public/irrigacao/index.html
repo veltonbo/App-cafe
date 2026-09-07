@@ -148,6 +148,22 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 .climateMetrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.climateMetrics span{padding:7px 9px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:.75rem;font-weight:800}
 .notifyHint{font-size:.72rem;color:var(--muted);margin-top:6px}
 @media(max-width:760px){.reportGrid{grid-template-columns:1fr 1fr}}
+
+/* Climate Auto v8 */
+.climateControl{border:1px solid #b9ddcf;background:linear-gradient(180deg,#fff,#f4fbf8)}
+.climateTop{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.climateSwitch{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:900;padding:8px 11px;border-radius:999px;background:#f1f5f3;border:1px solid var(--line);cursor:pointer}
+.climateSwitch.auto{background:var(--brand);color:#fff;border-color:var(--brand)}
+.climateGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.climateCard{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fff}
+.climateCard small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:3px}.climateCard strong{font-size:.94rem}
+.climateReason{margin-top:10px;padding:12px;border-radius:13px;background:var(--brandSoft);line-height:1.45;font-size:.82rem}
+.climatePending{display:none;margin-top:10px;padding:13px;border-radius:14px;background:var(--warnSoft);border:1px solid #eed3a3}
+.climatePending.show{display:block}.climatePending b{display:block;margin-bottom:5px}
+.climatePending .row{margin-top:10px}
+.pulseBox{background:#fbfdfc}.pulseMiniGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.pulseMini{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fff}.pulseMini small{display:block;color:var(--muted);font-size:.7rem}.pulseMini strong{font-size:1rem}
+@media(max-width:760px){.climateGrid{grid-template-columns:1fr 1fr}.pulseMiniGrid{grid-template-columns:1fr 1fr}.pulseMini:last-child{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -261,6 +277,16 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <div class="nextEventBox"><small>Próximo evento</small><strong id="nextEventText">Aguardando configuração</strong></div>
 </section>
 
+<section class="box pulseBox" id="pulseActivityBox">
+  <div class="head"><div><span class="sectionKicker">Ciclo</span><h2>Atividade dos pulsos</h2></div><span class="phase off">SEM NOTIFICAÇÕES INDIVIDUAIS</span></div>
+  <div class="pulseMiniGrid">
+    <div class="pulseMini"><small>Pulsos hoje</small><strong id="pulseActivityCount">0</strong></div>
+    <div class="pulseMini"><small>Último pulso</small><strong id="pulseActivityLast">—</strong></div>
+    <div class="pulseMini"><small>Próximo pulso</small><strong id="pulseActivityNext">—</strong></div>
+  </div>
+  <p class="note">Os pulsos ficam concentrados aqui. As notificações são reservadas para início, chuva, falhas e alterações importantes.</p>
+</section>
+
 <section class="box" id="systemHealthBox">
   <div class="head"><div><span class="sectionKicker">Confiabilidade</span><h2>Saúde do sistema</h2></div><span id="healthOverall" class="phase off">VERIFICANDO</span></div>
   <div class="opsGrid">
@@ -300,10 +326,30 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <div id="upcomingSchedule" class="scheduleList"><div class="empty">Aguardando programação...</div></div>
 </section>
 
-<section class="box" id="climateAdviceBox">
-  <div class="head"><div><span class="sectionKicker">Apoio à decisão</span><h2>Sugestão pelo clima</h2></div><span class="phase off">SÓ SUGESTÃO</span></div>
-  <div id="climateAdvice" class="climateAdvice">Aguardando temperatura e umidade da Weather2-2.</div>
-  <p class="note">O sistema não altera a irrigação sozinho com base nessa sugestão.</p>
+<section class="box climateControl" id="climateAdviceBox">
+  <div class="climateTop">
+    <div><span class="sectionKicker">Irrigação inteligente</span><h2 style="margin:3px 0">Ajuste climático</h2></div>
+    <button type="button" id="climateAutoBtn" class="climateSwitch">Manual</button>
+  </div>
+  <div class="climateGrid">
+    <div class="climateCard"><small>Tempo-base</small><strong id="climateBase">—</strong></div>
+    <div class="climateCard"><small>Tempo atual</small><strong id="climateCurrent">—</strong></div>
+    <div class="climateCard"><small>Temperatura</small><strong id="climateTemp">—</strong></div>
+    <div class="climateCard"><small>Umidade</small><strong id="climateHumidity">—</strong></div>
+  </div>
+  <div id="climateReason" class="climateReason">Aguardando avaliação da Weather2-2.</div>
+  <div id="climatePending" class="climatePending">
+    <b id="climatePendingTitle">Sugestão de alteração</b>
+    <div id="climatePendingReason"></div>
+    <div class="row">
+      <button type="button" id="climateApply" class="btn primary">Aplicar alteração</button>
+      <button type="button" id="climateReject" class="btn soft">Manter como está</button>
+    </div>
+  </div>
+  <details class="weatherAdvanced" style="margin-top:10px">
+    <summary>Como o automático decide</summary>
+    <p class="note">A cada 15 minutos o sistema compara temperatura e umidade com o tempo-base. O ajuste é limitado e conservador. Chuva sempre tem prioridade e pausa a irrigação. O modo automático altera apenas o tempo ligado; os horários e dias permanecem iguais.</p>
+  </details>
 </section>
 
 <section class="box" id="weeklyBox">
@@ -441,6 +487,7 @@ function reorganizeLayout(){
   const order=[
     'Ciclo rápido',
     'Hoje',
+    'Atividade dos pulsos',
     'Saúde do sistema',
     'Modo manutenção',
     'Proteção automática por chuva',
@@ -1096,6 +1143,7 @@ function auditCategory(type){
   const t=String(type||'');
   if(t.includes('weather')||t.includes('rain'))return 'rain';
   if(t.includes('error')||t.includes('failure')||t.includes('delay'))return 'error';
+  if(t.includes('climate'))return 'config';
   if(t.includes('cycle_start')||t.includes('waiting_window')||t.includes('window_start')||t.includes('window_end')||t.includes('preset')||t.includes('config'))return 'config';
   return 'irrigation';
 }
@@ -1109,6 +1157,9 @@ function notificationTitle(type){
   if(t.includes('error'))return 'Erro no viveiro';
   if(t==='viveiro_maintenance_start')return 'Modo manutenção';
   if(t==='viveiro_maintenance_end')return 'Manutenção encerrada';
+  if(t==='viveiro_climate_auto_change')return 'Ajuste climático automático';
+  if(t==='viveiro_climate_applied')return 'Ajuste climático aplicado';
+  if(t==='viveiro_climate_suggestion')return 'Sugestão de ajuste climático';
   return 'Fazenda 2E • Viveiro';
 }
 function notificationsSupported(){
@@ -1164,9 +1215,10 @@ function processDashboardNotifications(payload){
   if(!notificationsSupported()||Notification.permission!=='granted')return;
   const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
   const important=new Set([
-    'viveiro_window_start','viveiro_pulse_start','viveiro_weather_pause','viveiro_weather_resume',
+    'viveiro_window_start','viveiro_weather_pause','viveiro_weather_resume',
     'viveiro_start_failure','viveiro_start_delay','viveiro_error',
-    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop','viveiro_window_end'
+    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop','viveiro_window_end',
+    'viveiro_climate_auto_change','viveiro_climate_applied','viveiro_climate_suggestion'
   ]);
   if(!data.notificationsPrimed){
     data.notifiedEventIds=rows.slice(0,80).map(x=>String(x.id||x.ts||''));
@@ -1250,12 +1302,46 @@ function renderDashboard(){
     $('climateAdvice').innerHTML='<b>'+String(advice.note||'Sem sugestão disponível.')+'</b>'+(metrics.length?'<div class="climateMetrics">'+metrics.join('')+'</div>':'');
   }
 
+
+  if($('pulseActivityCount'))$('pulseActivityCount').textContent=String(Number(sum.pulses||0));
+  if($('pulseActivityLast'))$('pulseActivityLast').textContent=shortTime(sum.last_pulse_at);
+  if($('pulseActivityNext')){
+    const nextAt=Number((data.secondsMode||{}).expected_next_on_at||0);
+    $('pulseActivityNext').textContent=nextAt?shortTime(nextAt):((data.secondsMode||{}).phase==='on'?'Após o pulso atual':'—');
+  }
+
+  const climate=d.climate||{};
+  const cc=climate.config||{};
+  const cs=climate.state||{};
+  const pending=cs.pending||null;
+  const secForClimate=data.secondsMode||{};
+  if($('climateAutoBtn')){
+    $('climateAutoBtn').textContent=cc.automatic?'Automático':'Manual';
+    $('climateAutoBtn').className='climateSwitch '+(cc.automatic?'auto':'');
+  }
+  if($('climateBase'))$('climateBase').textContent=Number(secForClimate.base_on_seconds||secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s';
+  if($('climateCurrent'))$('climateCurrent').textContent=Number(secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s';
+  if($('climateTemp'))$('climateTemp').textContent=cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C';
+  if($('climateHumidity'))$('climateHumidity').textContent=cs.last_humidity==null?'—':Number(cs.last_humidity).toFixed(0)+'%';
+  if($('climateReason')){
+    const modeText=cc.automatic?'Automático ativo. ':'Modo manual. ';
+    $('climateReason').textContent=modeText+String(cs.last_reason||'Aguardando a próxima avaliação climática.');
+  }
+  if($('climatePending')){
+    $('climatePending').className='climatePending '+(pending&&!cc.automatic?'show':'');
+    if(pending&&!cc.automatic){
+      $('climatePendingTitle').textContent='Alterar de '+Number(pending.current_on_seconds||0)+' s para '+Number(pending.target_on_seconds||0)+' s?';
+      $('climatePendingReason').textContent=String(pending.reason||'Ajuste sugerido pelas condições climáticas.');
+    }
+  }
+
   const week=Array.isArray(d.summary?.week)?d.summary.week:[];
   if($('weekGrid'))$('weekGrid').innerHTML=week.length?week.map(x=>
     '<div class="weekDay"><small>'+x.label+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+x.pulses+' pulsos</small></div>'
   ).join(''):'<div class="empty">Sem histórico ainda.</div>';
 
-  const audit=Array.isArray(d.audit_today)?d.audit_today:(Array.isArray(d.history)?d.history:[]);
+  const auditRaw=Array.isArray(d.audit_today)?d.audit_today:(Array.isArray(d.history)?d.history:[]);
+  const audit=auditRaw.filter(x=>!['viveiro_pulse_start','viveiro_pulse_complete'].includes(String(x.type||'')));
   const filter=String(data.auditFilter||'all');
   const events=filter==='all'?audit:audit.filter(x=>auditCategory(x.type)===filter);
   if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,40).map(x=>{
@@ -1281,12 +1367,52 @@ function renderDashboard(){
   }
   validateFastCycle();
 }
+async function setClimateAutomatic(){
+  const current=Boolean(data.dashboard?.climate?.config?.automatic);
+  const next=!current;
+  if(next&&!confirm('Ativar ajuste climático automático?\n\nO sistema poderá alterar sozinho o tempo ligado conforme temperatura e umidade, dentro de limites de segurança.'))return;
+  try{
+    const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({
+      action:'climate_config',
+      automatic:next,
+      enabled:true,
+      evaluation_minutes:15,
+      max_adjust_percent:30,
+      min_change_seconds:3
+    })});
+    data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
+    save();renderDashboard();
+    toast(next?'Automático climático ativado':'Automático climático desativado');
+    setTimeout(()=>syncDashboard(false),1000);
+  }catch(e){toast('Clima: '+String(e.message||e))}
+}
+async function answerClimateSuggestion(apply){
+  const pending=data.dashboard?.climate?.state?.pending;
+  if(!pending)return;
+  try{
+    const action=apply?'climate_apply':'climate_reject';
+    await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({action,id:pending.id})});
+    data.climatePromptedId=String(pending.id||'');
+    save();
+    toast(apply?'Alteração aprovada':'Tempo atual mantido');
+    setTimeout(()=>syncDashboard(false),1200);
+  }catch(e){toast('Ajuste climático: '+String(e.message||e))}
+}
+function maybePromptClimateSuggestion(payload){
+  const climate=payload?.climate||{};
+  if(climate.config?.automatic)return;
+  const p=climate.state?.pending;
+  if(!p||String(data.climatePromptedId||'')===String(p.id||''))return;
+  data.climatePromptedId=String(p.id||'');save();
+  const msg='Sugestão climática\n\nAlterar o tempo ligado de '+Number(p.current_on_seconds||0)+' s para '+Number(p.target_on_seconds||0)+' s?\n\nMotivo: '+String(p.reason||'Condição climática diferente do tempo-base.')+'\n\nTemperatura: '+(p.temperature==null?'—':Number(p.temperature).toFixed(1)+' °C')+'\nUmidade: '+(p.humidity==null?'—':Number(p.humidity).toFixed(0)+'%');
+  if(confirm(msg))answerClimateSuggestion(true);
+}
 async function syncDashboard(showToast=false){
   try{
     const r=await api('/api/viveiro/dashboard');
     processDashboardNotifications(r);
     data.dashboard=r;
-    save();renderDashboard();
+    save();renderDashboard();maybePromptClimateSuggestion(r);
     if(showToast)toast('Painel atualizado');
   }catch(e){
     if(showToast)toast('Painel: '+String(e.message||e));

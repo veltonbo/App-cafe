@@ -1,49 +1,132 @@
-/* Fazenda 2E — camada de estabilidade visual mobile */
-html,body{max-width:100%;overflow-x:hidden}
-body{min-width:0}
-.wrap,.box,.hero,.configGroup,.secondsField,.secondsMetric,.protectCard,.stat,.windowCard,.climateCard{min-width:0;max-width:100%}
-*{overflow-wrap:anywhere}
-button,input,select,textarea{max-width:100%}
-.head,.heroTop,.statusLine,.windowCard,.configGroupTitle{min-width:0}
-.head>*:first-child,.heroTop>*:first-child,.statusLine>*:first-child,.windowCard>*:first-child,.configGroupTitle>*:first-child{min-width:0}
-.btn,.climateSwitch{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.climateSwitch{min-height:42px;white-space:normal;text-align:center}
-.actionBar{align-items:stretch}
-.actionBar .btn{min-height:46px;white-space:normal}
-.presetRow{align-items:stretch}
-.presetRow .btn{max-width:100%}
-.bottomNav{isolation:isolate}
-.emergency{max-width:calc(100vw - 28px);white-space:nowrap}
-dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 30px);overflow:auto}
-.modal{max-width:100%}
-.climateGrid,.protectGrid,.secondsLiveGrid,.grid{min-width:0}
-.climateCard strong,.secondsMetric strong,.protectCard strong,.stat strong{word-break:break-word}
-@media(max-width:760px){
-  .wrap{padding-left:12px;padding-right:12px;padding-bottom:176px}
-  .top{padding-left:13px;padding-right:13px}
-  .hero,.box{border-radius:20px;padding:16px}
-  .heroTop{gap:10px}
-  .hero h2{font-size:1.3rem}
-  .heroCountdown{font-size:1.65rem}
-  .grid,.protectGrid,.climateGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .secondsHero,.scheduleGrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
-  .secondsLiveGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .actionBar{grid-template-columns:1fr!important}
-  .row{display:grid!important;grid-template-columns:1fr!important}
-  .row .btn{width:100%;min-width:0}
-  .head{align-items:flex-start;flex-wrap:wrap}
-  .head>div:last-child{max-width:100%}
-  .windowCard,.statusLine{align-items:flex-start;flex-wrap:wrap}
-  .windowBadge{white-space:normal;text-align:center}
-  .dayGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-  .emergency{right:12px;bottom:calc(86px + env(safe-area-inset-bottom));padding:12px 15px;font-size:.82rem}
-  .bottomNav{left:8px;right:8px}
-  .toast{bottom:calc(146px + env(safe-area-inset-bottom));width:calc(100vw - 28px);text-align:center}
+/* Fazenda 2E — Irrigação Inteligente • layout mobile v5 */
+:root{
+  --ui-bg:#f3f6f4;--ui-card:#fff;--ui-ink:#16382e;--ui-muted:#71817b;
+  --ui-line:#dfe9e5;--ui-brand:#08765a;--ui-brand-2:#0a8b69;--ui-soft:#eaf7f2;
+  --ui-warn:#9b6414;--ui-warn-soft:#fff5e4;--ui-danger:#b62d29;--ui-danger-soft:#fff0ef;
+  --ui-shadow:0 10px 28px rgba(22,56,46,.08)
 }
-@media(max-width:390px){
-  .grid,.protectGrid,.climateGrid,.secondsHero,.secondsLiveGrid,.scheduleGrid{grid-template-columns:1fr!important}
-  .secondsLiveGrid .secondsMetric:last-child{grid-column:auto!important}
-  .dayGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-  .box,.hero{padding:14px}
-  .climateSwitch{flex:1 1 120px}
+html,body{max-width:100%;overflow-x:hidden}
+html{background:var(--ui-bg)}
+body.smartIrrigationV5{min-width:0;background:linear-gradient(180deg,#edf7f3 0,#f6f8f7 360px,var(--ui-bg) 100%);color:var(--ui-ink)}
+.smartIrrigationV5 *{box-sizing:border-box;min-width:0}
+.smartIrrigationV5 button,.smartIrrigationV5 input,.smartIrrigationV5 select,.smartIrrigationV5 textarea{font:inherit;max-width:100%}
+.smartIrrigationV5 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.smartIrrigationV5 .top{
+  position:sticky;top:0;z-index:30;display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;gap:10px;width:100%;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  background:rgba(248,251,249,.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(217,230,224,.95);
+  box-shadow:0 3px 18px rgba(22,56,46,.045)
+}
+.smartIrrigationV5 .top .ey{font-size:.62rem;letter-spacing:.13em}
+.smartIrrigationV5 .top h1{margin:2px 0;font-size:1.08rem;line-height:1.15;letter-spacing:-.02em}
+.smartIrrigationV5 .top>div:last-child{display:flex!important;justify-content:flex-end;gap:0!important}
+.smartIrrigationV5 .top a.pill{display:none!important}
+.smartIrrigationV5 #conn{min-width:0!important;min-height:40px;padding:8px 12px!important;border-radius:999px;font-size:.82rem;white-space:nowrap}
+.smartIrrigationV5 .wrap{width:min(100%,780px);max-width:780px;margin:0 auto;padding:14px 12px calc(34px + env(safe-area-inset-bottom))}
+.smartIrrigationV5 .wrap>*{max-width:100%}
+.smartIrrigationV5 .offlineBanner{top:74px}
+.smartIrrigationV5 .hero{
+  margin:0;border-radius:24px;padding:20px;background:linear-gradient(145deg,#075c48 0%,#087158 56%,#0b8c6a 100%);
+  box-shadow:0 18px 42px rgba(8,118,90,.20);border:1px solid rgba(255,255,255,.14)
+}
+.smartIrrigationV5 .heroTop{display:block}
+.smartIrrigationV5 .hero h2{font-size:1.48rem;letter-spacing:-.035em;line-height:1.15}
+.smartIrrigationV5 .hero p{font-size:.88rem;line-height:1.45}
+.smartIrrigationV5 .heroCountdown{font-size:1.85rem}
+.smartIrrigationV5 .box{width:100%;margin-top:12px;padding:18px;border-radius:22px;background:var(--ui-card);border:1px solid var(--ui-line);box-shadow:var(--ui-shadow)}
+.smartIrrigationV5 .box .head,.smartIrrigationV5 .climateTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.smartIrrigationV5 .sectionKicker{display:block;margin-bottom:4px;font-size:.65rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--ui-brand)}
+.smartIrrigationV5 .box h2{margin:2px 0 10px;font-size:1.16rem;line-height:1.2;letter-spacing:-.02em}
+.smartIrrigationV5 .note{line-height:1.5}
+.smartIrrigationV5 .climateControl{border-color:#b9dfd2;background:linear-gradient(180deg,#fff 0,#f4fbf8 100%)}
+.smartIrrigationV5 .climateTop>div:last-child{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;width:100%;
+  padding:4px;border-radius:14px;background:#edf3f0
+}
+.smartIrrigationV5 .climateSwitch{
+  width:100%;min-height:44px;padding:8px 10px!important;border-radius:11px!important;display:flex;align-items:center;
+  justify-content:center;text-align:center;border:0!important;background:transparent!important;color:#5e716a!important;
+  font-size:.76rem!important;font-weight:850!important;line-height:1.15;white-space:normal
+}
+.smartIrrigationV5 .climateSwitch.auto,.smartIrrigationV5 .climateSwitch[aria-pressed="true"]{
+  background:#fff!important;color:var(--ui-brand)!important;box-shadow:0 2px 8px rgba(22,56,46,.10)!important
+}
+.smartIrrigationV5 .climateGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-top:12px!important}
+.smartIrrigationV5 .climateCard{min-height:78px;padding:12px!important;border-radius:14px!important;background:#fff;border:1px solid var(--ui-line)}
+.smartIrrigationV5 .climateCard small{font-size:.72rem!important}
+.smartIrrigationV5 .climateCard strong{display:block;margin-top:4px;font-size:1.02rem!important;overflow-wrap:anywhere}
+.smartIrrigationV5 .climateReason{margin-top:10px!important;padding:13px!important;border-radius:14px!important;background:var(--ui-soft)!important;font-size:.84rem!important;line-height:1.45!important}
+.smartIrrigationV5 .climatePending{border-radius:16px!important}
+.smartIrrigationV5 .secondsBox{border-color:#d0e5dd;background:#fff}
+.smartIrrigationV5 .configGroup{margin-top:12px!important;padding:13px!important;border-radius:17px!important;border:1px solid var(--ui-line)!important;background:#fafcfb!important}
+.smartIrrigationV5 .configGroupTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.smartIrrigationV5 .secondsHero{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.smartIrrigationV5 .secondsField{padding:11px!important;border-radius:13px!important;background:#fff!important;border:1px solid var(--ui-line)!important}
+.smartIrrigationV5 .secondsField input{min-height:36px}
+.smartIrrigationV5 .presetRow,.smartIrrigationV5 .shortcutRow{display:flex!important;gap:7px!important;flex-wrap:wrap!important}
+.smartIrrigationV5 .presetRow .btn,.smartIrrigationV5 .shortcutRow .btn{min-height:40px;flex:1 1 auto!important}
+.smartIrrigationV5 .presetTools{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px!important}
+.smartIrrigationV5 .presetTools #saveFastPreset{grid-column:1/-1;width:100%!important;min-height:44px}
+.smartIrrigationV5 .daySelect{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.smartIrrigationV5 .windowCard,.smartIrrigationV5 .secondsStatus,.smartIrrigationV5 .statusLine{width:100%;max-width:100%;gap:10px;overflow:hidden}
+.smartIrrigationV5 .windowCard strong,.smartIrrigationV5 .secondsStatus strong,.smartIrrigationV5 .statusLine strong{overflow-wrap:anywhere;text-align:right}
+.smartIrrigationV5 .secondsLiveGrid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.smartIrrigationV5 .secondsMetric{padding:11px!important;border-radius:13px!important}
+.smartIrrigationV5 .actionBar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.smartIrrigationV5 .actionBar #saveSecondsConfig{grid-column:1/-1}
+.smartIrrigationV5 .btn{min-width:0!important;min-height:44px;padding:11px 13px;border-radius:13px!important;white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.smartIrrigationV5 .btn:active,.smartIrrigationV5 .climateSwitch:active{transform:scale(.985)}
+.smartIrrigationV5 .protectGrid,.smartIrrigationV5 .reportGrid,.smartIrrigationV5 .opsGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.smartIrrigationV5 .protectCard,.smartIrrigationV5 .reportCard,.smartIrrigationV5 .opsCard{border-radius:14px!important;overflow:hidden}
+.smartIrrigationV5 .head>div:last-child{max-width:100%;display:flex;gap:7px;flex-wrap:wrap}
+.smartIrrigationV5 #eventsBox .head>div:last-child{width:100%;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important}
+.smartIrrigationV5 #eventsBox .notifyBtn{width:100%!important;min-width:0!important;max-width:100%}
+.smartIrrigationV5 .auditFilters{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px!important}
+.smartIrrigationV5 .auditFilters .btn{width:100%!important;min-height:40px}
+.smartIrrigationV5 .auditFilters .btn:first-child{grid-column:1/-1}
+.smartIrrigationV5 .eventRow{max-width:100%;overflow:hidden}
+.smartIrrigationV5 .eventRow>*{min-width:0}
+.smartIrrigationV5 .eventRow b{overflow-wrap:anywhere}
+.smartIrrigationV5 .maintenanceBar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important}
+.smartIrrigationV5 .smartSafety{margin:10px 0 0;padding:0;width:100%}
+.smartIrrigationV5 .smartSafety .emergency{
+  position:static!important;inset:auto!important;width:100%!important;max-width:100%!important;min-height:48px;margin:0!important;
+  padding:12px 16px!important;border-radius:15px!important;font-size:.86rem!important;box-shadow:none!important;background:var(--ui-danger)!important
+}
+.smartIrrigationV5 .bottomNav{display:none!important}
+.smartIrrigationV5 .toast{left:12px!important;right:12px!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;transform:translateY(120px)!important;text-align:center}
+.smartIrrigationV5 .toast.show{transform:translateY(0)!important}
+.smartIrrigationV5 .smartAdvanced{margin-top:14px;border:1px solid var(--ui-line);border-radius:20px;background:#fff;box-shadow:var(--ui-shadow);overflow:hidden}
+.smartIrrigationV5 .smartAdvanced>summary{
+  list-style:none;cursor:pointer;min-height:54px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;color:var(--ui-ink)
+}
+.smartIrrigationV5 .smartAdvanced>summary::-webkit-details-marker{display:none}
+.smartIrrigationV5 .smartAdvanced>summary::after{content:"⌄";font-size:1.1rem;color:var(--ui-muted)}
+.smartIrrigationV5 .smartAdvanced[open]>summary::after{content:"⌃"}
+.smartIrrigationV5 .smartAdvancedContent{padding:0 10px 10px}
+.smartIrrigationV5 .smartAdvancedContent>.box,.smartIrrigationV5 .smartAdvancedContent>.grid{margin-top:10px;box-shadow:none}
+.smartIrrigationV5 footer{padding-bottom:6px!important}
+.smartIrrigationV5 dialog{width:min(92vw,460px)!important;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 30px)!important;overflow:auto!important}
+.smartIrrigationV5 .modal{max-width:100%}
+.smartIrrigationV5 .layoutOverflow{outline:2px dashed rgba(182,45,41,.35)}
+
+@media(max-width:430px){
+  .smartIrrigationV5 .wrap{padding-left:10px;padding-right:10px}
+  .smartIrrigationV5 .hero,.smartIrrigationV5 .box{padding:16px;border-radius:20px}
+  .smartIrrigationV5 .hero h2{font-size:1.34rem}
+  .smartIrrigationV5 .heroCountdown{font-size:1.68rem}
+  .smartIrrigationV5 .top{padding-left:12px;padding-right:12px}
+  .smartIrrigationV5 .climateTop{display:block!important}
+  .smartIrrigationV5 .climateTop>div:last-child{margin-top:10px}
+  .smartIrrigationV5 .secondsLiveGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .smartIrrigationV5 .secondsLiveGrid .secondsMetric:last-child{grid-column:1/-1}
+  .smartIrrigationV5 .head{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+  .smartIrrigationV5 .head>div:last-child{width:100%}
+  .smartIrrigationV5 .windowCard,.smartIrrigationV5 .secondsStatus,.smartIrrigationV5 .statusLine{align-items:flex-start!important;flex-wrap:wrap!important}
+  .smartIrrigationV5 .windowCard strong,.smartIrrigationV5 .secondsStatus strong,.smartIrrigationV5 .statusLine strong{text-align:left}
+}
+@media(max-width:350px){
+  .smartIrrigationV5 .climateGrid,.smartIrrigationV5 .secondsHero,.smartIrrigationV5 .protectGrid,.smartIrrigationV5 .reportGrid,.smartIrrigationV5 .opsGrid{grid-template-columns:1fr!important}
+  .smartIrrigationV5 .actionBar,.smartIrrigationV5 .presetTools,.smartIrrigationV5 .maintenanceBar,.smartIrrigationV5 #eventsBox .head>div:last-child{grid-template-columns:1fr!important}
+  .smartIrrigationV5 .actionBar #saveSecondsConfig{grid-column:auto}
 }

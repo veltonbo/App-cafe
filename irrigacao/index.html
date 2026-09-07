@@ -106,11 +106,35 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 .nextEventBox{margin-top:10px;padding:13px 14px;border:1px solid #cfe4dc;border-radius:15px;background:linear-gradient(180deg,#fbfefd,#f5fbf8)}
 .nextEventBox small{display:block;color:var(--muted);font-size:.72rem}.nextEventBox strong{display:block;font-size:1.03rem;margin-top:3px}
 @media(max-width:760px){.daySelect{grid-template-columns:repeat(4,1fr)}.todayGrid{grid-template-columns:1fr 1fr}.todayCard.wide{grid-column:1/-1}}
+
+/* Viveiro Operations v5 */
+.opsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.opsCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+.opsCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:4px}.opsCard strong{font-size:.94rem}
+.healthDot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#a8b4b0}
+.healthDot.ok{background:#2fa77d}.healthDot.bad{background:#cf4f47}.healthDot.warn{background:#dfa036}
+.alertBox{display:none;margin-top:10px;padding:11px 12px;border-radius:13px;background:var(--warnSoft);color:var(--warn);font-weight:800;font-size:.83rem}
+.alertBox.show{display:block}.alertBox.bad{background:var(--dangerSoft);color:var(--danger)}
+.maintenanceBar{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.maintenanceBar .btn{flex:0 0 auto;min-width:0;padding:9px 12px}
+.maintenanceActive{padding:11px 12px;border-radius:13px;background:var(--warnSoft);color:var(--warn);font-size:.82rem;font-weight:850;margin-top:10px}
+.weekGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.weekDay{border:1px solid var(--line);border-radius:12px;padding:9px 5px;text-align:center;background:#fff}
+.weekDay small{display:block;color:var(--muted);font-size:.66rem}.weekDay strong{font-size:.85rem}
+.eventList{display:grid;gap:7px;margin-top:10px}.eventRow{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:#fff}
+.eventIcon{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;background:var(--brandSoft)}
+.eventRow b{font-size:.82rem}.eventRow small{color:var(--muted);font-size:.7rem}
+.presetTools{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.presetTools select{flex:1;min-width:160px;border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;color:var(--ink);font:inherit}
+.shortcutRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.shortcutRow .btn{flex:0 0 auto;min-width:0;padding:8px 10px;font-size:.75rem}
+.configMeta{font-size:.72rem;color:var(--muted);margin-top:8px}
+.offlineBanner{display:none;position:sticky;top:74px;z-index:4;padding:9px 12px;border-radius:12px;background:#fff4dd;color:#8a5b10;font-size:.8rem;font-weight:850;margin-bottom:9px;border:1px solid #f0d59d}
+.offlineBanner.show{display:block}
+@media(max-width:760px){.opsGrid{grid-template-columns:1fr 1fr}.weekGrid{grid-template-columns:repeat(4,1fr)}.eventRow{grid-template-columns:auto 1fr}.eventRow>small:last-child{grid-column:2}.offlineBanner{top:70px}}
 </style>
 </head>
 <body>
 <header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
-<main class="wrap">
+<main class="wrap"><div id="offlineBanner" class="offlineBanner">Sem conexão com o painel. A automação no servidor continua independente desta tela.</div>
 <section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">VIVEIRO • CONTROLE AUTOMÁTICO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
 <section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Tuya</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
@@ -143,6 +167,10 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
     <button type="button" class="btn soft secondsPreset" data-on="30" data-off="90">30 / 90</button>
     <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60 / 120</button>
   </div>
+  <div class="presetTools">
+    <select id="fastPresetSelect"><option value="">Perfis salvos</option></select>
+    <button type="button" id="saveFastPreset" class="btn soft" style="flex:0 0 auto;min-width:0">Salvar perfil</button>
+  </div>
 </div>
 
 <div class="configGroup">
@@ -150,6 +178,11 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <div class="secondsHero">
     <label class="secondsField"><small>Início</small><input id="secondsStart" type="time" value="06:00"></label>
     <label class="secondsField"><small>Final</small><input id="secondsEnd" type="time" value="18:00"></label>
+  </div>
+  <div class="shortcutRow">
+    <button type="button" class="btn soft dayShortcut" data-mask="127">Todos os dias</button>
+    <button type="button" class="btn soft dayShortcut" data-mask="62">Seg–Sex</button>
+    <button type="button" class="btn soft dayShortcut" data-mask="65">Fim de semana</button>
   </div>
   <div class="daySelect" id="secondsDays">
     <label><input type="checkbox" value="1" checked><span>Dom</span></label>
@@ -171,6 +204,8 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <span id="secondsCloudState" class="cloudState">☁ sincronizando</span>
 </div>
 <div id="secondsStatus" class="secondsStatus"><span>Configuração salva</span><strong>30 s / 90 s • 06:00–18:00</strong></div>
+<div id="fastValidation" class="alertBox"></div>
+<div id="fastConfigMeta" class="configMeta">Aguardando sincronização da configuração.</div>
 
 <div class="secondsLiveGrid">
   <div class="secondsMetric"><small>Fase atual</small><strong id="secondsPhase">Desativado</strong></div>
@@ -199,12 +234,46 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 <section class="box" id="todayBox">
   <div class="head"><div><span class="sectionKicker">Resumo</span><h2>Hoje</h2></div><span class="phase off" id="todayStatus">AGUARDANDO</span></div>
   <div class="todayGrid">
-    <div class="todayCard"><small>Pulsos da sessão</small><strong id="todayPulses">0</strong></div>
-    <div class="todayCard"><small>Tempo irrigado</small><strong id="todayWaterTime">0 s</strong></div>
-    <div class="todayCard"><small>Janela</small><strong id="todayWindow">—</strong></div>
-    <div class="todayCard"><small>Dias ativos</small><strong id="todayDays">—</strong></div>
+    <div class="todayCard"><small>Pulsos hoje</small><strong id="todayPulses">0</strong></div>
+    <div class="todayCard"><small>Tempo irrigado hoje</small><strong id="todayWaterTime">0 s</strong></div>
+    <div class="todayCard"><small>Última irrigação</small><strong id="todayLastPulse">—</strong></div>
+    <div class="todayCard"><small>Pausas por chuva</small><strong id="todayRainPauses">0</strong></div>
   </div>
   <div class="nextEventBox"><small>Próximo evento</small><strong id="nextEventText">Aguardando configuração</strong></div>
+</section>
+
+<section class="box" id="systemHealthBox">
+  <div class="head"><div><span class="sectionKicker">Confiabilidade</span><h2>Saúde do sistema</h2></div><span id="healthOverall" class="phase off">VERIFICANDO</span></div>
+  <div class="opsGrid">
+    <div class="opsCard"><small>Servidor Railway</small><strong id="healthServer"><span class="healthDot"></span>Aguardando</strong></div>
+    <div class="opsCard"><small>EKAZA / Tuya</small><strong id="healthTuya"><span class="healthDot"></span>Aguardando</strong></div>
+    <div class="opsCard"><small>Firebase</small><strong id="healthFirebase"><span class="healthDot"></span>Aguardando</strong></div>
+    <div class="opsCard"><small>Weather2-2</small><strong id="healthWeather"><span class="healthDot"></span>Aguardando</strong></div>
+  </div>
+  <div id="systemAlert" class="alertBox"></div>
+  <details class="diag" style="margin-top:10px"><summary>Diagnóstico técnico</summary><pre id="systemDiag">Aguardando dados...</pre></details>
+</section>
+
+<section class="box" id="maintenanceBox">
+  <div class="head"><div><span class="sectionKicker">Operação</span><h2>Modo manutenção</h2></div></div>
+  <p class="note" style="margin-top:0">Suspende temporariamente a automação sem apagar a programação.</p>
+  <div id="maintenanceState" class="maintenanceActive" style="display:none"></div>
+  <div class="maintenanceBar">
+    <button type="button" class="btn soft maintenanceBtn" data-minutes="15">15 min</button>
+    <button type="button" class="btn soft maintenanceBtn" data-minutes="30">30 min</button>
+    <button type="button" class="btn soft maintenanceBtn" data-minutes="60">1 hora</button>
+    <button type="button" class="btn danger maintenanceBtn" data-minutes="0">Encerrar manutenção</button>
+  </div>
+</section>
+
+<section class="box" id="weeklyBox">
+  <div class="head"><div><span class="sectionKicker">Acompanhamento</span><h2>Últimos 7 dias</h2></div></div>
+  <div id="weekGrid" class="weekGrid"><div class="empty">Aguardando histórico...</div></div>
+</section>
+
+<section class="box" id="eventsBox">
+  <div class="head"><div><span class="sectionKicker">Registro automático</span><h2>Eventos do viveiro</h2></div><button id="refreshDashboard" class="btn soft" style="min-width:auto;flex:0">Atualizar</button></div>
+  <div id="eventList" class="eventList"><div class="empty">Aguardando eventos...</div></div>
 </section>
 
 <section class="box weatherProtect">
@@ -298,6 +367,7 @@ if(!('weatherProtection' in data)) data.weatherProtection=null;
 if(!('secondsMode' in data)) data.secondsMode=null;
 if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
 if(!('secondsCloud' in data))data.secondsCloud={loaded:false,synced:false,lastSync:0};
+if(!('dashboard' in data))data.dashboard=null;
 let syncing=false;
 let weatherSyncing=false;
 const $=id=>document.getElementById(id);
@@ -314,7 +384,11 @@ function reorganizeLayout(){
   const order=[
     'Ciclo rápido',
     'Hoje',
+    'Saúde do sistema',
+    'Modo manutenção',
     'Proteção automática por chuva',
+    'Últimos 7 dias',
+    'Eventos do viveiro',
     'Controle manual',
     'Programação da irrigação',
     'Estado em tempo real',
@@ -663,7 +737,7 @@ async function loadSecondsCloudConfig(){
 }
 async function saveSecondsCloudConfig(draft){
   const current=await api('/api/irrigation/config').catch(()=>({config:{}}));
-  const profiles={...(current?.config?.profiles||{}),viveiroFast:{...draft,updated_at:new Date().toISOString()}};
+  const profiles={...(current?.config?.profiles||{}),viveiroFast:{...draft,updated_at:new Date().toISOString(),origin:(/iPhone|iPad|iPod/i.test(navigator.userAgent)?'iPhone/iPad':'Web')}};
   await api('/api/irrigation/config',{method:'PATCH',body:JSON.stringify({profiles})});
   data.secondsCloud={loaded:true,synced:true,lastSync:Date.now()};
 }
@@ -906,6 +980,145 @@ function nextActiveStart(draft){
   }
   return 'Nenhum dia ativo';
 }
+function shortTime(ts){
+  const n=Number(ts||0);if(!n)return '—';
+  return new Date(n).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function eventIcon(type){
+  const t=String(type||'');
+  if(t.includes('pulse_complete'))return '✓';
+  if(t.includes('pulse_start'))return '💧';
+  if(t.includes('weather'))return '🌧';
+  if(t.includes('maintenance'))return '🛠';
+  if(t.includes('error'))return '!';
+  if(t.includes('cycle_start'))return '▶';
+  if(t.includes('cycle_stop'))return '■';
+  return '•';
+}
+function validateFastCycle(){
+  const d=currentDraftFromInputs();
+  const box=$('fastValidation');if(!box)return;
+  let msg='',bad=false;
+  if(!Number.isFinite(d.start_minutes)||!Number.isFinite(d.end_minutes)||d.end_minutes<=d.start_minutes){msg='Confira o horário inicial e final.';bad=true}
+  else if(!d.days_mask){msg='Selecione pelo menos um dia da semana.';bad=true}
+  else{
+    const windowSec=(d.end_minutes-d.start_minutes)*60;
+    const cycle=Math.max(1,d.on_seconds+d.off_seconds);
+    const pulses=Math.floor(windowSec/cycle);
+    const duty=d.on_seconds/cycle;
+    if(duty>=.75)msg='Atenção: o viveiro ficará ligado em cerca de '+Math.round(duty*100)+'% do tempo.';
+    else if(pulses>3000)msg='Configuração muito intensa: aproximadamente '+pulses+' pulsos por dia.';
+  }
+  box.textContent=msg;
+  box.className='alertBox '+(msg?'show ':'')+(bad?'bad':'');
+}
+function renderDashboard(){
+  const d=data.dashboard||{};
+  const sum=d.summary?.today||{};
+  if($('todayPulses'))$('todayPulses').textContent=String(Number(sum.pulses||0));
+  if($('todayWaterTime'))$('todayWaterTime').textContent=humanDurationSeconds(Number(sum.irrigated_seconds||0));
+  if($('todayLastPulse'))$('todayLastPulse').textContent=shortTime(sum.last_pulse_at);
+  if($('todayRainPauses'))$('todayRainPauses').textContent=String(Number(sum.rain_pauses||0));
+
+  const setHealth=(id,ok,label,warn=false)=>{
+    const el=$(id);if(!el)return;
+    el.innerHTML='<span class="healthDot '+(ok?'ok':warn?'warn':'bad')+'"></span>'+label;
+  };
+  setHealth('healthServer',Boolean(d.server?.online),d.server?.online?'Online':'Offline');
+  setHealth('healthFirebase',Boolean(d.firebase?.online),d.firebase?.online?'Online':'Falha');
+  setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':'Aguardando',data.online==null);
+  const weatherOk=Boolean(data.weatherProtection?.weather?.linked);
+  setHealth('healthWeather',weatherOk,weatherOk?'Online':'Sem dados',!weatherOk);
+  const allOk=Boolean(d.server?.online&&d.firebase?.online&&data.online===true&&weatherOk);
+  if($('healthOverall')){
+    $('healthOverall').textContent=allOk?'TUDO OK':'ATENÇÃO';
+    $('healthOverall').className='phase '+(allOk?'':'off');
+  }
+
+  let alert='';
+  const sec=data.secondsMode||{};
+  const now=Date.now();
+  if(sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
+  else if(sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
+  else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
+  else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
+  if($('systemAlert')){$('systemAlert').textContent=alert;$('systemAlert').className='alertBox '+(alert?'show bad':'')}
+
+  const maint=d.maintenance||{};
+  if($('maintenanceState')){
+    $('maintenanceState').style.display=maint.active?'block':'none';
+    $('maintenanceState').textContent=maint.active?'Manutenção ativa até '+shortTime(maint.until):'';
+  }
+
+  const week=Array.isArray(d.summary?.week)?d.summary.week:[];
+  if($('weekGrid'))$('weekGrid').innerHTML=week.length?week.map(x=>
+    '<div class="weekDay"><small>'+x.label+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+x.pulses+' pulsos</small></div>'
+  ).join(''):'<div class="empty">Sem histórico ainda.</div>';
+
+  const events=Array.isArray(d.history)?d.history:[];
+  if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,20).map(x=>{
+    const at=Number(x.ts||Date.parse(x.at||0));
+    return '<div class="eventRow"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+String(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
+  }).join(''):'<div class="empty">Nenhum evento registrado.</div>';
+
+  const diag={phase:sec.phase||null,relay:data.relay,seconds_state:sec,weather:data.weatherProtection?.state||null,maintenance:maint,last_sync:data.lastSync};
+  if($('systemDiag'))$('systemDiag').textContent=JSON.stringify(diag,null,2);
+
+  const presets=d.presets||{};
+  if($('fastPresetSelect')){
+    const current=$('fastPresetSelect').value;
+    $('fastPresetSelect').innerHTML='<option value="">Perfis salvos</option>'+Object.keys(presets).map(k=>'<option value="'+k.replaceAll('"','')+'">'+k+'</option>').join('');
+    if(presets[current])$('fastPresetSelect').value=current;
+  }
+  const fc=d.fast_config||{};
+  if($('fastConfigMeta')&&fc.updated_at){
+    const origin=fc.origin?' • '+fc.origin:'';
+    $('fastConfigMeta').textContent='Última configuração salva: '+new Date(fc.updated_at).toLocaleString('pt-BR')+origin;
+  }
+  validateFastCycle();
+}
+async function syncDashboard(showToast=false){
+  try{
+    const r=await api('/api/viveiro/dashboard');
+    data.dashboard=r;
+    save();renderDashboard();
+    if(showToast)toast('Painel atualizado');
+  }catch(e){
+    if(showToast)toast('Painel: '+String(e.message||e));
+  }
+}
+async function setMaintenance(minutes){
+  try{
+    const label=Number(minutes)>0?(Number(minutes)+' min'):'encerrar';
+    if(Number(minutes)>0&&!confirm('Ativar modo manutenção por '+label+'?\n\nA irrigação automática ficará suspensa.'))return;
+    const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({action:'maintenance',minutes:Number(minutes)})});
+    data.dashboard={...(data.dashboard||{}),maintenance:r.maintenance};
+    renderDashboard();toast(Number(minutes)>0?'Modo manutenção ativado':'Manutenção encerrada');
+    setTimeout(()=>syncDashboard(false),1200);
+  }catch(e){toast('Manutenção: '+String(e.message||e))}
+}
+async function saveNamedPreset(){
+  if(secondsActive())return toast('Pare o ciclo antes de salvar um perfil');
+  const draft=readSecondsDraft();
+  const existing=data.dashboard?.presets||{};
+  let base='Perfil '+(Object.keys(existing).length+1);
+  const name=prompt('Nome do perfil:',base);
+  if(!name)return;
+  const current=await api('/api/irrigation/config').catch(()=>({config:{}}));
+  const profiles={...(current?.config?.profiles||{})};
+  profiles.viveiroPresets={...(profiles.viveiroPresets||{}),[name]:{...draft,updated_at:new Date().toISOString()}};
+  await api('/api/irrigation/config',{method:'PATCH',body:JSON.stringify({profiles})});
+  toast('Perfil salvo');await syncDashboard(false);
+}
+function applyNamedPreset(name){
+  const p=data.dashboard?.presets?.[name];if(!p||secondsActive())return;
+  $('secondsOn').value=Number(p.on_seconds||30);
+  $('secondsOff').value=Number(p.off_seconds||90);
+  $('secondsStart').value=minutesToClock(Number(p.start_minutes??360));
+  $('secondsEnd').value=minutesToClock(Number(p.end_minutes??1080));
+  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(p.days_mask||127)&Number(cb.value))});
+  updateFastCycleDraftUI();validateFastCycle();
+}
 function updateTodaySummary(){
   const sec=data.secondsMode||{};
   const draft=sec.enabled?sec:(data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127});
@@ -914,10 +1127,10 @@ function updateTodaySummary(){
   if(sec.enabled&&sec.phase==='on'&&sec.pulse_started_at){
     irrigated+=Math.max(0,Math.min(Number(draft.on_seconds||0),(Date.now()-Number(sec.pulse_started_at))/1000));
   }
-  if($('todayPulses'))$('todayPulses').textContent=String(pulses);
-  if($('todayWaterTime'))$('todayWaterTime').textContent=humanDurationSeconds(irrigated);
-  if($('todayWindow'))$('todayWindow').textContent=minutesToClock(draft.start_minutes)+'–'+minutesToClock(draft.end_minutes);
-  if($('todayDays'))$('todayDays').textContent=daysLabel(Number(draft.days_mask||127));
+  if(!data.dashboard?.summary?.today){
+    if($('todayPulses'))$('todayPulses').textContent=String(pulses);
+    if($('todayWaterTime'))$('todayWaterTime').textContent=humanDurationSeconds(irrigated);
+  }
   if($('todayStatus')){
     $('todayStatus').textContent=sec.enabled?secondsPhaseLabel(sec.phase).toUpperCase():'PARADO';
     $('todayStatus').className='phase '+(sec.enabled&&sec.phase==='on'?'':'off');
@@ -1053,8 +1266,8 @@ $('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
 $('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);
 $('saveWeatherProtection').onclick=saveWeatherProtectionConfig;
 ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{
-  $(id)?.addEventListener('input',updateFastCycleDraftUI);
-  $(id)?.addEventListener('change',updateFastCycleDraftUI);
+  $(id)?.addEventListener('input',()=>{updateFastCycleDraftUI();validateFastCycle()});
+  $(id)?.addEventListener('change',()=>{updateFastCycleDraftUI();validateFastCycle()});
 });
 document.querySelectorAll('.secondsPreset').forEach(btn=>btn.onclick=()=>{
   if(secondsActive())return toast('Pare o modo rápido antes de alterar os tempos');
@@ -1093,10 +1306,17 @@ $('saveCycle').onclick=async e=>{
   if(ok)$('cycleDlg').close();
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-reorganizeLayout();render();if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false)}
+reorganizeLayout();render();renderDashboard();if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false)}},10000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token)syncWeatherProtection(false)},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},30000);
+function updateOfflineBanner(){
+  const show=!navigator.onLine||data.online===false;
+  if($('offlineBanner'))$('offlineBanner').className='offlineBanner '+(show?'show':'');
+}
+window.addEventListener('online',()=>{updateOfflineBanner();syncStatus(false);syncDashboard(false)});
+window.addEventListener('offline',updateOfflineBanner);
+setInterval(updateOfflineBanner,3000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false);syncWeatherProtection(false)}});
 </script>
 </body></html>

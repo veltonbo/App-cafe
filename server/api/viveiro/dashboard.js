@@ -191,7 +191,9 @@ export default async function handler(req,res){
       if(action==='climate_config'){
         const cfg=await setClimateConfig({
           automatic:Boolean(req.body?.automatic),
+          observation:Boolean(req.body?.observation),
           enabled:req.body?.enabled!==false,
+          trend_minutes:req.body?.trend_minutes,
           evaluation_minutes:req.body?.evaluation_minutes,
           max_adjust_percent:req.body?.max_adjust_percent,
           min_change_seconds:req.body?.min_change_seconds

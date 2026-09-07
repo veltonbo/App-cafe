@@ -1,0 +1,49 @@
+/* Fazenda 2E — camada de estabilidade visual mobile */
+html,body{max-width:100%;overflow-x:hidden}
+body{min-width:0}
+.wrap,.box,.hero,.configGroup,.secondsField,.secondsMetric,.protectCard,.stat,.windowCard,.climateCard{min-width:0;max-width:100%}
+*{overflow-wrap:anywhere}
+button,input,select,textarea{max-width:100%}
+.head,.heroTop,.statusLine,.windowCard,.configGroupTitle{min-width:0}
+.head>*:first-child,.heroTop>*:first-child,.statusLine>*:first-child,.windowCard>*:first-child,.configGroupTitle>*:first-child{min-width:0}
+.btn,.climateSwitch{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.climateSwitch{min-height:42px;white-space:normal;text-align:center}
+.actionBar{align-items:stretch}
+.actionBar .btn{min-height:46px;white-space:normal}
+.presetRow{align-items:stretch}
+.presetRow .btn{max-width:100%}
+.bottomNav{isolation:isolate}
+.emergency{max-width:calc(100vw - 28px);white-space:nowrap}
+dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 30px);overflow:auto}
+.modal{max-width:100%}
+.climateGrid,.protectGrid,.secondsLiveGrid,.grid{min-width:0}
+.climateCard strong,.secondsMetric strong,.protectCard strong,.stat strong{word-break:break-word}
+@media(max-width:760px){
+  .wrap{padding-left:12px;padding-right:12px;padding-bottom:176px}
+  .top{padding-left:13px;padding-right:13px}
+  .hero,.box{border-radius:20px;padding:16px}
+  .heroTop{gap:10px}
+  .hero h2{font-size:1.3rem}
+  .heroCountdown{font-size:1.65rem}
+  .grid,.protectGrid,.climateGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .secondsHero,.scheduleGrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+  .secondsLiveGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .actionBar{grid-template-columns:1fr!important}
+  .row{display:grid!important;grid-template-columns:1fr!important}
+  .row .btn{width:100%;min-width:0}
+  .head{align-items:flex-start;flex-wrap:wrap}
+  .head>div:last-child{max-width:100%}
+  .windowCard,.statusLine{align-items:flex-start;flex-wrap:wrap}
+  .windowBadge{white-space:normal;text-align:center}
+  .dayGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .emergency{right:12px;bottom:calc(86px + env(safe-area-inset-bottom));padding:12px 15px;font-size:.82rem}
+  .bottomNav{left:8px;right:8px}
+  .toast{bottom:calc(146px + env(safe-area-inset-bottom));width:calc(100vw - 28px);text-align:center}
+}
+@media(max-width:390px){
+  .grid,.protectGrid,.climateGrid,.secondsHero,.secondsLiveGrid,.scheduleGrid{grid-template-columns:1fr!important}
+  .secondsLiveGrid .secondsMetric:last-child{grid-column:auto!important}
+  .dayGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .box,.hero{padding:14px}
+  .climateSwitch{flex:1 1 120px}
+}

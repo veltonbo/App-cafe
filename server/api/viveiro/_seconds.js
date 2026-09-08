@@ -151,9 +151,13 @@ function disabledCycle(currentRaw,cfg){
   },currentRaw).raw;
 }
 
-export async function pulseStillActive(state={}){
+export async function pulseStillActive(state={},options={}){
   if(!state?.enabled||!state?.disabled_cycle_raw)return false;
-  const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
+  const force=Boolean(options?.force);
+  const current=await readViveiroDevice({
+    force,
+    maxAgeMs:force?0:2500
+  }).catch(()=>null);
   return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
 }
 

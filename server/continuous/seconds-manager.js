@@ -880,6 +880,26 @@ function ensureLoop(){
 export async function initSecondsManager(){
   await load();
 
+  const [startupClimateConfig,startupClimateState]=await Promise.all([
+    getClimateConfig().catch(()=>null),
+    getClimateState().catch(()=>null)
+  ]);
+  console.log('Automatico 2.0 startup',{
+    cycle_enabled:Boolean(state.enabled),
+    phase:String(state.phase||''),
+    automatic:Boolean(startupClimateConfig?.automatic),
+    observation:Boolean(startupClimateConfig?.observation),
+    climate_enabled:startupClimateConfig?.enabled!==false,
+    last_evaluated_at:Number(startupClimateState?.last_evaluated_at||0)||null,
+    last_applied_at:Number(startupClimateState?.last_applied_at||0)||null,
+    last_decision:String(startupClimateState?.last_decision||''),
+    confidence:String(startupClimateState?.confidence||''),
+    samples:Number(startupClimateState?.trend_samples||0),
+    last_target_on_seconds:Number(startupClimateState?.last_target_on_seconds||0)||null,
+    last_target_off_seconds:Number(startupClimateState?.last_target_off_seconds||0)||null,
+    pending:Boolean(startupClimateState?.pending)
+  });
+
   const baseOn=Math.max(1,Math.min(300,Math.round(Number(state.base_on_seconds||state.on_seconds)||30)));
   const baseOff=Math.max(1,Math.min(900,Math.round(Number(state.base_off_seconds||state.off_seconds)||120)));
   if(Number(state.base_on_seconds)!==baseOn||Number(state.base_off_seconds)!==baseOff){
@@ -953,6 +973,18 @@ export async function configureSeconds(input={}){
     climate_reason:'Ciclo-base definido pela programação salva.'
   };
   await persist();
+  await patchClimateState({
+    pending:null,
+    approved_id:null,
+    rejected_id:null,
+    normal_streak:0,
+    cycle_base_on_seconds:Number(state.base_on_seconds||state.on_seconds||30),
+    cycle_base_off_seconds:Number(state.base_off_seconds||state.off_seconds||120),
+    cycle_rearmed_at:Date.now(),
+    last_decision:'cycle_rearmed',
+    last_decision_at:Date.now(),
+    last_reason:'Nova programação armada. Sugestões climáticas antigas foram descartadas.'
+  }).catch(()=>null);
   await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,
     start_minutes:state.start_minutes,end_minutes:state.end_minutes,days_mask:state.days_mask

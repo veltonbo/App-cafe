@@ -1,0 +1,64 @@
+/* Fazenda 2E — shell único de navegação */
+:root{
+  --shell-bg:#f7faf8;--shell-card:#fff;--shell-ink:#173d33;--shell-muted:#74857f;
+  --shell-line:#dce8e3;--shell-brand:#0b7258;--shell-soft:#eaf6f1;--shell-danger:#b83b35;
+  --shell-shadow:0 18px 55px rgba(20,58,48,.18)
+}
+body{--shell-top-h:64px}
+.f2eShellTop{
+  position:sticky;top:0;z-index:90;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+  min-height:var(--shell-top-h);padding:calc(9px + env(safe-area-inset-top)) 13px 9px;
+  background:rgba(247,250,248,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--shell-line);
+  box-shadow:0 3px 16px rgba(20,58,48,.045)
+}
+.f2eShellBrand small{display:block;color:var(--shell-brand);font-size:.62rem;font-weight:900;letter-spacing:.14em}
+.f2eShellBrand h1{margin:2px 0 0;color:var(--shell-ink);font-size:1.08rem;line-height:1.15;letter-spacing:-.02em}
+.f2eShellMenuBtn{
+  min-width:82px;min-height:42px;border:1px solid var(--shell-line);border-radius:12px;background:#fff;color:var(--shell-ink);
+  padding:8px 12px;font-weight:850;font-size:.82rem;box-shadow:0 4px 14px rgba(20,58,48,.05)
+}
+.f2eShellOverlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(8,31,24,.42);backdrop-filter:blur(5px)}
+.f2eShellOverlay.open{display:block}
+.f2eShellPanel{
+  position:absolute;right:0;top:0;width:min(88vw,360px);height:100dvh;overflow:auto;
+  padding:calc(13px + env(safe-area-inset-top)) 13px calc(18px + env(safe-area-inset-bottom));
+  background:var(--shell-bg);box-shadow:var(--shell-shadow)
+}
+.f2eShellHead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:2px 2px 13px}
+.f2eShellHead small{display:block;color:var(--shell-brand);font-size:.62rem;font-weight:900;letter-spacing:.13em}
+.f2eShellHead strong{display:block;margin-top:2px;font-size:1.08rem;color:var(--shell-ink)}
+.f2eShellClose{
+  width:42px;height:42px;border:1px solid var(--shell-line);border-radius:12px;background:#fff;color:var(--shell-ink);font-size:1rem
+}
+.f2eShellContext{
+  display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:center;margin-bottom:13px;padding:11px;
+  border:1px solid var(--shell-line);border-radius:14px;background:#fff
+}
+.f2eShellContext span{grid-row:1/3;padding:5px 8px;border-radius:999px;background:var(--shell-soft);color:var(--shell-brand);font-size:.61rem;font-weight:900}
+.f2eShellContext b{font-size:.86rem;color:var(--shell-ink)}
+.f2eShellContext small{font-size:.68rem;color:var(--shell-muted)}
+.f2eShellLabel{margin:14px 4px 7px;color:var(--shell-muted);font-size:.63rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.f2eShellNav{display:grid;gap:7px}
+.f2eShellItem{
+  width:100%;min-height:48px;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px;
+  border:1px solid var(--shell-line);border-radius:14px;background:#fff;color:var(--shell-ink);text-decoration:none;
+  padding:10px 11px;text-align:left;font:inherit
+}
+.f2eShellItem .ico{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#eef6f2;color:var(--shell-brand);font-weight:900}
+.f2eShellItem b{display:block;font-size:.84rem}.f2eShellItem small{display:block;margin-top:1px;color:var(--shell-muted);font-size:.68rem}
+.f2eShellItem .arrow{color:var(--shell-muted);font-size:1.05rem}
+.f2eShellItem.active{border-color:#9bcfbd;background:#f2faf7}
+.f2eShellItem.active .ico{background:var(--shell-brand);color:#fff}
+.f2eShellItem.danger{color:var(--shell-danger)}
+.f2eShellDivider{height:1px;background:var(--shell-line);margin:13px 0}
+body.f2eShellApplied>header.top{display:none!important}
+body.f2eShellApplied .smartMenuOverlay,body.f2eShellApplied #smartMenuOverlay{display:none!important}
+body.f2eShellApplied #menuDlg{display:none!important}
+body.f2eShellApplied .profileContext{display:none!important}
+body.f2eShellApplied .tabs{display:none!important}
+body.f2eShellApplied .wrap{padding-top:12px!important}
+@media(max-width:430px){
+  .f2eShellTop{padding-left:11px;padding-right:11px}
+  .f2eShellBrand h1{font-size:1.02rem}
+  .f2eShellMenuBtn{min-width:76px;padding-left:10px;padding-right:10px}
+}

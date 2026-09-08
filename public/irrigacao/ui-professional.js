@@ -17,6 +17,29 @@
     el.dataset[key]='1';
   }
 
+  function normalizeControls(){
+    qsa('button:not([type])').forEach(b=>b.type='button');
+  }
+
+  function renamePrimary(){
+    const header=qs('.top h1');
+    if(header)header.textContent='Viveiro';
+    const heroKicker=qs('.hero .ey');
+    if(heroKicker)heroKicker.textContent='VIVEIRO • TEMPO REAL';
+
+    const seconds=sectionByTitle('Ciclo rápido');
+    if(seconds){
+      const h=seconds.querySelector('h2');if(h)h.textContent='Programação';
+      const k=seconds.querySelector('.sectionKicker');if(k)k.textContent='Perfil do viveiro';
+    }
+    const weather=sectionByTitle('Proteção automática por chuva');
+    if(weather){const h=weather.querySelector('h2');if(h)h.textContent='Proteção por chuva'}
+    const climate=byId('climateAdviceBox');
+    if(climate){
+      const h=climate.querySelector('h2');if(h)h.textContent='Automático 2.0';
+    }
+  }
+
   function ensureModeSelector(){
     const auto=byId('climateAutoBtn');
     const observe=byId('climateObserveBtn');
@@ -98,40 +121,67 @@
     }));
   }
 
-  function renamePrimarySections(){
-    const header=qs('.top h1');
-    if(header)header.textContent='Irrigação inteligente';
-    const heroKicker=qs('.hero .ey');
-    if(heroKicker)heroKicker.textContent='IRRIGAÇÃO INTELIGENTE • TEMPO REAL';
-    const seconds=sectionByTitle('Ciclo rápido');
-    if(seconds){
-      const h=seconds.querySelector('h2');if(h)h.textContent='Programação inteligente';
-      const k=seconds.querySelector('.sectionKicker');if(k)k.textContent='Tempos e horários';
+  function moveEmergencyIntoFlow(){
+    const hero=qs('main.wrap > .hero');
+    const stop=byId('emergencyStop');
+    if(!hero||!stop)return;
+    let row=byId('smartSafety');
+    if(!row){
+      row=document.createElement('div');
+      row.id='smartSafety';
+      row.className='smartSafety';
+      hero.insertAdjacentElement('afterend',row);
     }
-    const weather=sectionByTitle('Proteção automática por chuva');
-    if(weather){const h=weather.querySelector('h2');if(h)h.textContent='Proteção por chuva'}
+    if(stop.parentElement!==row)row.appendChild(stop);
+    stop.textContent='PARAR IRRIGAÇÃO AGORA';
+  }
+
+  function ensureProfileCard(){
+    const main=qs('main.wrap');
+    if(!main)return null;
+    let card=byId('viveiroProfileCard');
+    if(!card){
+      card=document.createElement('section');
+      card.id='viveiroProfileCard';
+      card.className='box smartProfileCard';
+      card.innerHTML=
+        '<div class="profileTop">'+
+          '<div><span class="sectionKicker">PERFIL ATIVO</span><h2>Viveiro de mudas</h2><p class="note">As configurações ficam agrupadas neste perfil.</p></div>'+
+          '<span class="profileBadge">ATIVO</span>'+
+        '</div>'+
+        '<div class="profileSummary">'+
+          '<div><small>Modo</small><strong id="profileMode">Automático 2.0</strong></div>'+
+          '<div><small>Ciclo-base</small><strong>30 s / 120 s</strong></div>'+
+          '<div><small>Clima</small><strong id="profileWeather">Weather2-2</strong></div>'+
+          '<div><small>Horário</small><strong id="profileSchedule">—</strong></div>'+
+        '</div>'+
+        '<button type="button" id="openProfileConfig" class="btn primary">Configurações do perfil</button>';
+      main.appendChild(card);
+    }
+    bind(byId('openProfileConfig'),'smartBound',()=>showView('perfil'));
+    return card;
   }
 
   function ensureAlertCenter(){
     const main=qs('main.wrap');
-    if(!main)return;
+    if(!main)return null;
     let box=byId('smartAlerts');
     if(!box){
       box=document.createElement('section');
       box.id='smartAlerts';
       box.className='box smartAlerts';
       box.innerHTML=
-        '<div class="head"><div><span class="sectionKicker">Alertas</span><h2>Notificações inteligentes</h2></div></div>'+
+        '<div class="head"><div><span class="sectionKicker">Alertas</span><h2>Notificações</h2></div></div>'+
         '<div class="smartAlertGrid">'+
-          '<div class="smartAlertCard"><small>Notificações no iPhone</small><strong id="smartPushState">Verificando</strong></div>'+
+          '<div class="smartAlertCard"><small>iPhone</small><strong id="smartPushState">Verificando</strong></div>'+
           '<div class="smartAlertCard"><small>WhatsApp</small><strong id="smartWhatsappState">Verificando</strong></div>'+
         '</div>'+
-        '<button type="button" id="smartEnablePush" class="btn soft">Ativar avisos no iPhone</button>'+
-        '<p class="note smartAlertNote">Avisos importantes: chuva, sensor offline, falha de início, interrupção, ajuste do Automático 2.0 e resumo da irrigação.</p>';
+        '<button type="button" id="smartEnablePush" class="btn soft">Ativar avisos no iPhone</button>';
       main.appendChild(box);
     }
     bind(byId('smartEnablePush'),'smartBound',()=>typeof enableBrowserNotifications==='function'&&enableBrowserNotifications());
     renderSmartAlerts();
+    return box;
   }
 
   function renderSmartAlerts(){
@@ -152,66 +202,147 @@
     if(wa){
       let configured=false;
       try{configured=Boolean(typeof data!=='undefined'&&data.dashboard?.notifications?.whatsapp?.configured)}catch{}
-      wa.textContent=configured?'Conectado':'Pronto para conectar';
+      wa.textContent=configured?'Conectado':'Não conectado';
       wa.className=configured?'ok':'';
     }
   }
 
-  function moveEmergencyIntoFlow(){
-    const main=qs('main.wrap');
-    const hero=qs('main.wrap > .hero');
-    const stop=byId('emergencyStop');
-    if(!main||!hero||!stop)return;
-    let row=byId('smartSafety');
-    if(!row){
-      row=document.createElement('div');
-      row.id='smartSafety';
-      row.className='smartSafety';
-      hero.insertAdjacentElement('afterend',row);
+  function updateProfileSummary(){
+    const sec=(typeof data!=='undefined'&&data.secondsMode)||{};
+    const cc=(typeof data!=='undefined'&&data.dashboard?.climate?.config)||{};
+    const mode=cc.observation?'Observação':cc.automatic?'Automático 2.0':'Manual';
+    if(byId('profileMode'))byId('profileMode').textContent=mode;
+    if(byId('profileSchedule')){
+      const start=Number(sec.start_minutes ?? (typeof data!=='undefined'?data.secondsDraft?.start_minutes:360) ?? 360);
+      const end=Number(sec.end_minutes ?? (typeof data!=='undefined'?data.secondsDraft?.end_minutes:1080) ?? 1080);
+      const fmt=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+      byId('profileSchedule').textContent=fmt(start)+'–'+fmt(end);
     }
-    if(stop.parentElement!==row)row.appendChild(stop);
-    stop.textContent='PARAR IRRIGAÇÃO AGORA';
+    if(byId('profileWeather')){
+      const linked=Boolean(typeof data!=='undefined'&&data.weatherProtection?.weather?.linked);
+      byId('profileWeather').textContent=linked?'Weather2-2 online':'Weather2-2';
+    }
   }
 
-  function buildAdvancedDisclosure(){
+  function makeView(id,title,subtitle){
+    const main=qs('main.wrap');
+    let view=byId(id);
+    if(!view){
+      view=document.createElement('div');
+      view.id=id;
+      view.className='smartView';
+      view.innerHTML='<div class="smartPageTitle"><span class="sectionKicker">'+subtitle+'</span><h2>'+title+'</h2></div>';
+      main.appendChild(view);
+    }
+    return view;
+  }
+
+  function organizeViews(){
     const main=qs('main.wrap');
     if(!main)return;
-    let details=byId('smartAdvanced');
-    if(!details){
-      details=document.createElement('details');
-      details.id='smartAdvanced';
-      details.className='smartAdvanced';
-      const summary=document.createElement('summary');
-      summary.textContent='Mais informações e manutenção';
-      const inner=document.createElement('div');
-      inner.className='smartAdvancedContent';
-      details.append(summary,inner);
-      main.appendChild(details);
+
+    const home=makeView('smartViewHome','Viveiro','VISÃO RÁPIDA');
+    const profile=makeView('smartViewProfile','Perfil do viveiro','CONFIGURAÇÕES');
+    const history=makeView('smartViewHistory','Histórico','ACOMPANHAMENTO');
+    const system=makeView('smartViewSystem','Sistema','MANUTENÇÃO E DIAGNÓSTICO');
+
+    const hero=qs('main.wrap > .hero');
+    const safety=byId('smartSafety');
+    const profileCard=byId('viveiroProfileCard');
+    const climate=byId('climateAdviceBox');
+    const today=byId('todayBox');
+
+    [hero,safety,profileCard,climate,today].filter(Boolean).forEach(el=>home.appendChild(el));
+
+    const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
+    const weather=sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva');
+    const calendar=byId('calendarBox');
+    const alerts=byId('smartAlerts');
+    [profileCard?.cloneNode(false),seconds,weather,calendar,alerts].filter(Boolean).forEach(el=>{
+      if(el!==profileCard?.cloneNode(false)) profile.appendChild(el);
+    });
+
+    [byId('dailyReportBox'),byId('weeklyBox'),byId('eventsBox'),byId('pulseActivityBox')]
+      .filter(Boolean).forEach(el=>history.appendChild(el));
+
+    [byId('systemHealthBox'),byId('maintenanceBox')]
+      .filter(Boolean).forEach(el=>system.appendChild(el));
+
+    const known=new Set([home,profile,history,system]);
+    qsa('main.wrap > section, main.wrap > .grid').forEach(el=>{
+      if(!known.has(el))system.appendChild(el);
+    });
+
+    const offline=byId('offlineBanner');
+    if(offline)main.insertBefore(offline,main.firstChild);
+  }
+
+  function ensureMenu(){
+    const top=qs('.top');
+    if(!top)return;
+
+    qsa('.top a.pill').forEach(a=>a.style.display='none');
+    if(byId('conn'))byId('conn').style.display='none';
+
+    let btn=byId('smartMenuBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='smartMenuBtn';
+      btn.type='button';
+      btn.className='smartMenuBtn';
+      btn.textContent='☰ Menu';
+      top.appendChild(btn);
     }
-    const inner=qs('.smartAdvancedContent',details);
-    const core=new Set([
-      qs('main.wrap > .hero'),byId('climateAdviceBox'),
-      sectionByTitle('Programação inteligente')||sectionByTitle('Ciclo rápido'),
-      sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva'),
-      byId('smartAlerts'),byId('todayBox'),byId('calendarBox'),byId('smartAlerts')
-    ].filter(Boolean));
-    qsa('main.wrap > section').forEach(s=>{if(!core.has(s))inner.appendChild(s)});
+
+    if(!byId('smartMenuOverlay')){
+      const overlay=document.createElement('div');
+      overlay.id='smartMenuOverlay';
+      overlay.className='smartMenuOverlay';
+      overlay.innerHTML=
+        '<aside class="smartMenuPanel" role="dialog" aria-label="Menu de irrigação">'+
+          '<div class="smartMenuHead"><div><span>FAZENDA 2E</span><strong>Irrigação</strong></div><button type="button" id="smartMenuClose">✕</button></div>'+
+          '<nav class="smartMainNav">'+
+            '<a href="/irrigacao/central/"><span>⌂</span><div><b>Início</b><small>Central de irrigação</small></div></a>'+
+            '<a class="active" href="/irrigacao/"><span>◉</span><div><b>Viveiro</b><small>Irrigação inteligente</small></div></a>'+
+            '<a href="/irrigacao/inkbird/"><span>☕</span><div><b>Café</b><small>Setores da lavoura</small></div></a>'+
+          '</nav>'+
+          '<div class="smartMenuLabel">Viveiro</div>'+
+          '<nav class="smartSubNav">'+
+            '<button type="button" data-smart-view="inicio">Resumo</button>'+
+            '<button type="button" data-smart-view="perfil">Perfil e configurações</button>'+
+            '<button type="button" data-smart-view="historico">Histórico</button>'+
+            '<button type="button" data-smart-view="sistema">Sistema e manutenção</button>'+
+          '</nav>'+
+          '<button type="button" id="smartConnectionBtn" class="smartConnectionBtn">Conexão do app</button>'+
+        '</aside>';
+      document.body.appendChild(overlay);
+    }
+
+    const overlay=byId('smartMenuOverlay');
+    const open=()=>overlay.classList.add('open');
+    const close=()=>overlay.classList.remove('open');
+    bind(btn,'smartBound',open);
+    bind(byId('smartMenuClose'),'smartBound',close);
+    bind(overlay,'smartOverlayBound',e=>{if(e.target===overlay)close()});
+    qsa('[data-smart-view]',overlay).forEach(b=>bind(b,'smartBound',()=>{
+      showView(String(b.dataset.smartView||'inicio'));close();
+    }));
+    bind(byId('smartConnectionBtn'),'smartBound',()=>{
+      close();
+      const target=byId('settings')||byId('conn');
+      if(target)target.click();
+    });
   }
 
-  function orderPrimary(){
-    const main=qs('main.wrap');if(!main)return;
-    const nodes=[
-      byId('offlineBanner'),qs('main.wrap > .hero'),byId('smartSafety'),byId('climateAdviceBox'),
-      sectionByTitle('Programação inteligente')||sectionByTitle('Ciclo rápido'),
-      sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva'),
-      byId('todayBox'),byId('calendarBox')
-    ].filter(Boolean);
-    nodes.forEach(el=>main.appendChild(el));
-  }
-
-  function normalizeControls(){
-    qsa('button:not([type])').forEach(b=>b.type='button');
-    qsa('button').forEach(b=>{if(!b.hasAttribute('aria-label')&&b.textContent.trim())b.setAttribute('aria-label',b.textContent.trim())});
+  const viewMap={inicio:'smartViewHome',perfil:'smartViewProfile',historico:'smartViewHistory',sistema:'smartViewSystem'};
+  function showView(name='inicio'){
+    const key=viewMap[name]?name:'inicio';
+    Object.entries(viewMap).forEach(([k,id])=>{
+      const el=byId(id);if(el)el.classList.toggle('active',k===key);
+    });
+    qsa('[data-smart-view]').forEach(b=>b.classList.toggle('active',b.dataset.smartView===key));
+    if(location.hash!=='#'+key)history.replaceState(null,'','#'+key);
+    window.scrollTo({top:0,behavior:'instant'});
   }
 
   function auditOverflow(){
@@ -222,39 +353,46 @@
       return r.width>0&&(r.right>vw+2||r.left<-2||el.scrollWidth>el.clientWidth+3);
     }).slice(0,12);
     offenders.forEach(el=>el.classList.add('layoutOverflow'));
-    if(offenders.length)console.warn('[Irrigação UI] elementos com overflow:',offenders);
+    if(offenders.length)console.warn('[Irrigação UI] overflow:',offenders);
     return offenders.length;
   }
 
-  function relayout(){
-    document.body.classList.add('smartIrrigationV5');
-    renamePrimarySections();
-    ensureModeSelector();
-    moveEmergencyIntoFlow();
-    ensureAlertCenter();
-    orderPrimary();
-    buildAdvancedDisclosure();
-    bindMissingActions();
-    normalizeControls();
-    updateModeState();
-    requestAnimationFrame(()=>auditOverflow());
-  }
-
   function boot(){
-    relayout();
-    setTimeout(relayout,250);
-    setTimeout(relayout,1200);
-    // Não observa mutações do painel climático: no Safari/iPhone isso podia entrar em loop
-    // quando o próprio updateModeState alterava classes/aria e congelar a interface.
-    setInterval(()=>{updateModeState();renderSmartAlerts()},3000);
+    document.body.classList.add('smartIrrigationV6');
+    normalizeControls();
+    renamePrimary();
+    ensureModeSelector();
+    bindMissingActions();
+    moveEmergencyIntoFlow();
+    ensureProfileCard();
+    ensureAlertCenter();
+    ensureMenu();
+    organizeViews();
+
+    const initial=String(location.hash||'#inicio').replace('#','');
+    showView(viewMap[initial]?initial:'inicio');
+    updateProfileSummary();
+    renderSmartAlerts();
+    updateModeState();
+
+    setInterval(()=>{
+      updateModeState();
+      updateProfileSummary();
+      renderSmartAlerts();
+    },3000);
+
+    window.addEventListener('hashchange',()=>{
+      const k=String(location.hash||'#inicio').replace('#','');
+      showView(viewMap[k]?k:'inicio');
+    });
     window.addEventListener('resize',()=>requestAnimationFrame(auditOverflow),{passive:true});
     window.addEventListener('orientationchange',()=>setTimeout(auditOverflow,250),{passive:true});
     window.addEventListener('error',e=>console.error('[Irrigação UI runtime]',e.message||e.error));
     window.addEventListener('unhandledrejection',e=>console.error('[Irrigação UI promise]',e.reason));
     window.__irrigacaoUiAudit=()=>({overflow:auditOverflow()});
+    setTimeout(auditOverflow,300);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 })();
-// publish-fix-iphone-freeze-v6

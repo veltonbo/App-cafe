@@ -112,6 +112,51 @@
     if(weather){const h=weather.querySelector('h2');if(h)h.textContent='Proteção por chuva'}
   }
 
+  function ensureAlertCenter(){
+    const main=qs('main.wrap');
+    if(!main)return;
+    let box=byId('smartAlerts');
+    if(!box){
+      box=document.createElement('section');
+      box.id='smartAlerts';
+      box.className='box smartAlerts';
+      box.innerHTML=
+        '<div class="head"><div><span class="sectionKicker">Alertas</span><h2>Notificações inteligentes</h2></div></div>'+
+        '<div class="smartAlertGrid">'+
+          '<div class="smartAlertCard"><small>Notificações no iPhone</small><strong id="smartPushState">Verificando</strong></div>'+
+          '<div class="smartAlertCard"><small>WhatsApp</small><strong id="smartWhatsappState">Verificando</strong></div>'+
+        '</div>'+
+        '<button type="button" id="smartEnablePush" class="btn soft">Ativar avisos no iPhone</button>'+
+        '<p class="note smartAlertNote">Avisos importantes: chuva, sensor offline, falha de início, interrupção, ajuste do Automático 2.0 e resumo da irrigação.</p>';
+      main.appendChild(box);
+    }
+    bind(byId('smartEnablePush'),'smartBound',()=>typeof enableBrowserNotifications==='function'&&enableBrowserNotifications());
+    renderSmartAlerts();
+  }
+
+  function renderSmartAlerts(){
+    const push=byId('smartPushState');
+    const wa=byId('smartWhatsappState');
+    const btn=byId('smartEnablePush');
+    if(push){
+      const supported=('Notification' in window);
+      const permission=supported?Notification.permission:'unsupported';
+      push.textContent=permission==='granted'?'Ativas':permission==='denied'?'Bloqueadas':'Desativadas';
+      push.className=permission==='granted'?'ok':permission==='denied'?'bad':'';
+    }
+    if(btn){
+      const granted=('Notification' in window)&&Notification.permission==='granted';
+      btn.textContent=granted?'Avisos no iPhone ativos':'Ativar avisos no iPhone';
+      btn.disabled=granted;
+    }
+    if(wa){
+      let configured=false;
+      try{configured=Boolean(typeof data!=='undefined'&&data.dashboard?.notifications?.whatsapp?.configured)}catch{}
+      wa.textContent=configured?'Conectado':'Pronto para conectar';
+      wa.className=configured?'ok':'';
+    }
+  }
+
   function moveEmergencyIntoFlow(){
     const main=qs('main.wrap');
     const hero=qs('main.wrap > .hero');
@@ -148,7 +193,7 @@
       qs('main.wrap > .hero'),byId('climateAdviceBox'),
       sectionByTitle('Programação inteligente')||sectionByTitle('Ciclo rápido'),
       sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva'),
-      byId('todayBox'),byId('calendarBox')
+      byId('smartAlerts'),byId('todayBox'),byId('calendarBox'),byId('smartAlerts')
     ].filter(Boolean));
     qsa('main.wrap > section').forEach(s=>{if(!core.has(s))inner.appendChild(s)});
   }
@@ -186,6 +231,7 @@
     renamePrimarySections();
     ensureModeSelector();
     moveEmergencyIntoFlow();
+    ensureAlertCenter();
     orderPrimary();
     buildAdvancedDisclosure();
     bindMissingActions();
@@ -200,7 +246,7 @@
     setTimeout(relayout,1200);
     // Não observa mutações do painel climático: no Safari/iPhone isso podia entrar em loop
     // quando o próprio updateModeState alterava classes/aria e congelar a interface.
-    setInterval(updateModeState,3000);
+    setInterval(()=>{updateModeState();renderSmartAlerts()},3000);
     window.addEventListener('resize',()=>requestAnimationFrame(auditOverflow),{passive:true});
     window.addEventListener('orientationchange',()=>setTimeout(auditOverflow,250),{passive:true});
     window.addEventListener('error',e=>console.error('[Irrigação UI runtime]',e.message||e.error));

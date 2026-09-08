@@ -3,6 +3,7 @@ import { storeGet, storeSet } from '../irrigation/_store.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
+import { getViveiroSafety, getViveiroMaintenance, setMaintenanceInterlock } from './_interlock.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -136,15 +137,16 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState]=await Promise.all([
+      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState,safety]=await Promise.all([
         storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
-        storeGet(ROOT+'/viveiroMaintenance').catch(()=>null),
+        getViveiroMaintenance().catch(()=>null),
         storeGet(ROOT+'/history').catch(()=>null),
         storeGet(ROOT+'/config').catch(()=>null),
         getClimateConfig().catch(()=>null),
-        getClimateState().catch(()=>null)
+        getClimateState().catch(()=>null),
+        getViveiroSafety().catch(()=>null)
       ]);
       const weatherError=String(weatherState?.lastWeatherError||'');
       const lastTemp=Number(climateState?.last_temperature);
@@ -166,7 +168,9 @@ export default async function handler(req,res){
       const now=Date.now();
       const todayKey=localDateKey(now);
       const auditToday=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey).slice(0,100);
-      const maintenanceActive=Boolean(maintenance?.enabled&&Number(maintenance?.until||0)>now);
+      const maintenanceActive=Boolean(maintenance?.active||(
+        maintenance?.enabled&&Number(maintenance?.until||0)>now
+      ));
       return res.status(200).json({
         ok:true,
         server:{online:true,at:now},
@@ -174,6 +178,7 @@ export default async function handler(req,res){
         seconds:seconds||{},
         weather:{state:weatherState||{},config:weatherConfig||{}},
         maintenance:{...(maintenance||{}),active:maintenanceActive},
+        safety:safety||{},
         summary:summarize(history),
         history:history.slice(0,60),
         audit_today:auditToday,
@@ -196,16 +201,11 @@ export default async function handler(req,res){
       const action=String(req.body?.action||'');
       if(action==='maintenance'){
         const minutes=Math.max(0,Math.min(1440,Math.round(Number(req.body?.minutes)||0)));
-        const enabled=minutes>0;
-        const payload={
-          enabled,
-          until:enabled?Date.now()+minutes*60000:0,
+        const payload=await setMaintenanceInterlock(
           minutes,
-          reason:String(req.body?.reason||'Modo manutenção'),
-          updated_at:Date.now()
-        };
-        await storeSet(ROOT+'/viveiroMaintenance',payload);
-        return res.status(200).json({ok:true,maintenance:{...payload,active:enabled}});
+          String(req.body?.reason||'Modo manutenção')
+        );
+        return res.status(200).json({ok:true,maintenance:payload});
       }
       if(action==='climate_config'){
         await createConfigBackup('antes_de_alterar_automatico_2').catch(()=>null);

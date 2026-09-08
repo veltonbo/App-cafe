@@ -307,12 +307,12 @@ function renderizarCardFinanceiro(gasto, lista) {
   card.dataset.index = i; // Adiciona índice como data-attribute para o fix do menu
   card.innerHTML = `
     <div class="financeiro-card-top">
-      <span class="financeiro-card-produto">${gasto.produto}</span>
-      <span class="financeiro-card-valor">${formatarValorBR(gasto.valor)}</span>
+      <span class="financeiro-card-produto">${escapeHtml(gasto.produto)}</span>
+      <span class="financeiro-card-valor">${escapeHtml(formatarValorBR(gasto.valor))}</span>
     </div>
-    <div class="financeiro-card-desc">${gasto.descricao ? gasto.descricao : "&nbsp;"}</div>
-    <div class="financeiro-card-data">${formatarDataBR(gasto.data)}</div>
-    <div class="financeiro-card-tipo">${gasto.tipo}</div>
+    <div class="financeiro-card-desc">${gasto.descricao ? escapeHtml(gasto.descricao) : "&nbsp;"}</div>
+    <div class="financeiro-card-data">${escapeHtml(formatarDataBR(gasto.data))}</div>
+    <div class="financeiro-card-tipo">${escapeHtml(gasto.tipo)}</div>
     <div class="opcoes-wrapper">
       <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
       <ul class="menu-opcoes-padrao-lista" style="display:none;">
@@ -411,16 +411,19 @@ function filtrarFinanceiro(filtro, btn) {
   listaApagar.innerHTML = '';
   listaPagos.innerHTML = '';
   const gastos = window.gastos || [];
-  const filtrados = gastos.filter(g => {
-    if (filtro === 'apagar') return !g.pago && !(g.descricao && g.descricao.toLowerCase().includes('pago'));
-    if (filtro === 'pagos') return g.pago || (g.descricao && g.descricao.toLowerCase().includes('pago'));
-    return true;
-  });
-  filtrados.forEach((gasto, i) => {
+  const filtrados = gastos
+    .map((gasto, originalIndex) => ({ ...gasto, _index: originalIndex }))
+    .filter(g => {
+      if (filtro === 'apagar') return !g.pago && !(g.descricao && g.descricao.toLowerCase().includes('pago'));
+      if (filtro === 'pagos') return g.pago || (g.descricao && g.descricao.toLowerCase().includes('pago'));
+      return true;
+    });
+  filtrados.forEach((gasto) => {
+    const i = gasto._index;
     const card = document.createElement('div');
     card.className = 'item item-financeiro';
     card.innerHTML = `
-      <span>${formatarDataBR(gasto.data)} - ${gasto.produto} - ${formatarValorBR(gasto.valor)} (${gasto.tipo})</span>
+      <span>${escapeHtml(formatarDataBR(gasto.data))} - ${escapeHtml(gasto.produto)} - ${escapeHtml(formatarValorBR(gasto.valor))} (${escapeHtml(gasto.tipo)})</span>
       <div class="opcoes-wrapper">
         <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
         <ul class="menu-opcoes-padrao-lista" style="display:none;">

@@ -189,15 +189,34 @@ export async function runViveiroWeatherCheck(){
     return{...result,state:next};
   }
 
-  const weatherUsable=Boolean(weather?.linked&&weather?.metrics);
+  const weatherUsable=Boolean(
+    weather?.linked&&weather?.metrics&&weather?.device?.online!==false
+  );
   if(!weatherUsable){
     next.status=previous.pausedByWeather?'paused_waiting_weather':'weather_unavailable';
     next.lastWeatherError=weather?.error||'Weather2-2 sem dados suficientes.';
-    // Fail-safe: se já estava pausado por chuva, não retoma sem confirmar o clima.
-    if(previous.pausedByWeather&&ekaza.relay===true){
-      await setRelay(false).catch(()=>null);
-      result.action='forced_off_weather_unavailable';
+    next.weatherUnavailableSince=Number(previous.weatherUnavailableSince||checkedAt);
+
+    if(seconds.enabled){
+      result.action='continuous_seconds_manager_handles_weather_unavailable';
+    }else{
+      const wasEnabled=previous.pausedByWeatherUnavailable
+        ?Boolean(previous.wasCycleEnabledUnavailable)
+        :Boolean(ekaza.cycleConfig?.enabled);
+      next.pausedByWeatherUnavailable=Boolean(previous.pausedByWeatherUnavailable||wasEnabled);
+      next.wasCycleEnabledUnavailable=wasEnabled;
+
+      if(ekaza.cycleConfig?.enabled){
+        await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false).catch(()=>null);
+        result.action='cycle_paused_weather_unavailable';
+      }
     }
+
+    if(ekaza.relay===true){
+      await setRelay(false).catch(()=>null);
+      result.action=result.action==='none'?'relay_off_weather_unavailable':result.action+'+relay_off';
+    }
+
     await storeSet(STATE_PATH,next);
     return{...result,state:next};
   }
@@ -208,9 +227,30 @@ export async function runViveiroWeatherCheck(){
   const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
   const rainBlocksNow=Boolean(rainingNow&&(config.blockWhileRaining||thresholdReached));
   next.lastWeatherError=null;
+  next.weatherUnavailableSince=0;
   next.rainDetected=rainingNow;
   next.rainAmountMm=rainMm;
   next.rainThresholdReached=thresholdReached;
+
+  if(previous.pausedByWeatherUnavailable&&!rainBlocksNow){
+    const shouldRestore=Boolean(previous.wasCycleEnabledUnavailable);
+    next.pausedByWeatherUnavailable=false;
+    next.wasCycleEnabledUnavailable=false;
+    if(!seconds.enabled&&shouldRestore&&ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
+      const restored=await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,true);
+      result.cycle_config=restored;
+      result.action=position.insideWindow?'cycle_recovered_weather_inside_window':'cycle_recovered_weather';
+    }else{
+      result.action=seconds.enabled?'continuous_seconds_weather_recovered':'weather_recovered';
+    }
+    if(!position.insideWindow){
+      await setRelay(false).catch(()=>null);
+    }
+    next.status=position.insideWindow?'weather_recovered_inside_window':'clear';
+    await record('viveiro_weather_recovered','Weather2-2 voltou a responder e a proteção climática foi restabelecida.');
+    await storeSet(STATE_PATH,next);
+    return{...result,state:next};
+  }
 
   if(rainBlocksNow){
     next.lastRainAt=checkedAt;
@@ -220,7 +260,11 @@ export async function runViveiroWeatherCheck(){
 
     const wasEnabled=previous.pausedByWeather
       ? Boolean(previous.wasCycleEnabled)
-      : Boolean(seconds.enabled||ekaza.cycleConfig?.enabled);
+      : Boolean(
+          seconds.enabled||
+          ekaza.cycleConfig?.enabled||
+          previous.wasCycleEnabledUnavailable
+        );
 
     next.wasCycleEnabled=wasEnabled;
     next.pausedByWeather=Boolean(previous.pausedByWeather||wasEnabled);

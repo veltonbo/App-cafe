@@ -1,4 +1,4 @@
-import { getDeviceId, tuyaRequest } from '../_tuya.js';
+import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { appendHistory, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
@@ -16,43 +16,25 @@ export const DEFAULT_VIVEIRO_WEATHER_CONFIG={
   rainThresholdMm:5
 };
 
-function normalizeStatus(result){
-  if(Array.isArray(result))return result;
-  if(Array.isArray(result?.status))return result.status;
-  if(Array.isArray(result?.result))return result.result;
-  return [];
-}
-function statusMap(result){
-  return Object.fromEntries(normalizeStatus(result).map(x=>[x.code,x.value]));
-}
-async function getShadowMap(deviceId){
-  try{
-    const shadow=await tuyaRequest('GET',`/v2.0/cloud/thing/${deviceId}/shadow/properties`);
-    const props=Array.isArray(shadow?.properties)?shadow.properties:[];
-    return Object.fromEntries(props.map(x=>[x.code,x.value]));
-  }catch{return{}}
-}
-async function readEkaza(deviceId){
-  const [statusR,shadowMap]=await Promise.all([
-    tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
-    getShadowMap(deviceId)
-  ]);
-  const map=statusMap(statusR);
-  const cycleRaw=typeof shadowMap.cycle_time==='string'?shadowMap.cycle_time:(typeof map.cycle_time==='string'?map.cycle_time:'');
+async function readEkaza(){
+  const state=await readViveiroState();
+  const map=state?.statusMap||{};
+  const cycleRaw=typeof map.cycle_time==='string'?map.cycle_time:'';
   return{
     relay:typeof map.switch_1==='boolean'?map.switch_1:null,
     cycleRaw,
     cycleConfig:decodeCycle(cycleRaw),
     raw:map,
-    shadow:shadowMap
+    shadow:{},
+    provider:state?.provider||null
   };
 }
-async function setRelay(deviceId,on){
-  await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'switch_1',value:Boolean(on)}]
-  });
+async function setRelay(on){
+  return sendViveiroCommands([
+    {code:'switch_1',value:Boolean(on)}
+  ]);
 }
-async function setCycleEnabled(deviceId,currentRaw,currentConfig,enabled){
+async function setCycleEnabled(currentRaw,currentConfig,enabled){
   if(!currentConfig)throw new Error('Programação cycle_time não reconhecida.');
   const encoded=encodeCycle({
     enabled,
@@ -62,9 +44,9 @@ async function setCycleEnabled(deviceId,currentRaw,currentConfig,enabled){
     onMinutes:currentConfig.onMinutes,
     offMinutes:currentConfig.offMinutes
   },currentRaw);
-  await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'cycle_time',value:encoded.raw}]
-  });
+  await sendViveiroCommands([
+    {code:'cycle_time',value:encoded.raw}
+  ]);
   return encoded;
 }
 function timeContext(now=new Date()){
@@ -131,7 +113,6 @@ async function record(type,detail,extra={}){
 }
 
 export async function runViveiroWeatherCheck(){
-  const deviceId=getDeviceId();
   const config=await getViveiroWeatherConfig();
   const previous=await getViveiroWeatherState();
   const checkedAt=Date.now();
@@ -143,7 +124,7 @@ export async function runViveiroWeatherCheck(){
 
   let ekaza=null;
   try{
-    ekaza=await readEkaza(deviceId);
+    ekaza=await readEkaza();
   }catch(error){
     const message=error?.message||String(error);
     const next={
@@ -193,7 +174,7 @@ export async function runViveiroWeatherCheck(){
     next.lastWeatherError=weather?.error||'Weather2-2 sem dados suficientes.';
     // Fail-safe: se já estava pausado por chuva, não retoma sem confirmar o clima.
     if(previous.pausedByWeather&&ekaza.relay===true){
-      await setRelay(deviceId,false).catch(()=>null);
+      await setRelay(false).catch(()=>null);
       result.action='forced_off_weather_unavailable';
     }
     await storeSet(STATE_PATH,next);
@@ -229,11 +210,11 @@ export async function runViveiroWeatherCheck(){
       // Esta verificação apenas reforça o desligamento físico em caso de chuva.
       result.action='continuous_seconds_manager_handles_rain';
     }else if(ekaza.cycleConfig?.enabled){
-      await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
+      await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_paused_rain';
     }
     if(ekaza.relay!==false){
-      await setRelay(deviceId,false);
+      await setRelay(false);
       result.action=result.action==='none'?'relay_off_rain':result.action+'+relay_off';
     }
 
@@ -278,11 +259,11 @@ export async function runViveiroWeatherCheck(){
       result.action='continuous_seconds_manager_handles_resume_delay';
     }else if(ekaza.cycleConfig?.enabled){
       // Alguém reativou manualmente durante a espera: mantém a proteção.
-      await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,false);
+      await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false);
       result.action='cycle_kept_paused_delay';
     }
     if(ekaza.relay===true){
-      await setRelay(deviceId,false);
+      await setRelay(false);
       result.action=result.action==='none'?'relay_off_delay':result.action+'+relay_off';
     }
     await storeSet(STATE_PATH,next);
@@ -293,12 +274,12 @@ export async function runViveiroWeatherCheck(){
     if(seconds.enabled){
       result.action=position.insideWindow?'continuous_seconds_ready':'continuous_seconds_waiting_window';
     }else if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
-      const restored=await setCycleEnabled(deviceId,ekaza.cycleRaw,ekaza.cycleConfig,true);
+      const restored=await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,true);
       result.cycle_config=restored;
       result.action=position.insideWindow?'cycle_resumed_inside_window':'cycle_restored_for_next_window';
     }
     if(!position.insideWindow){
-      await setRelay(deviceId,false).catch(()=>null);
+      await setRelay(false).catch(()=>null);
     }
     next.status=position.insideWindow?'resumed_inside_window':'restored_outside_window';
     await record(

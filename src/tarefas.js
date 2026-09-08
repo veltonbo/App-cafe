@@ -1,6 +1,9 @@
 // ====== VARIÁVEIS GLOBAIS ======
 window.tarefas = window.tarefas || [];
 let indiceEdicaoTarefa = null; // Agora está corretamente definida
+let refTarefas = null;
+let listenerTarefas = null;
+let callbacksTarefas = [];
 
 // ====== ADICIONAR OU SALVAR EDIÇÃO DE TAREFA ======
 function adicionarTarefa() {
@@ -225,7 +228,14 @@ function mostrarCamposAplicacao() {
 // ====== CARREGAR TAREFAS ======
 function carregarTarefas(callback) {
   console.log("Carregando tarefas...");
-  db.ref('Tarefas').on('value', (snapshot) => {
+  if (typeof callback === 'function') callbacksTarefas.push(callback);
+  if (listenerTarefas) {
+    while (callbacksTarefas.length) callbacksTarefas.shift()();
+    return;
+  }
+
+  refTarefas = db.ref('Tarefas');
+  listenerTarefas = (snapshot) => {
     const dados = snapshot.exists() ? Object.values(snapshot.val()) : [];
     // Só atualiza window.tarefas se mudou
     if (JSON.stringify(window.tarefas) !== JSON.stringify(dados)) {
@@ -235,17 +245,15 @@ function carregarTarefas(callback) {
     // Controle de carregamento de dados principais para notificações automáticas
     window.__dadosCarregados = window.__dadosCarregados || { tarefas: false, gastos: false };
     window.__dadosCarregados.tarefas = true;
-    
-    // Execute callback if provided
-    if (typeof callback === 'function') {
-      callback();
-    }
-    
+
+    while (callbacksTarefas.length) callbacksTarefas.shift()();
+
     if (window.__dadosCarregados.gastos) {
       document.dispatchEvent(new Event('dadosCarregados'));
       window.__dadosCarregados = { tarefas: false, gastos: false };
     }
-  });
+  };
+  refTarefas.on('value', listenerTarefas);
 }
 
 // Controle de carregamento de dados principais para notificações automáticas

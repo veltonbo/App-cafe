@@ -24,7 +24,9 @@ function atualizarRelatorioCompleto() {
 function atualizarRelatorioAplicacoes() {
   relatorioAplicacoes = aplicacoes || [];
   document.getElementById("resumoRelAplicacoes").innerHTML = relatorioAplicacoes.length
-    ? relatorioAplicacoes.map(app => `${app.data} - ${app.produto} (${app.tipo}) - ${app.dosagem} - ${app.setor}`).join('<br>')
+    ? relatorioAplicacoes.map(app => [
+        app.data, app.produto, '(' + String(app.tipo || '') + ')', app.dosagem, app.setor
+      ].map(escapeHtml).join(' - ')).join('<br>')
     : "Nenhuma aplicação registrada.";
 }
 
@@ -32,7 +34,9 @@ function atualizarRelatorioAplicacoes() {
 function atualizarRelatorioTarefas() {
   relatorioTarefas = (tarefas || []).concat(tarefasFeitas || []);
   document.getElementById("resumoRelTarefas").innerHTML = relatorioTarefas.length
-    ? relatorioTarefas.map(t => `${t.data} - ${t.descricao} (${t.prioridade}) - ${t.setor}`).join('<br>')
+    ? relatorioTarefas.map(t => [
+        t.data, t.descricao, '(' + String(t.prioridade || '') + ')', t.setor
+      ].map(escapeHtml).join(' - ')).join('<br>')
     : "Nenhuma tarefa registrada.";
 }
 
@@ -40,7 +44,12 @@ function atualizarRelatorioTarefas() {
 function atualizarRelatorioFinanceiro() {
   relatorioFinanceiro = gastos || [];
   document.getElementById("resumoRelFinanceiro").innerHTML = relatorioFinanceiro.length
-    ? relatorioFinanceiro.map(g => `${g.data} - ${g.produto} - R$ ${g.valor.toFixed(2)} (${g.tipo})`).join('<br>')
+    ? relatorioFinanceiro.map(g => [
+        g.data,
+        g.produto,
+        'R$ ' + Number(g.valor || 0).toFixed(2),
+        '(' + String(g.tipo || '') + ')'
+      ].map(escapeHtml).join(' - ')).join('<br>')
     : "Nenhum lançamento financeiro registrado.";
 }
 
@@ -48,7 +57,11 @@ function atualizarRelatorioFinanceiro() {
 function atualizarRelatorioColheita() {
   relatorioColheita = colheita || [];
   document.getElementById("resumoRelColheita").innerHTML = relatorioColheita.length
-    ? relatorioColheita.map(c => `${c.data} - ${c.colhedor} - ${c.quantidade.toFixed(2)} latas`).join('<br>')
+    ? relatorioColheita.map(c => [
+        c.data,
+        c.colhedor,
+        Number(c.quantidade || 0).toFixed(2) + ' latas'
+      ].map(escapeHtml).join(' - ')).join('<br>')
     : "Nenhum registro de colheita.";
 }
 

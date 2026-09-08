@@ -7,7 +7,9 @@ import {
   climateConfidenceAdjustmentLimit,
   climateExtremeProfile,
   climateSuggestion,
+  climateTrend,
   normalizeClimateConfig,
+  updateClimateSamples,
   vaporPressureDeficit
 } from '../server/api/viveiro/_climate.js';
 
@@ -253,4 +255,63 @@ test('Automatico 2.0 reduz mais o intervalo em cenario real de 37.4C e VPD 3.92'
   assert.ok(suggestion.target_off_seconds<=82);
   assert.ok(suggestion.target_off_seconds>=78);
   assert.equal(suggestion.useful,true);
+});
+
+
+test('Automatico 2.0 nao duplica a mesma observacao climatica',()=>{
+  const snapshot={
+    checked_at:1000000,
+    metrics:{
+      temperature:{value:33},
+      humidity:{value:50}
+    }
+  };
+  const cfg={trend_minutes:30};
+  const first=updateClimateSamples([],snapshot,cfg,1000000);
+  const second=updateClimateSamples(first,snapshot,cfg,1005000);
+  assert.equal(first.length,1);
+  assert.equal(second.length,1);
+});
+
+test('Automatico 2.0 rejeita salto climatico improvavel em poucos minutos',()=>{
+  const base=[{
+    ts:1000000,observation_ts:1000000,
+    temperature:32,humidity:60,vpd:vaporPressureDeficit(32,60)
+  }];
+  const snapshot={
+    checked_at:1120000,
+    metrics:{
+      temperature:{value:48},
+      humidity:{value:15}
+    }
+  };
+  const rows=updateClimateSamples(base,snapshot,{trend_minutes:30},1120000);
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].temperature,32);
+});
+
+test('Automatico 2.0 usa regressao para detectar secagem progressiva',()=>{
+  const rows=[
+    {ts:0,temperature:30,humidity:65,vpd:vaporPressureDeficit(30,65)},
+    {ts:300000,temperature:31,humidity:60,vpd:vaporPressureDeficit(31,60)},
+    {ts:600000,temperature:32,humidity:55,vpd:vaporPressureDeficit(32,55)},
+    {ts:900000,temperature:33,humidity:50,vpd:vaporPressureDeficit(33,50)},
+    {ts:1200000,temperature:34,humidity:45,vpd:vaporPressureDeficit(34,45)}
+  ];
+  const trend=climateTrend(rows,1200000);
+  assert.equal(trend.confidence,'high');
+  assert.ok(trend.temp_slope_per_10m>0);
+  assert.ok(trend.humidity_slope_per_10m<0);
+  assert.ok(trend.vpd_slope_per_10m>0);
+  assert.ok(trend.vpd_delta>0);
+});
+
+test('janela de irrigacao continua sendo a referencia do Automatico 2.0',()=>{
+  const state={start_minutes:8*60,end_minutes:10*60,days_mask:1<<2};
+  const before=localSchedule(state,new Date('2026-09-08T11:30:00Z')); // 07:30 local
+  const inside=localSchedule(state,new Date('2026-09-08T12:30:00Z')); // 08:30 local
+  const after=localSchedule(state,new Date('2026-09-08T15:00:00Z')); // 11:00 local
+  assert.equal(before.inside,false);
+  assert.equal(inside.inside,true);
+  assert.equal(after.inside,false);
 });

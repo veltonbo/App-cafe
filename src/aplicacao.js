@@ -46,6 +46,11 @@ function salvarOuEditarAplicacao() {
     setor: document.getElementById("setorApp").value
   };
 
+  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
+    alert("Preencha todos os campos corretamente.");
+    return;
+  }
+
   // NOVO: Só cria tarefa de reaplicação se o toggle estiver ativado
   const toggleReaplicacao = document.getElementById("toggleReaplicacaoApp");
   if (toggleReaplicacao && toggleReaplicacao.checked) {
@@ -59,11 +64,6 @@ function salvarOuEditarAplicacao() {
         setor: nova.setor
       });
     }
-  }
-
-  if (!nova.data || !nova.produto || !nova.dosagem || isNaN(parseFloat(nova.dosagem))) {
-    alert("Preencha todos os campos corretamente.");
-    return;
   }
 
   if (indiceEdicaoAplicacao !== null) {

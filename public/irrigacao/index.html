@@ -1282,10 +1282,10 @@ function processDashboardNotifications(payload){
   if(!notificationsSupported()||Notification.permission!=='granted')return;
   const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
   const important=new Set([
-    'viveiro_window_start','viveiro_weather_pause','viveiro_weather_resume',
+    'viveiro_weather_pause','viveiro_weather_unavailable',
     'viveiro_start_failure','viveiro_start_delay','viveiro_error',
-    'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_cycle_stop','viveiro_window_end',
-    'viveiro_climate_auto_change','viveiro_climate_applied','viveiro_climate_suggestion'
+    'viveiro_emergency_stop','viveiro_cycle_stop',
+    'viveiro_climate_suggestion'
   ]);
   if(!data.notificationsPrimed){
     data.notifiedEventIds=rows.slice(0,80).map(x=>String(x.id||x.ts||''));

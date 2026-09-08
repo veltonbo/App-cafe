@@ -1,55 +1,43 @@
-import { ensureCloudConfig, tuyaRequest } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
-import { disableAllDp38 } from '../inkbird/_iic800.js';
+import { readInkbirdState, sendInkbirdCommands } from '../inkbird/_transport.js';
+import { encodeDp45Stop, encodeNormalTimerZone, dp45HasWatering } from '../inkbird/_iic800.js';
 import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
 import { appendHistory, getAutomationConfig, storeGet, storeSet } from './_store.js';
 
-function token(req) {
+function token(req){
   const header=String(req.headers.authorization||'');
   return header.toLowerCase().startsWith('bearer ')?header.slice(7).trim():'';
 }
-function allowed(req) {
+function allowed(req){
   const supplied=token(req);
-  const cron=(process.env.CRON_SECRET||'').trim();
-  const app=(process.env.APP_CONTROL_TOKEN||'').trim();
+  const cron=String(process.env.CRON_SECRET||'').trim();
+  const app=String(process.env.APP_CONTROL_TOKEN||'').trim();
   return Boolean(supplied&&((cron&&supplied===cron)||(app&&supplied===app)));
 }
-function normalizeStatus(result){
-  if(Array.isArray(result))return result;
-  if(Array.isArray(result?.status))return result.status;
-  if(Array.isArray(result?.result))return result.result;
-  return [];
+function uiMaskToDevice(mask){
+  const m=Math.max(0,Math.min(127,Number(mask)||0));
+  return((m>>1)&0x3f)|((m&1)<<6);
 }
-function normalizeShadow(result){
-  if(Array.isArray(result?.properties))return result.properties;
-  if(Array.isArray(result))return result;
-  return [];
+async function scheduleCache(deviceId){
+  const raw=await storeGet(`IrrigacaoFazenda2E/inkbirdSchedules/${deviceId}`).catch(()=>null);
+  return raw&&typeof raw==='object'?raw:{};
 }
-async function readScheduleRaw(deviceId){
-  const [sR,shR]=await Promise.allSettled([
-    tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
-    tuyaRequest('GET',`/v2.0/cloud/thing/${deviceId}/shadow/properties`)
-  ]);
-  const status=sR.status==='fulfilled'?normalizeStatus(sR.value):[];
-  const shadow=shR.status==='fulfilled'?normalizeShadow(shR.value):[];
-  return status.find(x=>x.code==='normal_time')?.value??shadow.find(x=>x.code==='normal_time')?.value??null;
-}
-async function writeScheduleRaw(deviceId,value){
-  try{
-    return await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-      commands:[{code:'normal_time',value}]
-    });
-  }catch(firstError){
-    return tuyaRequest('POST',`/v2.0/cloud/thing/${deviceId}/shadow/properties/issue`,{
-      properties:JSON.stringify({normal_time:value})
-    });
-  }
+async function sendScheduleConfig(deviceId,config,enabled){
+  const deviceCfg={
+    ...config,
+    enabled,
+    days_mask:uiMaskToDevice(config.days_mask)
+  };
+  const encoded=encodeNormalTimerZone(null,Number(config.zone),deviceCfg);
+  return sendInkbirdCommands({
+    deviceId,
+    commands:[{code:'normal_timer',value:encoded.raw}]
+  });
 }
 
 export default async function handler(req,res){
-  if(req.method!=='GET'&&req.method!=='POST')return res.status(405).json({ok:false,error:'Método não permitido.'});
+  if(!['GET','POST'].includes(req.method))return res.status(405).json({ok:false,error:'Método não permitido.'});
   if(!allowed(req))return res.status(401).json({ok:false,error:'Não autorizado.'});
-  if(!ensureCloudConfig(res))return;
 
   try{
     const config=await getAutomationConfig();
@@ -58,13 +46,13 @@ export default async function handler(req,res){
       return res.status(200).json({ok:true,enabled:false,message:'Proteção meteorológica em segundo plano desativada.'});
     }
 
-    const snapshot=await fetchWeatherSnapshot();
+    const snapshot=await fetchWeatherSnapshot({maxAgeMs:5000});
     const weatherState=(await storeGet('IrrigacaoFazenda2E/weatherState').catch(()=>null))||{};
     if(snapshot?.metrics?.rainDetected)weatherState.lastRainAt=Date.now();
     const decision=decideWeather(snapshot,policy,weatherState);
     await storeSet('IrrigacaoFazenda2E/weatherState',{
       ...weatherState,checkedAt:Date.now(),decision,
-      snapshot:{linked:snapshot?.linked||false,online:snapshot?.device?.online??null,metrics:snapshot?.metrics||null}
+      snapshot:{linked:Boolean(snapshot?.linked),online:snapshot?.device?.online??null,metrics:snapshot?.metrics||null}
     }).catch(()=>null);
 
     const controllers=await listInkbirdDevices();
@@ -72,38 +60,79 @@ export default async function handler(req,res){
 
     for(let i=0;i<controllers.length;i++){
       const ctrl=controllers[i],id=ctrl.id;
-      const state=(await storeGet(`IrrigacaoFazenda2E/background/${id}`).catch(()=>null))||{};
+      const guard=(await storeGet(`IrrigacaoFazenda2E/background/${id}`).catch(()=>null))||{};
+      const device=await readInkbirdState({deviceId:id,force:true,maxAgeMs:0}).catch(()=>null);
+      if(!device){
+        results.push({device_id:id,action:'offline_or_unavailable'});
+        continue;
+      }
 
-      if(decision.blocked&&!state.suspended){
-        const raw=await readScheduleRaw(id);
-        if(raw==null){results.push({device_id:id,action:'skip',reason:'agenda_indisponivel'});continue;}
-        const disabledRaw=disableAllDp38(raw);
-        await writeScheduleRaw(id,disabledRaw);
+      let manualStopped=false;
+      if(decision.blocked&&dp45HasWatering(device.statusMap.irrigation_time_all)){
+        await sendInkbirdCommands({
+          deviceId:id,
+          commands:[{code:'irrigation_time_all',value:encodeDp45Stop(8)}],
+          priority:true
+        });
+        await storeSet(`IrrigacaoFazenda2E/active/${id}`,null).catch(()=>null);
+        manualStopped=true;
+        await appendHistory({
+          type:'weather_stop',controller_id:id,controller_index:i+1,source:'smartlife',
+          status:'confirmed',detail:'Irrigação interrompida pela proteção meteorológica',weather:decision
+        }).catch(()=>null);
+      }
+
+      const cache=await scheduleCache(id);
+      const known=Array.from({length:8},(_,z)=>cache[String(z+1)]).filter(Boolean);
+      const fullScheduleKnowledge=known.length===8;
+
+      if(decision.blocked&&!guard.suspended&&fullScheduleKnowledge){
+        const saved={};
+        for(let zone=1;zone<=8;zone++){
+          const cfg={...cache[String(zone)],zone};
+          saved[String(zone)]=cfg;
+          if(cfg.enabled)await sendScheduleConfig(id,cfg,false);
+        }
         await storeSet(`IrrigacaoFazenda2E/background/${id}`,{
-          suspended:true,saved_raw:raw,suspended_at:Date.now(),reason:decision
+          suspended:true,saved_schedules:saved,suspended_at:Date.now(),reason:decision
         });
         await appendHistory({
-          type:'weather_suspend',controller_id:id,controller_index:i+1,source:'server_weather',
-          status:'confirmed',detail:'Agenda automática suspensa pelo clima',weather:decision
-        });
-        results.push({device_id:id,action:'suspended'});
-      }else if(!decision.blocked&&state.suspended&&state.saved_raw){
-        await writeScheduleRaw(id,state.saved_raw);
+          type:'weather_suspend',controller_id:id,controller_index:i+1,source:'smartlife',
+          status:'confirmed',detail:'Agendas conhecidas suspensas pelo clima',weather:decision
+        }).catch(()=>null);
+        results.push({device_id:id,action:'suspended',manual_stopped:manualStopped,known_schedules:8});
+      }else if(!decision.blocked&&guard.suspended&&guard.saved_schedules){
+        for(let zone=1;zone<=8;zone++){
+          const cfg=guard.saved_schedules[String(zone)];
+          if(cfg?.enabled)await sendScheduleConfig(id,{...cfg,zone},true);
+        }
         await storeSet(`IrrigacaoFazenda2E/background/${id}`,{
-          suspended:false,restored_at:Date.now(),saved_raw:null
+          suspended:false,restored_at:Date.now(),saved_schedules:null
         });
         await appendHistory({
-          type:'weather_restore',controller_id:id,controller_index:i+1,source:'server_weather',
-          status:'confirmed',detail:'Agenda automática restaurada após liberação do clima',weather:decision
-        });
+          type:'weather_restore',controller_id:id,controller_index:i+1,source:'smartlife',
+          status:'confirmed',detail:'Agendas restauradas após liberação do clima',weather:decision
+        }).catch(()=>null);
         results.push({device_id:id,action:'restored'});
       }else{
-        results.push({device_id:id,action:'none',suspended:Boolean(state.suspended)});
+        results.push({
+          device_id:id,
+          action:manualStopped?'manual_stopped':'none',
+          suspended:Boolean(guard.suspended),
+          known_schedules:known.length,
+          full_schedule_protection:fullScheduleKnowledge,
+          limited:decision.blocked&&!fullScheduleKnowledge
+        });
       }
     }
 
-    return res.status(200).json({ok:true,enabled:true,decision,controllers:results});
+    return res.status(200).json({
+      ok:true,enabled:true,provider:'smartlife',decision,controllers:results,
+      note:'A suspensão preventiva de agendas exige que as 8 zonas tenham sido lidas/salvas pelo app.'
+    });
   }catch(error){
-    return res.status(502).json({ok:false,error:error.message||'Falha na proteção meteorológica em segundo plano.'});
+    return res.status(502).json({
+      ok:false,error:error?.message||'Falha na proteção meteorológica do Café via Smart Life.'
+    });
   }
 }

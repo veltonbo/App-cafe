@@ -1,6 +1,6 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { storeGet, storeSet } from '../irrigation/_store.js';
-import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
+import { approveClimateSuggestion, getClimateConfig, getClimateState, patchClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
 import { getViveiroSafety, getViveiroMaintenance, setMaintenanceInterlock } from './_interlock.js';
@@ -209,6 +209,7 @@ export default async function handler(req,res){
       }
       if(action==='climate_config'){
         await createConfigBackup('antes_de_alterar_automatico_2').catch(()=>null);
+        const previous=await getClimateConfig().catch(()=>({}));
         const cfg=await setClimateConfig({
           automatic:Boolean(req.body?.automatic),
           observation:Boolean(req.body?.observation),
@@ -222,6 +223,21 @@ export default async function handler(req,res){
           normal_confirmations:req.body?.normal_confirmations,
           post_rain_hold_minutes:req.body?.post_rain_hold_minutes
         });
+        const modeChanged=
+          Boolean(previous?.automatic)!==Boolean(cfg.automatic)||
+          Boolean(previous?.observation)!==Boolean(cfg.observation)||
+          Boolean(previous?.enabled)!==Boolean(cfg.enabled);
+        if(modeChanged){
+          await patchClimateState({
+            pending:null,
+            approved_id:null,
+            rejected_id:null,
+            mode_changed_at:Date.now(),
+            last_decision:'mode_changed',
+            last_decision_at:Date.now(),
+            last_reason:'Modo do Automático 2.0 alterado. Sugestões antigas foram descartadas.'
+          }).catch(()=>null);
+        }
         return res.status(200).json({ok:true,climate_config:cfg});
       }
       if(action==='climate_apply'){

@@ -1,6 +1,5 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { storeGet, storeSet } from '../irrigation/_store.js';
-import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
@@ -137,17 +136,32 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,weatherSnapshot,climateConfig,climateState]=await Promise.all([
+      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState]=await Promise.all([
         storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
         storeGet(ROOT+'/viveiroMaintenance').catch(()=>null),
         storeGet(ROOT+'/history').catch(()=>null),
         storeGet(ROOT+'/config').catch(()=>null),
-        fetchWeatherSnapshot().catch(()=>null),
         getClimateConfig().catch(()=>null),
         getClimateState().catch(()=>null)
       ]);
+      const weatherError=String(weatherState?.lastWeatherError||'');
+      const lastTemp=Number(climateState?.last_temperature);
+      const lastHum=Number(climateState?.last_humidity);
+      const weatherSnapshot={
+        ok:!weatherError,
+        linked:!weatherError,
+        cached:true,
+        checked_at:Number(weatherState?.lastCheckedAt||climateState?.last_evaluated_at||0)||null,
+        error:weatherError||null,
+        metrics:{
+          rainDetected:Boolean(weatherState?.rainDetected),
+          rainGeneric:Number.isFinite(Number(weatherState?.rainAmountMm))?{value:Number(weatherState.rainAmountMm),unit:'mm'}:null,
+          temperature:Number.isFinite(lastTemp)?{value:lastTemp,unit:'°C'}:null,
+          humidity:Number.isFinite(lastHum)?{value:lastHum,unit:'%'}:null
+        }
+      };
       const history=historyRows(historyRaw).filter(x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')).slice(0,160);
       const now=Date.now();
       const todayKey=localDateKey(now);

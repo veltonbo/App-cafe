@@ -151,14 +151,28 @@
         '</div>'+
         '<div class="smartOverviewGrid">'+
           '<div><small>Ciclo atual</small><strong id="smartClimateCycle">—</strong></div>'+
+          '<div><small>Ciclo-base</small><strong id="smartBaseCycle">—</strong></div>'+
           '<div><small>Temperatura</small><strong id="smartOverviewTemp">—</strong></div>'+
           '<div><small>Umidade</small><strong id="smartOverviewHumidity">—</strong></div>'+
-          '<div><small>Condição</small><strong id="smartClimateLevel">Aguardando</strong></div>'+
+        '</div>'+
+        '<div class="smartIntensity">'+
+          '<div class="smartIntensityTop"><span><small>Intensidade</small><b id="smartIntensityText">Normal</b></span><span id="smartIntensityDelta">0%</span></div>'+
+          '<div class="smartIntensityTrack"><i id="smartIntensityFill"></i></div>'+
+        '</div>'+
+        '<div class="smartClimateLine">'+
+          '<span><small>Condição</small><b id="smartClimateLevel">Aguardando</b></span>'+
+          '<span><small>Tendência</small><b id="smartTrendText">Aguardando</b></span>'+
         '</div>'+
         '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
+        '<div class="smartDecisionSummary">'+
+          '<small>Última decisão</small><strong id="smartLastDecision">Aguardando</strong>'+
+          '<span id="smartLastDecisionTime"></span>'+
+        '</div>'+
         '<div class="smartOverviewMeta">'+
           '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
+          '<span><small>Próxima avaliação</small><b id="smartNextEval">—</b></span>'+
           '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
+          '<span><small>Confiança</small><b id="smartClimateConfidence">—</b></span>'+
         '</div>'+
         '<button type="button" id="openProfileConfig" class="btn soft smartOverviewAction">Automação e horários</button>';
       main.appendChild(card);
@@ -197,6 +211,190 @@
     if(byId('smartClimateReason'))byId('smartClimateReason').textContent=
       String(cs.last_reason||'Aguardando avaliação climática.');
   }
+  function fmtDuration(seconds){
+    const s=Math.max(0,Math.round(Number(seconds)||0));
+    if(typeof humanDurationSeconds==='function')return humanDurationSeconds(s);
+    if(s<60)return s+' s';
+    const m=Math.floor(s/60),r=s%60;
+    return m+' min'+(r?' '+r+' s':'');
+  }
+  function relativeTime(ts){
+    const n=Number(ts||0);
+    if(!n)return '—';
+    const diff=n-Date.now();
+    if(diff<=0)return 'agora';
+    const sec=Math.ceil(diff/1000);
+    if(sec<60)return 'em '+sec+' s';
+    const min=Math.ceil(sec/60);
+    return 'em '+min+' min';
+  }
+  function shortClock(ts){
+    const n=Number(ts||0);
+    if(!n)return '';
+    return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(n));
+  }
+  function trendLabel(cs={}){
+    const t=Number(cs.trend_temp_slope_per_10m||0);
+    const h=Number(cs.trend_humidity_slope_per_10m||0);
+    const v=Number(cs.trend_vpd_slope_per_10m||0);
+    if(v>=.18||t>=1.2||h<=-6)return 'Secando rápido ↑';
+    if(v<=-.18&&t<=-.5)return 'Ficando mais úmido ↓';
+    if(Math.abs(v)<.08&&Math.abs(t)<.6)return 'Estável';
+    return v>0?'Secando ↑':'Aliviando ↓';
+  }
+  function decisionText(row){
+    if(!row)return 'Nenhuma mudança importante recente.';
+    if(row.to_on&&row.to_off&&row.from_on&&row.from_off){
+      return row.title+': '+row.from_on+'/'+row.from_off+' → '+row.to_on+'/'+row.to_off+' s';
+    }
+    return row.title+(row.detail?': '+row.detail:'');
+  }
+  function ensureHealthStrip(){
+    const main=qs('main.wrap');
+    if(!main)return null;
+    let el=byId('smartHealthStrip');
+    if(!el){
+      el=document.createElement('button');
+      el.type='button';
+      el.id='smartHealthStrip';
+      el.className='smartHealthStrip';
+      el.innerHTML='<i></i><span><b id="smartHealthTitle">Verificando sistema</b><small id="smartHealthDetail">Aguardando dados</small></span><em>›</em>';
+      bind(el,'smartBound',()=>showView('sistema'));
+      main.appendChild(el);
+    }
+    return el;
+  }
+  function ensureDailyCompare(){
+    const box=byId('todayBox');
+    if(!box)return null;
+    let el=byId('smartDailyCompare');
+    if(!el){
+      el=document.createElement('div');
+      el.id='smartDailyCompare';
+      el.className='smartDailyCompare';
+      el.innerHTML=
+        '<div><small>Tempo irrigado</small><strong id="smartTodayIrrigated">—</strong></div>'+
+        '<div><small>Base esperada até agora</small><strong id="smartTodayBase">—</strong></div>'+
+        '<div class="wide"><small>Comparação com o ciclo-base</small><strong id="smartTodayDelta">—</strong><div class="smartCompareTrack"><i id="smartCompareFill"></i></div></div>';
+      box.appendChild(el);
+    }
+    return el;
+  }
+  function ensureDecisionTimeline(){
+    const main=qs('main.wrap');
+    if(!main)return null;
+    let box=byId('smartDecisionBox');
+    if(!box){
+      box=document.createElement('section');
+      box.id='smartDecisionBox';
+      box.className='box smartDecisionBox';
+      box.innerHTML=
+        '<div class="head"><div><span class="sectionKicker">DECISÕES</span><h2>O que o sistema fez</h2></div></div>'+
+        '<p class="note">Somente mudanças relevantes de clima, chuva, ciclo e segurança.</p>'+
+        '<div id="smartDecisionList" class="smartDecisionList"><div class="empty">Aguardando histórico...</div></div>';
+      main.appendChild(box);
+    }
+    return box;
+  }
+  function ensureSystemSummary(){
+    const box=byId('systemHealthBox');
+    if(!box)return null;
+    let el=byId('smartSystemSummary');
+    if(!el){
+      el=document.createElement('div');
+      el.id='smartSystemSummary';
+      el.className='smartSystemSummary';
+      el.innerHTML='<span class="smartSystemDot"></span><div><b id="smartSystemTitle">Verificando</b><small id="smartSystemDetail">Aguardando dados...</small></div>';
+      const ops=qs('.opsGrid',box);
+      if(ops)box.insertBefore(el,ops);else box.appendChild(el);
+    }
+    return el;
+  }
+  function renderOperationalIntelligence(){
+    let d={},sec={},cs={};
+    try{
+      d=(typeof data!=='undefined'&&data.dashboard)||{};
+      sec=(typeof data!=='undefined'&&data.secondsMode)||{};
+      cs=d.climate?.state||{};
+    }catch{}
+    const intel=d.intelligence||{};
+    const intensity=intel.intensity||{};
+    const baseOn=Number(sec.base_on_seconds||sec.on_seconds||30);
+    const baseOff=Number(sec.base_off_seconds||sec.off_seconds||120);
+    if(byId('smartBaseCycle'))byId('smartBaseCycle').textContent=baseOn+' s / '+baseOff+' s';
+    if(byId('smartIntensityText'))byId('smartIntensityText').textContent=String(intensity.label||'Normal');
+    const pct=Number(intensity.change_percent||0);
+    if(byId('smartIntensityDelta'))byId('smartIntensityDelta').textContent=(pct>0?'+':'')+pct.toFixed(0)+'% vs base';
+    const fill=byId('smartIntensityFill');
+    if(fill){
+      const pos=Math.max(8,Math.min(100,50+pct));
+      fill.style.width=pos+'%';
+      fill.dataset.level=String(intensity.level||'normal');
+    }
+    if(byId('smartTrendText'))byId('smartTrendText').textContent=trendLabel(cs);
+    if(byId('smartClimateConfidence'))byId('smartClimateConfidence').textContent=String(cs.confidence_label||'—');
+    if(byId('smartNextEval'))byId('smartNextEval').textContent=relativeTime(intel.next_evaluation_at);
+
+    const decisions=Array.isArray(intel.decisions)?intel.decisions:[];
+    const lastDecision=decisions.find(x=>['climate','weather','critical','warning'].includes(String(x.kind||'')))||decisions[0]||null;
+    if(byId('smartLastDecision'))byId('smartLastDecision').textContent=decisionText(lastDecision);
+    if(byId('smartLastDecisionTime'))byId('smartLastDecisionTime').textContent=lastDecision?.ts?shortClock(lastDecision.ts):'';
+
+    const health=intel.health||{};
+    const strip=byId('smartHealthStrip');
+    if(strip){
+      strip.dataset.level=String(health.level||'warning');
+      if(byId('smartHealthTitle'))byId('smartHealthTitle').textContent=String(health.message||'Verificando sistema');
+      const issues=Array.isArray(health.issues)?health.issues:[];
+      if(byId('smartHealthDetail'))byId('smartHealthDetail').textContent=
+        issues.length?issues.slice(1,3).map(x=>x.message).join(' • ')||'Toque para ver detalhes':'Smart Life, Weather2-2 e automação monitorados';
+    }
+
+    const system=byId('smartSystemSummary');
+    if(system){
+      system.dataset.level=String(health.level||'warning');
+      if(byId('smartSystemTitle'))byId('smartSystemTitle').textContent=String(health.message||'Verificando sistema');
+      const issues=Array.isArray(health.issues)?health.issues:[];
+      if(byId('smartSystemDetail'))byId('smartSystemDetail').textContent=
+        issues.length?issues.map(x=>x.message).join(' • '):'Railway, Firebase, Smart Life e Weather2-2 estão respondendo.';
+    }
+
+    const sum=d.summary?.today||{};
+    if(byId('smartTodayIrrigated'))byId('smartTodayIrrigated').textContent=fmtDuration(sum.irrigated_seconds);
+    if(byId('smartTodayBase'))byId('smartTodayBase').textContent=fmtDuration(sum.base_expected_irrigated_seconds);
+    const delta=Number(sum.versus_base_percent);
+    if(byId('smartTodayDelta')){
+      byId('smartTodayDelta').textContent=Number.isFinite(delta)
+        ?(delta>0?'+':'')+delta.toFixed(0)+'% em relação ao base'
+        :'Aguardando janela ativa';
+    }
+    const compare=byId('smartCompareFill');
+    if(compare){
+      const pos=Number.isFinite(delta)?Math.max(5,Math.min(100,50+delta)):50;
+      compare.style.width=pos+'%';
+    }
+
+    const list=byId('smartDecisionList');
+    if(list){
+      list.textContent='';
+      const rows=decisions.slice(0,12);
+      if(!rows.length){
+        const empty=document.createElement('div');empty.className='empty';empty.textContent='Nenhuma decisão importante registrada ainda.';list.appendChild(empty);
+      }else rows.forEach(row=>{
+        const item=document.createElement('div');
+        item.className='smartDecisionItem';
+        item.dataset.kind=String(row.kind||'info');
+        const dot=document.createElement('i');
+        const body=document.createElement('div');
+        const title=document.createElement('b');title.textContent=String(row.title||'Evento');
+        const detail=document.createElement('small');detail.textContent=decisionText(row).replace(String(row.title||'')+': ','');
+        body.append(title,detail);
+        const time=document.createElement('time');time.textContent=shortClock(row.ts);
+        item.append(dot,body,time);list.appendChild(item);
+      });
+    }
+  }
+
   function ensureAlertCenter(){
     const main=qs('main.wrap');
     if(!main)return null;
@@ -283,9 +481,10 @@
 
     const hero=qs('main.wrap > .hero');
     const safety=byId('smartSafety');
+    const healthStrip=byId('smartHealthStrip');
     const profileCard=byId('viveiroProfileCard');
     const today=byId('todayBox');
-    [hero,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
+    [hero,healthStrip,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
 
     const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
@@ -293,8 +492,9 @@
     const calendar=byId('calendarBox');
     [climate,seconds,weather,calendar].filter(Boolean).forEach(el=>profile.appendChild(el));
 
-    [byId('weeklyBox'),byId('eventsBox')]
+    [byId('smartDecisionBox'),byId('weeklyBox')]
       .filter(Boolean).forEach(el=>history.appendChild(el));
+    if(byId('eventsBox'))byId('eventsBox').classList.add('smartUiHidden');
 
     [byId('systemHealthBox'),byId('maintenanceBox'),byId('smartAlerts')]
       .filter(Boolean).forEach(el=>system.appendChild(el));
@@ -410,6 +610,10 @@
     moveEmergencyIntoFlow();
     ensureProfileCard();
     ensureClimateStatus();
+    ensureHealthStrip();
+    ensureDailyCompare();
+    ensureDecisionTimeline();
+    ensureSystemSummary();
     ensureAlertCenter();
     organizeViews();
 
@@ -418,12 +622,14 @@
     updateProfileSummary();
     renderSmartAlerts();
     updateModeState();
+    renderOperationalIntelligence();
 
     setInterval(()=>{
       updateModeState();
       updateProfileSummary();
       updateClimateStatus();
       renderSmartAlerts();
+      renderOperationalIntelligence();
     },3000);
 
     window.addEventListener('hashchange',()=>{

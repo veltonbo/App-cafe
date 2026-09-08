@@ -145,6 +145,54 @@ export function climateConfidenceAdjustmentLimit(confidence,maxAdjustPercent=30)
   return Math.min(maxPct,10);
 }
 
+export function climateExtremeProfile({temperature,humidity,vpd,confidence,baseLimitPercent=30}={}){
+  const t=Number(temperature),h=Number(humidity),d=Number(vpd);
+  const high=String(confidence||'low')==='high';
+  const base=Math.max(10,Math.min(30,Math.round(Number(baseLimitPercent)||30)));
+  if(!high||!Number.isFinite(d))return{
+    level:'normal',
+    limit_percent:base,
+    factor_floor:null,
+    min_off_change_seconds:null,
+    max_off_step_seconds:null
+  };
+
+  const critical=d>=4.2||(Number.isFinite(t)&&Number.isFinite(h)&&t>=39&&h<=40);
+  if(critical)return{
+    level:'critico',
+    limit_percent:Math.max(base,40),
+    factor_floor:1.40,
+    min_off_change_seconds:4,
+    max_off_step_seconds:15
+  };
+
+  const severe=d>=3.5||(Number.isFinite(t)&&Number.isFinite(h)&&t>=37&&h<=45);
+  if(severe)return{
+    level:'severo',
+    limit_percent:Math.max(base,35),
+    factor_floor:1.35,
+    min_off_change_seconds:4,
+    max_off_step_seconds:12
+  };
+
+  const hotDry=d>=3.0||(Number.isFinite(t)&&Number.isFinite(h)&&t>=35.5&&h<=45);
+  if(hotDry)return{
+    level:'quente_seco',
+    limit_percent:Math.max(base,33),
+    factor_floor:1.33,
+    min_off_change_seconds:4,
+    max_off_step_seconds:10
+  };
+
+  return{
+    level:'normal',
+    limit_percent:base,
+    factor_floor:null,
+    min_off_change_seconds:null,
+    max_off_step_seconds:null
+  };
+}
+
 export function climateSuggestion(snapshot={},secondsState={},config={},trendData=null){
   const cfg=normalizeClimateConfig(config);
   const instantTemperature=metricValue(snapshot?.metrics?.temperature);
@@ -193,7 +241,15 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
 
   const confidence=String(trendData?.confidence||'low');
   const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
-  const maxPct=confidenceLimitPct/100;
+  const extreme=climateExtremeProfile({
+    temperature,humidity,vpd,confidence,
+    baseLimitPercent:confidenceLimitPct
+  });
+  if(Number.isFinite(Number(extreme.factor_floor))){
+    factor=Math.max(factor,Number(extreme.factor_floor));
+  }
+  const effectiveLimitPct=Math.max(confidenceLimitPct,Number(extreme.limit_percent||confidenceLimitPct));
+  const maxPct=effectiveLimitPct/100;
   factor=Math.max(1-maxPct,Math.min(1+maxPct,factor));
 
   // Automático 2.0: preserva o pulso-base configurado e ajusta principalmente o intervalo.
@@ -201,12 +257,22 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const targetDuty=Math.max(.08,Math.min(.45,baseDuty*factor));
   const targetOn=baseOn;
   const minOff=Math.max(1,Math.min(30,baseOff));
-  const targetOff=Math.max(minOff,Math.min(900,Math.round(targetOn*(1-targetDuty)/targetDuty)));
+  let targetOff=Math.max(minOff,Math.min(900,Math.round(targetOn*(1-targetDuty)/targetDuty)));
+
+  // Em calor extremo, reage em degraus limitados. Isso evita um salto grande caso
+  // o ciclo-base seja curto, mas ainda permite responder quando o teto normal já foi atingido.
+  const maxOffStep=Math.max(0,Number(extreme.max_off_step_seconds||0));
+  if(maxOffStep>0&&targetOff<currentOff){
+    targetOff=Math.max(targetOff,currentOff-maxOffStep);
+  }
 
   const returningToBase=targetOn===baseOn&&targetOff===baseOff&&(currentOn!==baseOn||currentOff!==baseOff);
   const deltaOn=Math.abs(targetOn-currentOn);
   const deltaOff=Math.abs(targetOff-currentOff);
-  const useful=(deltaOn>=cfg.min_change_seconds||deltaOff>=cfg.min_change_off_seconds||returningToBase)&&
+  const minOffChange=extreme.min_off_change_seconds==null
+    ?cfg.min_change_off_seconds
+    :Math.min(cfg.min_change_off_seconds,Number(extreme.min_off_change_seconds));
+  const useful=(deltaOn>=cfg.min_change_seconds||deltaOff>=minOffChange||returningToBase)&&
     (targetOn!==currentOn||targetOff!==currentOff);
 
   let reason='';
@@ -229,6 +295,10 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     factor,
     water_factor:factor,
     confidence_adjust_limit_percent:confidenceLimitPct,
+    effective_adjust_limit_percent:effectiveLimitPct,
+    extreme_level:extreme.level,
+    max_off_step_seconds:maxOffStep||null,
+    min_off_change_seconds:minOffChange,
     level:drying.level,
     level_label:drying.label,
     confidence:trendData?.confidence||'low',

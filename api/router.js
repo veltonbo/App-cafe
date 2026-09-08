@@ -21,6 +21,7 @@ import inkbirdGroup from '../server/api/inkbird/group.js';
 import inkbirdSchedule from '../server/api/inkbird/schedule.js';
 import inkbirdZone from '../server/api/inkbird/zone.js';
 import inkbirdStatus from '../server/api/inkbird/status.js';
+import smartLifeImport from '../server/api/smartlife/import.js';
 
 const ROUTES={
   'cycle':cycle,
@@ -45,7 +46,8 @@ const ROUTES={
   'inkbird/group':inkbirdGroup,
   'inkbird/schedule':inkbirdSchedule,
   'inkbird/zone':inkbirdZone,
-  'inkbird/status':inkbirdStatus
+  'inkbird/status':inkbirdStatus,
+  'smartlife/import':smartLifeImport
 };
 
 export default async function handler(req,res){

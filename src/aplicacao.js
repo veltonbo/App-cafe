@@ -1,6 +1,9 @@
 // ===== VARIÁVEIS GLOBAIS =====
 window.aplicacoes = window.aplicacoes || [];
 let indiceEdicaoAplicacao = null;
+let refAplicacoes = null;
+let listenerAplicacoes = null;
+let callbacksAplicacoes = [];
 
 // ===== MODAL DE FORMULÁRIO =====
 function abrirModalAplicacao(editar = false) {
@@ -296,18 +299,22 @@ document.addEventListener("dadosCarregados", carregarAplicacoes);
 
 function carregarAplicacoes(callback) {
   console.log("Carregando aplicações...");
-  db.ref('Aplicacoes').on('value', (snapshot) => {
+  if (typeof callback === 'function') callbacksAplicacoes.push(callback);
+  if (listenerAplicacoes) {
+    while (callbacksAplicacoes.length) callbacksAplicacoes.shift()();
+    return;
+  }
+
+  refAplicacoes = db.ref('Aplicacoes');
+  listenerAplicacoes = (snapshot) => {
     const dados = snapshot.exists() ? Object.values(snapshot.val()) : [];
     if (JSON.stringify(window.aplicacoes) !== JSON.stringify(dados)) {
       window.aplicacoes = dados;
     }
     atualizarAplicacoes();
-    
-    // Execute callback if provided
-    if (typeof callback === 'function') {
-      callback();
-    }
-  });
+    while (callbacksAplicacoes.length) callbacksAplicacoes.shift()();
+  };
+  refAplicacoes.on('value', listenerAplicacoes);
 }
 
 // Atualiza selects de setor ao carregar setores dinâmicos

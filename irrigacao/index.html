@@ -470,6 +470,7 @@ if(window.location.hostname.endsWith('.up.railway.app')) data.settings.apiUrl=DE
 if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;
 if(!('lastSync' in data)) data.lastSync=null;
 if(!('lastError' in data)) data.lastError=null;
+if(!('tuyaUnavailable' in data))data.tuyaUnavailable=false;
 if(!('cycleConfig' in data)) data.cycleConfig=null;
 if(!('weatherProtection' in data)) data.weatherProtection=null;
 if(!('secondsMode' in data)) data.secondsMode=null;
@@ -523,6 +524,7 @@ function reorganizeLayout(){
   });
 }
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
+function isTuyaQuotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 function log(detail){data.history.unshift({at:new Date().toISOString(),detail});data.history=data.history.slice(0,80);save()}
 async function api(path,opt={}){
   if(!data.settings.apiUrl) throw new Error('Configure a URL do backend');
@@ -602,25 +604,27 @@ function renderWeatherRuntimeOnly(){
 }
 function renderConnectionRuntimeOnly(){
   const online=data.online===true;
+  const quota=Boolean(data.tuyaUnavailable);
   const blocked=isWeatherProtected();
   const secActive=secondsActive();
-  if($('relayState'))$('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
+  if($('relayState'))$('relayState').textContent=quota?'Não confirmado':data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
   if($('connectionState')){
-    $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
-    $('connectionState').className=online?'ok':data.online===false?'bad':'';
+    $('connectionState').textContent=!data.settings.token?'Token não configurado':quota?'Tuya indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
+    $('connectionState').className=online?'ok':(quota||data.online===false)?'bad':'';
   }
-  if($('conn'))$('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Tuya';
-  if($('liveDot'))$('liveDot').className='liveDot '+(online?'on':'');
-  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
-  if($('lastSync'))$('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
+  if($('conn'))$('conn').textContent=syncing?'● Atualizando':quota?'● Tuya indisponível':online?'● Online':'● Tuya';
+  if($('liveDot'))$('liveDot').className='liveDot '+(online&&!quota?'on':'');
+  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':quota?'Tuya indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
+  if($('lastSync'))$('lastSync').textContent=quota?'Leitura ao vivo não confirmada':data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
   if($('phase')){
-    $('phase').textContent=blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA')
+    $('phase').textContent=quota?'ESTADO NÃO CONFIRMADO':blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA')
       :data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
-    $('phase').className='phase '+(data.relay===true&&!blocked?'':'off');
+    $('phase').className='phase '+(data.relay===true&&!blocked&&!quota?'':'off');
   }
-  if($('heroTitle'))$('heroTitle').textContent=blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
-  if($('heroSub'))$('heroSub').textContent=blocked
-    ?(data.weatherProtection?.weather?.metrics?.rainDetected?'A chuva interrompeu a irrigação.':'Aguardando o tempo configurado para retomar.')
+  if($('heroTitle'))$('heroTitle').textContent=quota?'Tuya temporariamente indisponível':blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
+  if($('heroSub'))$('heroSub').textContent=quota
+    ?'A cota do IoT Core está esgotada. O aplicativo não consegue confirmar o estado do EKAZA pela nuvem neste momento.'
+    :blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'A chuva interrompeu a irrigação.':'Aguardando o tempo configurado para retomar.')
     :data.relay===true?'Saída do viveiro ligada neste momento.':data.relay===false?'Saída desligada neste momento.':'Aguardando leitura do equipamento.';
   if($('refresh'))$('refresh').disabled=syncing;
 }
@@ -643,11 +647,14 @@ async function syncStatus(showToast=false){
     data.secondsMode=s.seconds_mode??data.secondsMode;
     data.lastSync=Date.now();
     data.lastError=null;
+    data.tuyaUnavailable=false;
     save();renderLiveFields();if(showToast)toast('Estado atualizado');
   }catch(e){
-    data.online=false;
     data.lastError=e.message||String(e);
-    save();renderLiveFields();if(showToast)toast('Falha: '+data.lastError);
+    data.tuyaUnavailable=isTuyaQuotaErrorMessage(data.lastError);
+    data.online=data.tuyaUnavailable?null:false;
+    if(data.tuyaUnavailable)data.relay=null;
+    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Tuya: cota IoT Core esgotada':'Falha: '+data.lastError);
   }finally{
     syncing=false;renderConnectionRuntimeOnly();
   }
@@ -694,7 +701,7 @@ async function syncWeatherProtection(showToast=false){
   if(weatherSyncing||!data.settings.apiUrl||!data.settings.token)return;
   weatherSyncing=true;
   try{
-    const r=await api('/api/viveiro/weather');
+    const r=await api('/api/viveiro/weather',{method:'POST',body:JSON.stringify({action:'status_only'})});
     data.weatherProtection=r;
     save();renderWeatherRuntimeOnly();renderConnectionRuntimeOnly();updateTodaySummary();
     if(showToast){
@@ -1699,17 +1706,28 @@ $('saveCycle').onclick=async e=>{
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false)}},10000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},10000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},120000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},60000);
 function updateOfflineBanner(){
-  const show=!navigator.onLine||data.online===false;
-  if($('offlineBanner'))$('offlineBanner').className='offlineBanner '+(show?'show':'');
+  const el=$('offlineBanner');
+  if(!el)return;
+  const noNetwork=!navigator.onLine;
+  const quota=Boolean(data.tuyaUnavailable);
+  const offline=data.online===false;
+  const show=noNetwork||quota||offline;
+  el.className='offlineBanner '+(show?'show':'');
+  el.textContent=noNetwork
+    ?'Sem internet neste aparelho. A tela não consegue atualizar o sistema.'
+    :quota
+      ?'Tuya indisponível: cota do IoT Core esgotada. O estado do EKAZA não pode ser confirmado pela nuvem.'
+      :'Sem resposta do EKAZA/Tuya. O estado ao vivo não está confirmado.';
 }
 window.addEventListener('online',()=>{updateOfflineBanner();syncStatus(false);syncDashboard(false)});
 window.addEventListener('offline',updateOfflineBanner);
 setInterval(updateOfflineBanner,3000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false);syncSecondsMode(false);syncWeatherProtection(false)}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}});
 </script>
 <script src="/irrigacao/ui-shell.js?v=20260907-1" defer></script>
 </body></html>

@@ -1,4 +1,4 @@
-import { applyCors, authorize, ensureConfig } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import {
   prepareServerPulse,
@@ -30,7 +30,7 @@ export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
   if(!['GET','POST'].includes(req.method))return res.status(405).json({ok:false,error:'Método não permitido.'});
-  if(!authorize(req,res)||!ensureConfig(res))return;
+  if(!authorize(req,res))return;
 
   try{
     if(req.method==='GET'){

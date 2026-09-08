@@ -28,7 +28,17 @@
 .capGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.cap{border:1px solid var(--l);border-radius:15px;padding:13px;background:#fbfdfc}.cap b{display:block;margin-bottom:3px}.cap small{color:var(--m)}.weatherGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.weatherCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.weatherCard small{display:block;color:var(--m);margin-bottom:5px}.weatherCard strong{font-size:1.05rem}.guard{border:1px solid #a8d8ca;background:#eef9f5;border-radius:16px;padding:14px;margin-top:12px}.guard.blocked{border-color:#efbbb7;background:#fff1f0}.ruleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.ruleGrid label{display:grid;gap:5px;font-size:.82rem;font-weight:800}.ruleGrid input{width:100%;border:1px solid var(--l);border-radius:10px;padding:10px;background:#fff}.checkLine{display:flex;gap:9px;align-items:center;font-weight:800}.checkLine input{width:auto}
 .controllerBar{display:grid;grid-template-columns:1fr auto auto;gap:9px;align-items:end}.controllerBar label{display:grid;gap:6px;font-size:.82rem;font-weight:850}.controllerBar select{width:100%;border:1px solid var(--l);border-radius:12px;padding:11px;background:#fff;color:#17372e}.controllerSummary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.miniTag{padding:7px 10px;border-radius:999px;background:var(--gs);color:var(--g);font-size:.8rem;font-weight:850}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}
 details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-top:10px}summary{padding:12px 14px;font-weight:850;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;padding:0 14px 14px;margin:0;font-size:.76rem;color:#53645e;max-height:320px;overflow:auto}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.tabBtn{border:1px solid var(--l);background:#fff;color:var(--m);border-radius:14px;padding:11px 8px;font-weight:850}.tabBtn.active{background:var(--g);color:#fff;border-color:var(--g)}.tabPanel{display:none}.tabPanel.active{display:block}.errorBanner{background:#fff0ef;border:1px solid #efbbb7;color:#9f352f;border-radius:16px;padding:12px 14px;margin-bottom:12px;font-weight:750}.sectorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sectorActions .btn{width:100%}.zone.mapped{border-color:#a9d8ca}.zone.running{background:#edf9f5}.sysGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sysCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.sysCard small{display:block;color:var(--m);margin-bottom:5px}.mapGrid{display:grid;gap:10px}.mapRow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center}.mapRow b{font-size:.9rem}.mapRow select{width:100%;border:1px solid var(--l);border-radius:11px;padding:10px;background:#fff}.mappingHelp{background:#eef9f5;border:1px solid #b6dfd2;border-radius:14px;padding:12px;color:#385d52;font-size:.84rem;line-height:1.45}.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.tabBtn{border:1px solid var(--l);background:#fff;color:var(--m);border-radius:14px;padding:11px 8px;font-weight:850}.tabBtn.active{background:var(--g);color:#fff;border-color:var(--g)}.tabPanel{display:none}.tabPanel.active{display:block}.errorBanner{background:#fff0ef;border:1px solid #efbbb7;color:#9f352f;border-radius:13px;padding:10px 12px;margin-bottom:12px;font-weight:750}
+.errorBanner.quota{background:#fff8e8;border-color:#f0d59d;color:#7b5312;padding:0;overflow:hidden;box-shadow:0 5px 16px rgba(122,83,18,.05)}
+.errorBanner.quota details{margin:0;border:0;border-radius:0;background:transparent}
+.errorBanner.quota summary{list-style:none;display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer}
+.errorBanner.quota summary::-webkit-details-marker{display:none}
+.errorBanner .errorIcon{flex:0 0 auto;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:#ffe8b7;font-weight:950}
+.errorBanner .errorMain{min-width:0;flex:1}
+.errorBanner .errorMain b{display:block;color:#81520a;font-size:.8rem}
+.errorBanner .errorMain span{display:block;color:#98702f;font-weight:650;font-size:.7rem;margin-top:1px}
+.errorBanner .errorMore{font-size:.68rem;font-weight:900;color:#875b13;white-space:nowrap}
+.errorBanner .errorDetail{padding:0 12px 11px 45px;color:#7f6740;font-size:.7rem;line-height:1.45}.sectorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sectorActions .btn{width:100%}.zone.mapped{border-color:#a9d8ca}.zone.running{background:#edf9f5}.sysGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sysCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.sysCard small{display:block;color:var(--m);margin-bottom:5px}.mapGrid{display:grid;gap:10px}.mapRow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center}.mapRow b{font-size:.9rem}.mapRow select{width:100%;border:1px solid var(--l);border-radius:11px;padding:10px;background:#fff}.mappingHelp{background:#eef9f5;border:1px solid #b6dfd2;border-radius:14px;padding:12px;color:#385d52;font-size:.84rem;line-height:1.45}.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
 @media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar,.sysGrid{grid-template-columns:1fr}.tabs{grid-template-columns:1fr 1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}.quickTimes{grid-template-columns:repeat(3,1fr)}}
 
 /* Fazenda 2E • Central de Irrigação V4 */
@@ -363,7 +373,20 @@ let overdueSyncAt=0;
 
 function save(){localStorage.setItem(APP_KEY,JSON.stringify(state))}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
-function showError(msg){$('globalError').hidden=!msg;$('globalError').textContent=msg||''}
+function showError(msg){
+  const el=$('globalError');
+  if(!el)return;
+  const text=String(msg||'');
+  el.hidden=!text;
+  el.className='errorBanner';
+  if(!text){el.innerHTML='';return}
+  if(isTuyaQuotaErrorMessage(text)){
+    el.className='errorBanner quota';
+    el.innerHTML='<details><summary><span class="errorIcon">!</span><span class="errorMain"><b>Tuya indisponível</b><span>Estado do Café não confirmado</span></span><span class="errorMore">Ver detalhes</span></summary><div class="errorDetail">A cota do IoT Core está esgotada (28841004). Enquanto a Tuya não liberar novas chamadas, o aplicativo não consegue confirmar os estados dos controladores pela nuvem.</div></details>';
+    return;
+  }
+  el.textContent=text;
+}
 function isTuyaQuotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 function selectedController(){return state.controllers.find(c=>c.id===state.selectedControllerId)||state.controllers[0]||null}
 function controllerIndex(c){return Math.max(1,Number(c?.controller_index)||1)}

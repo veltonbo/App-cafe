@@ -4,7 +4,7 @@ import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getViveiroWeatherState } from '../viveiro/_weather_logic.js';
 import { verifyGitHubOidc } from '../viveiro/_github_oidc.js';
 import { getAutomationConfig, storeGet, storeSet } from './_store.js';
-import { sendPushAlert } from './_push.js';
+import { notifyIrrigation } from './_notify.js';
 
 async function authorized(req,res){
   if(await verifyGitHubOidc(req))return true;
@@ -80,7 +80,7 @@ export default async function handler(req,res){
     for(const alert of current.alerts){
       const prior=activeBefore[alert.key];
       if(!prior){
-        const result=await sendPushAlert({...alert,tag:alert.key});
+        const result=await notifyIrrigation({...alert,tag:alert.key,whatsapp:true});
         sent.push({key:alert.key,type:'active',...result});
       }
     }
@@ -92,7 +92,7 @@ export default async function handler(req,res){
       else if(key.startsWith('offline-'))resolved={title:'Controlador online novamente',body:old.body?.replace(' está offline.',' voltou a responder.')||'Controlador restabelecido.',tag:key+'-clear',url:'/irrigacao/central/'};
       else if(key.startsWith('overdue-'))resolved={title:'Alerta de irrigação encerrado',body:'O controlador não indica mais irrigação fora do tempo previsto.',tag:key+'-clear',url:'/irrigacao/central/'};
       if(resolved){
-        const result=await sendPushAlert(resolved);
+        const result=await notifyIrrigation({...resolved,level:'info',whatsapp:true});
         sent.push({key,type:'resolved',...result});
       }
     }
@@ -107,7 +107,7 @@ export default async function handler(req,res){
         for(const h of newer){
           const p=eventPush(h);
           if(p){
-            const result=await sendPushAlert(p);
+            const result=await notifyIrrigation({...p,level:'info',whatsapp:true});
             sent.push({key:'event-'+h.id,type:'event',...result});
           }
         }

@@ -497,6 +497,7 @@ if(!Array.isArray(data.notifiedEventIds))data.notifiedEventIds=[];
 if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
 let syncing=false;
 let weatherSyncing=false;
+let secondsFreshAt=0;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'')
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -798,6 +799,7 @@ async function syncSecondsMode(showToast=false){
     const r=await api('/api/viveiro/seconds');
     if(r?.state){
       const wasActive=secondsActive();
+      secondsFreshAt=Date.now();
       data.secondsMode={...data.secondsMode,...r.state};
       if(typeof r.state.device_relay==='boolean')data.relay=r.state.device_relay;
       save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();renderConnectionRuntimeOnly();
@@ -1327,9 +1329,15 @@ function renderDashboard(){
   const sec=data.secondsMode||{};
   if(emergencyActive)alert='PARADA DE EMERGÊNCIA ATIVA. A irrigação está bloqueada até liberação manual.';
   const now=Date.now();
+  const serverReadAt=Number(sec.server_read_at||0);
+  const secondsStateFresh=Boolean(
+    secondsFreshAt&&
+    now-secondsFreshAt<25000&&
+    (!serverReadAt||Math.abs(now-serverReadAt)<30000)
+  );
   if(!emergencyActive){
-    if(sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
-    else if(sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
+    if(secondsStateFresh&&sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
+    else if(secondsStateFresh&&sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
     else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
     else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
   }

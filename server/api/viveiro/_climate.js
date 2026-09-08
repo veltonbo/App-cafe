@@ -80,49 +80,110 @@ export function updateClimateSamples(existing=[],snapshot={},config={},now=Date.
   const cfg=normalizeClimateConfig(config);
   const temperature=metricValue(snapshot?.metrics?.temperature);
   const humidity=metricValue(snapshot?.metrics?.humidity);
-  const samples=Array.isArray(existing)?existing.filter(x=>x&&Number(x.ts)>0):[];
-  if(temperature!=null&&humidity!=null){
-    samples.push({ts:now,temperature,humidity,vpd:vaporPressureDeficit(temperature,humidity)});
+  const observationTs=Math.max(1,Number(snapshot?.checked_at||now));
+  const samples=Array.isArray(existing)
+    ?existing.filter(x=>x&&Number(x.ts)>0)
+    :[];
+
+  const plausible=
+    temperature!=null&&humidity!=null&&
+    temperature>=-5&&temperature<=60&&
+    humidity>=1&&humidity<=100;
+
+  // Não transforma a mesma leitura em várias amostras só porque o loop avaliou de novo.
+  const duplicate=samples.some(x=>
+    Number(x.observation_ts||x.ts)===observationTs
+  );
+
+  let outlier=false;
+  const last=samples[samples.length-1]||null;
+  if(plausible&&last){
+    const elapsed=Math.max(1,observationTs-Number(last.observation_ts||last.ts||0));
+    if(elapsed<=10*60000){
+      outlier=
+        Math.abs(temperature-Number(last.temperature))>8||
+        Math.abs(humidity-Number(last.humidity))>35;
+    }
+  }
+
+  if(plausible&&!duplicate&&!outlier){
+    samples.push({
+      ts:observationTs,
+      observation_ts:observationTs,
+      temperature,
+      humidity,
+      vpd:vaporPressureDeficit(temperature,humidity)
+    });
   }
   const cutoff=now-Math.max(20,Number(cfg.trend_minutes||30))*60000;
   return samples.filter(x=>Number(x.ts)>=cutoff).slice(-72);
 }
 
-function linearDelta(rows,key){
-  if(rows.length<2)return 0;
-  const first=Number(rows[0]?.[key]),last=Number(rows[rows.length-1]?.[key]);
-  return Number.isFinite(first)&&Number.isFinite(last)?last-first:0;
+function regressionDelta(rows,key){
+  if(rows.length<2)return{delta:0,slope_per_10m:0};
+  const baseTs=Number(rows[0].ts||0);
+  const points=rows.map(row=>({
+    x:(Number(row.ts||0)-baseTs)/60000,
+    y:Number(row?.[key])
+  })).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+  if(points.length<2)return{delta:0,slope_per_10m:0};
+  const mx=points.reduce((s,p)=>s+p.x,0)/points.length;
+  const my=points.reduce((s,p)=>s+p.y,0)/points.length;
+  const den=points.reduce((s,p)=>s+Math.pow(p.x-mx,2),0);
+  if(den<=0)return{delta:0,slope_per_10m:0};
+  const slope=points.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0)/den;
+  const span=Math.max(0,points[points.length-1].x-points[0].x);
+  return{delta:slope*span,slope_per_10m:slope*10};
+}
+function trimmedMean(values=[]){
+  const rows=values.filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!rows.length)return null;
+  const trim=rows.length>=7?1:0;
+  const selected=trim?rows.slice(trim,-trim):rows;
+  return selected.reduce((s,x)=>s+x,0)/selected.length;
 }
 
 export function climateTrend(samples=[],now=Date.now()){
   const rows=(Array.isArray(samples)?samples:[])
-    .filter(x=>Number.isFinite(Number(x.temperature))&&Number.isFinite(Number(x.humidity)))
+    .filter(x=>
+      Number.isFinite(Number(x.temperature))&&
+      Number.isFinite(Number(x.humidity))&&
+      Number(x.temperature)>=-5&&Number(x.temperature)<=60&&
+      Number(x.humidity)>=1&&Number(x.humidity)<=100
+    )
     .sort((a,b)=>Number(a.ts||0)-Number(b.ts||0));
   if(!rows.length)return{
     samples:0,temperature:null,humidity:null,vpd:null,temp_range:null,humidity_range:null,
-    temp_delta:0,humidity_delta:0,vpd_delta:0,age_minutes:null,confidence:'low',confidence_label:'Baixa'
+    temp_delta:0,humidity_delta:0,vpd_delta:0,
+    temp_slope_per_10m:0,humidity_slope_per_10m:0,vpd_slope_per_10m:0,
+    age_minutes:null,confidence:'low',confidence_label:'Baixa'
   };
   const temps=rows.map(x=>Number(x.temperature));
   const hums=rows.map(x=>Number(x.humidity));
   const vpds=rows.map(x=>Number.isFinite(Number(x.vpd))?Number(x.vpd):vaporPressureDeficit(x.temperature,x.humidity));
-  const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
   const tempRange=Math.max(...temps)-Math.min(...temps);
   const humRange=Math.max(...hums)-Math.min(...hums);
   const ageMinutes=Math.max(0,(now-Number(rows[rows.length-1].ts||now))/60000);
-  const vpdDelta=vpds.length>=2?vpds[vpds.length-1]-vpds[0]:0;
+  const tempTrend=regressionDelta(rows,'temperature');
+  const humidityTrend=regressionDelta(rows,'humidity');
+  const vpdRows=rows.map((x,i)=>({...x,vpd:vpds[i]}));
+  const vpdTrend=regressionDelta(vpdRows,'vpd');
   let confidence='low';
   if(rows.length>=5&&ageMinutes<=10&&tempRange<=5&&humRange<=25)confidence='high';
   else if(rows.length>=3&&ageMinutes<=15&&tempRange<=7&&humRange<=35)confidence='medium';
   return{
     samples:rows.length,
-    temperature:avg(temps),
-    humidity:avg(hums),
-    vpd:avg(vpds),
+    temperature:trimmedMean(temps),
+    humidity:trimmedMean(hums),
+    vpd:trimmedMean(vpds),
     temp_range:tempRange,
     humidity_range:humRange,
-    temp_delta:linearDelta(rows,'temperature'),
-    humidity_delta:linearDelta(rows,'humidity'),
-    vpd_delta:vpdDelta,
+    temp_delta:tempTrend.delta,
+    humidity_delta:humidityTrend.delta,
+    vpd_delta:vpdTrend.delta,
+    temp_slope_per_10m:tempTrend.slope_per_10m,
+    humidity_slope_per_10m:humidityTrend.slope_per_10m,
+    vpd_slope_per_10m:vpdTrend.slope_per_10m,
     age_minutes:ageMinutes,
     confidence,
     confidence_label:confidence==='high'?'Alta':confidence==='medium'?'Média':'Baixa'
@@ -197,9 +258,21 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const cfg=normalizeClimateConfig(config);
   const instantTemperature=metricValue(snapshot?.metrics?.temperature);
   const instantHumidity=metricValue(snapshot?.metrics?.humidity);
-  const temperature=Number.isFinite(Number(trendData?.temperature))?Number(trendData.temperature):instantTemperature;
-  const humidity=Number.isFinite(Number(trendData?.humidity))?Number(trendData.humidity):instantHumidity;
-  const vpd=Number.isFinite(Number(trendData?.vpd))?Number(trendData.vpd):vaporPressureDeficit(temperature,humidity);
+  const trendTemperature=Number.isFinite(Number(trendData?.temperature))?Number(trendData.temperature):instantTemperature;
+  const trendHumidity=Number.isFinite(Number(trendData?.humidity))?Number(trendData.humidity):instantHumidity;
+  const instantVpd=vaporPressureDeficit(instantTemperature,instantHumidity);
+  const trendVpd=Number.isFinite(Number(trendData?.vpd))?Number(trendData.vpd):instantVpd;
+  const confidence=String(trendData?.confidence||'low');
+  // Para aumentar água, uma leitura fresca mais quente/seca pode antecipar a resposta.
+  // Para reduzir água, continua exigindo a tendência suavizada.
+  const allowFastDrying=confidence!=='low'&&Number.isFinite(instantVpd)&&Number.isFinite(trendVpd)&&instantVpd>trendVpd;
+  const temperature=allowFastDrying&&Number.isFinite(instantTemperature)
+    ?Math.max(Number(trendTemperature),Number(instantTemperature))
+    :trendTemperature;
+  const humidity=allowFastDrying&&Number.isFinite(instantHumidity)
+    ?Math.min(Number(trendHumidity),Number(instantHumidity))
+    :trendHumidity;
+  const vpd=allowFastDrying?Math.max(Number(trendVpd),Number(instantVpd)):trendVpd;
   const raining=Boolean(snapshot?.metrics?.rainDetected);
 
   const baseOn=Math.max(1,Math.min(300,Math.round(Number(secondsState.base_on_seconds)||30)));
@@ -230,16 +303,17 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const drying=dryingLevel(vpd);
   let factor=drying.factor;
   const vpdDelta=Number(trendData?.vpd_delta||0);
+  const vpdSlope10=Number(trendData?.vpd_slope_per_10m||0);
 
-  // A tendência antecipa pequenas mudanças, mas nunca ultrapassa o limite configurado.
-  if(vpdDelta>=0.25)factor+=0.05;
-  else if(vpdDelta<=-0.25)factor-=0.05;
+  // A regressão reduz o efeito de uma leitura isolada. Subida rápida antecipa
+  // aumento de irrigação; queda rápida continua mais conservadora.
+  if(vpdDelta>=0.25||vpdSlope10>=0.18)factor+=0.05;
+  else if(vpdDelta<=-0.30&&vpdSlope10<=-0.18)factor-=0.05;
 
   // Situações extremas recebem o teto permitido.
   if(temperature>=35&&humidity<=40)factor=Math.max(factor,1.30);
   if(temperature<=23&&humidity>=90)factor=Math.min(factor,.85);
 
-  const confidence=String(trendData?.confidence||'low');
   const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
   const extreme=climateExtremeProfile({
     temperature,humidity,vpd,confidence,
@@ -281,7 +355,11 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   }else if(drying.level==='normal'){
     reason='Pressão de secagem normal. Mantendo o ciclo-base.';
   }else{
-    const trendText=vpdDelta>=0.25?' e a tendência ainda está secando':vpdDelta<=-0.25?' e a tendência está ficando mais úmida':'';
+    const trendText=(vpdDelta>=0.25||vpdSlope10>=0.18)
+      ?' e a tendência ainda está secando'
+      :(vpdDelta<=-0.30&&vpdSlope10<=-0.18)
+        ?' e a tendência está ficando mais úmida'
+        :'';
     reason=drying.label+' (VPD '+vpd.toFixed(2)+' kPa)'+trendText+'. Ajuste feito principalmente no intervalo entre os pulsos.';
   }
 

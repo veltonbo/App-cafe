@@ -460,3 +460,16 @@ body.smartIrrigationV6{background:#f3f6f4}
 @media(max-width:520px){
   .smartIrrigationV7 #todayBox .todayGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+.smartIrrigationV7 .smartSystemDetails{
+  margin-top:10px;border:1px solid var(--ui-line);border-radius:12px;background:#fbfdfc;padding:0 10px
+}
+.smartIrrigationV7 .smartSystemDetails>summary{
+  list-style:none;cursor:pointer;padding:10px 0;font-size:.72rem;font-weight:850;color:var(--ui-muted)
+}
+.smartIrrigationV7 .smartSystemDetails>summary::-webkit-details-marker{display:none}
+.smartIrrigationV7 .smartSystemDetails>summary::after{content:'+';float:right;font-size:.9rem}
+.smartIrrigationV7 .smartSystemDetails[open]>summary::after{content:'−'}
+.smartIrrigationV7 .smartSystemDetails .opsGrid{margin:0 0 9px}
+.smartIrrigationV7 .smartSystemDetails .diag{margin:0 0 10px!important}

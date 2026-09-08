@@ -503,12 +503,31 @@ function removerSetor(idx) {
 function atualizarListaSetores() {
   const ul = document.getElementById('listaSetores');
   if (!ul) return;
-  ul.innerHTML = setores.map((s, i) => `<li style='margin-bottom:6px;'>${s} <button onclick='removerSetor(${i})' style='width:auto;background:#f44336;color:#fff;padding:2px 10px;font-size:13px;border-radius:6px;margin-left:8px;'>Remover</button></li>`).join('');
+  ul.replaceChildren();
+  setores.forEach((nome, i) => {
+    const li = document.createElement('li');
+    li.style.marginBottom = '6px';
+    li.append(document.createTextNode(String(nome) + ' '));
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Remover';
+    btn.style.cssText = 'width:auto;background:#f44336;color:#fff;padding:2px 10px;font-size:13px;border-radius:6px;margin-left:8px;';
+    btn.addEventListener('click', () => removerSetor(i));
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
 }
 function atualizarSelectsSetor() {
   document.querySelectorAll('select[id$="setorApp"], select[id$="setorTarefa"], select[id$="setorColheita"]').forEach(sel => {
     const val = sel.value;
-    sel.innerHTML = setores.map(s => `<option value="${s}">${s}</option>`).join('');
+    sel.replaceChildren();
+    setores.forEach(nome => {
+      const option = document.createElement('option');
+      option.value = String(nome);
+      option.textContent = String(nome);
+      sel.appendChild(option);
+    });
     if (setores.includes(val)) sel.value = val;
   });
 }

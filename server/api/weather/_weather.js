@@ -245,9 +245,15 @@ export async function fetchWeatherSnapshot(options = {}) {
       return weatherSnapshotCache.value;
     }
     if(weatherSnapshotCache.error){
+      const smartLifeReady=weatherSnapshotCache.errorQuota
+        ?await smartLifeConfigured().catch(()=>false)
+        :false;
       const backoff=weatherSnapshotCache.errorQuota?WEATHER_QUOTA_BACKOFF_MS:WEATHER_ERROR_BACKOFF_MS;
-      if(now-weatherSnapshotCache.errorAt<backoff){
+      if(!smartLifeReady&&now-weatherSnapshotCache.errorAt<backoff){
         throw new Error(weatherSnapshotCache.error);
+      }
+      if(smartLifeReady&&weatherSnapshotCache.errorQuota){
+        weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
       }
     }
   }

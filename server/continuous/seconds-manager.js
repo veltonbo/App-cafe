@@ -309,12 +309,10 @@ async function safetyCountdown(seconds){
   // Best effort: alguns EKAZA expõem countdown_1. O laço do servidor continua
   // sendo o controlador principal; o countdown serve apenas como proteção extra.
   try{
-    const current=await readViveiroDevice();
-    const deviceId=current.deviceId;
-    const { tuyaRequest } = await import('../api/_tuya.js');
-    await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-      commands:[{code:'countdown_1',value:Math.max(1,Math.round(Number(seconds)||30))}]
-    });
+    const { sendViveiroCommands } = await import('../api/_viveiro_transport.js');
+    await sendViveiroCommands([
+      {code:'countdown_1',value:Math.max(1,Math.round(Number(seconds)||30))}
+    ]);
     return true;
   }catch{
     return false;
@@ -844,9 +842,13 @@ export async function suspendSecondsForRestart(){
 
 export async function getSecondsManagerState(){
   if(state.enabled){
-    const current=await readViveiroDevice().catch(()=>null);
-    if(current){
-      state={...state,device_relay:current.relay,relay_expected:current.relay===true,checked_at:Date.now()};
+    const lastChecked=Number(state.checked_at||0);
+    const needsLiveCheck=!lastChecked||Date.now()-lastChecked>30000;
+    if(needsLiveCheck){
+      const current=await readViveiroDevice().catch(()=>null);
+      if(current){
+        state={...state,device_relay:current.relay,relay_expected:current.relay===true,checked_at:Date.now()};
+      }
     }
   }
   return state;

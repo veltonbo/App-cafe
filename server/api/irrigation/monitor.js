@@ -1,5 +1,6 @@
-import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
+import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getViveiroWeatherState } from '../viveiro/_weather_logic.js';
 import { verifyGitHubOidc } from '../viveiro/_github_oidc.js';
@@ -10,12 +11,6 @@ async function authorized(req,res){
   if(await verifyGitHubOidc(req))return true;
   return authorize(req,res);
 }
-function normalizeStatus(result){
-  if(Array.isArray(result))return result;
-  if(Array.isArray(result?.status))return result.status;
-  return[];
-}
-function mapStatus(result){return Object.fromEntries(normalizeStatus(result).map(x=>[x.code,x.value]));}
 function historyArray(raw){
   if(!raw||typeof raw!=='object')return[];
   return Object.entries(raw).map(([id,v])=>({id,...(v||{})})).sort((a,b)=>Number(a.ts||0)-Number(b.ts||0));
@@ -44,10 +39,11 @@ async function currentAlerts(){
     if(prefs.overdue){
       try{
         const [st,session]=await Promise.all([
-          tuyaRequest('GET',`/v1.0/iot-03/devices/${d.id}/status`),
+          readInkbirdState({deviceId:d.id,maxAgeMs:2500}),
           storeGet(`IrrigacaoFazenda2E/active/${d.id}`).catch(()=>null)
         ]);
-        const m=mapStatus(st),mask=Number(m.zonerun_state||0),end=Number(session?.expected_end_at||0);
+        const mask=Number(st.runtime.active_mask||st.runtime.pending_mask||0);
+        const end=Number(session?.expected_end_at||0);
         if(mask&&end&&Date.now()>end+120000){
           alerts.push({key:'overdue-'+d.id,level:'critical',title:'Irrigação fora do tempo',body:`Controlador ${i+1} ainda indica setor ativo após o término previsto.`,url:'/irrigacao/inkbird/'});
         }
@@ -70,7 +66,7 @@ export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
   if(!['GET','POST'].includes(req.method))return res.status(405).json({ok:false,error:'Método não permitido.'});
-  if(!(await authorized(req,res))||!ensureCloudConfig(res))return;
+  if(!(await authorized(req,res)))return;
   try{
     const state=(await storeGet('IrrigacaoFazenda2E/alertMonitor').catch(()=>null))||{};
     const current=await currentAlerts();

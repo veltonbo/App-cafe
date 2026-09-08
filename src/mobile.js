@@ -99,10 +99,13 @@ function initMobileUI() {
     const newButton = button.cloneNode(true);
     button.parentNode.replaceChild(newButton, button);
     
-    // Recuperar o onclick original
-    const originalOnClick = newButton.getAttribute('onclick');
+    // A navegação lateral usa somente mostrarAba('...').
+    // Capturamos o destino antes de remover o onclick, sem executar texto como código.
+    const originalOnClick = newButton.getAttribute('onclick') || '';
+    const targetMatch = originalOnClick.match(/^\s*mostrarAba\(['"]([a-z0-9_-]+)['"]\)\s*;?\s*$/i);
+    const targetAba = targetMatch ? targetMatch[1] : String(newButton.id || '').replace(/^btn-/, '');
     
-    // Adicionar novo evento que fecha o menu e depois executa o onclick original
+    // Adicionar novo evento que fecha o menu e depois navega de forma segura
     newButton.removeAttribute('onclick');
     newButton.addEventListener('click', function(e) {
       console.log('Item de navegação clicado');
@@ -121,11 +124,9 @@ function initMobileUI() {
         }, 300);
       }
       
-      // Executar a ação original do botão (mostrar aba)
-      if (originalOnClick) {
-        setTimeout(() => {
-          eval(originalOnClick);
-        }, 10);
+      // Executar a navegação sem eval()
+      if (targetAba && typeof window.mostrarAba === 'function') {
+        setTimeout(() => window.mostrarAba(targetAba), 10);
       }
     });
   });

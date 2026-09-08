@@ -205,8 +205,12 @@
     const off=Number(sec.off_seconds||baseOff);
     if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=on+' s / '+off+' s';
     if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=String(cs.drying_level_label||'Aguardando');
-    const temp=Number(cs.last_temperature);
-    const humidity=Number(cs.last_humidity);
+    let liveWeather={};
+    try{liveWeather=(typeof data!=='undefined'&&data.weatherProtection?.weather?.metrics)||{}}catch{}
+    const liveTemp=Number(liveWeather?.temperature?.value);
+    const liveHumidity=Number(liveWeather?.humidity?.value);
+    const temp=Number.isFinite(liveTemp)?liveTemp:Number(cs.last_temperature);
+    const humidity=Number.isFinite(liveHumidity)?liveHumidity:Number(cs.last_humidity);
     if(byId('smartOverviewTemp'))byId('smartOverviewTemp').textContent=Number.isFinite(temp)?temp.toFixed(1)+' °C':'—';
     if(byId('smartOverviewHumidity'))byId('smartOverviewHumidity').textContent=Number.isFinite(humidity)?Math.round(humidity)+'%':'—';
     if(byId('smartClimateReason')){
@@ -230,7 +234,14 @@
     const sec=Math.ceil(diff/1000);
     if(sec<60)return 'em '+sec+' s';
     const min=Math.ceil(sec/60);
-    return 'em '+min+' min';
+    if(min<120)return 'em '+min+' min';
+    const target=new Date(n);
+    const now=new Date();
+    const sameDay=target.toDateString()===now.toDateString();
+    const tomorrow=new Date(now);tomorrow.setDate(now.getDate()+1);
+    const isTomorrow=target.toDateString()===tomorrow.toDateString();
+    const clock=new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(target);
+    return sameDay?'às '+clock:isTomorrow?'amanhã '+clock:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(target);
   }
   function shortClock(ts){
     const n=Number(ts||0);
@@ -335,7 +346,8 @@
       fill.style.width=pos+'%';
       fill.dataset.level=String(intensity.level||'normal');
     }
-    if(byId('smartTrendText'))byId('smartTrendText').textContent=trendLabel(cs);
+    if(byId('smartTrendText'))byId('smartTrendText').textContent=
+      String(cs.last_decision||'')==='outside_schedule'?'Aguardando janela':trendLabel(cs);
     if(byId('smartClimateConfidence'))byId('smartClimateConfidence').textContent=String(cs.confidence_label||'—');
     if(byId('smartNextEval'))byId('smartNextEval').textContent=relativeTime(intel.next_evaluation_at);
 

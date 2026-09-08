@@ -346,13 +346,25 @@ async function evaluateClimateControl(){
 
     const lowConfidence=suggestion.confidence==='low';
     const configuredCooldownMinutes=Math.max(20,Number(cfg.cooldown_minutes||30));
-    const extremeHighConfidence=
-      suggestion.confidence==='high'&&['quente_seco','severo','critico'].includes(String(suggestion.extreme_level||''));
-    const effectiveCooldownMinutes=extremeHighConfidence
-      ?Math.min(configuredCooldownMinutes,20)
-      :configuredCooldownMinutes;
+    const extremeLevel=String(suggestion.extreme_level||'normal');
+    const dryingIncrease=
+      Number(suggestion.target_off_seconds||0)<Number(suggestion.current_off_seconds||0);
+    let effectiveCooldownMinutes=configuredCooldownMinutes;
+    if(suggestion.confidence==='high'&&dryingIncrease){
+      if(extremeLevel==='critico')effectiveCooldownMinutes=Math.min(configuredCooldownMinutes,10);
+      else if(extremeLevel==='severo')effectiveCooldownMinutes=Math.min(configuredCooldownMinutes,15);
+      else if(extremeLevel==='quente_seco')effectiveCooldownMinutes=Math.min(configuredCooldownMinutes,20);
+    }
     const cooldownMs=effectiveCooldownMinutes*60000;
-    const cooldownActive=Date.now()-Number(climateState?.last_applied_at||0)<cooldownMs;
+    const baseOffForCatchup=Math.max(1,Number(suggestion.base_off_seconds||state.base_off_seconds||120));
+    const criticalCatchup=
+      suggestion.confidence==='high'&&
+      extremeLevel==='critico'&&
+      dryingIncrease&&
+      Number(suggestion.current_off_seconds||baseOffForCatchup)>=baseOffForCatchup*.95;
+    const cooldownActive=
+      !criticalCatchup&&
+      Date.now()-Number(climateState?.last_applied_at||0)<cooldownMs;
 
     if(cfg.automatic){
       // No Automático, confiança baixa não é ignorada: vira sugestão para confirmação.

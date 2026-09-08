@@ -6,8 +6,6 @@ import { fileURLToPath } from 'node:url';
 import apiRouter from '../../api/router.js';
 import secondsHandler from './seconds-handler.js';
 import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.js';
-import { listInkbirdDevices } from '../api/inkbird/_device.js';
-import { tuyaRequest } from '../api/_tuya.js';
 import { smartLifeConfigured, smartLifeListDevices } from '../api/_smartlife.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
@@ -176,78 +174,28 @@ console.log('Firebase credential diagnostic',{
 
 async function runReadOnlyBootDiagnostics(){
   try{
-    if(await smartLifeConfigured()){
-      const devices=await smartLifeListDevices();
-      const rows=devices.slice(0,8).map(device=>({
-        name:device?.name||'Sem nome',
-        online:device?.online!==false,
-        category:device?.category||null,
-        supportLocal:device?.support_local===true,
-        statusKeys:Object.keys(device?.status||{}).slice(0,40),
-        functionKeys:Object.keys(device?.function||{}).slice(0,40),
-        statusRangeKeys:Object.keys(device?.status_range||{}).slice(0,40),
-        localStrategyKeys:Object.keys(device?.local_strategy||{}).slice(0,40),
-        iic800:/iic[- ]?800|inkbird/i.test(String(device?.name||''))
-          ?{
-              status:device?.status||{},
-              functions:device?.function||{},
-              status_range:device?.status_range||{},
-              local_strategy:device?.local_strategy||{}
-            }
-          :undefined
-      }));
-      const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
-        error:error?.message||String(error)
-      }));
-      const iic=devices.find(device=>/iic[- ]?800|inkbird/i.test(String(device?.name||'')));
-      if(iic){
-        console.log('IIC Smart Life DP diagnostic',JSON.stringify({
-          name:iic.name,
-          online:iic.online!==false,
-          status:iic.status||{},
-          functions:iic.function||{},
-          status_range:iic.status_range||{},
-          local_strategy:iic.local_strategy||{}
-        }));
-      }
-      console.log('Smart Life read-only diagnostic',{
-        deviceCount:devices.length,
-        devices:rows,
-        weatherLinked:Boolean(weather?.linked),
-        weatherOnline:weather?.device?.online??null,
-        weatherProvider:weather?.provider||null,
-        weatherError:weather?.error||null,
-        weatherMetricKeys:Object.keys(weather?.metrics||{}).filter(k=>weather?.metrics?.[k]!=null)
-      });
+    if(!(await smartLifeConfigured())){
+      console.warn('Smart Life não configurado; automação remota indisponível.');
       return;
     }
-
-    const controllers=await listInkbirdDevices();
-    const rows=[];
-    for(const ctrl of controllers.slice(0,4)){
-      try{
-        const status=await tuyaRequest('GET',`/v1.0/iot-03/devices/${ctrl.id}/status`);
-        const map=Object.fromEntries((Array.isArray(status)?status:[]).map(x=>[x.code,x.value]));
-        rows.push({
-          name:ctrl.name,
-          online:ctrl.online!==false,
-          activeMask:Number(map.zonerun_state||0),
-          pendingMask:Number(map.pendingzone_state||0),
-          operationMode:map.operation_mode??null,
-          irrigationMode:map.irrigation_mode??null,
-          hasSchedule:typeof map.normal_time==='string'||map.normal_time!=null
-        });
-      }catch(error){
-        rows.push({name:ctrl.name,online:ctrl.online!==false,error:error?.message||String(error)});
-      }
-    }
-    const weather=await fetchWeatherSnapshot().catch(()=>null);
-    console.log('INKBIRD read-only diagnostic',{
-      controllerCount:controllers.length,
-      controllers:rows,
+    const devices=await smartLifeListDevices({force:true,maxAgeMs:0});
+    const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
+      error:error?.message||String(error)
+    }));
+    const rows=devices.slice(0,8).map(device=>({
+      name:device?.name||'Sem nome',
+      online:device?.online!==false,
+      category:device?.category||null,
+      supportLocal:device?.support_local===true,
+      statusKeys:Object.keys(device?.status||{}).slice(0,24)
+    }));
+    console.log('Smart Life read-only diagnostic',{
+      deviceCount:devices.length,
+      devices:rows,
       weatherLinked:Boolean(weather?.linked),
       weatherOnline:weather?.device?.online??null,
-      rainDetected:Boolean(weather?.metrics?.rainDetected)
+      weatherProvider:weather?.provider||null,
+      weatherError:weather?.error||null
     });
   }catch(error){
     console.warn('Read-only irrigation diagnostic unavailable:',error?.message||error);

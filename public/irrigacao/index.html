@@ -195,11 +195,11 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <div class="configGroupTitle"><b>Tempos do ciclo</b><span>em segundos</span></div>
   <div class="secondsHero">
     <label class="secondsField"><small>Ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
-    <label class="secondsField"><small>Desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="90"><small>segundos</small></label>
+    <label class="secondsField"><small>Desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="120"><small>segundos</small></label>
   </div>
   <div class="presetRow">
     <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15 / 45</button>
-    <button type="button" class="btn soft secondsPreset" data-on="30" data-off="90">30 / 90</button>
+    <button type="button" class="btn soft secondsPreset" data-on="30" data-off="120">30 / 120</button>
     <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60 / 120</button>
   </div>
   <div class="presetTools">
@@ -239,7 +239,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
   <div id="secondsSaveState" class="saveState saved" style="margin-top:0"><span class="saveDot"></span><span>Configuração salva</span></div>
   <span id="secondsCloudState" class="cloudState">☁ sincronizando</span>
 </div>
-<div id="secondsStatus" class="secondsStatus"><span>Configuração salva</span><strong>30 s / 90 s • 06:00–18:00</strong></div>
+<div id="secondsStatus" class="secondsStatus"><span>Configuração salva</span><strong>30 s / 120 s • 06:00–18:00</strong></div>
 <div id="fastValidation" class="alertBox"></div>
 <div id="fastConfigMeta" class="configMeta">Aguardando sincronização da configuração.</div>
 
@@ -329,7 +329,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 
 <section class="box climateControl" id="climateAdviceBox">
   <div class="climateTop">
-    <div><span class="sectionKicker">Irrigação inteligente</span><h2 style="margin:3px 0">Ajuste climático</h2></div>
+    <div><span class="sectionKicker">Irrigação inteligente</span><h2 style="margin:3px 0">Automático 2.0</h2></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
       <button type="button" id="climateObserveBtn" class="climateSwitch">Observação</button>
       <button type="button" id="climateAutoBtn" class="climateSwitch">Automático</button>
@@ -340,10 +340,12 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
     <div class="climateCard"><small>Tempo atual</small><strong id="climateCurrent">—</strong></div>
     <div class="climateCard"><small>Temperatura</small><strong id="climateTemp">—</strong></div>
     <div class="climateCard"><small>Umidade média</small><strong id="climateHumidity">—</strong></div>
+    <div class="climateCard"><small>VPD / secagem</small><strong id="climateVpd">—</strong></div>
+    <div class="climateCard"><small>Nível</small><strong id="climateLevel">—</strong></div>
     <div class="climateCard"><small>Confiança</small><strong id="climateConfidence">—</strong></div>
     <div class="climateCard"><small>Tendência</small><strong id="climateTrend">30 min</strong></div>
   </div>
-  <div id="climateReason" class="climateReason">Aguardando avaliação da Weather2-2.</div>
+  <div id="climateReason" class="climateReason">Aguardando leituras da Weather2-2 para calcular VPD e tendência.</div>
   <div id="climatePending" class="climatePending">
     <b id="climatePendingTitle">Sugestão de alteração</b>
     <div id="climatePendingReason"></div>
@@ -471,7 +473,7 @@ if(!('lastError' in data)) data.lastError=null;
 if(!('cycleConfig' in data)) data.cycleConfig=null;
 if(!('weatherProtection' in data)) data.weatherProtection=null;
 if(!('secondsMode' in data)) data.secondsMode=null;
-if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
+if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
 if(!('secondsCloud' in data))data.secondsCloud={loaded:false,synced:false,lastSync:0};
 if(!('dashboard' in data))data.dashboard=null;
 if(!('auditFilter' in data))data.auditFilter='all';
@@ -555,12 +557,12 @@ function renderSecondsControlsOnly(){
 function renderSecondsRuntimeOnly(){
   const sec=data.secondsMode||{};
   const active=Boolean(sec.enabled);
-  const draft=data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
+  const draft=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
   const cfg=active?sec:draft;
   if($('secondsStatus')){
     $('secondsStatus').className='secondsStatus '+(active?'on':'');
     $('secondsStatus').innerHTML='<span>'+(active?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+
-      Number(cfg.on_seconds||30)+' s / '+Number(cfg.off_seconds||90)+' s • '+minutesToClock(cfg.start_minutes)+'–'+minutesToClock(cfg.end_minutes)+'</strong>';
+      Number(cfg.on_seconds||30)+' s / '+Number(cfg.off_seconds||120)+' s • '+minutesToClock(cfg.start_minutes)+'–'+minutesToClock(cfg.end_minutes)+'</strong>';
   }
   if($('secondsCloudState')){
     const cs=data.secondsCloud||{};
@@ -794,7 +796,7 @@ function currentDraftFromInputs(){
   };
 }
 function updateFastCycleDraftUI(){
-  const saved=data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
+  const saved=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
   const cur=currentDraftFromInputs();
   const dirty=['on_seconds','off_seconds','start_minutes','end_minutes','days_mask'].some(k=>Number(cur[k])!==Number(saved[k]));
   const state=$('secondsSaveState');
@@ -822,7 +824,7 @@ async function loadSecondsCloudConfig(){
     if(cloud&&typeof cloud==='object'){
       const normalized={
         on_seconds:Math.max(1,Math.min(300,Math.round(Number(cloud.on_seconds)||30))),
-        off_seconds:Math.max(1,Math.min(900,Math.round(Number(cloud.off_seconds)||90))),
+        off_seconds:Math.max(1,Math.min(900,Math.round(Number(cloud.off_seconds)||120))),
         start_minutes:Math.max(0,Math.min(1439,Math.round(Number(cloud.start_minutes)??360))),
         end_minutes:Math.max(1,Math.min(1440,Math.round(Number(cloud.end_minutes)??1080))),
         days_mask:Math.max(1,Math.min(127,Math.round(Number(cloud.days_mask)||127)))
@@ -834,7 +836,7 @@ async function loadSecondsCloudConfig(){
     if(!secondsActive()){
       const d=data.secondsDraft;
       if($('secondsOn'))$('secondsOn').value=Number(d.on_seconds||30);
-      if($('secondsOff'))$('secondsOff').value=Number(d.off_seconds||90);
+      if($('secondsOff'))$('secondsOff').value=Number(d.off_seconds||120);
       if($('secondsStart'))$('secondsStart').value=minutesToClock(Number(d.start_minutes??360));
       if($('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(d.end_minutes??1080));
       document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(d.days_mask||127)&Number(cb.value))});
@@ -853,7 +855,7 @@ async function saveSecondsCloudConfig(draft){
 }
 function readSecondsDraft(){
   const on=Math.max(1,Math.min(300,Math.round(Number($('secondsOn').value)||30)));
-  const off=Math.max(1,Math.min(900,Math.round(Number($('secondsOff').value)||90)));
+  const off=Math.max(1,Math.min(900,Math.round(Number($('secondsOff').value)||120)));
   const start=clockToMinutes($('secondsStart').value);
   const end=clockToMinutes($('secondsEnd').value);
   if(on+off>1200)throw new Error('O ciclo total deve ficar em até 1200 segundos.');
@@ -1324,15 +1326,18 @@ function renderDashboard(){
   const pending=cs.pending||null;
   const secForClimate=data.secondsMode||{};
   if($('climateAutoBtn')){
-    $('climateAutoBtn').textContent=cc.automatic?'Automático ativo':'Automático';
+    $('climateAutoBtn').textContent=cc.automatic?'Automático 2.0 ativo':'Automático 2.0';
     $('climateAutoBtn').className='climateSwitch '+(cc.automatic?'auto':'');
   }
   if($('climateObserveBtn')){
     $('climateObserveBtn').textContent=cc.observation?'Observação ativa':'Observação';
     $('climateObserveBtn').className='climateSwitch '+(cc.observation?'auto':'');
   }
-  if($('climateBase'))$('climateBase').textContent=Number(secForClimate.base_on_seconds||secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s';
-  if($('climateCurrent'))$('climateCurrent').textContent=Number(secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s';
+  if($('climateBase'))$('climateBase').textContent=
+    Number(secForClimate.base_on_seconds||30)+' s / '+Number(secForClimate.base_off_seconds||120)+' s';
+  if($('climateCurrent'))$('climateCurrent').textContent=
+    Number(secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s / '+
+    Number(secForClimate.off_seconds||data.secondsDraft?.off_seconds||120)+' s';
   if($('climateTemp'))$('climateTemp').textContent=cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C';
   if($('climateHumidity'))$('climateHumidity').textContent=cs.trend_humidity==null?(cs.last_humidity==null?'—':Number(cs.last_humidity).toFixed(0)+'%'):Number(cs.trend_humidity).toFixed(0)+'%';
   if($('climateTemp'))$('climateTemp').textContent=cs.trend_temperature==null?(cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C'):Number(cs.trend_temperature).toFixed(1)+' °C';
@@ -1341,9 +1346,15 @@ function renderDashboard(){
     $('climateConfidence').textContent=label;
     $('climateConfidence').className=(label==='Alta'?'ok':label==='Média'?'':'bad');
   }
-  if($('climateTrend'))$('climateTrend').textContent=Number(cc.trend_minutes||30)+' min • '+Number(cs.trend_samples||0)+' leituras';
+  if($('climateVpd'))$('climateVpd').textContent=cs.trend_vpd==null?(cs.last_vpd==null?'—':Number(cs.last_vpd).toFixed(2)+' kPa'):Number(cs.trend_vpd).toFixed(2)+' kPa';
+  if($('climateLevel'))$('climateLevel').textContent=String(cs.drying_level_label||'Aguardando');
+  if($('climateTrend')){
+    const delta=Number(cs.trend_vpd_delta||0);
+    $('climateTrend').textContent=Number(cc.trend_minutes||30)+' min • '+Number(cs.trend_samples||0)+' leituras'+
+      (Number.isFinite(delta)&&Math.abs(delta)>=0.01?' • Δ '+(delta>0?'+':'')+delta.toFixed(2):'');
+  }
   if($('climateReason')){
-    const modeText=cc.observation?'Observação ativa. ':cc.automatic?'Automático ativo. ':'Modo manual. ';
+    const modeText=cc.observation?'Observação ativa. ':cc.automatic?'Automático 2.0 ativo. ':'Modo manual. ';
     $('climateReason').textContent=modeText+String(cs.last_reason||'Aguardando a próxima avaliação climática.');
   }
   if($('climatePending')){
@@ -1397,13 +1408,17 @@ async function setClimateAutomatic(){
       observation:false,
       enabled:true,
       trend_minutes:30,
-      evaluation_minutes:15,
+      evaluation_minutes:5,
       max_adjust_percent:30,
-      min_change_seconds:3
+      min_change_seconds:3,
+      min_change_off_seconds:6,
+      cooldown_minutes:30,
+      normal_confirmations:2,
+      post_rain_hold_minutes:30
     })});
     data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
     save();renderDashboard();
-    toast(next?'Automático climático ativado':'Automático climático desativado');
+    toast(next?'Automático 2.0 ativado':'Automático 2.0 desativado');
     setTimeout(()=>syncDashboard(false),1000);
   }catch(e){toast('Clima: '+String(e.message||e))}
 }
@@ -1417,9 +1432,13 @@ async function setClimateObservation(){
       observation:next,
       enabled:true,
       trend_minutes:30,
-      evaluation_minutes:15,
+      evaluation_minutes:5,
       max_adjust_percent:30,
-      min_change_seconds:3
+      min_change_seconds:3,
+      min_change_off_seconds:6,
+      cooldown_minutes:30,
+      normal_confirmations:2,
+      post_rain_hold_minutes:30
     })});
     data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
     save();renderDashboard();
@@ -1486,7 +1505,7 @@ async function saveNamedPreset(){
 function applyNamedPreset(name){
   const p=data.dashboard?.presets?.[name];if(!p||secondsActive())return;
   $('secondsOn').value=Number(p.on_seconds||30);
-  $('secondsOff').value=Number(p.off_seconds||90);
+  $('secondsOff').value=Number(p.off_seconds||120);
   $('secondsStart').value=minutesToClock(Number(p.start_minutes??360));
   $('secondsEnd').value=minutesToClock(Number(p.end_minutes??1080));
   document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(p.days_mask||127)&Number(cb.value))});
@@ -1494,7 +1513,7 @@ function applyNamedPreset(name){
 }
 function updateTodaySummary(){
   const sec=data.secondsMode||{};
-  const draft=sec.enabled?sec:(data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127});
+  const draft=sec.enabled?sec:(data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127});
   const pulses=Number(sec.pulse_count||0);
   let irrigated=pulses*Number(draft.on_seconds||0);
   if(sec.enabled&&sec.phase==='on'&&sec.pulse_started_at){
@@ -1527,16 +1546,16 @@ function render(){
   const raining=Boolean(wp?.weather?.metrics?.rainDetected);
   const sec=data.secondsMode||{};
   const secActive=Boolean(sec.enabled);
-  const draft=data.secondsDraft||{on_seconds:30,off_seconds:90,start_minutes:360,end_minutes:1080,days_mask:127};
+  const draft=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
   const secCfg=secActive?sec:draft;
   if($('secondsOn')&&document.activeElement!==$('secondsOn'))$('secondsOn').value=Number(secCfg.on_seconds||30);
-  if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(secCfg.off_seconds||90);
+  if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(secCfg.off_seconds||120);
   if($('secondsStart')&&document.activeElement!==$('secondsStart'))$('secondsStart').value=minutesToClock(Number(secCfg.start_minutes??360));
   if($('secondsEnd')&&document.activeElement!==$('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(secCfg.end_minutes??1080));
   ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=false});
   document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(secCfg.days_mask??127)&Number(cb.value));cb.disabled=false});
   if($('secondsBadge')){$('secondsBadge').textContent=secActive?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';$('secondsBadge').className='phase '+(secActive&&!sec.paused_by_weather?'':'off')}
-  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+Number(secCfg.on_seconds||30)+' s / '+Number(secCfg.off_seconds||90)+' s • '+minutesToClock(secCfg.start_minutes)+'–'+minutesToClock(secCfg.end_minutes)+'</strong>'} updateSecondsLive();
+  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+Number(secCfg.on_seconds||30)+' s / '+Number(secCfg.off_seconds||120)+' s • '+minutesToClock(secCfg.start_minutes)+'–'+minutesToClock(secCfg.end_minutes)+'</strong>'} updateSecondsLive();
   if($('saveSecondsConfig'))$('saveSecondsConfig').disabled=false;
   if($('enableSeconds')){$('enableSeconds').textContent=secActive?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';$('enableSeconds').disabled=secActive}
   if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
@@ -1590,11 +1609,11 @@ function render(){
   $('phaseState').textContent=weatherBlocked?weatherStatusLabel(wpState.status):data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
   $('cycleDetected').textContent=data.cycleConfig?'Sim':'Não reportado';
   if(secActive){
-    $('cycleCard').textContent=Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||90)+' s';
+    $('cycleCard').textContent=Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||120)+' s';
     $('cycleEnabledState').textContent=sec.paused_by_weather?'Pausado pelo clima':'Modo rápido ativo';
     $('cycleEnabledState').className=sec.paused_by_weather?'bad':'ok';
     $('cycleOnState').textContent=Number(sec.on_seconds||30)+' s';
-    $('cycleOffState').textContent=Number(sec.off_seconds||90)+' s';
+    $('cycleOffState').textContent=Number(sec.off_seconds||120)+' s';
     $('cycleWindowState').textContent=minutesToClock(sec.start_minutes)+' às '+minutesToClock(sec.end_minutes);
     $('cycleDaysState').textContent=daysLabel(Number(sec.days_mask||0));
     $('toggleCycle').textContent='Ciclo nativo pausado';
@@ -1628,7 +1647,7 @@ function render(){
   $('editCycle').disabled=weatherBlocked||secActive;
   $('toggleCycle').disabled=weatherBlocked||secActive;
   if($('timelineOn'))$('timelineOn').textContent=secActive?'💧 '+Number(sec.on_seconds||30)+' segundos ligado':'💧 '+(data.cycleConfig?.onMinutes||1)+' minuto'+((data.cycleConfig?.onMinutes||1)===1?'':'s')+' ligado';
-  if($('timelineOff'))$('timelineOff').textContent=secActive?'⏸ '+Number(sec.off_seconds||90)+' segundos desligado':'⏸ '+(data.cycleConfig?.offMinutes||2)+' minutos desligado';
+  if($('timelineOff'))$('timelineOff').textContent=secActive?'⏸ '+Number(sec.off_seconds||120)+' segundos desligado':'⏸ '+(data.cycleConfig?.offMinutes||2)+' minutos desligado';
   if($('timelineOnSub'))$('timelineOnSub').textContent=secActive?'O servidor Fazenda 2E envia e confirma o comando.':'Executado pelo ciclo nativo do EKAZA.';
   if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O servidor contínuo espera este intervalo antes do próximo pulso.':'Depois ele volta a ligar conforme a programação existente.';
   $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo pelo servidor Fazenda 2E; o cycle_time nativo fica pausado para não conflitar com os pulsos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');

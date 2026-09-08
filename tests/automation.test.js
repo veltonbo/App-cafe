@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { encodeCycle, decodeCycle } from '../server/api/_cycle.js';
 import { localSchedule, secondsUntilNextWindow } from '../server/api/viveiro/_seconds.js';
 import {
+  climateConfidenceAdjustmentLimit,
   climateSuggestion,
   normalizeClimateConfig,
   vaporPressureDeficit
@@ -117,4 +118,79 @@ test('rain always prevents climate adjustment',()=>{
   assert.equal(suggestion.level,'chuva');
   assert.equal(suggestion.target_on_seconds,30);
   assert.equal(suggestion.target_off_seconds,90);
+});
+
+
+test('Automatico 2.0 limita agressividade conforme a confianca',()=>{
+  assert.equal(climateConfidenceAdjustmentLimit('low',30),10);
+  assert.equal(climateConfidenceAdjustmentLimit('medium',30),15);
+  assert.equal(climateConfidenceAdjustmentLimit('high',30),30);
+
+  const makeSuggestion=(confidence)=>climateSuggestion(
+    {
+      metrics:{
+        temperature:{value:36},
+        humidity:{value:30},
+        rainDetected:false
+      }
+    },
+    {
+      base_on_seconds:30,
+      base_off_seconds:90,
+      on_seconds:30,
+      off_seconds:90
+    },
+    {automatic:true,max_adjust_percent:30},
+    {
+      temperature:36,
+      humidity:30,
+      vpd:vaporPressureDeficit(36,30),
+      vpd_delta:0.30,
+      confidence,
+      confidence_label:confidence==='high'?'Alta':confidence==='medium'?'Média':'Baixa'
+    }
+  );
+
+  const low=makeSuggestion('low');
+  const medium=makeSuggestion('medium');
+  const high=makeSuggestion('high');
+
+  assert.equal(low.confidence_adjust_limit_percent,10);
+  assert.equal(medium.confidence_adjust_limit_percent,15);
+  assert.equal(high.confidence_adjust_limit_percent,30);
+  assert.ok(low.target_off_seconds>medium.target_off_seconds);
+  assert.ok(medium.target_off_seconds>high.target_off_seconds);
+  assert.equal(low.target_on_seconds,30);
+  assert.equal(medium.target_on_seconds,30);
+  assert.equal(high.target_on_seconds,30);
+});
+
+test('Automatico 2.0 com baixa confianca sugere mudanca conservadora',()=>{
+  const suggestion=climateSuggestion(
+    {
+      metrics:{
+        temperature:{value:36},
+        humidity:{value:30},
+        rainDetected:false
+      }
+    },
+    {
+      base_on_seconds:30,
+      base_off_seconds:90,
+      on_seconds:30,
+      off_seconds:90
+    },
+    {automatic:true,max_adjust_percent:30},
+    {
+      temperature:36,
+      humidity:30,
+      vpd:vaporPressureDeficit(36,30),
+      vpd_delta:0.30,
+      confidence:'low',
+      confidence_label:'Baixa'
+    }
+  );
+  assert.equal(suggestion.useful,true);
+  assert.equal(suggestion.target_on_seconds,30);
+  assert.ok(suggestion.target_off_seconds>=75);
 });

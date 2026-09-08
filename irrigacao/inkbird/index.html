@@ -364,6 +364,7 @@ let overdueSyncAt=0;
 function save(){localStorage.setItem(APP_KEY,JSON.stringify(state))}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
 function showError(msg){$('globalError').hidden=!msg;$('globalError').textContent=msg||''}
+function isTuyaQuotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 function selectedController(){return state.controllers.find(c=>c.id===state.selectedControllerId)||state.controllers[0]||null}
 function controllerIndex(c){return Math.max(1,Number(c?.controller_index)||1)}
 function sectorStart(c){return Number(c?.sector_start)||((controllerIndex(c)-1)*8+1)}
@@ -763,13 +764,26 @@ async function syncControllers(showToast=true){
     showError('');
     const r=await api('/api/inkbird/controllers');
     state.controllers=Array.isArray(r.controllers)?r.controllers:[];
+    state.cloudError=null;
     if(!state.selectedControllerId||!state.controllers.some(c=>c.id===state.selectedControllerId)){
       state.selectedControllerId=state.controllers[0]?.id||null;
     }
     state.controllers.forEach(getPrefs);save();renderControllers();
     if(showToast)toast(state.controllers.length?state.controllers.length+' controlador(es) encontrado(s)':'Nenhum IIC-800 encontrado');
     return state.controllers;
-  }catch(e){showError(e.message);if(showToast)toast('Falha ao buscar controladores');return[]}
+  }catch(e){
+    const msg=e.message||String(e);
+    if(isTuyaQuotaErrorMessage(msg)){
+      state.cloudError=msg;
+      state.statusByController={};
+      showError('Tuya indisponível: cota do IoT Core esgotada. Os estados dos controladores não podem ser confirmados agora.');
+      renderStatus();renderToday();
+      if(showToast)toast('Tuya: cota IoT Core esgotada');
+    }else{
+      showError(msg);if(showToast)toast('Falha ao buscar controladores');
+    }
+    return[];
+  }
 }
 
 async function syncStatus(showToast=false,controller=null){
@@ -778,13 +792,30 @@ async function syncStatus(showToast=false,controller=null){
   try{
     const s=await api('/api/inkbird/status?device_id='+encodeURIComponent(c.id));
     state.statusByController[c.id]=s;
+    state.cloudError=null;
     if(s?.runtime?.active_session)state.activeSessions[c.id]=s.runtime.active_session;
     else if(Number(s?.mapping?.active_mask||0)===0)delete state.activeSessions[c.id];
     save();
     if(c.id===selectedController()?.id)renderStatus();
     renderToday();
     if(showToast)toast('Controlador atualizado');
-  }catch(e){if(c.id===selectedController()?.id)showError(e.message);if(showToast)toast('Falha ao ler controlador')}
+  }catch(e){
+    const msg=e.message||String(e);
+    if(isTuyaQuotaErrorMessage(msg)){
+      state.cloudError=msg;
+      delete state.statusByController[c.id];
+      save();
+      if(c.id===selectedController()?.id){
+        showError('Tuya indisponível: cota do IoT Core esgotada. O estado ao vivo do Café não está confirmado.');
+        renderStatus();
+      }
+      renderToday();
+      if(showToast)toast('Tuya: cota IoT Core esgotada');
+    }else{
+      if(c.id===selectedController()?.id)showError(msg);
+      if(showToast)toast('Falha ao ler controlador');
+    }
+  }
 }
 async function syncAllStatuses(){
   await Promise.all((state.controllers||[]).map(c=>syncStatus(false,c)));
@@ -1264,7 +1295,7 @@ $('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/inkbird/sw.js').catch(()=>null);
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
-setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},120000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
 setInterval(()=>{
   if(document.visibilityState!=='visible')return;

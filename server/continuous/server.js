@@ -199,6 +199,17 @@ async function runReadOnlyBootDiagnostics(){
       const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
         error:error?.message||String(error)
       }));
+      const iic=devices.find(device=>/iic[- ]?800|inkbird/i.test(String(device?.name||'')));
+      if(iic){
+        console.log('IIC Smart Life DP diagnostic',JSON.stringify({
+          name:iic.name,
+          online:iic.online!==false,
+          status:iic.status||{},
+          functions:iic.function||{},
+          status_range:iic.status_range||{},
+          local_strategy:iic.local_strategy||{}
+        }));
+      }
       console.log('Smart Life read-only diagnostic',{
         deviceCount:devices.length,
         devices:rows,

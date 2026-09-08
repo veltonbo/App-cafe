@@ -143,48 +143,34 @@
     if(!card){
       card=document.createElement('section');
       card.id='viveiroProfileCard';
-      card.className='box smartProfileCard';
+      card.className='box smartProfileCard smartOverviewCard';
       card.innerHTML=
-        '<div class="profileTop">'+
-          '<div><span class="sectionKicker">PERFIL ATIVO</span><h2>Viveiro de mudas</h2><p class="note">As configurações ficam agrupadas neste perfil.</p></div>'+
-          '<span class="profileBadge">ATIVO</span>'+
+        '<div class="smartOverviewHead">'+
+          '<div><span class="sectionKicker">AGORA</span><h2>Resumo do viveiro</h2></div>'+
+          '<span id="smartClimateBadge" class="profileBadge">ATIVO</span>'+
         '</div>'+
-        '<div class="profileSummary">'+
-          '<div><small>Modo</small><strong id="profileMode">Automático 2.0</strong></div>'+
-          '<div><small>Ciclo-base</small><strong id="profileCycle">—</strong></div>'+
-          '<div><small>Clima</small><strong id="profileWeather">Weather2-2</strong></div>'+
-          '<div><small>Horário</small><strong id="profileSchedule">—</strong></div>'+
+        '<div class="smartOverviewGrid">'+
+          '<div><small>Ciclo atual</small><strong id="smartClimateCycle">—</strong></div>'+
+          '<div><small>Temperatura</small><strong id="smartOverviewTemp">—</strong></div>'+
+          '<div><small>Umidade</small><strong id="smartOverviewHumidity">—</strong></div>'+
+          '<div><small>Condição</small><strong id="smartClimateLevel">Aguardando</strong></div>'+
         '</div>'+
-        '<button type="button" id="openProfileConfig" class="btn primary">Configurações do perfil</button>';
+        '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
+        '<div class="smartOverviewMeta">'+
+          '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
+          '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
+        '</div>'+
+        '<button type="button" id="openProfileConfig" class="btn soft smartOverviewAction">Automação e horários</button>';
       main.appendChild(card);
     }
     bind(byId('openProfileConfig'),'smartBound',()=>showView('perfil'));
     return card;
   }
-
   function ensureClimateStatus(){
-    const main=qs('main.wrap');
-    if(!main)return null;
-    let box=byId('smartClimateStatus');
-    if(!box){
-      box=document.createElement('section');
-      box.id='smartClimateStatus';
-      box.className='box smartClimateStatus';
-      box.innerHTML=
-        '<div class="head"><div><span class="sectionKicker">AUTOMÁTICO 2.0</span><h2>Ajuste inteligente</h2></div><span id="smartClimateBadge" class="profileBadge">ATIVO</span></div>'+
-        '<div class="smartClimateSummary">'+
-          '<div><small>Ciclo atual</small><strong id="smartClimateCycle">30 s / 120 s</strong></div>'+
-          '<div><small>Condição</small><strong id="smartClimateLevel">Aguardando</strong></div>'+
-        '</div>'+
-        '<p id="smartClimateReason" class="note">Aguardando avaliação climática.</p>'+
-        '<button type="button" id="openClimateConfig" class="btn soft">Ver ajuste automático</button>';
-      main.appendChild(box);
-    }
-    bind(byId('openClimateConfig'),'smartBound',()=>showView('perfil'));
+    const card=byId('viveiroProfileCard')||ensureProfileCard();
     updateClimateStatus();
-    return box;
+    return card;
   }
-
   function updateClimateStatus(){
     let sec={},cc={},cs={};
     try{
@@ -192,18 +178,25 @@
       cc=(typeof data!=='undefined'&&data.dashboard?.climate?.config)||{};
       cs=(typeof data!=='undefined'&&data.dashboard?.climate?.state)||{};
     }catch{}
-    const mode=cc.observation?'OBSERVAÇÃO':cc.automatic?'ATIVO':'MANUAL';
-    if(byId('smartClimateBadge'))byId('smartClimateBadge').textContent=mode;
+    const mode=cc.observation?'OBSERVAÇÃO':cc.automatic?'AUTOMÁTICO':'MANUAL';
+    const badge=byId('smartClimateBadge');
+    if(badge){
+      badge.textContent=mode;
+      badge.classList.toggle('warn',mode==='MANUAL'||mode==='OBSERVAÇÃO');
+    }
     const baseOn=Number(sec.base_on_seconds||sec.on_seconds||30);
     const baseOff=Number(sec.base_off_seconds||sec.off_seconds||120);
-    if(byId('profileCycle'))byId('profileCycle').textContent=baseOn+' s / '+baseOff+' s';
-    if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=
-      Number(sec.on_seconds||baseOn)+' s / '+Number(sec.off_seconds||baseOff)+' s';
+    const on=Number(sec.on_seconds||baseOn);
+    const off=Number(sec.off_seconds||baseOff);
+    if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=on+' s / '+off+' s';
     if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=String(cs.drying_level_label||'Aguardando');
+    const temp=Number(cs.last_temperature);
+    const humidity=Number(cs.last_humidity);
+    if(byId('smartOverviewTemp'))byId('smartOverviewTemp').textContent=Number.isFinite(temp)?temp.toFixed(1)+' °C':'—';
+    if(byId('smartOverviewHumidity'))byId('smartOverviewHumidity').textContent=Number.isFinite(humidity)?Math.round(humidity)+'%':'—';
     if(byId('smartClimateReason'))byId('smartClimateReason').textContent=
       String(cs.last_reason||'Aguardando avaliação climática.');
   }
-
   function ensureAlertCenter(){
     const main=qs('main.wrap');
     if(!main)return null;
@@ -284,40 +277,53 @@
     if(!main)return;
 
     const home=makeView('smartViewHome','Viveiro','VISÃO RÁPIDA');
-    const profile=makeView('smartViewProfile','Perfil do viveiro','CONFIGURAÇÕES');
+    const profile=makeView('smartViewProfile','Automação','CICLO, CLIMA E HORÁRIOS');
     const history=makeView('smartViewHistory','Histórico','ACOMPANHAMENTO');
-    const system=makeView('smartViewSystem','Sistema','MANUTENÇÃO E DIAGNÓSTICO');
+    const system=makeView('smartViewSystem','Sistema','SEGURANÇA E MANUTENÇÃO');
 
     const hero=qs('main.wrap > .hero');
     const safety=byId('smartSafety');
     const profileCard=byId('viveiroProfileCard');
-    const climateStatus=byId('smartClimateStatus');
-    const climate=byId('climateAdviceBox');
     const today=byId('todayBox');
+    [hero,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
 
-    [hero,safety,profileCard,climateStatus,today].filter(Boolean).forEach(el=>home.appendChild(el));
-
+    const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
     const weather=sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva');
     const calendar=byId('calendarBox');
-    const alerts=byId('smartAlerts');
-    [climate,seconds,weather,calendar,alerts].filter(Boolean).forEach(el=>profile.appendChild(el));
+    [climate,seconds,weather,calendar].filter(Boolean).forEach(el=>profile.appendChild(el));
 
-    [byId('dailyReportBox'),byId('weeklyBox'),byId('eventsBox'),byId('pulseActivityBox')]
+    [byId('weeklyBox'),byId('eventsBox')]
       .filter(Boolean).forEach(el=>history.appendChild(el));
 
-    [byId('systemHealthBox'),byId('maintenanceBox')]
+    [byId('systemHealthBox'),byId('maintenanceBox'),byId('smartAlerts')]
       .filter(Boolean).forEach(el=>system.appendChild(el));
+
+    const hiddenTitles=new Set([
+      'Programação da irrigação',
+      'Estado em tempo real',
+      'Controle manual',
+      'Ciclo já configurado',
+      'Diagnóstico do ciclo',
+      'Histórico do app',
+      'Conexão segura • Fazenda 2E'
+    ]);
+    qsa('main.wrap section').forEach(el=>{
+      if(hiddenTitles.has(titleOf(el)))el.classList.add('smartUiHidden');
+    });
+    [byId('dailyReportBox'),byId('pulseActivityBox')].filter(Boolean)
+      .forEach(el=>el.classList.add('smartUiHidden'));
 
     const known=new Set([home,profile,history,system]);
     qsa('main.wrap > section, main.wrap > .grid').forEach(el=>{
-      if(!known.has(el))system.appendChild(el);
+      if(known.has(el)||el.classList.contains('smartUiHidden'))return;
+      // Blocos técnicos remanescentes ficam fora da tela principal.
+      system.appendChild(el);
     });
 
     const offline=byId('offlineBanner');
     if(offline)main.insertBefore(offline,main.firstChild);
   }
-
   function ensureMenu(){
     const top=qs('.top');
     if(!top)return;
@@ -396,7 +402,7 @@
   }
 
   function boot(){
-    document.body.classList.add('smartIrrigationV5','smartIrrigationV6');
+    document.body.classList.add('smartIrrigationV5','smartIrrigationV6','smartIrrigationV7');
     normalizeControls();
     renamePrimary();
     ensureModeSelector();
@@ -405,7 +411,6 @@
     ensureProfileCard();
     ensureClimateStatus();
     ensureAlertCenter();
-    ensureMenu();
     organizeViews();
 
     const initial=String(location.hash||'#inicio').replace('#','');

@@ -64,6 +64,20 @@ async function evaluateClimateControl(){
 
     const pending=climateState?.pending||null;
     if(pending&&String(climateState?.approved_id||'')===String(pending.id||'')){
+      const pendingAge=Date.now()-Number(pending.created_at||0);
+      if(!Number(pending.created_at)||pendingAge>60*60*1000){
+        await patchClimateState({
+          pending:null,
+          approved_id:null,
+          last_reason:'Sugestão aprovada expirou antes de ser aplicada.'
+        });
+        await event('viveiro_climate_suggestion_expired','Sugestão climática aprovada expirou e não foi aplicada.');
+        return;
+      }
+      const currentWeather=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
+      if(!currentWeather?.linked||currentWeather?.device?.online===false||!currentWeather?.metrics||currentWeather.metrics.rainDetected){
+        return;
+      }
       const oldOn=Math.max(1,Number(state.on_seconds||30));
       const oldOff=Math.max(1,Number(state.off_seconds||120));
       const targetOn=Math.max(1,Math.min(300,Math.round(Number(pending.target_on_seconds)||oldOn)));

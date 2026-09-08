@@ -403,3 +403,50 @@ body.smartIrrigationV6{background:#f3f6f4}
   .smartIrrigationV7 .smartDailyCompare{grid-template-columns:1fr}
   .smartIrrigationV7 .smartDailyCompare .wide{grid-column:auto}
 }
+
+
+/* Viveiro operations clarity v9 */
+.smartIrrigationV7 .smartOperatingCard{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+  margin:4px 0 8px;padding:14px 15px;border-radius:18px;border:1px solid #dbe8e3;
+  background:#fff;box-shadow:0 8px 24px rgba(20,55,46,.07)
+}
+.smartIrrigationV7 .smartOperatingState{display:grid;grid-template-columns:13px minmax(0,1fr);gap:10px;align-items:start}
+.smartIrrigationV7 .smartOperatingState>i{
+  width:11px;height:11px;border-radius:50%;margin-top:5px;background:#7d9089;
+  box-shadow:0 0 0 5px rgba(125,144,137,.12)
+}
+.smartIrrigationV7 .smartOperatingState small,
+.smartIrrigationV7 .smartOperatingNext small{
+  display:block;color:var(--ui-muted);font-size:.61rem;font-weight:850;letter-spacing:.04em
+}
+.smartIrrigationV7 .smartOperatingState strong{display:block;font-size:1rem;letter-spacing:.01em}
+.smartIrrigationV7 .smartOperatingState span{display:block;color:var(--ui-muted);font-size:.69rem;line-height:1.35;margin-top:2px}
+.smartIrrigationV7 .smartOperatingNext{text-align:right;min-width:92px}
+.smartIrrigationV7 .smartOperatingNext strong{display:block;font-size:.82rem;margin-top:2px}
+.smartIrrigationV7 .smartOperatingCard[data-tone="active"]{background:#f3fbf7;border-color:#cfe7dc}
+.smartIrrigationV7 .smartOperatingCard[data-tone="active"] .smartOperatingState>i{
+  background:#24935f;box-shadow:0 0 0 5px rgba(36,147,95,.13)
+}
+.smartIrrigationV7 .smartOperatingCard[data-tone="weather"]{background:#f3f8fc;border-color:#d3e4ef}
+.smartIrrigationV7 .smartOperatingCard[data-tone="weather"] .smartOperatingState>i{
+  background:#4d89b1;box-shadow:0 0 0 5px rgba(77,137,177,.12)
+}
+.smartIrrigationV7 .smartOperatingCard[data-tone="warning"]{background:#fffaf0;border-color:#ead9ae}
+.smartIrrigationV7 .smartOperatingCard[data-tone="warning"] .smartOperatingState>i{
+  background:#c8912f;box-shadow:0 0 0 5px rgba(200,145,47,.12)
+}
+.smartIrrigationV7 .smartOperatingCard[data-tone="critical"]{background:#fff4f3;border-color:#efc9c5}
+.smartIrrigationV7 .smartOperatingCard[data-tone="critical"] .smartOperatingState>i{
+  background:#c74b42;box-shadow:0 0 0 5px rgba(199,75,66,.12)
+}
+.smartIrrigationV7 .smartWhyCycle{
+  margin-top:7px;padding:9px 10px;border:1px solid var(--ui-line);border-radius:11px;background:#fff
+}
+.smartIrrigationV7 .smartWhyCycle small{display:block;color:var(--ui-muted);font-size:.62rem}
+.smartIrrigationV7 .smartWhyCycle strong{display:block;font-size:.76rem;margin-top:2px}
+.smartIrrigationV7 .smartWhyCycle span{display:block;color:var(--ui-muted);font-size:.66rem;line-height:1.35;margin-top:2px}
+@media(max-width:520px){
+  .smartIrrigationV7 .smartOperatingCard{grid-template-columns:1fr;gap:8px}
+  .smartIrrigationV7 .smartOperatingNext{text-align:left;padding-left:23px}
+}

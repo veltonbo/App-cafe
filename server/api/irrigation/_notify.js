@@ -1,4 +1,5 @@
 import { sendPushAlert } from './_push.js';
+import { getAutomationConfig } from './_store.js';
 
 const recent=new Map();
 
@@ -79,13 +80,35 @@ export async function notifyIrrigation({
   level='info',
   url='/irrigacao/',
   whatsapp=true,
-  cooldownMinutes=0
+  cooldownMinutes=0,
+  force=false
 }={}){
   const key=String(tag||title||'fazenda2e');
   if(!cooldownAllowed(key,cooldownMinutes)){
     return{skipped:true,reason:'cooldown'};
   }
-  const push=await sendPushAlert({title,body,tag,url,level}).catch(error=>({sent:0,error:error?.message||String(error)}));
-  const wa=whatsapp?await sendWhatsAppTemplate({title,body,level}):{enabled:false,sent:false};
-  return{skipped:false,push,whatsapp:wa};
+
+  const cfg=await getAutomationConfig().catch(()=>({}));
+  const alertCfg=cfg?.alerts||{};
+  const priorities={
+    critical:alertCfg?.priorities?.critical!==false,
+    warning:alertCfg?.priorities?.warning!==false,
+    info:alertCfg?.priorities?.info===true
+  };
+  const channels={
+    push:alertCfg?.channels?.push!==false,
+    whatsapp:alertCfg?.channels?.whatsapp===true
+  };
+  const normalizedLevel=['critical','warning','info'].includes(String(level))?String(level):'info';
+  if(!force&&!priorities[normalizedLevel]){
+    return{skipped:true,reason:'priority_disabled',level:normalizedLevel};
+  }
+
+  const push=channels.push||force
+    ?await sendPushAlert({title,body,tag,url,level:normalizedLevel}).catch(error=>({sent:0,error:error?.message||String(error)}))
+    :{sent:0,total:0,disabled:true};
+  const wa=(whatsapp&&(channels.whatsapp||force))
+    ?await sendWhatsAppTemplate({title,body,level:normalizedLevel})
+    :{enabled:false,sent:false,disabled:true};
+  return{skipped:false,push,whatsapp:wa,level:normalizedLevel};
 }

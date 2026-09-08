@@ -670,7 +670,7 @@ async function run(){
       relay_expected:false,
       pulse_count:Number(state.pulse_count||0)+1,
       last_pulse_at:Date.now(),
-      expected_next_on_at:Date.now()+Number(state.off_seconds||90)*1000
+      expected_next_on_at:Date.now()+Number(state.off_seconds||120)*1000
     };
     await persist();
     await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
@@ -679,7 +679,7 @@ async function run(){
     });
 
     let offElapsed=0;
-    const offSeconds=Math.max(1,Number(state.off_seconds||90));
+    const offSeconds=Math.max(1,Number(state.off_seconds||120));
     while(state.enabled&&offElapsed<offSeconds){
       const chunk=Math.min(10,offSeconds-offElapsed);
       await sleep(chunk*1000);

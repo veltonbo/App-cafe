@@ -6,6 +6,9 @@ import {
 } from './_smartlife.js';
 
 const SMARTLIFE_VIVEIRO_NAME=String(process.env.SMARTLIFE_VIVEIRO_NAME||'Viveiro').trim();
+const SMARTLIFE_PRIMARY_ONLY=!/^(0|false|no)$/i.test(
+  String(process.env.SMARTLIFE_PRIMARY_ONLY||'true').trim()
+);
 
 function normalizeTuyaStatus(result){
   if(Array.isArray(result))return result;
@@ -20,12 +23,17 @@ function toStatusMap(list){
   );
 }
 
-export async function readViveiroState(){
+export async function readViveiroState(options={}){
   let smartLifeError=null;
+  const smartLifeReady=await smartLifeConfigured();
 
-  if(await smartLifeConfigured()){
+  if(smartLifeReady){
     try{
-      const device=await smartLifeReadDevice({deviceName:SMARTLIFE_VIVEIRO_NAME});
+      const device=await smartLifeReadDevice({
+        deviceName:SMARTLIFE_VIVEIRO_NAME,
+        force:Boolean(options?.force),
+        maxAgeMs:Number.isFinite(Number(options?.maxAgeMs))?Number(options.maxAgeMs):undefined
+      });
       return{
         provider:'smartlife',
         deviceId:device?.id||null,
@@ -35,6 +43,9 @@ export async function readViveiroState(){
       };
     }catch(error){
       smartLifeError=error?.message||String(error);
+      if(SMARTLIFE_PRIMARY_ONLY){
+        throw new Error('Smart Life: '+smartLifeError);
+      }
     }
   }
 
@@ -64,7 +75,9 @@ export async function sendViveiroCommands(commands){
   }
 
   let smartLifeError=null;
-  if(await smartLifeConfigured()){
+  const smartLifeReady=await smartLifeConfigured();
+
+  if(smartLifeReady){
     try{
       const device=await smartLifeSendCommands({
         deviceName:SMARTLIFE_VIVEIRO_NAME,
@@ -79,6 +92,9 @@ export async function sendViveiroCommands(commands){
       };
     }catch(error){
       smartLifeError=error?.message||String(error);
+      if(SMARTLIFE_PRIMARY_ONLY){
+        throw new Error('Smart Life: '+smartLifeError);
+      }
     }
   }
 

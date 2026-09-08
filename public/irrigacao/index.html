@@ -1712,7 +1712,7 @@ $('saveCycle').onclick=async e=>{
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},10000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},120000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},300000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},60000);
 function updateOfflineBanner(){

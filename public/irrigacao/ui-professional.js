@@ -309,6 +309,8 @@
         '<div class="wide"><small>Comparação com o ciclo-base</small><strong id="smartTodayDelta">—</strong><div class="smartCompareTrack"><i id="smartCompareFill"></i></div></div>';
       box.appendChild(el);
     }
+    const legacyWater=byId('todayWaterTime')?.closest('.todayCard');
+    if(legacyWater)legacyWater.classList.add('smartUiHidden');
     return el;
   }
   function ensureDecisionTimeline(){
@@ -526,12 +528,15 @@
     const system=makeView('smartViewSystem','Sistema','SEGURANÇA E MANUTENÇÃO');
 
     const hero=qs('main.wrap > .hero');
+    const legacyStats=qs('main.wrap > .grid');
+    if(hero)hero.classList.add('smartLegacyVisual');
+    if(legacyStats)legacyStats.classList.add('smartUiHidden');
     const operation=byId('smartOperatingCard');
     const healthStrip=byId('smartHealthStrip');
     const safety=byId('smartSafety');
     const profileCard=byId('viveiroProfileCard');
     const today=byId('todayBox');
-    [operation,hero,healthStrip,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
+    [operation,healthStrip,safety,profileCard,today,hero].filter(Boolean).forEach(el=>home.appendChild(el));
 
     const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');

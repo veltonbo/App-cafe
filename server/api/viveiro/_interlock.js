@@ -55,7 +55,10 @@ async function secondsRunning(){
 
 async function pauseNativeCycle(recordPath,record){
   if(await secondsRunning()){
-    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+    const current=await readViveiroDevice({maxAgeMs:2000}).catch(()=>null);
+    if(current?.relay===true){
+      await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+    }
     return record;
   }
 
@@ -84,7 +87,9 @@ async function pauseNativeCycle(recordPath,record){
     }
   }
 
-  await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+  if(current?.relay===true){
+    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+  }
   return next;
 }
 
@@ -167,7 +172,9 @@ export async function setMaintenanceInterlock(minutes,reason='Modo manutenção'
     native_cycle_was_enabled:false
   };
   await storeSet(MAINTENANCE_PATH,payload);
-  await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+  if(!restored){
+    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+  }
   return payload;
 }
 

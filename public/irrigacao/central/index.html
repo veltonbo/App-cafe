@@ -24,6 +24,34 @@
 .modal{padding:20px;display:grid;gap:13px;min-width:min(92vw,620px)}dialog{border:0;padding:0;border-radius:21px;box-shadow:0 24px 70px rgba(0,0,0,.23)}dialog::backdrop{background:#092a225c}.flowGrid{display:grid;gap:8px;max-height:55vh;overflow:auto}.flowRow{display:grid;grid-template-columns:1fr 120px;gap:9px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:11px}.flowRow label{font-size:.8rem;font-weight:850}.flowRow small{display:block;color:var(--muted)}.flowRow input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px}.check{display:flex;gap:8px;align-items:center;font-size:.82rem;font-weight:800}.check input{width:auto}.note{color:var(--muted);font-size:.78rem;line-height:1.45}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translate(-50%,100px);background:#16372e;color:#fff;padding:10px 14px;border-radius:12px;transition:.2s;z-index:30;font-size:.8rem}.toast.show{transform:translate(-50%,0)}
 .bottom{display:none}
 @media(max-width:760px){.topActions .iconBtn:first-child{display:none}.summary{grid-template-columns:1fr 1fr}.systemGrid{grid-template-columns:1fr}.waterHero{grid-template-columns:1fr}.waterRow{grid-template-columns:65px 1fr 74px}.waterRow .events{display:none}.bottom{display:grid;position:fixed;z-index:20;left:9px;right:9px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(3,1fr);gap:5px;padding:6px;background:#f8faf9f5;border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 35px rgba(20,58,48,.18)}.bottom a{padding:10px 4px;text-align:center;text-decoration:none;color:var(--muted);font-size:.71rem;font-weight:850;border-radius:11px}.bottom a.active{background:var(--green);color:#fff}.wrap{padding-bottom:100px}.hero h2{font-size:1.3rem}.head{align-items:flex-start}.head .btn{white-space:nowrap}.flowRow{grid-template-columns:1fr 100px}}
+
+.profileGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.profileCard{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:19px;padding:16px;background:linear-gradient(180deg,#fff,#fbfdfc);box-shadow:0 9px 24px rgba(23,61,51,.06)}
+.profileCard:active{transform:scale(.99)}
+.profileCardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.profileCard h3{margin:2px 0 4px;font-size:1.05rem}
+.profileCard .profileSub{color:var(--muted);font-size:.76rem;line-height:1.35}
+.profileBadge{flex:0 0 auto;padding:6px 8px;border-radius:999px;background:#edf3f0;color:#64736d;font-size:.66rem;font-weight:900}
+.profileBadge.on{background:#ddf3eb;color:var(--green)}
+.profileBadge.warn{background:var(--ambersoft);color:var(--amber)}
+.profileBadge.bad{background:var(--redsoft);color:var(--red)}
+.profileMeta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:13px 0}
+.profileMeta div{border:1px solid #e8efec;border-radius:12px;padding:10px;background:#fff}
+.profileMeta small{display:block;color:var(--muted);font-size:.66rem;margin-bottom:3px}
+.profileMeta strong{display:block;font-size:.82rem;overflow-wrap:anywhere}
+.profileOpen{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:11px;border-top:1px solid #edf2ef;color:var(--green);font-size:.82rem;font-weight:900}
+.alertsCompact.quiet{background:#f8fcfa;border-color:#d7e9e1}
+.alertsCompact.quiet .alertList{margin-top:0}
+.moreBox{margin-top:12px;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+.moreBox>summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:900;color:var(--ink);display:flex;align-items:center;justify-content:space-between}
+.moreBox>summary::-webkit-details-marker{display:none}
+.moreBox>summary::after{content:"⌄";color:var(--muted);font-size:1.1rem}
+.moreBox[open]>summary::after{content:"⌃"}
+.moreContent{padding:0 10px 10px}
+.moreContent .summary{margin:0 0 10px}
+.innerBox{box-shadow:none;margin-top:10px}
+@media(max-width:760px){.profileGrid{grid-template-columns:1fr}.profileCard{padding:14px}.profilesBox{padding:15px}.moreBox{border-radius:18px}}
+
 </style>
 </head>
 <body>
@@ -33,40 +61,46 @@
 </header>
 <main class="wrap">
 <section class="hero">
-  <div class="heroTop"><div><div class="ey">VISÃO GERAL • FAZENDA 2E</div><h2 id="heroTitle">Sistema de irrigação</h2><p id="heroSub">Viveiro, café e clima em uma única central.</p><span id="heroStatus" class="heroStatus">AGUARDANDO LEITURA</span></div></div>
-</section>
-<section class="summary">
-  <div class="stat"><small>Weather2-2</small><strong id="sumWeather">Aguardando</strong></div>
-  <div class="stat"><small>Viveiro</small><strong id="sumViveiro">Aguardando</strong></div>
-  <div class="stat"><small>Controladores café</small><strong id="sumControllers">—</strong></div>
-  <div class="stat"><small>Água estimada hoje</small><strong id="sumWater">—</strong></div>
+  <div class="heroTop"><div><div class="ey">FAZENDA 2E • IRRIGAÇÃO</div><h2 id="heroTitle">Escolha um perfil</h2><p id="heroSub">Entre no Viveiro ou no Café. Cada perfil guarda suas próprias configurações.</p><span id="heroStatus" class="heroStatus">AGUARDANDO LEITURA</span></div></div>
 </section>
 
-<section class="box">
-  <div class="head"><h2>Sistemas da Fazenda 2E</h2></div>
-  <div id="systems" class="systemGrid"></div>
+<section class="box profilesBox">
+  <div class="head"><div><div class="ey" style="color:var(--green)">PERFIS</div><h2>Perfis de irrigação</h2></div></div>
+  <div id="systems" class="profileGrid"></div>
 </section>
 
-<section class="box">
-  <div class="head"><h2>Alertas</h2><button id="notificationBtn" class="btn soft">Ativar notificações</button></div>
+<section id="alertsBox" class="box alertsCompact">
+  <div class="head"><h2 id="alertsTitle">Alertas</h2><button id="notificationBtn" class="btn soft">Ativar notificações</button></div>
   <div id="alerts" class="alertList"></div>
   <div class="actions"><button id="testNotification" class="btn soft">Testar alerta</button><button id="alertSettings" class="btn soft">Configurar alertas</button></div>
-  <p id="pushNote" class="note">Instale a Central na Tela de Início para receber alertas no iPhone mesmo com o app fechado.</p>
+  <p id="pushNote" class="note">Os avisos importantes ficam centralizados aqui.</p>
 </section>
 
-<section class="box">
-  <div class="head"><h2>Volume de água estimado</h2><button id="flowSettings" class="btn soft">Configurar vazões</button></div>
-  <div class="waterHero">
-    <div class="waterBig"><small>Aplicado hoje</small><strong id="waterToday">0 L</strong><span id="waterTodaySub" class="note">Baseado nas vazões cadastradas.</span></div>
-    <div class="waterBig"><small>Acumulado registrado</small><strong id="waterTotal">0 L</strong><span class="note">Estimativa a partir do histórico de irrigação.</span></div>
+<details class="moreBox">
+  <summary>Hoje e histórico</summary>
+  <div class="moreContent">
+    <section class="summary">
+      <div class="stat"><small>Weather2-2</small><strong id="sumWeather">Aguardando</strong></div>
+      <div class="stat"><small>Viveiro</small><strong id="sumViveiro">Aguardando</strong></div>
+      <div class="stat"><small>Controladores café</small><strong id="sumControllers">—</strong></div>
+      <div class="stat"><small>Água estimada hoje</small><strong id="sumWater">—</strong></div>
+    </section>
+
+    <section class="box innerBox">
+      <div class="head"><h2>Volume de água estimado</h2><button id="flowSettings" class="btn soft">Configurar vazões</button></div>
+      <div class="waterHero">
+        <div class="waterBig"><small>Aplicado hoje</small><strong id="waterToday">0 L</strong><span id="waterTodaySub" class="note">Baseado nas vazões cadastradas.</span></div>
+        <div class="waterBig"><small>Acumulado registrado</small><strong id="waterTotal">0 L</strong><span class="note">Estimativa a partir do histórico de irrigação.</span></div>
+      </div>
+      <div id="waterRows" class="waterTable"></div>
+    </section>
+
+    <section class="box innerBox">
+      <div class="head"><h2>Atividade recente</h2></div>
+      <div id="history" class="history"></div>
+    </section>
   </div>
-  <div id="waterRows" class="waterTable"></div>
-</section>
-
-<section class="box">
-  <div class="head"><h2>Atividade recente</h2></div>
-  <div id="history" class="history"></div>
-</section>
+</details>
 </main>
 
 <nav class="bottom"><a class="active" href="/irrigacao/central/">Central</a><a href="/irrigacao/">Viveiro</a><a href="/irrigacao/inkbird/">Café</a></nav>
@@ -145,16 +179,54 @@ function render(){
   $('sumControllers').textContent=online+'/'+total+' online';$('sumControllers').className=online===total?'ok':'bad';
   $('sumWater').textContent=fmtL(o.volume?.today_liters);
   const critical=(o.alerts||[]).some(a=>a.level==='critical');
-  $('heroTitle').textContent=critical?'Atenção necessária':'Sistema de irrigação';
-  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s) neste momento.'):'Viveiro, café e clima operando em uma única central.';
+  $('heroTitle').textContent=critical?'Atenção necessária':'Escolha um perfil';
+  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s). Entre no perfil para ver os detalhes.'):'Viveiro e Café organizados em perfis separados.';
   $('heroStatus').textContent=critical?'VERIFICAR ALERTAS':(o.alerts||[]).length?'ATENÇÃO':'SISTEMA NORMAL';
+  if($('alertsBox'))$('alertsBox').classList.toggle('quiet',!(o.alerts||[]).length);
+  if($('alertsTitle'))$('alertsTitle').textContent=(o.alerts||[]).length?'Alertas':'Tudo certo';
+
+  const profiles=o.profiles||{};
+  const vp=profiles.viveiro||{},sec=vp.seconds||{},cc=vp.climate_config||{},cs=vp.climate_state||{};
+  const cp=profiles.cafe||{};
+  const viveiroMode=cc.observation?'Observação':cc.automatic?'Automático 2.0':'Manual';
+  const viveiroCycle=Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||120)+' s';
+  const viveiroState=vw.online===false?'OFFLINE':viveiroBlocked?'PROTEGIDO':vw.relay?'IRRIGANDO':'ONLINE';
+  const viveiroBadge=vw.online===false?'bad':viveiroBlocked?'warn':'on';
+  const weatherTxt=o.weather?.linked?(o.weather?.metrics?.rainDetected?'Chovendo':'Weather2-2 online'):'Sem clima';
+
+  const coffeeControllers=o.controllers||[];
+  const coffeeOnline=coffeeControllers.filter(x=>x.online!==false).length;
+  const coffeeActive=coffeeControllers.flatMap(x=>(x.active_zones||[]).map(z=>x.sector_start+z-1));
+  const coffeeState=coffeeOnline<coffeeControllers.length?'ATENÇÃO':coffeeActive.length?'IRRIGANDO':'ONLINE';
+  const coffeeBadge=coffeeOnline<coffeeControllers.length?'bad':'on';
+  const firstSector=coffeeControllers.length?Math.min(...coffeeControllers.map(x=>Number(x.sector_start||1))):1;
+  const lastSector=coffeeControllers.length?Math.max(...coffeeControllers.map(x=>Number(x.sector_end||8))):8;
 
   const cards=[];
-  cards.push('<div class="systemCard"><div class="systemTop"><div><h3>Viveiro • EKAZA</h3><div class="note">Proteção Weather2-2</div></div><span class="badge '+(vw.online===false?'alert':'on')+'">'+(vw.online===false?'OFFLINE':viveiroBlocked?'PROTEGIDO':vw.relay?'IRRIGANDO':'ONLINE')+'</span></div><div class="systemMeta"><div class="mini"><small>Saída</small><b>'+(vw.relay?'Ligada':'Desligada')+'</b></div><div class="mini"><small>Proteção</small><b>'+String(vs.status||'—').replaceAll('_',' ')+'</b></div></div><div class="actions"><a class="btn soft" href="/irrigacao/">Abrir viveiro</a></div></div>');
-  for(const c of o.controllers||[]){
-    const active=(c.active_zones||[]).map(z=>pad(c.sector_start+z-1)).join(', ');
-    cards.push('<div class="systemCard"><div class="systemTop"><div><h3>Controlador '+c.controller_index+' • Café</h3><div class="note">Setores '+pad(c.sector_start)+'–'+pad(c.sector_end)+'</div></div><span class="badge '+(c.online===false?'alert':'on')+'">'+(c.online===false?'OFFLINE':c.active_mask?'IRRIGANDO':'ONLINE')+'</span></div><div class="systemMeta"><div class="mini"><small>Modo</small><b>'+(c.operation_mode||'—')+'</b></div><div class="mini"><small>Ativo agora</small><b>'+(active||'Nenhum')+'</b></div></div><div class="actions"><a class="btn soft" href="/irrigacao/inkbird/">Abrir controlador</a></div></div>');
-  }
+  cards.push(
+    '<a class="profileCard" href="/irrigacao/">'+
+      '<div class="profileCardTop"><div><div class="ey" style="color:var(--green)">PERFIL</div><h3>Viveiro de mudas</h3><div class="profileSub">Irrigação inteligente e proteção climática</div></div><span class="profileBadge '+viveiroBadge+'">'+viveiroState+'</span></div>'+
+      '<div class="profileMeta">'+
+        '<div><small>Modo</small><strong>'+viveiroMode+'</strong></div>'+
+        '<div><small>Ciclo atual</small><strong>'+viveiroCycle+'</strong></div>'+
+        '<div><small>Clima</small><strong>'+weatherTxt+'</strong></div>'+
+        '<div><small>Condição</small><strong>'+String(cs.drying_level_label||'Normal')+'</strong></div>'+
+      '</div>'+
+      '<div class="profileOpen"><span>Abrir perfil</span><span>›</span></div>'+
+    '</a>'
+  );
+  cards.push(
+    '<a class="profileCard" href="/irrigacao/inkbird/">'+
+      '<div class="profileCardTop"><div><div class="ey" style="color:var(--green)">PERFIL</div><h3>Café</h3><div class="profileSub">Controladores e setores da lavoura</div></div><span class="profileBadge '+coffeeBadge+'">'+coffeeState+'</span></div>'+
+      '<div class="profileMeta">'+
+        '<div><small>Controladores</small><strong>'+coffeeOnline+'/'+coffeeControllers.length+' online</strong></div>'+
+        '<div><small>Setores</small><strong>'+pad(firstSector)+'–'+pad(lastSector)+'</strong></div>'+
+        '<div><small>Ativos agora</small><strong>'+(coffeeActive.length?coffeeActive.map(pad).join(', '):'Nenhum')+'</strong></div>'+
+        '<div><small>Clima</small><strong>'+weatherTxt+'</strong></div>'+
+      '</div>'+
+      '<div class="profileOpen"><span>Abrir perfil</span><span>›</span></div>'+
+    '</a>'
+  );
   $('systems').innerHTML=cards.join('');
 
   $('alerts').innerHTML=(o.alerts||[]).length?(o.alerts||[]).map(a=>'<div class="alert '+a.level+'"><div class="alertIcon">'+(a.level==='critical'?'!':'●')+'</div><div><b>'+a.title+'</b><small>'+a.body+'</small></div></div>').join(''):'<div class="empty">Nenhum alerta ativo. Sistema normal.</div>';

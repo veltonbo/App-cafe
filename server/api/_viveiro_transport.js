@@ -79,9 +79,13 @@ export async function sendViveiroCommands(commands){
 
   if(smartLifeReady){
     try{
+      const priority=commands.some(cmd=>
+        cmd?.code==='switch_1'&&cmd?.value===false
+      );
       const device=await smartLifeSendCommands({
         deviceName:SMARTLIFE_VIVEIRO_NAME,
-        commands
+        commands,
+        priority
       });
       return{
         provider:'smartlife',

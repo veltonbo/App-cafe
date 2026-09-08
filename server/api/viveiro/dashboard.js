@@ -395,7 +395,15 @@ function summarize(history,seconds={},now=Date.now()){
   const todayKey=localDateKey(now);
   const today=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey);
   const pulseRows=today.filter(x=>x.type==='viveiro_pulse_complete');
-  const irrigatedSeconds=pulseRows.reduce((s,x)=>s+Math.max(0,Number(x.duration_seconds||0)),0);
+  const completedIrrigatedSeconds=pulseRows.reduce((s,x)=>s+Math.max(0,Number(x.duration_seconds||0)),0);
+  const ongoingSeconds=
+    String(seconds?.phase||'')==='on'&&Number(seconds?.pulse_started_at||0)>0
+      ?Math.max(0,Math.min(
+          Number(seconds.on_seconds||seconds.base_on_seconds||30),
+          (now-Number(seconds.pulse_started_at||now))/1000
+        ))
+      :0;
+  const irrigatedSeconds=completedIrrigatedSeconds+ongoingSeconds;
   const pauses=today.filter(x=>x.type==='viveiro_weather_pause').length;
   const errors=today.filter(x=>String(x.type||'').includes('error')).length;
   const lastPulse=history.find(x=>x.type==='viveiro_pulse_complete')||null;

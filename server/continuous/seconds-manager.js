@@ -59,6 +59,29 @@ async function evaluateClimateControl(){
   try{
     const [cfg,climateState]=await Promise.all([getClimateConfig(),getClimateState()]);
     if(cfg.enabled===false)return;
+
+    // O Automático 2.0 só atua dentro da janela configurada de irrigação.
+    // Fora do horário, o clima pode continuar sendo exibido no painel, mas
+    // nenhuma sugestão é criada/aprovada/aplicada e o ciclo não é alterado.
+    const schedule=localSchedule(state);
+    if(!schedule.inside){
+      const nextWindowAt=Date.now()+Math.max(0,secondsUntilNextWindow(state))*1000;
+      const alreadyOutside=
+        String(climateState?.last_decision||'')==='outside_schedule'&&
+        Number(climateState?.next_schedule_window_at||0)===Number(nextWindowAt||0);
+      if(!alreadyOutside){
+        await patchClimateState({
+          pending:null,
+          approved_id:null,
+          last_decision:'outside_schedule',
+          last_decision_at:Date.now(),
+          next_schedule_window_at:nextWindowAt||null,
+          last_reason:'Automático 2.0 aguardando o horário programado da irrigação.'
+        }).catch(()=>null);
+      }
+      return;
+    }
+
     if(state.paused_by_weather||['weather_blocked','waiting_after_rain'].includes(String(state.phase||'')))return;
     if(Number(state.climate_post_rain_hold_until||0)>Date.now())return;
 

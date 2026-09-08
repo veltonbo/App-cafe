@@ -5,8 +5,8 @@ const STATE_PATH='IrrigacaoFazenda2E/viveiroClimate/state';
 
 export function normalizeClimateConfig(raw={}){
   return{
-    automatic:raw.automatic!==false,
-    observation:Boolean(raw.observation),
+    automatic:Boolean(raw.automatic),
+    observation:raw.observation===undefined?true:Boolean(raw.observation),
     trend_minutes:Math.max(20,Math.min(60,Math.round(Number(raw.trend_minutes)||30))),
     evaluation_minutes:Math.max(5,Math.min(30,Math.round(Number(raw.evaluation_minutes)||5))),
     max_adjust_percent:Math.max(10,Math.min(30,Math.round(Number(raw.max_adjust_percent)||30))),
@@ -187,7 +187,7 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const maxPct=cfg.max_adjust_percent/100;
   factor=Math.max(1-maxPct,Math.min(1+maxPct,factor));
 
-  // Automático 2.0: preserva o pulso-base de 30 s e ajusta principalmente o intervalo.
+  // Automático 2.0: preserva o pulso-base configurado e ajusta principalmente o intervalo.
   const baseDuty=baseOn/(baseOn+baseOff);
   const targetDuty=Math.max(.08,Math.min(.45,baseDuty*factor));
   const targetOn=baseOn;

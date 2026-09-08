@@ -5,6 +5,7 @@ const WEATHER_CACHE_MS=5*60*1000;
 const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
 const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
 let weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
+let weatherDeviceMeta=null;
 function isQuotaError(error){return /28841004|quota is exhausted|trial quota/i.test(String(error?.message||error||''));}
 
 function normalizeList(result) {
@@ -93,64 +94,93 @@ function collectMetrics(statusMap, shadowMap, spec) {
   };
 }
 
-async function fetchWeatherSnapshotFresh() {
-  const deviceListResult = await tuyaRequest('GET', '/v2.0/cloud/thing/device?page_size=20');
-  const devices = normalizeList(deviceListResult);
-  const device = devices.find(d => String(d.name || d.custom_name || '').trim().toLowerCase() === TARGET_NAME)
-    || devices.find(d => String(d.name || d.custom_name || '').toLowerCase().includes(TARGET_NAME));
+async function resolveWeatherDeviceMeta(){
+  if(weatherDeviceMeta?.deviceId)return weatherDeviceMeta;
 
-  if (!device) {
-    return {
+  const deviceListResult=await tuyaRequest('GET','/v2.0/cloud/thing/device?page_size=20');
+  const devices=normalizeList(deviceListResult);
+  const device=devices.find(d=>String(d.name||d.custom_name||'').trim().toLowerCase()===TARGET_NAME)
+    ||devices.find(d=>String(d.name||d.custom_name||'').toLowerCase().includes(TARGET_NAME));
+
+  if(!device){
+    return{
+      missing:true,
+      devices:devices.map(d=>({id:d.id||d.device_id,name:d.name||d.custom_name||'Sem nome',online:d.online??null}))
+    };
+  }
+
+  const deviceId=device.id||device.device_id;
+  const [infoR,specR]=await Promise.allSettled([
+    tuyaRequest('GET',`/v1.1/iot-03/devices/${deviceId}`),
+    tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/specification`)
+  ]);
+  const info=infoR.status==='fulfilled'?infoR.value:null;
+  const specification=specR.status==='fulfilled'?specR.value:null;
+  weatherDeviceMeta={
+    deviceId,
+    device,
+    info,
+    specification,
+    infoError:infoR.status==='rejected'?(infoR.reason?.message||String(infoR.reason)):null,
+    specificationError:specR.status==='rejected'?(specR.reason?.message||String(specR.reason)):null,
+    resolvedAt:Date.now()
+  };
+  return weatherDeviceMeta;
+}
+
+async function fetchWeatherSnapshotFresh() {
+  const meta=await resolveWeatherDeviceMeta();
+  if(meta?.missing){
+    return{
       ok:true,
       linked:false,
       name:'Weather2-2',
       error:'Estação Weather2-2 não encontrada entre os dispositivos do projeto Tuya.',
-      devices:devices.map(d => ({ id:d.id || d.device_id, name:d.name || d.custom_name || 'Sem nome', online:d.online ?? null }))
+      devices:meta.devices||[]
     };
   }
 
-  const deviceId = device.id || device.device_id;
-  const [infoR, specR, statusR, shadowR] = await Promise.allSettled([
-    tuyaRequest('GET', `/v1.1/iot-03/devices/${deviceId}`),
-    tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/specification`),
-    tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/status`),
-    tuyaRequest('GET', `/v2.0/cloud/thing/${deviceId}/shadow/properties`)
+  const {deviceId,device,info,specification}=meta;
+  const [statusR,shadowR]=await Promise.allSettled([
+    tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
+    tuyaRequest('GET',`/v2.0/cloud/thing/${deviceId}/shadow/properties`)
   ]);
 
-  const info = infoR.status === 'fulfilled' ? infoR.value : null;
-  const specification = specR.status === 'fulfilled' ? specR.value : null;
-  const rawStatus = statusR.status === 'fulfilled' ? statusR.value : [];
-  const statusList = Array.isArray(rawStatus) ? rawStatus : Array.isArray(rawStatus?.status) ? rawStatus.status : [];
-  const shadow = shadowR.status === 'fulfilled' ? shadowR.value : null;
+  if(statusR.status==='rejected'&&shadowR.status==='rejected'){
+    const message=statusR.reason?.message||shadowR.reason?.message||'Falha ao ler a Weather2-2.';
+    throw new Error(message);
+  }
 
-  const statusMap = Object.fromEntries(statusList.map(item => [item.code, item.value]));
-  const shadowList = Array.isArray(shadow?.properties) ? shadow.properties : [];
-  const shadowMap = Object.fromEntries(shadowList.map(item => [item.code, item.value]));
-  const metrics = collectMetrics(statusMap, shadowMap, specification);
+  const rawStatus=statusR.status==='fulfilled'?statusR.value:[];
+  const statusList=Array.isArray(rawStatus)?rawStatus:Array.isArray(rawStatus?.status)?rawStatus.status:[];
+  const shadow=shadowR.status==='fulfilled'?shadowR.value:null;
+  const statusMap=Object.fromEntries(statusList.map(item=>[item.code,item.value]));
+  const shadowList=Array.isArray(shadow?.properties)?shadow.properties:[];
+  const shadowMap=Object.fromEntries(shadowList.map(item=>[item.code,item.value]));
+  const metrics=collectMetrics(statusMap,shadowMap,specification);
 
-  return {
+  return{
     ok:true,
     linked:true,
     device:{
       id:deviceId,
-      name:info?.name || device.name || 'Weather2-2',
-      online:info?.online ?? device.online ?? null,
-      category:info?.category || specification?.category || device.category || null,
-      product_id:info?.product_id || device.product_id || null
+      name:info?.name||device.name||'Weather2-2',
+      online:statusR.status==='fulfilled'||shadowR.status==='fulfilled'?true:(info?.online??device.online??null),
+      category:info?.category||specification?.category||device.category||null,
+      product_id:info?.product_id||device.product_id||null
     },
     metrics,
     status:statusMap,
     shadow:shadowMap,
-    specification:specification || null,
+    specification:specification||null,
     errors:{
-      info:infoR.status === 'rejected' ? (infoR.reason?.message || String(infoR.reason)) : null,
-      specification:specR.status === 'rejected' ? (specR.reason?.message || String(specR.reason)) : null,
-      status:statusR.status === 'rejected' ? (statusR.reason?.message || String(statusR.reason)) : null,
-      shadow:shadowR.status === 'rejected' ? (shadowR.reason?.message || String(shadowR.reason)) : null
+      info:meta.infoError||null,
+      specification:meta.specificationError||null,
+      status:statusR.status==='rejected'?(statusR.reason?.message||String(statusR.reason)):null,
+      shadow:shadowR.status==='rejected'?(shadowR.reason?.message||String(shadowR.reason)):null
     }
   };
 }
-
 
 export async function fetchWeatherSnapshot(options = {}) {
   const force=Boolean(options?.force);

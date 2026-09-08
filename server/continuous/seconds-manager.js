@@ -355,6 +355,14 @@ async function evaluateClimateControl(){
 }
 
 async function persist(){
+  // Mantém somente o prazo que pertence à fase atual.
+  // Isso impede um horário antigo de uma fase anterior virar falso atraso na interface.
+  state={
+    ...state,
+    state_updated_at:Date.now(),
+    expected_off_at:String(state.phase||'')==='on'?Number(state.expected_off_at||0):0,
+    expected_next_on_at:String(state.phase||'')==='off'?Number(state.expected_next_on_at||0):0
+  };
   let localOk=false;
   try{
     await fs.mkdir(path.dirname(STATE_FILE),{recursive:true});
@@ -1057,5 +1065,5 @@ export async function getSecondsManagerState(){
       }
     }
   }
-  return state;
+  return{...state,server_read_at:Date.now()};
 }

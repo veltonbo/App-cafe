@@ -217,6 +217,9 @@ if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.token)state.settings.token=inkbird?.settings?.token||viveiro?.settings?.token||'';
 if(!('cloudError' in state))state.cloudError=null;
 const $=id=>document.getElementById(id);
+const esc=value=>String(value??'')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let busy=false,deferredPrompt=null;
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
@@ -225,7 +228,9 @@ function pad(n){return String(n).padStart(2,'0')}
 function fmtL(v){const n=Number(v||0);return n>=1000?(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:2})+' mil L':n.toLocaleString('pt-BR',{maximumFractionDigits:0})+' L'}
 async function api(path,opt={}){
   if(!state.settings.token)throw new Error('Configure o token de controle.');
-  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),15000);
+  const method=String(opt.method||'GET').toUpperCase();
+  const timeoutMs=['POST','PUT','PATCH','DELETE'].includes(method)?30000:15000;
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeoutMs);
   try{
     const r=await fetch((state.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.settings.token,...(opt.headers||{})},signal:ctl.signal});
     const body=await r.json().catch(()=>({}));
@@ -301,7 +306,7 @@ function render(){
         '<div><small>Modo</small><strong>'+viveiroMode+'</strong></div>'+
         '<div><small>Ciclo atual</small><strong>'+viveiroCycle+'</strong></div>'+
         '<div><small>Clima</small><strong>'+weatherTxt+'</strong></div>'+
-        '<div><small>Condição</small><strong>'+String(cs.drying_level_label||'Normal')+'</strong></div>'+
+        '<div><small>Condição</small><strong>'+esc(cs.drying_level_label||'Normal')+'</strong></div>'+
       '</div>'+
       '<div class="profileOpen"><span>Abrir perfil</span><span>›</span></div>'+
     '</a>'
@@ -320,7 +325,10 @@ function render(){
   );
   $('systems').innerHTML=cards.join('');
 
-  $('alerts').innerHTML=(o.alerts||[]).length?(o.alerts||[]).map(a=>'<div class="alert '+a.level+'"><div class="alertIcon">'+(a.level==='critical'?'!':'●')+'</div><div><b>'+a.title+'</b><small>'+a.body+'</small></div></div>').join(''):'<div class="empty">Nenhum alerta ativo. Sistema normal.</div>';
+  $('alerts').innerHTML=(o.alerts||[]).length?(o.alerts||[]).map(a=>{
+    const level=a.level==='critical'?'critical':a.level==='warning'?'warning':'info';
+    return '<div class="alert '+level+'"><div class="alertIcon">'+(level==='critical'?'!':'●')+'</div><div><b>'+esc(a.title)+'</b><small>'+esc(a.body)+'</small></div></div>';
+  }).join(''):'<div class="empty">Nenhum alerta ativo. Sistema normal.</div>';
 
   $('waterToday').textContent=fmtL(o.volume?.today_liters);$('waterTotal').textContent=fmtL(o.volume?.total_liters);
   const bySector=o.volume?.by_sector||[];
@@ -331,7 +339,7 @@ function render(){
     const when=new Date(Number(h.ts||Date.now()));
     const sec=Number(h.sector||0)?'Setor '+pad(h.sector):'Irrigação';
     const names={start:'iniciado',stop:'parado',complete:'concluído',group_start:'grupo iniciado',blocked:'bloqueado',viveiro_rain_pause:'viveiro pausado por chuva',viveiro_rain_resume:'viveiro retomado'};
-    return '<div class="hist"><div class="histIcon">•</div><div><b>'+sec+' • '+(names[h.type]||h.detail||h.type||'evento')+'</b><small>'+(h.duration_minutes?Number(h.duration_minutes)+' min':'')+'</small></div><time>'+when.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+when.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></div>';
+    return '<div class="hist"><div class="histIcon">•</div><div><b>'+esc(sec)+' • '+esc(names[h.type]||h.detail||h.type||'evento')+'</b><small>'+(h.duration_minutes?Number(h.duration_minutes)+' min':'')+'</small></div><time>'+when.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+when.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></div>';
   }).join(''):'<div class="empty">Nenhuma atividade registrada.</div>';
 }
 async function refresh(show=true){
@@ -355,7 +363,7 @@ function openFlow(){
   const wf=o.config?.waterFlow||{};
   $('flowGrid').innerHTML=(o.controllers||[]).flatMap(c=>Array.from({length:8},(_,i)=>{
     const z=i+1,sector=c.sector_start+i,val=Number(wf?.[c.id]?.[z]||0);
-    return '<div class="flowRow"><label>Setor '+pad(sector)+'<small>Controlador '+c.controller_index+' • saída '+z+'</small></label><input data-controller="'+c.id+'" data-zone="'+z+'" type="number" min="0" step="0.01" value="'+(val||'')+'" placeholder="L/min"></div>';
+    return '<div class="flowRow"><label>Setor '+pad(sector)+'<small>Controlador '+Number(c.controller_index||0)+' • saída '+z+'</small></label><input data-controller="'+esc(c.id)+'" data-zone="'+z+'" type="number" min="0" step="0.01" value="'+(val||'')+'" placeholder="L/min"></div>';
   })).join('');
   $('flowDlg').showModal();
 }
@@ -401,9 +409,9 @@ async function runDiagnostics(){
   try{
     const r=await api('/api/irrigation/diagnostics');
     $('diagRows').innerHTML=(r.checks||[]).map(x=>
-      '<div class="diagRow"><span class="diagDot '+x.status+'"></span><div><b>'+x.label+'</b><small>'+x.detail+'</small></div><span class="diagStatus '+(x.status==='error'?'bad':x.status==='warning'?'warn':'ok')+'">'+(x.status==='ok'?'OK':x.status==='warning'?'ATENÇÃO':'FALHA')+'</span></div>'
+      '<div class="diagRow"><span class="diagDot '+(x.status==='error'?'error':x.status==='warning'?'warning':'ok')+'"></span><div><b>'+esc(x.label)+'</b><small>'+esc(x.detail)+'</small></div><span class="diagStatus '+(x.status==='error'?'bad':x.status==='warning'?'warn':'ok')+'">'+(x.status==='ok'?'OK':x.status==='warning'?'ATENÇÃO':'FALHA')+'</span></div>'
     ).join('')||'<div class="empty">Nenhum resultado.</div>';
-  }catch(e){$('diagRows').innerHTML='<div class="empty">Falha no diagnóstico: '+e.message+'</div>'}
+  }catch(e){$('diagRows').innerHTML='<div class="empty">Falha no diagnóstico: '+esc(e.message)+'</div>'}
   finally{$('runDiag').disabled=false}
 }
 $('runDiag').onclick=runDiagnostics;
@@ -425,7 +433,7 @@ async function loadBackups(){
     $('backupRows').innerHTML=(r.backups||[]).map(b=>{
       const d=new Date(Number(b.created_at||0));
       const sec=b.seconds_snapshot||{};
-      return '<div class="backupRow"><div><b>'+backupReasonLabel(b.reason)+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' • Viveiro '+Number(sec.on_seconds||30)+'/'+Number(sec.off_seconds||120)+'</small></div><button class="btn soft restoreBackup" data-id="'+b.id+'">Restaurar</button></div>';
+      return '<div class="backupRow"><div><b>'+esc(backupReasonLabel(b.reason))+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' • Viveiro '+Number(sec.on_seconds||30)+'/'+Number(sec.off_seconds||120)+'</small></div><button class="btn soft restoreBackup" data-id="'+esc(b.id)+'">Restaurar</button></div>';
     }).join('')||'<div class="empty">Nenhum backup criado ainda.</div>';
     document.querySelectorAll('.restoreBackup').forEach(btn=>btn.onclick=async()=>{
       const ok=confirm('Restaurar as configurações deste backup? O ciclo/relé ao vivo não será restaurado, mas regras futuras do perfil podem mudar.');
@@ -437,7 +445,7 @@ async function loadBackups(){
       }catch(e){toast('Falha: '+e.message)}
       finally{btn.disabled=false}
     });
-  }catch(e){$('backupRows').innerHTML='<div class="empty">Falha: '+e.message+'</div>'}
+  }catch(e){$('backupRows').innerHTML='<div class="empty">Falha: '+esc(e.message)+'</div>'}
 }
 $('createBackup').onclick=async()=>{
   $('createBackup').disabled=true;

@@ -119,6 +119,39 @@ function irrigationIntensity(seconds={}){
     current_duty:Number((currentDuty*100).toFixed(1))
   };
 }
+function cycleExplanation(seconds={},climateState={}){
+  const baseOn=Math.max(1,Number(seconds.base_on_seconds||seconds.on_seconds||30));
+  const baseOff=Math.max(1,Number(seconds.base_off_seconds||seconds.off_seconds||120));
+  const on=Math.max(1,Number(seconds.on_seconds||baseOn));
+  const off=Math.max(1,Number(seconds.off_seconds||baseOff));
+  const outside=String(climateState?.last_decision||'')==='outside_schedule';
+  if(outside)return{
+    title:'Ciclo-base preservado fora do horário',
+    detail:'Base '+baseOn+'/'+baseOff+' s. O Automático 2.0 só poderá alterar o ciclo quando a janela de irrigação começar.',
+    changed:false
+  };
+  if(on===baseOn&&off===baseOff)return{
+    title:'Usando o ciclo-base',
+    detail:'O clima não exige alteração confirmada neste momento.',
+    changed:false
+  };
+  if(off<baseOff)return{
+    title:'Irrigação aumentada pelo clima',
+    detail:'Intervalo reduzido de '+baseOff+' s para '+off+' s. '+String(climateState?.last_reason||'Automático 2.0 ajustou o ciclo.'),
+    changed:true
+  };
+  if(off>baseOff)return{
+    title:'Irrigação reduzida pelo clima',
+    detail:'Intervalo ampliado de '+baseOff+' s para '+off+' s. '+String(climateState?.last_reason||'Automático 2.0 ajustou o ciclo.'),
+    changed:true
+  };
+  return{
+    title:'Ciclo ajustado',
+    detail:'Ciclo-base '+baseOn+'/'+baseOff+' s → atual '+on+'/'+off+' s.',
+    changed:true
+  };
+}
+
 function baseExpectedToday(seconds={},now=Date.now()){
   if(seconds?.enabled===false)return{elapsed_window_seconds:0,expected_irrigated_seconds:0};
   const start=Math.max(0,Math.min(1439,Number(seconds.start_minutes||0)));
@@ -452,6 +485,7 @@ export default async function handler(req,res){
       const summary=summarize(history,activeSeconds,now);
       const decisions=decisionTimeline(history);
       const intensity=irrigationIntensity(activeSeconds);
+      const cycle_reason=cycleExplanation(activeSeconds,climateState||{});
       const nextEvaluationAt=String(climateState?.last_decision||'')==='outside_schedule'
         ?Number(climateState?.next_schedule_window_at||now)
         :Number(climateState?.last_evaluated_at||0)
@@ -490,6 +524,7 @@ export default async function handler(req,res){
         upcoming:upcomingSchedule(activeSeconds,now),
         intelligence:{
           intensity,
+          cycle_reason,
           operation,
           next_evaluation_at:nextEvaluationAt>now?nextEvaluationAt:now,
           decisions,

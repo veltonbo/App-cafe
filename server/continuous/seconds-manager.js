@@ -21,6 +21,7 @@ const STATE_FILE=(process.env.IRRIGATION_STATE_FILE||'/data/viveiro-seconds.json
 let state={enabled:false,phase:'idle'};
 let loopPromise=null;
 let remoteStoreAvailable=null;
+let remoteStoreRetryAt=0;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
@@ -230,15 +231,16 @@ async function persist(){
     console.warn('seconds local persist indisponível:',error?.message||error);
   }
 
-  if(remoteStoreAvailable!==false){
+  const shouldTryRemote=remoteStoreAvailable!==false||Date.now()>=Number(remoteStoreRetryAt||0);
+  if(shouldTryRemote){
     try{
       await storeSet(REMOTE_STATE_PATH,state);
       remoteStoreAvailable=true;
+      remoteStoreRetryAt=0;
     }catch(error){
-      if(remoteStoreAvailable!==false){
-        console.warn('seconds Firebase persist indisponível:',error?.message||error);
-      }
+      console.warn('seconds Firebase persist indisponível:',error?.message||error);
       remoteStoreAvailable=false;
+      remoteStoreRetryAt=Date.now()+30000;
     }
   }
 
@@ -246,18 +248,21 @@ async function persist(){
 }
 
 async function load(){
-  if(remoteStoreAvailable!==false){
+  if(remoteStoreAvailable!==false||Date.now()>=Number(remoteStoreRetryAt||0)){
     try{
       const remote=await storeGet(REMOTE_STATE_PATH);
       if(remote&&typeof remote==='object'){
         state=remote;
         remoteStoreAvailable=true;
+        remoteStoreRetryAt=0;
         return;
       }
       remoteStoreAvailable=true;
+      remoteStoreRetryAt=0;
     }catch(error){
       console.warn('seconds Firebase load indisponível:',error?.message||error);
       remoteStoreAvailable=false;
+      remoteStoreRetryAt=Date.now()+30000;
     }
   }
 

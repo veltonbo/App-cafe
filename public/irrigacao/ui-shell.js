@@ -61,9 +61,9 @@
     if(area==='viveiro')return[
       {label:'Viveiro',items:[
         {icon:'⌂',label:'Resumo',sub:'Situação de agora',action:()=>viveiroView('inicio'),key:'inicio'},
-        {icon:'◷',label:'Programação',sub:'Automático 2.0, tempos e chuva',action:()=>viveiroView('perfil'),key:'perfil'},
+        {icon:'◷',label:'Automação',sub:'Ciclo, clima e horários',action:()=>viveiroView('perfil'),key:'perfil'},
         {icon:'≡',label:'Histórico',sub:'Irrigações e eventos',action:()=>viveiroView('historico'),key:'historico'},
-        {icon:'⚙',label:'Configurações',sub:'Sistema e manutenção',action:()=>viveiroView('sistema'),key:'sistema'}
+        {icon:'⚙',label:'Sistema',sub:'Segurança e manutenção',action:()=>viveiroView('sistema'),key:'sistema'}
       ]},
       {label:'Navegação',items:[
         {icon:'↔',label:'Trocar área',sub:'Voltar para Viveiro ou Café',href:'/irrigacao/central/'},
@@ -118,6 +118,38 @@
   document.body.insertBefore(top,document.body.firstChild);
   document.body.appendChild(overlay);
 
-  window.__f2eShell={open,close,updateActive};
-  setInterval(updateActive,1500);
+  let bottomNav=null;
+  if(area==='viveiro'){
+    bottomNav=document.createElement('nav');
+    bottomNav.className='f2eBottomNav';
+    bottomNav.setAttribute('aria-label','Navegação do Viveiro');
+    const items=[
+      {key:'inicio',icon:'⌂',label:'Resumo'},
+      {key:'perfil',icon:'◷',label:'Automação'},
+      {key:'historico',icon:'≡',label:'Histórico'},
+      {key:'sistema',icon:'⚙',label:'Sistema'}
+    ];
+    items.forEach(x=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.dataset.key=x.key;
+      b.innerHTML='<span>'+x.icon+'</span><small>'+x.label+'</small>';
+      b.addEventListener('click',()=>viveiroView(x.key));
+      bottomNav.appendChild(b);
+    });
+    document.body.appendChild(bottomNav);
+  }
+
+  const updateShellActive=()=>{
+    updateActive();
+    if(bottomNav){
+      const key=currentViveiro();
+      qa('button',bottomNav).forEach(b=>b.classList.toggle('active',b.dataset.key===key));
+    }
+  };
+
+  window.__f2eShell={open,close,updateActive:updateShellActive};
+  setInterval(updateShellActive,1000);
+  window.addEventListener('hashchange',updateShellActive);
+  setTimeout(updateShellActive,100);
 })();

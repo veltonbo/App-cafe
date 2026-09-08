@@ -1,62 +1,55 @@
-import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
+import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 
 export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='GET')return res.status(405).json({ok:false,error:'Método não permitido.'});
-  if(!authorize(req,res)||!ensureCloudConfig(res))return;
+  if(!authorize(req,res))return;
 
   try{
-    const weather=await fetchWeatherSnapshot();
-    const controllers=await listInkbirdDevices();
-    const weatherId=weather?.device?.id||null;
-
-    const weatherLinkR=weatherId
-      ? await Promise.allSettled([
-          tuyaRequest('GET',`/v1.0/devices/${weatherId}/enable-linkage/codes`),
-          tuyaRequest('GET',`/v2.0/cloud/thing/${weatherId}`)
-        ])
-      : [];
-
-    const controllerRows=[];
-    for(const ctrl of controllers){
-      const [linkR,infoR]=await Promise.allSettled([
-        tuyaRequest('GET',`/v1.0/devices/${ctrl.id}/enable-linkage/codes`),
-        tuyaRequest('GET',`/v2.0/cloud/thing/${ctrl.id}`)
-      ]);
-      controllerRows.push({
-        id:ctrl.id,
-        name:ctrl.name,
-        linkage:linkR.status==='fulfilled'?linkR.value:null,
-        info:infoR.status==='fulfilled'?infoR.value:null,
-        errors:{
-          linkage:linkR.status==='rejected'?(linkR.reason?.message||String(linkR.reason)):null,
-          info:infoR.status==='rejected'?(infoR.reason?.message||String(infoR.reason)):null
-        }
-      });
-    }
-
-    const weatherInfo=weatherLinkR[1]?.status==='fulfilled'?weatherLinkR[1].value:null;
-    const possibleSpaces=[
-      weatherInfo?.space_id,weatherInfo?.spaceId,weatherInfo?.asset_id,weatherInfo?.home_id,
-      ...controllerRows.flatMap(x=>[x.info?.space_id,x.info?.spaceId,x.info?.asset_id,x.info?.home_id])
-    ].filter(Boolean);
+    const [weather,controllers]=await Promise.all([
+      fetchWeatherSnapshot({maxAgeMs:5000}),
+      listInkbirdDevices()
+    ]);
+    const rows=await Promise.all(controllers.map(async(ctrl)=>{
+      try{
+        const state=await readInkbirdState({deviceId:ctrl.id,maxAgeMs:2500});
+        return{
+          id:ctrl.id,
+          name:ctrl.name,
+          online:state.online!==false,
+          provider:'smartlife',
+          dp38:Object.prototype.hasOwnProperty.call(state.statusMap,'normal_timer'),
+          dp44:Object.prototype.hasOwnProperty.call(state.statusMap,'irrigation_mode'),
+          dp45:Object.prototype.hasOwnProperty.call(state.statusMap,'irrigation_time_all')
+        };
+      }catch(error){
+        return{id:ctrl.id,name:ctrl.name,online:false,provider:'smartlife',error:error?.message||String(error)};
+      }
+    }));
 
     return res.status(200).json({
       ok:true,
+      provider:'smartlife',
+      cloud_linkage:false,
+      server_guard:true,
       weather:{
-        id:weatherId,
+        id:weather?.device?.id||null,
         name:weather?.device?.name||'Weather2-2',
-        linkage:weatherLinkR[0]?.status==='fulfilled'?weatherLinkR[0].value:null,
-        info:weatherInfo,
-        error:weatherLinkR[0]?.status==='rejected'?(weatherLinkR[0].reason?.message||String(weatherLinkR[0].reason)):null
+        online:weather?.device?.online!==false,
+        linked:Boolean(weather?.linked),
+        rain_detected:Boolean(weather?.metrics?.rainDetected)
       },
-      controllers:controllerRows,
-      possible_space_ids:[...new Set(possibleSpaces.map(String))]
+      controllers:rows,
+      possible_space_ids:[],
+      note:'A proteção Weather2-2 ↔ IIC-800 é aplicada pelo Railway usando Smart Life. O IoT Core antigo não é necessário.'
     });
   }catch(error){
-    return res.status(502).json({ok:false,error:error.message||'Falha ao verificar automação Tuya.'});
+    return res.status(502).json({
+      ok:false,error:error?.message||'Falha ao verificar integração Smart Life.'
+    });
   }
 }

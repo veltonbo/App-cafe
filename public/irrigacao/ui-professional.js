@@ -164,6 +164,7 @@
           '<span><small>Tendência</small><b id="smartTrendText">Aguardando</b></span>'+
         '</div>'+
         '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
+        '<div class="smartWhyCycle"><small>Por que este ciclo?</small><strong id="smartWhyCycleTitle">Aguardando</strong><span id="smartWhyCycleDetail"></span></div>'+
         '<div class="smartDecisionSummary">'+
           '<small>Última decisão</small><strong id="smartLastDecision">Aguardando</strong>'+
           '<span id="smartLastDecisionTime"></span>'+
@@ -264,6 +265,21 @@
     }
     return row.title+(row.detail?': '+row.detail:'');
   }
+  function ensureOperationalCard(){
+    const main=qs('main.wrap');
+    if(!main)return null;
+    let card=byId('smartOperatingCard');
+    if(!card){
+      card=document.createElement('section');
+      card.id='smartOperatingCard';
+      card.className='smartOperatingCard';
+      card.innerHTML=
+        '<div class="smartOperatingState"><i></i><div><small>ESTADO AGORA</small><strong id="smartOperatingLabel">VERIFICANDO</strong><span id="smartOperatingDetail">Aguardando o servidor...</span></div></div>'+
+        '<div class="smartOperatingNext"><small id="smartOperatingNextLabel">Próximo evento</small><strong id="smartOperatingNext">—</strong></div>';
+      main.appendChild(card);
+    }
+    return card;
+  }
   function ensureHealthStrip(){
     const main=qs('main.wrap');
     if(!main)return null;
@@ -355,6 +371,20 @@
     const lastDecision=decisions.find(x=>['climate','weather','critical','warning'].includes(String(x.kind||'')))||decisions[0]||null;
     if(byId('smartLastDecision'))byId('smartLastDecision').textContent=decisionText(lastDecision);
     if(byId('smartLastDecisionTime'))byId('smartLastDecisionTime').textContent=lastDecision?.ts?shortClock(lastDecision.ts):'';
+
+    const op=intel.operation||{};
+    const opCard=byId('smartOperatingCard');
+    if(opCard){
+      opCard.dataset.tone=String(op.tone||'neutral');
+      if(byId('smartOperatingLabel'))byId('smartOperatingLabel').textContent=String(op.label||'VERIFICANDO');
+      if(byId('smartOperatingDetail'))byId('smartOperatingDetail').textContent=String(op.detail||'Aguardando estado...');
+      if(byId('smartOperatingNextLabel'))byId('smartOperatingNextLabel').textContent=String(op.next_event_label||'Próximo evento');
+      if(byId('smartOperatingNext'))byId('smartOperatingNext').textContent=op.next_event_at?relativeTime(op.next_event_at):'—';
+    }
+
+    const cycleReason=intel.cycle_reason||{};
+    if(byId('smartWhyCycleTitle'))byId('smartWhyCycleTitle').textContent=String(cycleReason.title||'Aguardando');
+    if(byId('smartWhyCycleDetail'))byId('smartWhyCycleDetail').textContent=String(cycleReason.detail||'');
 
     const health=intel.health||{};
     const strip=byId('smartHealthStrip');
@@ -496,11 +526,12 @@
     const system=makeView('smartViewSystem','Sistema','SEGURANÇA E MANUTENÇÃO');
 
     const hero=qs('main.wrap > .hero');
-    const safety=byId('smartSafety');
+    const operation=byId('smartOperatingCard');
     const healthStrip=byId('smartHealthStrip');
+    const safety=byId('smartSafety');
     const profileCard=byId('viveiroProfileCard');
     const today=byId('todayBox');
-    [hero,healthStrip,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
+    [operation,hero,healthStrip,safety,profileCard,today].filter(Boolean).forEach(el=>home.appendChild(el));
 
     const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
@@ -626,6 +657,7 @@
     moveEmergencyIntoFlow();
     ensureProfileCard();
     ensureClimateStatus();
+    ensureOperationalCard();
     ensureHealthStrip();
     ensureDailyCompare();
     ensureDecisionTimeline();

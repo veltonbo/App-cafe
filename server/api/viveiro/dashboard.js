@@ -175,8 +175,124 @@ function decisionTimeline(history=[]){
     };
   });
 }
-function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},history=[],now=Date.now()}={}){
+
+function scheduleRuntime(seconds={},now=Date.now()){
+  const local=localNowParts(now);
+  const start=Math.max(0,Math.min(1439,Number(seconds.start_minutes||0)))*60;
+  const end=Math.max(1,Math.min(1440,Number(seconds.end_minutes||1440)))*60;
+  const mask=Math.max(0,Number(seconds.days_mask??127));
+  const selected=Boolean(mask&(1<<local.weekday));
+  return{
+    selected,
+    inside:selected&&local.seconds>=start&&local.seconds<end,
+    before:selected&&local.seconds<start,
+    after:selected&&local.seconds>=end,
+    start_seconds:start,
+    end_seconds:end,
+    now_seconds:local.seconds
+  };
+}
+function operationalState({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},now=Date.now()}={}){
+  const schedule=scheduleRuntime(seconds,now);
+  const phase=String(seconds.phase||'');
+  const emergency=Boolean(safety?.emergency_latched||safety?.latched||phase.includes('emergency'));
+  const raining=Boolean(weatherSnapshot?.metrics?.rainDetected);
+  const enabled=Boolean(seconds?.enabled);
+  let code='stopped',label='PARADO',detail='Programação desativada.',tone='neutral';
+  let nextAt=null,nextLabel='';
+
+  if(emergency){
+    code='emergency';label='EMERGÊNCIA';detail='Irrigação bloqueada até liberação manual.';tone='critical';
+  }else if(maintenance?.active){
+    code='maintenance';label='MANUTENÇÃO';detail='Automação temporariamente suspensa.';tone='warning';
+    nextAt=Number(maintenance.until||0)||null;nextLabel=nextAt?'Fim da manutenção':'';
+  }else if(!enabled){
+    code='stopped';label='PARADO';detail='A programação não está armada.';tone='neutral';
+  }else if(!weatherSnapshot?.linked||weatherSnapshot?.error||phase==='weather_unavailable'){
+    code='weather_unavailable';label='PROTEGIDO';detail='Weather2-2 sem dados. Irrigação mantida desligada.';tone='warning';
+  }else if(raining||phase==='weather_blocked'){
+    code='rain';label='PAUSADO PELA CHUVA';detail='A proteção climática está impedindo a irrigação.';tone='weather';
+  }else if(phase==='waiting_after_rain'){
+    code='post_rain';label='AGUARDANDO APÓS CHUVA';detail='O sistema espera o tempo de segurança antes de retomar.';tone='weather';
+    const last=Number(seconds.rain_last_at||0),delay=Number(seconds.resume_delay_minutes||0)*60000;
+    nextAt=last&&delay?last+delay:null;nextLabel=nextAt?'Pode retomar':'';
+  }else if(!schedule.inside||phase==='waiting_window'){
+    code='waiting_schedule';label='AGUARDANDO HORÁRIO';detail='Automático 2.0 não altera o ciclo fora da janela.';tone='neutral';
+    nextAt=Number(seconds.next_window_at||climateState?.next_schedule_window_at||0)||null;
+    nextLabel=nextAt?'Próximo início':'';
+  }else if(phase==='on'){
+    code='irrigating';label='IRRIGANDO';detail='Saída do viveiro ligada.';tone='active';
+    nextAt=Number(seconds.expected_off_at||0)||null;nextLabel=nextAt?'Desliga':'';
+  }else if(phase==='off'){
+    code='interval';label='INTERVALO';detail='Aguardando o próximo pulso.';tone='active';
+    nextAt=Number(seconds.expected_next_on_at||0)||null;nextLabel=nextAt?'Liga novamente':'';
+  }else{
+    code='starting';label='PREPARANDO';detail='Automação dentro da janela e preparando o próximo pulso.';tone='active';
+  }
+
+  return{
+    code,label,detail,tone,phase,
+    inside_schedule:schedule.inside,
+    next_event_at:nextAt,
+    next_event_label:nextLabel
+  };
+}
+function detectAnomalies({seconds={},climateState={},weatherSnapshot={},maintenance={},safety={},history=[],now=Date.now()}={}){
   const issues=[];
+  const op=operationalState({seconds,climateState,weatherSnapshot,maintenance,safety,now});
+  const phase=String(seconds.phase||'');
+  if(op.code==='irrigating'){
+    const due=Number(seconds.expected_off_at||0);
+    if(due&&now>due+20000)issues.push({
+      level:'critical',code:'pulse_overdue',
+      message:'Pulso ligado além do horário esperado.'
+    });
+  }
+  if(op.code==='interval'){
+    const due=Number(seconds.expected_next_on_at||0);
+    if(due&&now>due+20000)issues.push({
+      level:'critical',code:'next_pulse_overdue',
+      message:'Próximo pulso não iniciou no tempo esperado.'
+    });
+  }
+
+  const protectedPhase=['weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window'];
+  if(seconds?.enabled&&op.inside_schedule&&!protectedPhase.includes(phase)){
+    const cycleSeconds=Math.max(2,Number(seconds.on_seconds||30)+Number(seconds.off_seconds||120));
+    const lastPulse=history.find(x=>String(x.type||'')==='viveiro_pulse_complete');
+    const firstWindow=Number(seconds.first_pulse_window_at||0);
+    const reference=Math.max(Number(lastPulse?.ts||0),firstWindow);
+    if(reference&&now-reference>(cycleSeconds*2+45)*1000){
+      issues.push({
+        level:'warning',code:'long_pulse_gap',
+        message:'Tempo sem pulso maior que o esperado para o ciclo atual.'
+      });
+    }
+  }
+
+  const recentFailures=history.filter(row=>{
+    const type=String(row.type||'');
+    return now-Number(row.ts||0)<30*60000&&
+      ['viveiro_error','viveiro_start_failure','viveiro_start_delay'].includes(type);
+  });
+  if(recentFailures.length>=2)issues.push({
+    level:'critical',code:'repeated_failures',
+    message:'Falhas repetidas de irrigação nos últimos 30 minutos.'
+  });
+
+  if(op.inside_schedule&&String(climateState?.last_mode||'')==='automatic'){
+    const evalAt=Number(climateState?.last_evaluated_at||0);
+    if(evalAt&&now-evalAt>20*60000)issues.push({
+      level:'warning',code:'climate_evaluation_stale',
+      message:'Automático 2.0 está há mais de 20 min sem nova avaliação.'
+    });
+  }
+  return issues;
+}
+function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},history=[],now=Date.now()}={}){
+  const issues=[
+    ...detectAnomalies({seconds,climateState,weatherSnapshot,maintenance,safety,history,now})
+  ];
   const emergency=Boolean(safety?.emergency_latched||safety?.latched||String(seconds?.phase||'').includes('emergency'));
   if(emergency)issues.push({level:'critical',code:'emergency',message:'Parada de emergência ativa.'});
   if(maintenance?.active)issues.push({level:'warning',code:'maintenance',message:'Modo manutenção ativo.'});
@@ -340,13 +456,22 @@ export default async function handler(req,res){
         ?Number(climateState?.next_schedule_window_at||now)
         :Number(climateState?.last_evaluated_at||0)
           +Math.max(5,Number(climateConfig?.evaluation_minutes||5))*60000;
+      const activeMaintenance={...(maintenance||{}),active:maintenanceActive};
       const health=buildHealth({
         seconds:activeSeconds,
         weatherSnapshot,
         climateState:climateState||{},
-        maintenance:{...(maintenance||{}),active:maintenanceActive},
+        maintenance:activeMaintenance,
         safety:safety||{},
         history,
+        now
+      });
+      const operation=operationalState({
+        seconds:activeSeconds,
+        weatherSnapshot,
+        climateState:climateState||{},
+        maintenance:activeMaintenance,
+        safety:safety||{},
         now
       });
       return res.status(200).json({
@@ -365,6 +490,7 @@ export default async function handler(req,res){
         upcoming:upcomingSchedule(activeSeconds,now),
         intelligence:{
           intensity,
+          operation,
           next_evaluation_at:nextEvaluationAt>now?nextEvaluationAt:now,
           decisions,
           health

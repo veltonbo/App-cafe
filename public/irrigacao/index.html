@@ -498,6 +498,9 @@ if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
 let syncing=false;
 let weatherSyncing=false;
 const $=id=>document.getElementById(id);
+const esc=value=>String(value??'')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function reorganizeLayout(){
   const main=document.querySelector('main.wrap');
@@ -1351,7 +1354,7 @@ function renderDashboard(){
 
   const upcoming=Array.isArray(d.upcoming)?d.upcoming:[];
   if($('upcomingSchedule'))$('upcomingSchedule').innerHTML=upcoming.length?upcoming.map(x=>
-    '<div class="scheduleRow '+(x.active_now?'active':'')+'"><div><b>'+x.label+'</b><small>'+(x.active_now?' • em andamento':'')+'</small></div><strong>'+x.start+'–'+x.end+'</strong></div>'
+    '<div class="scheduleRow '+(x.active_now?'active':'')+'"><div><b>'+esc(x.label)+'</b><small>'+(x.active_now?' • em andamento':'')+'</small></div><strong>'+esc(x.start)+'–'+esc(x.end)+'</strong></div>'
   ).join(''):'<div class="empty">Nenhum próximo dia ativo encontrado.</div>';
 
   const advice=d.suggestion||{};
@@ -1360,7 +1363,7 @@ function renderDashboard(){
     if(advice.temperature!=null)metrics.push('<span>🌡 '+Number(advice.temperature).toFixed(1)+' °C</span>');
     if(advice.humidity!=null)metrics.push('<span>💧 '+Number(advice.humidity).toFixed(0)+'% UR</span>');
     $('climateAdvice').className='climateAdvice '+(advice.level==='attention'?'attention':'');
-    $('climateAdvice').innerHTML='<b>'+String(advice.note||'Sem sugestão disponível.')+'</b>'+(metrics.length?'<div class="climateMetrics">'+metrics.join('')+'</div>':'');
+    $('climateAdvice').innerHTML='<b>'+esc(advice.note||'Sem sugestão disponível.')+'</b>'+(metrics.length?'<div class="climateMetrics">'+metrics.join('')+'</div>':'');
   }
 
 
@@ -1418,7 +1421,7 @@ function renderDashboard(){
 
   const week=Array.isArray(d.summary?.week)?d.summary.week:[];
   if($('weekGrid'))$('weekGrid').innerHTML=week.length?week.map(x=>
-    '<div class="weekDay"><small>'+x.label+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+x.pulses+' pulsos</small></div>'
+    '<div class="weekDay"><small>'+esc(x.label)+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+Number(x.pulses||0)+' pulsos</small></div>'
   ).join(''):'<div class="empty">Sem histórico ainda.</div>';
 
   const auditRaw=Array.isArray(d.audit_today)?d.audit_today:(Array.isArray(d.history)?d.history:[]);
@@ -1428,7 +1431,7 @@ function renderDashboard(){
   if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,40).map(x=>{
     const at=Number(x.ts||Date.parse(x.at||0));
     const critical=auditCategory(x.type)==='error';
-    return '<div class="eventRow '+(critical?'criticalEvent':'')+'"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+String(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
+    return '<div class="eventRow '+(critical?'criticalEvent':'')+'"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+esc(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
   }).join(''):'<div class="empty">Nenhum evento nesta categoria hoje.</div>';
   document.querySelectorAll('.auditFilter').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===filter));
 
@@ -1437,9 +1440,20 @@ function renderDashboard(){
 
   const presets=d.presets||{};
   if($('fastPresetSelect')){
-    const current=$('fastPresetSelect').value;
-    $('fastPresetSelect').innerHTML='<option value="">Perfis salvos</option>'+Object.keys(presets).map(k=>'<option value="'+k.replaceAll('"','')+'">'+k+'</option>').join('');
-    if(presets[current])$('fastPresetSelect').value=current;
+    const select=$('fastPresetSelect');
+    const current=select.value;
+    select.replaceChildren();
+    const empty=document.createElement('option');
+    empty.value='';
+    empty.textContent='Perfis salvos';
+    select.appendChild(empty);
+    Object.keys(presets).forEach(name=>{
+      const option=document.createElement('option');
+      option.value=name;
+      option.textContent=name;
+      select.appendChild(option);
+    });
+    if(presets[current])select.value=current;
   }
   const fc=d.fast_config||{};
   if($('fastConfigMeta')&&fc.updated_at){
@@ -1703,7 +1717,7 @@ function render(){
   if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O servidor contínuo espera este intervalo antes do próximo pulso.':'Depois ele volta a ligar conforme a programação existente.';
   $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo pelo servidor Fazenda 2E; o cycle_time nativo fica pausado para não conflitar com os pulsos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
   $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
-  $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+h.detail+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
+  $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+esc(h.detail)+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
 }
 $('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
 $('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);

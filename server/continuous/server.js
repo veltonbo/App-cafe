@@ -250,7 +250,10 @@ async function startViveiroWeatherWatch(){
     }
   };
   const cfg=await getViveiroWeatherConfig().catch(()=>({checkMinutes:5}));
-  const intervalMs=Math.max(60000,Math.min(3600000,Number(cfg.checkMinutes||5)*60000));
+  // Com Smart Life, uma atualização traz os dispositivos em conjunto. Mantemos
+  // a proteção nativa responsiva sem depender do antigo polling de vários minutos.
+  const configuredMs=Math.max(15000,Number(cfg.checkMinutes||5)*60000);
+  const intervalMs=Math.min(15000,configuredMs);
   weatherWatchTimer=setInterval(tick,intervalMs);
   weatherWatchTimer.unref();
   setTimeout(tick,5000).unref();

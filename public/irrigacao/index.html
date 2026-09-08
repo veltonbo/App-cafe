@@ -544,7 +544,10 @@ function log(detail){data.history.unshift({at:new Date().toISOString(),detail});
 async function api(path,opt={}){
   if(!data.settings.apiUrl) throw new Error('Configure a URL do backend');
   if(!data.settings.token) throw new Error('Configure o token de controle');
-  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),9000);
+  const method=String(opt.method||'GET').toUpperCase();
+  const mutation=['POST','PUT','PATCH','DELETE'].includes(method);
+  const timeoutMs=mutation?30000:12000;
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeoutMs);
   try{
     const r=await fetch(data.settings.apiUrl.replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json','Authorization':'Bearer '+data.settings.token},signal:ctl.signal});
     const body=await r.json().catch(()=>({}));

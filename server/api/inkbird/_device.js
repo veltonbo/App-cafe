@@ -1,128 +1,71 @@
-import { tuyaRequest } from '../_tuya.js';
+import { smartLifeListDevices } from '../_smartlife.js';
 
-const FALLBACK_ID = (process.env.INKBIRD_DEVICE_ID || '').trim();
+const FALLBACK_NAME=String(process.env.SMARTLIFE_INKBIRD_NAME||'IIC-800-WIFI').trim();
 
-function normalizeList(result) {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.list)) return result.list;
-  if (Array.isArray(result?.devices)) return result.devices;
-  if (Array.isArray(result?.data)) return result.data;
-  if (Array.isArray(result?.result)) return result.result;
-  return [];
-}
-
-function scoreDevice(device) {
-  const text = [
+function scoreDevice(device){
+  const text=[
     device?.name,
-    device?.customName,
-    device?.custom_name,
-    device?.productName,
     device?.product_name,
-    device?.model,
-    device?.categoryName,
-    device?.category_name
+    device?.category
   ].filter(Boolean).join(' ').toLowerCase();
-
-  let score = 0;
-  if (/iic[- ]?800/.test(text)) score += 120;
-  if (/inkbird/.test(text)) score += 100;
-  if (/sprinkler|irrigation|irrigador|rega|controlador/.test(text)) score += 50;
-  if (/8\s*(zone|zona)/.test(text)) score += 20;
+  const funcs=device?.function||{};
+  const status=device?.status||{};
+  let score=0;
+  if(/iic[- ]?800/.test(text))score+=160;
+  if(/inkbird/.test(text))score+=120;
+  if(String(device?.category||'').toLowerCase()==='ggq')score+=80;
+  if(Object.prototype.hasOwnProperty.call(funcs,'irrigation_time_all'))score+=100;
+  if(Object.prototype.hasOwnProperty.call(status,'irrigation_time_all'))score+=80;
+  if(Object.prototype.hasOwnProperty.call(funcs,'normal_timer'))score+=40;
   return score;
 }
 
-export async function listProjectDevices() {
-  const all = [];
-  let lastId = '';
-
-  for (let page = 0; page < 10; page++) {
-    const suffix = lastId ? `&last_id=${encodeURIComponent(lastId)}` : '';
-    const result = await tuyaRequest('GET', `/v2.0/cloud/thing/device?page_size=20${suffix}`);
-    const list = normalizeList(result);
-
-    if (!list.length) break;
-    all.push(...list);
-
-    if (list.length < 20) break;
-
-    const nextLastId = list[list.length - 1]?.id || list[list.length - 1]?.device_id;
-    if (!nextLastId || nextLastId === lastId) break;
-    lastId = nextLastId;
-  }
-
-  const seen = new Set();
-  return all.filter(device => {
-    const id = device?.id || device?.device_id;
-    if (!id || seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
+export async function listProjectDevices(){
+  return smartLifeListDevices({maxAgeMs:3000});
 }
 
-export async function listInkbirdDevices() {
-  const devices = await listProjectDevices();
+export async function listInkbirdDevices(){
+  const devices=await listProjectDevices();
   return devices
-    .map(device => ({
-      device,
-      score: scoreDevice(device),
-      id: device?.id || device?.device_id
-    }))
-    .filter(item => item.id && item.score > 0)
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      const an = String(a.device?.name || a.device?.custom_name || '');
-      const bn = String(b.device?.name || b.device?.custom_name || '');
-      return an.localeCompare(bn, 'pt-BR');
-    })
-    .map((item, index) => ({
-      id: item.id,
-      name: item.device?.name || item.device?.customName || item.device?.custom_name || `INKBIRD ${index + 1}`,
-      online: item.device?.online ?? null,
-      category: item.device?.category ?? null,
-      product_name: item.device?.productName || item.device?.product_name || null,
-      model: item.device?.model || 'IIC-800-WIFI',
-      score: item.score,
-      raw: item.device
+    .map(device=>({device,score:scoreDevice(device)}))
+    .filter(item=>item.device?.id&&item.score>0)
+    .sort((a,b)=>b.score-a.score||String(a.device?.name||'').localeCompare(String(b.device?.name||''),'pt-BR'))
+    .map((item,index)=>({
+      id:item.device.id,
+      name:item.device.name||`INKBIRD ${index+1}`,
+      online:item.device.online!==false,
+      category:item.device.category||null,
+      product_name:item.device.product_name||null,
+      product_id:item.device.product_id||null,
+      model:'IIC-800-WIFI',
+      score:item.score,
+      provider:'smartlife',
+      raw:item.device
     }));
 }
 
-export async function resolveInkbirdDevice(preferredId = '') {
-  const inkbirds = await listInkbirdDevices();
-
-  if (preferredId) {
-    const selected = inkbirds.find(item => item.id === preferredId);
-    if (selected) {
-      return {
-        id: selected.id,
-        source: 'selected',
-        candidate: selected.raw,
-        devices: inkbirds
+export async function resolveInkbirdDevice(preferredId=''){
+  const devices=await listInkbirdDevices();
+  if(preferredId){
+    const selected=devices.find(item=>String(item.id)===String(preferredId));
+    if(selected){
+      return{
+        id:selected.id,
+        source:'selected_smartlife',
+        candidate:selected.raw,
+        devices
       };
     }
   }
 
-  if (inkbirds.length) {
-    return {
-      id: inkbirds[0].id,
-      source: 'discovery',
-      candidate: inkbirds[0].raw,
-      devices: inkbirds
-    };
-  }
-
-  if (FALLBACK_ID) {
-    return {
-      id: FALLBACK_ID,
-      source: 'env',
-      candidate: null,
-      devices: inkbirds
-    };
-  }
-
-  return {
-    id: null,
-    source: 'none',
-    candidate: null,
-    devices: inkbirds
+  const byName=devices.find(item=>
+    String(item.name||'').trim().toLowerCase()===FALLBACK_NAME.toLowerCase()
+  );
+  const selected=byName||devices[0]||null;
+  return{
+    id:selected?.id||null,
+    source:selected?'smartlife':'none',
+    candidate:selected?.raw||null,
+    devices
   };
 }

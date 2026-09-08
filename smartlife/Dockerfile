@@ -15,7 +15,9 @@ RUN python3 -m venv /opt/smartlife \
 
 COPY . .
 
-RUN npm test \
+RUN (npm audit --json > /tmp/npm-audit.json || true) \
+    && node scripts/audit-summary.mjs /tmp/npm-audit.json \
+    && npm test \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && npm prune --omit=dev

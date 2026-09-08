@@ -329,7 +329,7 @@
       </select>
       <label><input type="checkbox" id="parceladoFin" onchange="mostrarCamposParcelas()"> Parcelado</label>
       <div id="camposParcelas" class="oculto">
-        <input id="parcelasFin" type="number" min="1" placeholder="Número de Parcelas">
+        <input id="parcelasFin" type="number" min="1" max="120" placeholder="Número de Parcelas">
       </div>
       <button id="btnSalvarFinanceiro" onclick="salvarOuEditarFinanceiro()">Salvar Gasto</button>
       <button class="fechar-modal" type="button" onclick="fecharModalFinanceiro()" title="Fechar" aria-label="Fechar modal">

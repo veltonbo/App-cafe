@@ -1,6 +1,8 @@
 import { tuyaRequest } from '../_tuya.js';
+import { smartLifeConfigured, smartLifeReadDevice } from '../_smartlife.js';
 
-const TARGET_NAME = (process.env.WEATHER_DEVICE_NAME || 'Weather2-2').trim().toLowerCase();
+const TARGET_DISPLAY_NAME=(process.env.WEATHER_DEVICE_NAME||'Weather2-2').trim();
+const TARGET_NAME=TARGET_DISPLAY_NAME.toLowerCase();
 const WEATHER_CACHE_MS=5*60*1000;
 const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
 const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
@@ -128,8 +130,61 @@ async function resolveWeatherDeviceMeta(){
   return weatherDeviceMeta;
 }
 
+async function fetchWeatherSnapshotSmartLife(){
+  const device=await smartLifeReadDevice({deviceName:TARGET_DISPLAY_NAME});
+  const statusMap=device?.status&&typeof device.status==='object'?device.status:{};
+  const statusRange=device?.status_range&&typeof device.status_range==='object'?device.status_range:{};
+  const functions=device?.function&&typeof device.function==='object'?device.function:{};
+  const specification={
+    category:device?.category||null,
+    status:Object.values(statusRange),
+    functions:Object.values(functions)
+  };
+  const metrics=collectMetrics(statusMap,{},specification);
+
+  return{
+    ok:true,
+    linked:true,
+    provider:'smartlife',
+    device:{
+      id:device?.id||null,
+      name:device?.name||TARGET_DISPLAY_NAME,
+      online:device?.online!==false,
+      category:device?.category||null,
+      product_id:device?.product_id||null
+    },
+    metrics,
+    status:statusMap,
+    shadow:{},
+    specification,
+    errors:{
+      info:null,
+      specification:null,
+      status:null,
+      shadow:null
+    }
+  };
+}
+
 async function fetchWeatherSnapshotFresh() {
-  const meta=await resolveWeatherDeviceMeta();
+  let smartLifeError=null;
+  if(await smartLifeConfigured()){
+    try{
+      return await fetchWeatherSnapshotSmartLife();
+    }catch(error){
+      smartLifeError=error?.message||String(error);
+    }
+  }
+
+  let meta;
+  try{
+    meta=await resolveWeatherDeviceMeta();
+  }catch(error){
+    if(smartLifeError){
+      throw new Error('Smart Life: '+smartLifeError+' | Tuya Cloud: '+(error?.message||String(error)));
+    }
+    throw error;
+  }
   if(meta?.missing){
     return{
       ok:true,

@@ -11,3 +11,5 @@ Publicar separacao definitiva entre Viveiro e Cafe
 Publicar menu padrao unico em Central Viveiro e Cafe
 
 Publicar tratamento de cota Tuya e reducao de consultas
+
+Publicar alerta compacto padronizado em Viveiro e Cafe

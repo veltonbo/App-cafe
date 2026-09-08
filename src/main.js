@@ -467,8 +467,7 @@ function fecharModalTarefa() {
   document.getElementById('btnSalvarTarefa').innerText = 'Salvar Tarefa';
 }
 function salvarOuEditarTarefa() {
-  adicionarTarefa();
-  fecharModalTarefa();
+  if (adicionarTarefa() === true) fecharModalTarefa();
 }
 
 // ===== MODAL COLHEITA =====
@@ -485,8 +484,7 @@ function fecharModalColheita() {
   document.getElementById('btnSalvarColheita').innerText = 'Salvar Colheita';
 }
 function salvarOuEditarColheita() {
-  adicionarColheita();
-  fecharModalColheita();
+  if (adicionarColheita() === true) fecharModalColheita();
 }
 
 // ===== MODAL FINANCEIRO =====

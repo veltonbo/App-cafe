@@ -52,12 +52,29 @@
 .innerBox{box-shadow:none;margin-top:10px}
 @media(max-width:760px){.profileGrid{grid-template-columns:1fr}.profileCard{padding:14px}.profilesBox{padding:15px}.moreBox{border-radius:18px}}
 
+
+.settingGroup{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc}
+.settingGroup>b{font-size:.82rem}
+.settingDetails{margin:0;border:1px solid var(--line);border-radius:14px;background:#fbfdfc}
+.settingDetails summary{padding:11px 12px;font-weight:850;cursor:pointer}
+.settingDetails .check{padding:0 12px 10px}
+.menuModal{gap:8px}
+.menuAction{width:100%;display:flex;justify-content:space-between;align-items:center;min-height:48px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);padding:12px 13px;text-align:left;font-weight:850}
+.menuAction span{color:var(--muted);font-size:1.1rem}
+.diagRows,.backupRows{display:grid;gap:8px;max-height:52vh;overflow:auto}
+.diagRow,.backupRow{display:grid;grid-template-columns:12px 1fr auto;gap:9px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:13px;background:#fbfdfc}
+.diagDot{width:10px;height:10px;border-radius:50%;background:#aab7b2}
+.diagDot.ok{background:#13a06e}.diagDot.warning{background:#d59326}.diagDot.error{background:#c7443d}
+.diagRow b,.backupRow b{display:block;font-size:.82rem}.diagRow small,.backupRow small{display:block;color:var(--muted);font-size:.69rem;margin-top:2px}
+.diagStatus{font-size:.68rem;font-weight:900;text-transform:uppercase}
+.backupRow{grid-template-columns:1fr auto}.backupRow button{min-height:38px;padding:8px 10px}
+
 </style>
 </head>
 <body>
 <header class="top">
   <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação</h1></div>
-  <div class="topActions"><button id="installBtn" class="iconBtn">Instalar app</button><button id="connectionBtn" class="iconBtn">Conexão</button><button id="refreshBtn" class="iconBtn">Atualizar</button></div>
+  <div class="topActions"><button id="refreshBtn" class="iconBtn">Atualizar</button><button id="menuBtn" class="iconBtn">Menu</button></div>
 </header>
 <main class="wrap">
 <section class="hero">
@@ -113,12 +130,47 @@
 </div></dialog>
 
 <dialog id="alertDlg"><div class="modal">
-  <div><div class="ey" style="color:var(--green)">ALERTAS</div><h2 style="margin:2px 0">O que deve avisar</h2></div>
-  <label class="check"><input id="alertWeather" type="checkbox" checked> Chuva e bloqueio climático</label>
-  <label class="check"><input id="alertOffline" type="checkbox" checked> Controlador ou viveiro offline</label>
-  <label class="check"><input id="alertOverdue" type="checkbox" checked> Irrigação que passou do tempo previsto</label>
-  <label class="check"><input id="alertIrrigation" type="checkbox" checked> Início, parada e conclusão da irrigação</label>
-  <div style="display:flex;gap:8px"><button id="cancelAlerts" class="btn soft" style="flex:1">Cancelar</button><button id="saveAlerts" class="btn primary" style="flex:1">Salvar alertas</button></div>
+  <div><div class="ey" style="color:var(--green)">NOTIFICAÇÕES</div><h2 style="margin:2px 0">Prioridade e canais</h2></div>
+  <div class="settingGroup"><b>Quais avisos receber</b>
+    <label class="check"><input id="priorityCritical" type="checkbox" checked> Críticos • falhas e sistema offline</label>
+    <label class="check"><input id="priorityWarning" type="checkbox" checked> Importantes • chuva e ajustes</label>
+    <label class="check"><input id="priorityInfo" type="checkbox"> Informativos • início, fim e resumo</label>
+  </div>
+  <div class="settingGroup"><b>Canais</b>
+    <label class="check"><input id="channelPush" type="checkbox" checked> iPhone / notificação do app</label>
+    <label class="check"><input id="channelWhatsapp" type="checkbox"> WhatsApp <span class="note">quando conectado</span></label>
+  </div>
+  <details class="settingDetails"><summary>Tipos de evento</summary>
+    <label class="check"><input id="alertWeather" type="checkbox" checked> Chuva e bloqueio climático</label>
+    <label class="check"><input id="alertOffline" type="checkbox" checked> Controlador ou viveiro offline</label>
+    <label class="check"><input id="alertOverdue" type="checkbox" checked> Irrigação que passou do tempo previsto</label>
+    <label class="check"><input id="alertIrrigation" type="checkbox" checked> Início, parada e conclusão da irrigação</label>
+  </details>
+  <div style="display:flex;gap:8px"><button id="cancelAlerts" class="btn soft" style="flex:1">Cancelar</button><button id="saveAlerts" class="btn primary" style="flex:1">Salvar</button></div>
+</div></dialog>
+
+<dialog id="menuDlg"><div class="modal menuModal">
+  <div><div class="ey" style="color:var(--green)">FAZENDA 2E</div><h2 style="margin:2px 0">Menu</h2></div>
+  <button id="menuAlerts" class="menuAction">Notificações <span>›</span></button>
+  <button id="menuDiagnostics" class="menuAction">Diagnóstico seguro <span>›</span></button>
+  <button id="menuBackups" class="menuAction">Backups dos perfis <span>›</span></button>
+  <button id="installBtn" class="menuAction">Instalar app <span>›</span></button>
+  <button id="connectionBtn" class="menuAction">Conexão do app <span>›</span></button>
+  <button id="closeMenu" class="btn soft">Fechar</button>
+</div></dialog>
+
+<dialog id="diagDlg"><div class="modal">
+  <div><div class="ey" style="color:var(--green)">DIAGNÓSTICO SEGURO</div><h2 style="margin:2px 0">Saúde do sistema</h2></div>
+  <p class="note">Somente leitura. Este teste não liga bomba, válvula ou relé.</p>
+  <div id="diagRows" class="diagRows"><div class="empty">Toque em “Executar diagnóstico”.</div></div>
+  <div style="display:flex;gap:8px"><button id="closeDiag" class="btn soft" style="flex:1">Fechar</button><button id="runDiag" class="btn primary" style="flex:1">Executar diagnóstico</button></div>
+</div></dialog>
+
+<dialog id="backupDlg"><div class="modal">
+  <div><div class="ey" style="color:var(--green)">BACKUPS</div><h2 style="margin:2px 0">Configurações dos perfis</h2></div>
+  <p class="note">O sistema cria backups automaticamente antes de alterações importantes. O estado ao vivo do relé não é restaurado.</p>
+  <div id="backupRows" class="backupRows"><div class="empty">Carregando backups.</div></div>
+  <div style="display:flex;gap:8px"><button id="closeBackup" class="btn soft" style="flex:1">Fechar</button><button id="createBackup" class="btn primary" style="flex:1">Criar backup agora</button></div>
 </div></dialog>
 
 <dialog id="settingsDlg"><div class="modal">
@@ -276,12 +328,80 @@ $('saveFlow').onclick=async()=>{
 
 function openAlerts(){
   const a={weather:true,offline:true,overdue:true,irrigation:true,...(state.overview?.config?.alerts||{})};
-  $('alertWeather').checked=a.weather;$('alertOffline').checked=a.offline;$('alertOverdue').checked=a.overdue;$('alertIrrigation').checked=a.irrigation;$('alertDlg').showModal();
+  const p={critical:true,warning:true,info:false,...(a.priorities||{})};
+  const ch={push:true,whatsapp:false,...(a.channels||{})};
+  $('alertWeather').checked=a.weather;$('alertOffline').checked=a.offline;$('alertOverdue').checked=a.overdue;$('alertIrrigation').checked=a.irrigation;
+  $('priorityCritical').checked=p.critical;$('priorityWarning').checked=p.warning;$('priorityInfo').checked=p.info;
+  $('channelPush').checked=ch.push;$('channelWhatsapp').checked=ch.whatsapp;
+  $('alertDlg').showModal();
 }
 $('alertSettings').onclick=openAlerts;$('cancelAlerts').onclick=()=>$('alertDlg').close();
 $('saveAlerts').onclick=async()=>{
-  const alerts={weather:$('alertWeather').checked,offline:$('alertOffline').checked,overdue:$('alertOverdue').checked,irrigation:$('alertIrrigation').checked};
-  try{await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({alerts})});$('alertDlg').close();toast('Alertas salvos');refresh(false)}catch(e){toast('Falha: '+e.message)}
+  const alerts={
+    weather:$('alertWeather').checked,offline:$('alertOffline').checked,overdue:$('alertOverdue').checked,irrigation:$('alertIrrigation').checked,
+    priorities:{critical:$('priorityCritical').checked,warning:$('priorityWarning').checked,info:$('priorityInfo').checked},
+    channels:{push:$('channelPush').checked,whatsapp:$('channelWhatsapp').checked}
+  };
+  try{await api('/api/irrigation/config',{method:'POST',body:JSON.stringify({alerts})});$('alertDlg').close();toast('Notificações salvas');refresh(false)}catch(e){toast('Falha: '+e.message)}
+};
+
+function closeMenu(){if($('menuDlg').open)$('menuDlg').close()}
+$('menuBtn').onclick=()=>$('menuDlg').showModal();
+$('closeMenu').onclick=closeMenu;
+$('menuAlerts').onclick=()=>{closeMenu();openAlerts()};
+$('menuDiagnostics').onclick=()=>{closeMenu();$('diagDlg').showModal()};
+$('menuBackups').onclick=()=>{closeMenu();$('backupDlg').showModal();loadBackups()};
+$('closeDiag').onclick=()=>$('diagDlg').close();
+$('closeBackup').onclick=()=>$('backupDlg').close();
+
+async function runDiagnostics(){
+  $('runDiag').disabled=true;$('diagRows').innerHTML='<div class="empty">Verificando sem acionar equipamentos…</div>';
+  try{
+    const r=await api('/api/irrigation/diagnostics');
+    $('diagRows').innerHTML=(r.checks||[]).map(x=>
+      '<div class="diagRow"><span class="diagDot '+x.status+'"></span><div><b>'+x.label+'</b><small>'+x.detail+'</small></div><span class="diagStatus '+(x.status==='error'?'bad':x.status==='warning'?'warn':'ok')+'">'+(x.status==='ok'?'OK':x.status==='warning'?'ATENÇÃO':'FALHA')+'</span></div>'
+    ).join('')||'<div class="empty">Nenhum resultado.</div>';
+  }catch(e){$('diagRows').innerHTML='<div class="empty">Falha no diagnóstico: '+e.message+'</div>'}
+  finally{$('runDiag').disabled=false}
+}
+$('runDiag').onclick=runDiagnostics;
+
+function backupReasonLabel(reason){
+  const map={
+    manual:'Backup manual',
+    antes_de_salvar_configuracao:'Antes de salvar configuração',
+    antes_de_alterar_automatico_2:'Antes de alterar Automático 2.0',
+    antes_de_alterar_protecao_de_chuva:'Antes de alterar proteção de chuva',
+    antes_de_alterar_programacao_do_viveiro:'Antes de alterar programação do viveiro'
+  };
+  return map[reason]||String(reason||'Backup automático').replaceAll('_',' ');
+}
+async function loadBackups(){
+  $('backupRows').innerHTML='<div class="empty">Carregando…</div>';
+  try{
+    const r=await api('/api/irrigation/backups');
+    $('backupRows').innerHTML=(r.backups||[]).map(b=>{
+      const d=new Date(Number(b.created_at||0));
+      const sec=b.seconds_snapshot||{};
+      return '<div class="backupRow"><div><b>'+backupReasonLabel(b.reason)+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' • Viveiro '+Number(sec.on_seconds||30)+'/'+Number(sec.off_seconds||120)+'</small></div><button class="btn soft restoreBackup" data-id="'+b.id+'">Restaurar</button></div>';
+    }).join('')||'<div class="empty">Nenhum backup criado ainda.</div>';
+    document.querySelectorAll('.restoreBackup').forEach(btn=>btn.onclick=async()=>{
+      const ok=confirm('Restaurar as configurações deste backup? O ciclo/relé ao vivo não será restaurado, mas regras futuras do perfil podem mudar.');
+      if(!ok)return;
+      btn.disabled=true;
+      try{
+        await api('/api/irrigation/backups',{method:'POST',body:JSON.stringify({action:'restore',id:btn.dataset.id,confirm:true})});
+        toast('Configurações restauradas');await refresh(false);await loadBackups();
+      }catch(e){toast('Falha: '+e.message)}
+      finally{btn.disabled=false}
+    });
+  }catch(e){$('backupRows').innerHTML='<div class="empty">Falha: '+e.message+'</div>'}
+}
+$('createBackup').onclick=async()=>{
+  $('createBackup').disabled=true;
+  try{await api('/api/irrigation/backups',{method:'POST',body:JSON.stringify({action:'create',reason:'manual'})});toast('Backup criado');await loadBackups()}
+  catch(e){toast('Falha: '+e.message)}
+  finally{$('createBackup').disabled=false}
 };
 
 function urlB64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
@@ -311,9 +431,9 @@ async function refreshPushState(){
 $('testNotification').onclick=async()=>{try{await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'test'})});toast('Alerta de teste enviado')}catch(e){toast('Falha: '+e.message)}};
 
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
-$('installBtn').onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else alert('No iPhone:\n\n1. Toque em Compartilhar no Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Abra a Central pela Tela de Início.\n\nDepois toque em “Ativar notificações”.')};
+$('installBtn').onclick=async()=>{closeMenu();if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else alert('No iPhone:\n\n1. Toque em Compartilhar no Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Abra a Central pela Tela de Início.\n\nDepois toque em “Ativar notificações”.')};
 $('refreshBtn').onclick=()=>refresh(true);
-$('connectionBtn').onclick=openSettings;
+$('connectionBtn').onclick=()=>{closeMenu();openSettings()};
 if('serviceWorker'in navigator){swReg().then(()=>refreshPushState()).catch(()=>null)}
 render();
 if(state.settings.token)refresh(false);else openSettings();

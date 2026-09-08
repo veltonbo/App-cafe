@@ -1,10 +1,12 @@
-import { applyCors, authorize, ensureCloudConfig, getDeviceId, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize, tuyaRequest } from '../_tuya.js';
 import { decodeCycle } from '../_cycle.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getViveiroWeatherConfig, getViveiroWeatherState } from '../viveiro/_weather_logic.js';
 import { getAutomationConfig, storeGet } from './_store.js';
 import { getClimateConfig, getClimateState } from '../viveiro/_climate.js';
+import { readViveiroState } from '../_viveiro_transport.js';
+import { getViveiroSafety, getViveiroMaintenance } from '../viveiro/_interlock.js';
 
 const TZ='America/Porto_Velho';
 
@@ -90,23 +92,33 @@ function waterSummary(events){
 }
 async function readViveiro(){
   try{
-    const id=getDeviceId();
-    const r=await tuyaRequest('GET',`/v1.0/iot-03/devices/${id}/status`);
-    const m=mapStatus(r);
-    let cycleRaw=typeof m.cycle_time==='string'?m.cycle_time:null;
-    try{
-      const sh=await tuyaRequest('GET',`/v2.0/cloud/thing/${id}/shadow/properties`);
-      const sm=Object.fromEntries((Array.isArray(sh?.properties)?sh.properties:[]).map(x=>[x.code,x.value]));
-      if(typeof sm.cycle_time==='string')cycleRaw=sm.cycle_time;
-    }catch{}
+    const state=await readViveiroState({maxAgeMs:2000});
+    const m=state?.statusMap||{};
+    const cycleRaw=typeof m.cycle_time==='string'?m.cycle_time:null;
+    const [weatherState,weatherConfig,safety,maintenance]=await Promise.all([
+      getViveiroWeatherState().catch(()=>({})),
+      getViveiroWeatherConfig().catch(()=>({})),
+      getViveiroSafety().catch(()=>({})),
+      getViveiroMaintenance().catch(()=>({}))
+    ]);
     return{
-      ok:true,online:true,relay:typeof m.switch_1==='boolean'?m.switch_1:null,
+      ok:true,
+      online:state?.online!==false,
+      provider:state?.provider||'smartlife',
+      relay:typeof m.switch_1==='boolean'?m.switch_1:null,
       cycle_config:decodeCycle(cycleRaw),
-      weather_state:await getViveiroWeatherState(),
-      weather_config:await getViveiroWeatherConfig()
+      weather_state:weatherState,
+      weather_config:weatherConfig,
+      safety,
+      maintenance
     };
   }catch(error){
-    return{ok:false,online:false,error:error?.message||String(error),weather_state:await getViveiroWeatherState().catch(()=>({}))};
+    return{
+      ok:false,
+      online:false,
+      error:error?.message||String(error),
+      weather_state:await getViveiroWeatherState().catch(()=>({}))
+    };
   }
 }
 async function readController(ctrl,index){
@@ -161,11 +173,11 @@ export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='GET')return res.status(405).json({ok:false,error:'Método não permitido.'});
-  if(!authorize(req,res)||!ensureCloudConfig(res))return;
+  if(!authorize(req,res))return;
   try{
     const [weather,inkbirds,viveiro,config,historyRaw,viveiroSeconds,climateConfig,climateState]=await Promise.all([
-      fetchWeatherSnapshot().catch(e=>({ok:false,linked:false,error:e?.message||String(e)})),
-      listInkbirdDevices(),
+      fetchWeatherSnapshot({maxAgeMs:10000}).catch(e=>({ok:false,linked:false,error:e?.message||String(e)})),
+      listInkbirdDevices().catch(error=>({__error:error?.message||String(error),list:[]})),
       readViveiro(),
       getAutomationConfig().catch(()=>({})),
       storeGet('IrrigacaoFazenda2E/history').catch(()=>null),
@@ -173,7 +185,9 @@ export default async function handler(req,res){
       getClimateConfig().catch(()=>null),
       getClimateState().catch(()=>null)
     ]);
-    const controllers=await Promise.all(inkbirds.map((c,i)=>readController(c,i)));
+    const inkbirdError=Array.isArray(inkbirds)?null:inkbirds?.__error||null;
+    const inkbirdList=Array.isArray(inkbirds)?inkbirds:(inkbirds?.list||[]);
+    const controllers=await Promise.all(inkbirdList.map((c,i)=>readController(c,i)));
     const allHistory=historyArray(historyRaw);
     const volume=waterSummary(volumeEvents(allHistory,config));
     const alerts=buildAlerts({weather,viveiro,controllers,config});
@@ -183,6 +197,7 @@ export default async function handler(req,res){
       weather,
       viveiro,
       controllers,
+      inkbird_error:inkbirdError,
       config,
       history:allHistory.slice(0,80),
       volume,

@@ -2,6 +2,9 @@
 window.colheita = window.colheita || [];
 let valorLataGlobal = 0;
 let indiceEdicaoColheita = null;
+let refColheita = null;
+let listenerColheita = null;
+let callbacksColheita = [];
 
 // ====== CARREGAMENTO DO VALOR DA LATA ======
 function carregarValorLata() {
@@ -66,18 +69,22 @@ function adicionarColheita() {
 // ====== CARREGAR COLHEITA ======
 function carregarColheita(callback) {
   console.log("Carregando colheita...");
-  db.ref('Colheita').on('value', snap => {
+  if (typeof callback === 'function') callbacksColheita.push(callback);
+  if (listenerColheita) {
+    while (callbacksColheita.length) callbacksColheita.shift()();
+    return;
+  }
+
+  refColheita = db.ref('Colheita');
+  listenerColheita = (snap) => {
     const dados = snap.exists() ? Object.values(snap.val()) : [];
     if (JSON.stringify(window.colheita) !== JSON.stringify(dados)) {
       window.colheita = dados;
     }
     atualizarColheita();
-    
-    // Execute callback if provided
-    if (typeof callback === 'function') {
-      callback();
-    }
-  });
+    while (callbacksColheita.length) callbacksColheita.shift()();
+  };
+  refColheita.on('value', listenerColheita);
 }
 
 // ====== ATUALIZAR LISTA DE COLHEITA ======

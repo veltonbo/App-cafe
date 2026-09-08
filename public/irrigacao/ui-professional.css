@@ -233,3 +233,81 @@ body.smartIrrigationV6{background:#f3f6f4}
   background:#fff;color:var(--ui-brand);text-decoration:none;font-weight:900;font-size:.82rem
 }
 .smartIrrigationV6 .smartMainNav{display:none!important}
+
+
+/* Viveiro Clean UI v7 */
+.smartIrrigationV7 .wrap{width:min(100%,700px);max-width:700px;padding-top:10px}
+.smartIrrigationV7 .box{margin-top:10px}
+.smartIrrigationV7 .smartUiHidden{display:none!important}
+.smartIrrigationV7 #smartViewHome{display:none}
+.smartIrrigationV7 #smartViewHome.active{display:block}
+.smartIrrigationV7 #smartViewHome>.hero{margin-top:2px}
+.smartIrrigationV7 #smartViewHome>.hero h2{font-size:1.35rem}
+.smartIrrigationV7 #smartViewHome>.hero p{font-size:.84rem}
+.smartIrrigationV7 #smartViewHome>.hero .heroCountdown{font-size:1.7rem}
+.smartIrrigationV7 .smartSafety{margin:8px 0!important}
+.smartIrrigationV7 .smartSafety .emergency{
+  min-height:44px!important;padding:10px 14px!important;border-radius:13px!important;
+  background:#fff5f4!important;color:#a8322c!important;border:1px solid #efc2be!important;
+  font-size:.8rem!important;font-weight:900!important
+}
+.smartIrrigationV7 .smartOverviewCard{
+  background:#fff;border:1px solid #dce9e4;box-shadow:0 8px 22px rgba(20,55,46,.06)
+}
+.smartIrrigationV7 .smartOverviewHead{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px
+}
+.smartIrrigationV7 .smartOverviewHead h2{margin:2px 0 0;font-size:1.08rem}
+.smartIrrigationV7 .smartOverviewGrid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px
+}
+.smartIrrigationV7 .smartOverviewGrid>div{
+  min-width:0;border:1px solid var(--ui-line);border-radius:12px;padding:10px;background:#fbfdfc
+}
+.smartIrrigationV7 .smartOverviewGrid small,
+.smartIrrigationV7 .smartOverviewMeta small{
+  display:block;color:var(--ui-muted);font-size:.65rem;margin-bottom:2px
+}
+.smartIrrigationV7 .smartOverviewGrid strong{display:block;font-size:.94rem;overflow-wrap:anywhere}
+.smartIrrigationV7 .smartOverviewReason{
+  margin:9px 0 0;padding:9px 10px;border-radius:11px;background:#f6faf8;font-size:.75rem;line-height:1.4
+}
+.smartIrrigationV7 .smartOverviewMeta{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px
+}
+.smartIrrigationV7 .smartOverviewMeta>span{
+  display:block;border-top:1px solid var(--ui-line);padding-top:7px
+}
+.smartIrrigationV7 .smartOverviewMeta b{font-size:.78rem}
+.smartIrrigationV7 .smartOverviewAction{
+  width:100%;margin-top:9px;min-height:40px;padding:9px 12px;font-size:.8rem
+}
+.smartIrrigationV7 .profileBadge.warn{background:#fff4df;color:#96600c}
+.smartIrrigationV7 #todayBox{background:#fff;box-shadow:none}
+.smartIrrigationV7 #todayBox .head{margin-bottom:4px}
+.smartIrrigationV7 #todayBox .todayGrid{gap:7px;margin-top:7px}
+.smartIrrigationV7 #todayBox .todayCard{padding:10px;border-radius:12px}
+.smartIrrigationV7 #smartViewProfile>.smartPageTitle,
+.smartIrrigationV7 #smartViewHistory>.smartPageTitle,
+.smartIrrigationV7 #smartViewSystem>.smartPageTitle{padding:6px 2px 3px}
+.smartIrrigationV7 #smartViewProfile>.box,
+.smartIrrigationV7 #smartViewHistory>.box,
+.smartIrrigationV7 #smartViewSystem>.box{box-shadow:none}
+.smartIrrigationV7 #smartViewProfile #climateAdviceBox{margin-top:6px}
+.smartIrrigationV7 #smartViewProfile .configGroup{padding:12px;margin-top:10px}
+.smartIrrigationV7 #smartViewProfile .assistBox{display:none}
+.smartIrrigationV7 #smartViewSystem .diag{margin-top:8px}
+.smartIrrigationV7 #smartViewSystem .diag:not([open]) pre{display:none}
+.smartIrrigationV7 #smartViewHistory #eventsBox{margin-bottom:12px}
+.smartIrrigationV7 .smartAlerts{margin-bottom:14px}
+.smartIrrigationV7 .layoutOverflow{outline:2px dashed #d6852b!important}
+
+@media(max-width:760px){
+  .smartIrrigationV7 .wrap{padding:8px 9px calc(92px + env(safe-area-inset-bottom))}
+  .smartIrrigationV7 .hero{padding:17px;border-radius:19px}
+  .smartIrrigationV7 .box{padding:13px;border-radius:17px}
+  .smartIrrigationV7 .smartOverviewGrid{grid-template-columns:1fr 1fr}
+  .smartIrrigationV7 .smartOverviewMeta{grid-template-columns:1fr 1fr}
+  .smartIrrigationV7 #todayBox .todayGrid{grid-template-columns:1fr 1fr}
+  .smartIrrigationV7 .toast{bottom:calc(82px + env(safe-area-inset-bottom))!important}
+}

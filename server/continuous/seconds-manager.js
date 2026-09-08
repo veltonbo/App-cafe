@@ -279,11 +279,21 @@ function rainAmountMm(metrics={}){
 }
 
 async function weather(){
+  const cfg=(await storeGet(WEATHER_CONFIG_PATH).catch(()=>null))||{};
+  if(cfg.enabled===false){
+    return{
+      usable:true,
+      raining:false,
+      rainingNow:false,
+      rainMm:null,
+      thresholdReached:false,
+      protectionEnabled:false,
+      snapshot:null
+    };
+  }
+
   try{
-    const [w,cfg]=await Promise.all([
-      fetchWeatherSnapshot({maxAgeMs:5000}),
-      storeGet(WEATHER_CONFIG_PATH).catch(()=>null)
-    ]);
+    const w=await fetchWeatherSnapshot({maxAgeMs:5000});
     const rainMm=rainAmountMm(w?.metrics||{});
     const threshold=Math.max(0,Number(cfg?.rainThresholdMm??5));
     const rainingNow=Boolean(w?.metrics?.rainDetected);
@@ -294,10 +304,11 @@ async function weather(){
       rainingNow,
       rainMm,
       thresholdReached,
+      protectionEnabled:true,
       snapshot:w
     };
   }catch(error){
-    return{usable:false,raining:false,error:error?.message||String(error)};
+    return{usable:false,raining:false,protectionEnabled:true,error:error?.message||String(error)};
   }
 }
 

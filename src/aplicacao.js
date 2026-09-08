@@ -148,9 +148,9 @@ function atualizarAplicacoes() {
       item.className = 'item';
       item.innerHTML = `
         <span>
-          <div class="data-aplicacao">${formatarDataBR(app.data)} - ${app.setor}</div>
-          <div class="produto-aplicacao">${app.produto}</div>
-          <div class="detalhes-aplicacao">${app.tipo} - Dosagem: ${app.dosagem}</div>
+          <div class="data-aplicacao">${escapeHtml(formatarDataBR(app.data))} - ${escapeHtml(app.setor)}</div>
+          <div class="produto-aplicacao">${escapeHtml(app.produto)}</div>
+          <div class="detalhes-aplicacao">${escapeHtml(app.tipo)} - Dosagem: ${escapeHtml(app.dosagem)}</div>
         </span>
         <div class="opcoes-wrapper">
           <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
@@ -249,15 +249,27 @@ function excluirAplicacao(index) {
 // ===== SUGESTÕES DE PRODUTO =====
 function atualizarSugestoesProdutoApp() {
   const lista = document.getElementById("sugestoesProdutoApp");
-  const produtosUnicos = [...new Set(aplicacoes.map(a => a.produto))];
-  lista.innerHTML = produtosUnicos.map(p => `<option value="${p}">`).join('');
+  if (!lista) return;
+  const produtosUnicos = [...new Set(aplicacoes.map(a => String(a.produto || '')).filter(Boolean))];
+  lista.replaceChildren();
+  produtosUnicos.forEach(produto => {
+    const option = document.createElement('option');
+    option.value = produto;
+    lista.appendChild(option);
+  });
 }
 
 // ===== EXPORTAR CSV DE APLICAÇÕES =====
 function exportarAplicacoesCSV() {
   let csv = "Data,Produto,Dosagem,Tipo,Setor\n";
   aplicacoes.forEach(app => {
-    csv += `${app.data},${app.produto},${app.dosagem},${app.tipo},${app.setor}\n`;
+    csv += [
+      csvCell(app.data),
+      csvCell(app.produto),
+      csvCell(app.dosagem),
+      csvCell(app.tipo),
+      csvCell(app.setor)
+    ].join(',') + '\n';
   });
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

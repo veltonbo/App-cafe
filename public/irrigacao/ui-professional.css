@@ -216,3 +216,14 @@ body.smartIrrigationV6{background:#f3f6f4}
 @media(max-width:350px){
   .smartIrrigationV6 .profileSummary{grid-template-columns:1fr}
 }
+
+.smartIrrigationV6 .smartClimateStatus{background:linear-gradient(180deg,#ffffff,#f5fbf8);border-color:#cfe5dc}
+.smartIrrigationV6 .smartClimateStatus .head{margin-bottom:8px}
+.smartIrrigationV6 .smartClimateSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+.smartIrrigationV6 .smartClimateSummary>div{border:1px solid var(--ui-line);border-radius:13px;padding:11px;background:#fff}
+.smartIrrigationV6 .smartClimateSummary small{display:block;color:var(--ui-muted);font-size:.68rem;margin-bottom:3px}
+.smartIrrigationV6 .smartClimateSummary strong{font-size:.9rem}
+.smartIrrigationV6 #smartClimateReason{margin:8px 0 11px}
+.smartIrrigationV6 #openClimateConfig{width:100%}
+.smartIrrigationV6 #smartViewProfile>.climateControl{margin-top:10px}
+.smartIrrigationV6 #smartViewProfile>.box{box-shadow:0 8px 22px rgba(22,56,46,.06)}

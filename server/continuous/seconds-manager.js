@@ -478,20 +478,6 @@ async function run(){
       continue;
     }
 
-    // Migração da lógica antiga: versões anteriores podiam atualizar rain_last_at
-    // pelo acumulado diário mesmo sem chuva atual, reiniciando indevidamente os 30 min.
-    // Só limpa uma vez estados antigos; novos eventos de chuva continuam usando o atraso normal.
-    if(state.paused_by_weather&&!state.legacy_weather_hold_cleared_at&&state.rain_last_at){
-      state={
-        ...state,
-        rain_last_at:0,
-        paused_by_weather:false,
-        legacy_weather_hold_cleared_at:Date.now(),
-        phase:'weather_clear'
-      };
-      await persist();
-    }
-
     const holdMs=Math.max(0,Number(state.resume_delay_minutes||0))*60000;
     const rainLast=Number(state.rain_last_at||0);
     if(rainLast&&Date.now()<rainLast+holdMs){
@@ -502,7 +488,6 @@ async function run(){
       continue;
     }
 
-    const wasPausedByWeather=Boolean(state.paused_by_weather);
     const resumedFromRain=Boolean(state.paused_by_weather||state.phase==='waiting_after_rain'||state.phase==='weather_blocked');
     if(resumedFromRain){
       const cc=await getClimateConfig().catch(()=>({post_rain_hold_minutes:30}));
@@ -535,12 +520,6 @@ async function run(){
       await event('viveiro_start_delay','Ciclo não confirmou o primeiro pulso em até 30 segundos após o horário de início.');
       await pushNotice('Atenção • viveiro não iniciou','O primeiro pulso não foi confirmado em até 30 segundos após o horário programado.','viveiro-start-delay-'+String(state.window_day_key||localDayKey()),'critical');
     }
-    if(wasPausedByWeather){
-      await event('viveiro_weather_resume','Proteção por chuva liberada. Irrigação retomada.',{
-        rain_last_at:Number(state.rain_last_at||0)
-      });
-    }
-
     const maxOn=Math.max(1,Math.min(
       Number(state.on_seconds||30),
       localSchedule(state).seconds_until_end||Number(state.on_seconds||30)

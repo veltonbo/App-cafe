@@ -32,11 +32,12 @@ function renderizarNotificacoesModal() {
     const notif = document.createElement('div');
     notif.className = 'notificacao ' + n.tipo + (n.lida ? '' : ' nao-lida');
     if (n.tipo === 'alerta') {
-      // Sanitiza mensagem para não duplicar ícone
+      // O ícone é HTML estático; a mensagem entra como texto, nunca como código.
       const mensagemLimpa = sanitizeMensagem(n.mensagem);
-      notif.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;margin-right:12px;width:32px;height:32px;background:linear-gradient(135deg,#f44336 60%,#b71c1c 100%);border-radius:50%;box-shadow:0 2px 8px #f4433622;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4M12 16h.01"/><path d="M21 18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7l5 5v9z"/></svg></span>' + mensagemLimpa;
+      notif.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;margin-right:12px;width:32px;height:32px;background:linear-gradient(135deg,#f44336 60%,#b71c1c 100%);border-radius:50%;box-shadow:0 2px 8px #f4433622;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4M12 16h.01"/><path d="M21 18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7l5 5v9z"/></svg></span>';
+      notif.append(document.createTextNode(mensagemLimpa));
     } else {
-      notif.innerHTML = n.mensagem;
+      notif.textContent = String(n.mensagem || '');
     }
     modalLista.appendChild(notif);
   });

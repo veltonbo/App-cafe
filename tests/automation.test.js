@@ -5,6 +5,7 @@ import { encodeCycle, decodeCycle } from '../server/api/_cycle.js';
 import { localSchedule, secondsUntilNextWindow } from '../server/api/viveiro/_seconds.js';
 import {
   climateConfidenceAdjustmentLimit,
+  climateExtremeProfile,
   climateSuggestion,
   normalizeClimateConfig,
   vaporPressureDeficit
@@ -193,4 +194,58 @@ test('Automatico 2.0 com baixa confianca sugere mudanca conservadora',()=>{
   assert.equal(suggestion.useful,true);
   assert.equal(suggestion.target_on_seconds,30);
   assert.ok(suggestion.target_off_seconds>=75);
+});
+
+
+test('Automatico 2.0 libera margem extra apenas em calor extremo com confianca alta',()=>{
+  const severe=climateExtremeProfile({
+    temperature:37.4,humidity:39,vpd:3.92,confidence:'high',baseLimitPercent:30
+  });
+  assert.equal(severe.level,'severo');
+  assert.equal(severe.limit_percent,35);
+  assert.equal(severe.factor_floor,1.35);
+
+  const low=climateExtremeProfile({
+    temperature:37.4,humidity:39,vpd:3.92,confidence:'low',baseLimitPercent:30
+  });
+  assert.equal(low.level,'normal');
+  assert.equal(low.limit_percent,30);
+});
+
+test('Automatico 2.0 reduz mais o intervalo em cenario real de 37.4C e VPD 3.92',()=>{
+  const suggestion=climateSuggestion(
+    {
+      metrics:{
+        temperature:{value:37.4},
+        humidity:{value:39},
+        rainDetected:false
+      }
+    },
+    {
+      base_on_seconds:30,
+      base_off_seconds:120,
+      on_seconds:30,
+      off_seconds:90
+    },
+    {
+      automatic:true,
+      max_adjust_percent:30,
+      min_change_off_seconds:6
+    },
+    {
+      temperature:37.4,
+      humidity:39,
+      vpd:3.92,
+      vpd_delta:0.1,
+      confidence:'high',
+      confidence_label:'Alta'
+    }
+  );
+
+  assert.equal(suggestion.extreme_level,'severo');
+  assert.equal(suggestion.effective_adjust_limit_percent,35);
+  assert.equal(suggestion.target_on_seconds,30);
+  assert.ok(suggestion.target_off_seconds<=82);
+  assert.ok(suggestion.target_off_seconds>=78);
+  assert.equal(suggestion.useful,true);
 });

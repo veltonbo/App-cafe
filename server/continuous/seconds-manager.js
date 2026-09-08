@@ -4,7 +4,8 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
-import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, setClimateConfig, updateClimateSamples } from '../api/viveiro/_climate.js';
+import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples } from '../api/viveiro/_climate.js';
+import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -275,7 +276,7 @@ function rainAmountMm(metrics={}){
 async function weather(){
   try{
     const [w,cfg]=await Promise.all([
-      fetchWeatherSnapshot(),
+      fetchWeatherSnapshot({maxAgeMs:5000}),
       storeGet(WEATHER_CONFIG_PATH).catch(()=>null)
     ]);
     const rainMm=rainAmountMm(w?.metrics||{});
@@ -283,7 +284,7 @@ async function weather(){
     const rainingNow=Boolean(w?.metrics?.rainDetected);
     const thresholdReached=threshold>0&&Number.isFinite(rainMm)&&rainMm>=threshold;
     return{
-      usable:Boolean(w?.linked&&w?.metrics),
+      usable:Boolean(w?.linked&&w?.metrics&&w?.device?.online!==false),
       raining:Boolean(rainingNow&&(cfg?.blockWhileRaining!==false||thresholdReached)),
       rainingNow,
       rainMm,
@@ -343,6 +344,14 @@ async function finishAndRestore(reason='stopped'){
 
 async function run(){
   while(state.enabled){
+    if(await emergencyLatched().catch(()=>false)){
+      await safeOff();
+      state={...state,enabled:false,phase:'emergency_stopped',relay_expected:false,last_error:null,emergency_stopped_at:Date.now()};
+      await persist();
+      await event('viveiro_emergency_stop','Parada de emergência manteve o ciclo rápido desligado.');
+      break;
+    }
+
     if(!(await active())){
       state={...state,enabled:false,phase:'stopped_external',relay_expected:false};
       await persist();
@@ -509,7 +518,7 @@ async function run(){
       await event('viveiro_weather_resume','Proteção por chuva liberada. Retomada no ciclo-base antes de novos ajustes climáticos.');
       await pushNotice(
         'Viveiro liberado após chuva',
-        'A irrigação foi liberada no padrão 30 s / 120 s. O Automático 2.0 aguardará novas leituras antes de ajustar novamente.',
+        'A irrigação foi liberada no ciclo-base '+Number(state.base_on_seconds||state.on_seconds||30)+' s ligado / '+Number(state.base_off_seconds||state.off_seconds||120)+' s desligado. O Automático 2.0 aguardará novas leituras antes de ajustar novamente.',
         'viveiro-rain-resume-'+localDayKey(),
         'info',
         20,
@@ -736,36 +745,18 @@ function ensureLoop(){
 export async function initSecondsManager(){
   await load();
 
-  const currentClimate=await getClimateConfig().catch(()=>({}));
-  await setClimateConfig({
-    ...currentClimate,
-    automatic:true,
-    observation:false,
-    enabled:true,
-    trend_minutes:30,
-    evaluation_minutes:5,
-    max_adjust_percent:30,
-    min_change_seconds:3,
-    min_change_off_seconds:6,
-    cooldown_minutes:30,
-    normal_confirmations:2,
-    post_rain_hold_minutes:30
-  }).catch(()=>null);
-
-  const baseChanged=Number(state.base_on_seconds||0)!==30||Number(state.base_off_seconds||0)!==120;
-  if(baseChanged||state.enabled){
-    state={
-      ...state,
-      base_on_seconds:30,
-      base_off_seconds:120,
-      ...(state.enabled?{
-        on_seconds:30,
-        off_seconds:120,
-        climate_reason:'Automático 2.0 iniciado no ciclo-base 30 s / 120 s.',
-        climate_level:'normal'
-      }:{})
-    };
+  const baseOn=Math.max(1,Math.min(300,Math.round(Number(state.base_on_seconds||state.on_seconds)||30)));
+  const baseOff=Math.max(1,Math.min(900,Math.round(Number(state.base_off_seconds||state.off_seconds)||120)));
+  if(Number(state.base_on_seconds)!==baseOn||Number(state.base_off_seconds)!==baseOff){
+    state={...state,base_on_seconds:baseOn,base_off_seconds:baseOff};
     await persist();
+  }
+
+  if(await emergencyLatched().catch(()=>false)){
+    await safeOff();
+    state={...state,enabled:false,phase:'emergency_stopped',relay_expected:false,emergency_stopped_at:Date.now()};
+    await persist();
+    return;
   }
 
   if(state.enabled){
@@ -773,7 +764,7 @@ export async function initSecondsManager(){
       ensureLoop();
       await pushNotice(
         'Irrigação online novamente',
-        'O servidor foi reiniciado e retomou o controle no padrão-base 30 s ligado / 120 s desligado.',
+        'O servidor foi reiniciado e retomou o controle mantendo o ciclo configurado: '+Number(state.on_seconds||baseOn)+' s ligado / '+Number(state.off_seconds||baseOff)+' s desligado.',
         'viveiro-server-resumed-'+localDayKey(),
         'info',
         10,
@@ -796,11 +787,18 @@ export async function initSecondsManager(){
 
 export async function configureSeconds(input={}){
   if(state.enabled)throw new Error('O modo em segundos já está ativo.');
+  if(await emergencyLatched().catch(()=>false)){
+    throw new Error('A parada de emergência está ativa. Libere a emergência antes de armar a irrigação.');
+  }
+  const maint=await maintenance();
+  if(maint.active){
+    throw new Error('O modo manutenção está ativo. Encerre a manutenção antes de armar a irrigação.');
+  }
 
   await createConfigBackup('antes_de_alterar_programacao_do_viveiro').catch(()=>null);
 
-  // A programação pode ser armada mesmo com chuva ou clima temporariamente indisponível.
-  // O laço contínuo mantém a saída desligada e só libera os pulsos quando o clima estiver seguro.
+  // A programação pode ser armada com chuva; o laço contínuo mantém a saída
+  // desligada até o clima ficar seguro e o atraso pós-chuva terminar.
   const prepared=await prepareServerPulse({
     onSeconds:input.on_seconds,
     offSeconds:input.off_seconds,
@@ -810,7 +808,13 @@ export async function configureSeconds(input={}){
     daysMask:input.days_mask
   });
 
-  state={...prepared,base_on_seconds:30,base_off_seconds:120,phase:'queued'};
+  state={
+    ...prepared,
+    base_on_seconds:prepared.on_seconds,
+    base_off_seconds:prepared.off_seconds,
+    phase:'queued',
+    climate_reason:'Ciclo-base definido pela programação salva.'
+  };
   await persist();
   await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,
@@ -824,6 +828,39 @@ export async function disableSeconds(){
   if(!state.enabled)return state;
   await finishAndRestore('stopped');
   return state;
+}
+
+export async function emergencyStopAll(reason='Parada de emergência pelo aplicativo'){
+  state={
+    ...state,
+    enabled:false,
+    phase:'emergency_stopped',
+    relay_expected:false,
+    device_relay:false,
+    emergency_stopped_at:Date.now()
+  };
+  await persist();
+  const safety=await activateEmergency(reason);
+  await safeOff();
+  await event('viveiro_emergency_stop','PARADA DE EMERGÊNCIA acionada.',{reason});
+  await pushNotice(
+    'PARADA DE EMERGÊNCIA',
+    'A automação do viveiro foi bloqueada e a saída foi desligada. É necessário liberar a emergência e rearmar manualmente.',
+    'viveiro-emergency-stop',
+    'critical',
+    0,
+    true
+  );
+  return{state,safety};
+}
+
+export async function clearEmergencyStop(){
+  const safety=await clearEmergency();
+  await safeOff();
+  state={...state,enabled:false,phase:'stopped',relay_expected:false,device_relay:false};
+  await persist();
+  await event('viveiro_emergency_clear','Parada de emergência liberada. A irrigação continua parada até novo rearme.');
+  return{state,safety};
 }
 
 export async function suspendSecondsForRestart(){
@@ -845,7 +882,7 @@ export async function getSecondsManagerState(){
     const lastChecked=Number(state.checked_at||0);
     const needsLiveCheck=!lastChecked||Date.now()-lastChecked>30000;
     if(needsLiveCheck){
-      const current=await readViveiroDevice().catch(()=>null);
+      const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
       if(current){
         state={...state,device_relay:current.relay,relay_expected:current.relay===true,checked_at:Date.now()};
       }

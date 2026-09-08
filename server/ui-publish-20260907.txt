@@ -1,3 +1,5 @@
 Publicação da camada de estabilidade visual e correção de botões da irrigação inteligente.
 
 Publicar layout com menus e perfil - 2026-09-08T00:31:29.523Z
+
+Publicar central por perfis Viveiro e Cafe

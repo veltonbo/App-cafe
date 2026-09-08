@@ -2,6 +2,8 @@ import { applyCors, authorize, ensureConfig } from '../api/_tuya.js';
 import {
   configureSeconds,
   disableSeconds,
+  emergencyStopAll,
+  clearEmergencyStop,
   getSecondsManagerState
 } from './seconds-manager.js';
 
@@ -26,6 +28,16 @@ export default async function handler(req,res){
     if(action==='disable'){
       const state=await disableSeconds();
       return res.status(200).json({ok:true,state});
+    }
+
+    if(action==='emergency_stop'){
+      const result=await emergencyStopAll(req.body?.reason||'Parada de emergência pelo aplicativo');
+      return res.status(200).json({ok:true,...result});
+    }
+
+    if(action==='clear_emergency'){
+      const result=await clearEmergencyStop();
+      return res.status(200).json({ok:true,...result});
     }
 
     if(action==='status'){

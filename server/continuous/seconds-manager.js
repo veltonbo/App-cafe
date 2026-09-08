@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
+import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, setClimateConfig, updateClimateSamples } from '../api/viveiro/_climate.js';
 import {
   localSchedule,
@@ -797,6 +798,8 @@ export async function initSecondsManager(){
 
 export async function configureSeconds(input={}){
   if(state.enabled)throw new Error('O modo em segundos já está ativo.');
+
+  await createConfigBackup('antes_de_alterar_programacao_do_viveiro').catch(()=>null);
 
   // A programação pode ser armada mesmo com chuva ou clima temporariamente indisponível.
   // O laço contínuo mantém a saída desligada e só libera os pulsos quando o clima estiver seguro.

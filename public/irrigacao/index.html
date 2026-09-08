@@ -1409,13 +1409,30 @@ function renderDashboard(){
   }
   if($('climateReason')){
     const modeText=cc.observation?'Observação ativa. ':cc.automatic?'Automático 2.0 ativo. ':'Modo manual. ';
-    $('climateReason').textContent=modeText+String(cs.last_reason||'Aguardando a próxima avaliação climática.');
+    const decisionMap={
+      automatic_applied:'Último ajuste aplicado automaticamente. ',
+      approved_applied:'Último ajuste aprovado e aplicado. ',
+      pending_confirmation:'Aguardando sua confirmação. ',
+      cooldown:'Aguardando o intervalo de segurança antes de um novo ajuste. ',
+      waiting_normal_confirmation:'Confirmando que o clima voltou ao normal antes de retornar ao tempo-base. ',
+      observation:'Somente observando; nenhum tempo é alterado. ',
+      no_change:'Sem necessidade de ajuste agora. ',
+      no_change_pending_cleared:'A condição mudou e a sugestão antiga foi descartada. ',
+      cycle_rearmed:'Nova programação armada; análise reiniciada. ',
+      mode_changed:'Modo alterado; análise reiniciada. '
+    };
+    const decisionText=decisionMap[String(cs.last_decision||'')]||'';
+    $('climateReason').textContent=modeText+decisionText+String(cs.last_reason||'Aguardando a próxima avaliação climática.');
   }
   if($('climatePending')){
     $('climatePending').className='climatePending '+(pending&&!cc.observation?'show':'');
     if(pending&&!cc.observation){
-      $('climatePendingTitle').textContent='Alterar de '+Number(pending.current_on_seconds||0)+' s para '+Number(pending.target_on_seconds||0)+' s?';
-      $('climatePendingReason').textContent=String(pending.reason||'Ajuste sugerido pelas condições climáticas.');
+      $('climatePendingTitle').textContent=
+        Number(pending.current_on_seconds||0)+'/'+Number(pending.current_off_seconds||0)+' s → '+
+        Number(pending.target_on_seconds||0)+'/'+Number(pending.target_off_seconds||0)+' s';
+      $('climatePendingReason').textContent=
+        'Confiança '+String(pending.confidence_label||'Baixa')+'. '+
+        String(pending.reason||'Ajuste sugerido pelas condições climáticas.');
     }
   }
 
@@ -1463,23 +1480,17 @@ function renderDashboard(){
   validateFastCycle();
 }
 async function setClimateAutomatic(){
-  const current=Boolean(data.dashboard?.climate?.config?.automatic);
+  const currentCfg={...(data.dashboard?.climate?.config||{})};
+  const current=Boolean(currentCfg.automatic);
   const next=!current;
-  if(next&&!confirm('Ativar ajuste climático automático?\n\nO sistema poderá alterar sozinho o tempo ligado quando a confiança for média ou alta. Com confiança baixa, continuará pedindo confirmação.'))return;
+  if(next&&!confirm('Ativar o Automático 2.0?\n\nEle ajusta principalmente o intervalo entre os pulsos, preservando o tempo-base ligado. Com confiança média ou alta, pode ajustar sozinho. Com confiança baixa, pede sua confirmação. Chuva continua tendo prioridade.'))return;
   try{
     const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({
+      ...currentCfg,
       action:'climate_config',
       automatic:next,
       observation:false,
-      enabled:true,
-      trend_minutes:30,
-      evaluation_minutes:5,
-      max_adjust_percent:30,
-      min_change_seconds:3,
-      min_change_off_seconds:6,
-      cooldown_minutes:30,
-      normal_confirmations:2,
-      post_rain_hold_minutes:30
+      enabled:true
     })});
     data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
     save();renderDashboard();
@@ -1488,22 +1499,16 @@ async function setClimateAutomatic(){
   }catch(e){toast('Clima: '+String(e.message||e))}
 }
 async function setClimateObservation(){
-  const current=Boolean(data.dashboard?.climate?.config?.observation);
+  const currentCfg={...(data.dashboard?.climate?.config||{})};
+  const current=Boolean(currentCfg.observation);
   const next=!current;
   try{
     const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({
+      ...currentCfg,
       action:'climate_config',
       automatic:false,
       observation:next,
-      enabled:true,
-      trend_minutes:30,
-      evaluation_minutes:5,
-      max_adjust_percent:30,
-      min_change_seconds:3,
-      min_change_off_seconds:6,
-      cooldown_minutes:30,
-      normal_confirmations:2,
-      post_rain_hold_minutes:30
+      enabled:true
     })});
     data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
     save();renderDashboard();
@@ -1529,7 +1534,10 @@ function maybePromptClimateSuggestion(payload){
   const p=climate.state?.pending;
   if(!p||String(data.climatePromptedId||'')===String(p.id||''))return;
   data.climatePromptedId=String(p.id||'');save();
-  const msg='Sugestão climática\n\nAlterar o tempo ligado de '+Number(p.current_on_seconds||0)+' s para '+Number(p.target_on_seconds||0)+' s?\n\nMotivo: '+String(p.reason||'Condição climática diferente do tempo-base.')+'\n\nTemperatura: '+(p.temperature==null?'—':Number(p.temperature).toFixed(1)+' °C')+'\nUmidade: '+(p.humidity==null?'—':Number(p.humidity).toFixed(0)+'%');
+  const currentCycle=Number(p.current_on_seconds||0)+' s ligado / '+Number(p.current_off_seconds||0)+' s desligado';
+  const targetCycle=Number(p.target_on_seconds||0)+' s ligado / '+Number(p.target_off_seconds||0)+' s desligado';
+  const confidence=String(p.confidence_label||'Baixa');
+  const msg='Sugestão do Automático 2.0\n\nCiclo atual: '+currentCycle+'\nSugestão: '+targetCycle+'\n\nConfiança: '+confidence+'\nMotivo: '+String(p.reason||'Condição climática diferente do tempo-base.')+'\n\nTemperatura: '+(p.temperature==null?'—':Number(p.temperature).toFixed(1)+' °C')+'\nUmidade: '+(p.humidity==null?'—':Number(p.humidity).toFixed(0)+'%')+'\n\nAplicar esta alteração?';
   if(confirm(msg))answerClimateSuggestion(true);
 }
 async function syncDashboard(showToast=false){

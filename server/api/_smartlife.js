@@ -90,6 +90,12 @@ async function loadSession(){
 
 async function saveSession(session){
   const clean=validateSession(session);
+  const currentExpire=Number(sessionCache?.token_info?.expire_time||0);
+  const nextExpire=Number(clean?.token_info?.expire_time||0);
+  // Em chamadas paralelas de segurança, nunca deixa um token mais antigo
+  // sobrescrever uma sessão que já foi renovada por outra chamada.
+  if(sessionCache&&currentExpire>0&&nextExpire>0&&currentExpire>nextExpire)return;
+
   sessionCache=clean;
   sessionLoaded=true;
   const fingerprint=sessionFingerprint(clean);
@@ -106,7 +112,7 @@ function pythonBin(){
   return 'python3';
 }
 
-function runBridge(input){
+function runBridge(input,{timeoutMs=30000}={}){
   return new Promise((resolve,reject)=>{
     const child=spawn(pythonBin(),[path.join(process.cwd(),'smartlife','bridge.py')],{
       cwd:process.cwd(),
@@ -121,7 +127,7 @@ function runBridge(input){
       finished=true;
       child.kill('SIGKILL');
       reject(new Error('Tempo esgotado ao acessar o Smart Life.'));
-    },30000);
+    },Math.max(5000,Number(timeoutMs)||30000));
 
     const append=(current,chunk)=>(
       current.length>2_000_000?current:current+chunk.toString('utf8')
@@ -239,17 +245,27 @@ export async function smartLifeReadDevice({deviceId=null,deviceName=null,maxAgeM
   return device;
 }
 
-export async function smartLifeSendCommands({deviceId=null,deviceName=null,commands=[]}={}){
+export async function smartLifeSendCommands({
+  deviceId=null,
+  deviceName=null,
+  commands=[],
+  priority=false
+}={}){
   const session=await loadSession();
   if(!session)throw new Error('Smart Life ainda não conectado ao servidor.');
-  const result=await queuedBridge({
+  const input={
     action:'command',
     session,
     device_id:deviceId||undefined,
     device_name:deviceName||undefined,
     commands,
-    confirm_delay:0.35
-  });
+    confirm_delay:priority?0.15:0.35
+  };
+  // OFF de segurança pode executar em paralelo com uma leitura já em andamento.
+  // Os demais comandos continuam serializados para evitar concorrência desnecessária.
+  const result=priority
+    ?await runBridge(input,{timeoutMs:12000})
+    :await queuedBridge(input);
   if(result.session)await saveSession(result.session);
   if(result.device)mergeDeviceIntoCache(result.device);
   else listCache={at:0,devices:null};

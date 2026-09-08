@@ -1,9 +1,11 @@
-import { applyCors, authorize, getDeviceId, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { listPushSubscriptions } from './_push.js';
 import { whatsappNotificationStatus } from './_notify.js';
 import { storeGet } from './_store.js';
+import { readViveiroState } from '../_viveiro_transport.js';
+import { getViveiroSafety, getViveiroMaintenance } from '../viveiro/_interlock.js';
 
 function item(key,label,status,detail=''){
   return{key,label,status,detail};
@@ -37,11 +39,22 @@ export default async function handler(req,res){
   }
 
   try{
-    const id=getDeviceId();
-    const result=await tuyaRequest('GET',`/v1.0/iot-03/devices/${id}/status`);
-    const rows=Array.isArray(result)?result:(Array.isArray(result?.status)?result.status:[]);
-    const map=Object.fromEntries(rows.map(x=>[x.code,x.value]));
-    checks.push(item('viveiro','EKAZA • Viveiro','ok','Online • saída '+(map.switch_1===true?'ligada':'desligada')));
+    const state=await readViveiroState({force:true,maxAgeMs:0});
+    const map=state?.statusMap||{};
+    const [safety,maintenance]=await Promise.all([
+      getViveiroSafety().catch(()=>({})),
+      getViveiroMaintenance().catch(()=>({}))
+    ]);
+    const blocked=safety?.emergency_latched||maintenance?.active;
+    checks.push(item(
+      'viveiro',
+      'EKAZA • Viveiro',
+      state?.online===false?'warning':'ok',
+      (state?.online===false?'Offline':'Online')+
+        ' • saída '+(map.switch_1===true?'ligada':'desligada')+
+        (blocked?' • automação bloqueada':'')+
+        ' • '+String(state?.provider||'Smart Life')
+    ));
   }catch(error){
     checks.push(item('viveiro','EKAZA • Viveiro','error',error?.message||'Sem resposta'));
   }

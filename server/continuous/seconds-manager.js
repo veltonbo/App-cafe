@@ -189,6 +189,10 @@ async function evaluateClimateControl(){
       confidence:suggestion.confidence,
       confidence_label:suggestion.confidence_label,
       confidence_adjust_limit_percent:suggestion.confidence_adjust_limit_percent,
+      effective_adjust_limit_percent:suggestion.effective_adjust_limit_percent,
+      extreme_level:suggestion.extreme_level,
+      base_on_seconds:suggestion.base_on_seconds,
+      base_off_seconds:suggestion.base_off_seconds,
       trend_temperature:trend.temperature,
       trend_humidity:trend.humidity,
       trend_vpd:trend.vpd,
@@ -213,8 +217,11 @@ async function evaluateClimateControl(){
       temperature:suggestion.temperature==null?null:Number(suggestion.temperature.toFixed?.(1)??suggestion.temperature),
       humidity:suggestion.humidity==null?null:Number(suggestion.humidity.toFixed?.(0)??suggestion.humidity),
       vpd:suggestion.vpd==null?null:Number(suggestion.vpd.toFixed?.(2)??suggestion.vpd),
+      base:String(suggestion.base_on_seconds)+'/'+String(suggestion.base_off_seconds),
       current:String(suggestion.current_on_seconds)+'/'+String(suggestion.current_off_seconds),
-      target:String(suggestion.target_on_seconds)+'/'+String(suggestion.target_off_seconds)
+      target:String(suggestion.target_on_seconds)+'/'+String(suggestion.target_off_seconds),
+      effectiveLimitPercent:Number(suggestion.effective_adjust_limit_percent||suggestion.confidence_adjust_limit_percent||0),
+      extremeLevel:String(suggestion.extreme_level||'normal')
     });
 
     if(!suggestion.useful){
@@ -262,6 +269,8 @@ async function evaluateClimateControl(){
         level:suggestion.level,level_label:suggestion.level_label,
         confidence:suggestion.confidence,confidence_label:suggestion.confidence_label,
         confidence_adjust_limit_percent:suggestion.confidence_adjust_limit_percent,
+        effective_adjust_limit_percent:suggestion.effective_adjust_limit_percent,
+        extreme_level:suggestion.extreme_level,
         reason:suggestion.reason,returning_to_base:Boolean(suggestion.returning_to_base),
         requires_confirmation:true,reason_tag:reasonTag
       };
@@ -279,7 +288,13 @@ async function evaluateClimateControl(){
     };
 
     const lowConfidence=suggestion.confidence==='low';
-    const cooldownMs=Math.max(20,Number(cfg.cooldown_minutes||30))*60000;
+    const configuredCooldownMinutes=Math.max(20,Number(cfg.cooldown_minutes||30));
+    const extremeHighConfidence=
+      suggestion.confidence==='high'&&['quente_seco','severo','critico'].includes(String(suggestion.extreme_level||''));
+    const effectiveCooldownMinutes=extremeHighConfidence
+      ?Math.min(configuredCooldownMinutes,20)
+      :configuredCooldownMinutes;
+    const cooldownMs=effectiveCooldownMinutes*60000;
     const cooldownActive=Date.now()-Number(climateState?.last_applied_at||0)<cooldownMs;
 
     if(cfg.automatic){
@@ -327,7 +342,10 @@ async function evaluateClimateControl(){
         last_reason:suggestion.reason,automatic:true,confidence:suggestion.confidence,
         normal_streak:0,version:2,
         last_decision:'automatic_applied',last_decision_at:Date.now(),
-        next_automatic_change_at:Date.now()+cooldownMs
+        next_automatic_change_at:Date.now()+cooldownMs,
+        effective_cooldown_minutes:effectiveCooldownMinutes,
+        effective_adjust_limit_percent:suggestion.effective_adjust_limit_percent,
+        extreme_level:suggestion.extreme_level
       });
       const type=suggestion.returning_to_base?'viveiro_climate_return_base':'viveiro_climate_auto_change';
       await event(type,suggestion.returning_to_base?'Automático 2.0 retornou ao ciclo-base.':'Automático 2.0 ajustou o intervalo pelo clima.',{

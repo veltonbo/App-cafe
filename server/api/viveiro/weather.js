@@ -1,6 +1,7 @@
 import { applyCors, authorize, ensureConfig } from '../_tuya.js';
 import { verifyGitHubOidc } from './_github_oidc.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
+import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import {
   getViveiroWeatherConfig,
   getViveiroWeatherState,
@@ -30,10 +31,16 @@ export default async function handler(req,res){
     }
 
     if(req.method==='POST'&&req.body?.action==='status_only'){
+      const weather=await fetchWeatherSnapshot().catch(error=>({
+        ok:false,
+        linked:false,
+        error:error?.message||String(error)
+      }));
       return res.status(200).json({
         ok:true,
         config:await getViveiroWeatherConfig(),
-        state:await getViveiroWeatherState()
+        state:await getViveiroWeatherState(),
+        weather
       });
     }
 

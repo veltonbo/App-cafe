@@ -1,5 +1,6 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { getAutomationConfig, patchAutomationConfig } from './_store.js';
+import { createConfigBackup } from './_backup.js';
 
 function sanitize(body = {}) {
   const out = {};
@@ -71,6 +72,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST' || req.method === 'PATCH') {
       const patch = sanitize(req.body || {});
+      await createConfigBackup('antes_de_salvar_configuracao').catch(()=>null);
       await patchAutomationConfig(patch);
       const config = await getAutomationConfig();
       return res.status(200).json({ ok:true, config:config || {} });

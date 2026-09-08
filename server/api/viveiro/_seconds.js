@@ -73,8 +73,8 @@ export function secondsUntilNextWindow(state,nowDate=new Date()){
   return 86400;
 }
 
-export async function readViveiroDevice(){
-  const state=await readViveiroState();
+export async function readViveiroDevice(options={}){
+  const state=await readViveiroState(options);
   const sm=state?.statusMap||{};
   const cycleRaw=typeof sm.cycle_time==='string'?sm.cycle_time:'';
 
@@ -88,11 +88,12 @@ export async function readViveiroDevice(){
   };
 }
 
-export async function setViveiroRelay(on,{attempts=on?4:10}={}){
+export async function setViveiroRelay(on,{attempts=on?4:8}={}){
   let lastError='';
   const wanted=Boolean(on);
+  const confirmations=Math.max(1,Math.min(10,Number(attempts)||1));
 
-  for(let i=0;i<Math.max(1,attempts);i++){
+  for(let sendTry=0;sendTry<2;sendTry++){
     try{
       const result=await sendViveiroCommands([
         {code:'switch_1',value:wanted}
@@ -104,15 +105,16 @@ export async function setViveiroRelay(on,{attempts=on?4:10}={}){
       lastError=error?.message||String(error);
     }
 
-    await sleep(500);
-
-    try{
-      const current=await readViveiroDevice();
-      if(current.relay===wanted){
-        return{ok:true,on:wanted,provider:current.provider};
+    for(let i=0;i<confirmations;i++){
+      await sleep(i===0?250:400);
+      try{
+        const current=await readViveiroDevice({force:true,maxAgeMs:0});
+        if(current.relay===wanted){
+          return{ok:true,on:wanted,provider:current.provider};
+        }
+      }catch(error){
+        lastError=error?.message||String(error);
       }
-    }catch(error){
-      lastError=error?.message||String(error);
     }
   }
 
@@ -151,12 +153,12 @@ function disabledCycle(currentRaw,cfg){
 
 export async function pulseStillActive(state={}){
   if(!state?.enabled||!state?.disabled_cycle_raw)return false;
-  const current=await readViveiroDevice().catch(()=>null);
+  const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
   return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
 }
 
 export async function prepareServerPulse({onSeconds=30,offSeconds=120,resumeDelayMinutes=30,startMinutes=null,endMinutes=null,daysMask=null}={}){
-  const current=await readViveiroDevice();
+  const current=await readViveiroDevice({force:true,maxAgeMs:0});
   const cycle=current.cycleConfig;
   if(!cycle)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
 
@@ -223,7 +225,7 @@ export async function rollbackPreparedPulse(state={},detail=''){
 export async function stopServerPulse({restoreNative=false,nativeCycleRaw='',disabledCycleRaw=''}={}){
   await setViveiroRelay(false).catch(()=>null);
 
-  const current=await readViveiroDevice().catch(()=>null);
+  const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
   const canRestore=!disabledCycleRaw||(
     current&&String(current.cycleRaw||'')===String(disabledCycleRaw||'')
   );
@@ -247,7 +249,7 @@ export async function probeServerPulse(state={}){
     return{...state,enabled:false,phase:'stopped',relay_expected:false};
   }
 
-  const current=await readViveiroDevice();
+  const current=await readViveiroDevice({force:true,maxAgeMs:0});
   const active=String(current.cycleRaw||'')===String(state.disabled_cycle_raw||'');
   if(!active){
     return{

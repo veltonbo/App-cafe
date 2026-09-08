@@ -166,15 +166,15 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <section class="grid">
   <div class="stat"><small>Controlador</small><strong id="controllerNumber">IIC-800-WIFI</strong></div>
   <div class="stat"><small>Setores deste controlador</small><strong id="sectorRange">01–08</strong></div>
-  <div class="stat"><small>Conexão Tuya</small><strong id="cloudState">Aguardando</strong></div>
+  <div class="stat"><small>Conexão Smart Life</small><strong id="cloudState">Aguardando</strong></div>
   <div class="stat"><small>Integração</small><strong id="mappingState">Pendente</strong></div>
 </section>
 
 <section class="box">
   <div class="head"><h2>Status da integração</h2><button id="checkDevice" class="btn primary">Ler controlador</button></div>
   <div class="statusLine"><span>Dispositivo localizado</span><strong id="linkedState">Aguardando</strong></div>
-  <div class="statusLine"><span>Online na Tuya</span><strong id="onlineState">—</strong></div>
-  <div class="statusLine techOnly"><span>Categoria Tuya</span><strong id="categoryState">—</strong></div>
+  <div class="statusLine"><span>Online no Smart Life</span><strong id="onlineState">—</strong></div>
+  <div class="statusLine techOnly"><span>Categoria do dispositivo</span><strong id="categoryState">—</strong></div>
   <div class="statusLine techOnly"><span>Funções encontradas</span><strong id="functionsState">—</strong></div>
   <div class="statusLine"><span>Acesso remoto</span><strong id="accessState">Aguardando</strong></div>
   <p id="accessDetail" class="note" style="margin-top:8px"></p>
@@ -192,7 +192,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
     <div class="weatherCard"><small>Umidade</small><strong id="weatherHum">—</strong></div>
   </div>
   <div class="statusLine"><span>Estação localizada</span><strong id="weatherLinked">Aguardando</strong></div>
-  <div class="statusLine"><span>Online na Tuya</span><strong id="weatherOnline">—</strong></div>
+  <div class="statusLine"><span>Online no Smart Life</span><strong id="weatherOnline">—</strong></div>
   <div class="statusLine"><span>Vento</span><strong id="weatherWind">—</strong></div>
   <div class="statusLine"><span>Última leitura</span><strong id="weatherUpdated">Nunca</strong></div>
 
@@ -255,16 +255,16 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <section class="box">
   <div class="head"><h2>Sistema e diagnóstico</h2></div>
   <p class="note">Quando o controlador for encontrado, esta área mostrará os códigos reais de funções e estados. A partir deles o app libera somente os comandos compatíveis com o seu aparelho.</p>
-  <details><summary>Funções Tuya detectadas</summary><pre id="functionsRaw">Nenhuma leitura realizada.</pre></details>
+  <details><summary>Funções Smart Life detectadas</summary><pre id="functionsRaw">Nenhuma leitura realizada.</pre></details>
   <details><summary>Status atual</summary><pre id="statusRaw">Nenhuma leitura realizada.</pre></details>
-  <details><summary>Shadow Properties</summary><pre id="shadowRaw">Nenhuma leitura realizada.</pre></details>
+  <details><summary>Dados complementares</summary><pre id="shadowRaw">Nenhuma leitura realizada.</pre></details>
   <details><summary>Erros de integração</summary><pre id="errorsRaw">Nenhum erro registrado.</pre></details>
 </section>
 
 <section class="box">
-  <div class="head"><h2>Automação Weather2-2 ↔ INKBIRD</h2><button id="checkLinkage" class="btn soft">Verificar nuvem Tuya</button></div>
-  <p class="note">O app verifica se a própria nuvem Tuya permite criar uma regra direta entre a estação meteorológica e os controladores. Se disponível, essa é a melhor opção para proteção com o telefone fechado.</p>
-  <details><summary>Compatibilidade da automação cloud</summary><pre id="linkageRaw">Ainda não verificado.</pre></details>
+  <div class="head"><h2>Automação Weather2-2 ↔ INKBIRD</h2><button id="checkLinkage" class="btn soft">Verificar integração</button></div>
+  <p class="note">O Railway usa a Weather2-2 e o Smart Life para proteger o IIC-800 mesmo com o telefone fechado. Esta verificação confirma a comunicação entre os equipamentos.</p>
+  <details><summary>Diagnóstico da integração Smart Life</summary><pre id="linkageRaw">Ainda não verificado.</pre></details>
 </section>
 
 <section class="box">
@@ -275,7 +275,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   </div>
 </section>
 
-<section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">Railway • Fazenda 2E</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O Access Secret da Tuya permanece somente no servidor Railway. Neste aparelho fica apenas o token de controle do app.</p></section>
+<section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">Railway • Fazenda 2E</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O acesso ao Smart Life fica protegido no servidor Railway. Neste aparelho permanece apenas o token de controle do app.</p></section>
 </div>
 <div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
 </main>
@@ -331,7 +331,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   </label>
   <label class="formField">Nome do grupo<input id="groupName" value="Grupo de irrigação"></label>
   <label class="formField">Execução
-    <select id="groupMode"><option value="order">Em sequência</option><option value="together">Ao mesmo tempo</option></select>
+    <select id="groupMode"><option value="order">Em sequência • recomendado pelo IIC-800</option></select>
   </label>
   <div id="groupRows" class="groupRows"></div>
   <div style="display:flex;gap:8px">
@@ -344,7 +344,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão da Central</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
 <dialog id="mappingDlg"><form method="dialog" style="padding:20px;display:grid;gap:14px;min-width:min(92vw,560px)">
   <div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Configurar saídas do IIC-800</h2></div>
-  <div class="mappingHelp">Use esta tela somente quando o mapeamento automático não fechar 8/8. Escolha para cada setor a função Tuya correspondente. O app não enviará nenhum comando enquanto você apenas configura esta tela.</div>
+  <div class="mappingHelp">Use esta tela somente quando o mapeamento automático não fechar 8/8. Escolha para cada setor a função Smart Life correspondente. O app não enviará nenhum comando enquanto você apenas configura esta tela.</div>
   <div id="mappingRows" class="mapGrid"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button id="clearManualMap" type="button" class="btn soft" style="flex:1">Limpar manual</button>
@@ -653,8 +653,10 @@ function applySelectedProfile(){
 
 async function api(path,opt={}){
   if(!state.settings.token)throw new Error('Configure o token de controle em Sistema > Configurar conexão.');
+  const method=String(opt.method||'GET').toUpperCase();
+  const timeoutMs=['POST','PUT','PATCH','DELETE'].includes(method)?30000:12000;
   const ctl=new AbortController();
-  const timer=setTimeout(()=>ctl.abort(),12000);
+  const timer=setTimeout(()=>ctl.abort(),timeoutMs);
   try{
     const r=await fetch((state.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')+path,{
       ...opt,
@@ -1041,7 +1043,7 @@ function loadSavedGroup(){
   const group=state.groups?.[name];
   if(!group)return;
   $('groupName').value=group.name||name;
-  $('groupMode').value=group.mode==='together'?'together':'order';
+  $('groupMode').value='order';
   document.querySelectorAll('.groupCheck').forEach(cb=>{
     const item=(group.zones||[]).find(x=>Number(x.zone)===Number(cb.dataset.zone));
     cb.checked=Boolean(item);
@@ -1059,8 +1061,8 @@ async function startGroupNow(){
   });
   if(!zones.length)return toast('Selecione pelo menos um setor');
   const name=$('groupName').value.trim()||'Grupo de irrigação';
-  const mode=$('groupMode').value==='together'?'together':'order';
-  const label=mode==='order'?'em sequência':'ao mesmo tempo';
+  const mode='order';
+  const label='em sequência';
   if(!confirm('Iniciar '+name+' '+label+'?\n\nSetores: '+zones.map(x=>x.zone).join(', ')))return;
   try{
     $('startGroup').disabled=true;
@@ -1093,7 +1095,7 @@ function openManualMapping(){
   if(!c||!s)return toast('Leia o controlador primeiro');
   const funcs=booleanFunctionOptions();
   if(!funcs.length){
-    alert('O controlador não expôs funções booleanas suficientes para o mapeamento manual. Abra Sistema > Funções Tuya detectadas e me envie essa tela para eu adaptar ao formato real do IIC-800.');
+    alert('O controlador não expôs funções booleanas suficientes para o mapeamento manual. Abra Sistema > Funções Smart Life detectadas e me envie essa tela para eu adaptar ao formato real do IIC-800.');
     return;
   }
   const manual=manualMapForController();
@@ -1277,7 +1279,7 @@ function changeController(id){
 $('controllerSelect').onchange=()=>changeController($('controllerSelect').value);
 if($('quickControllerSelect'))$('quickControllerSelect').onchange=()=>changeController($('quickControllerSelect').value);
 $('syncControllers').onclick=()=>syncControllers(true);
-$('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador na mesma conta Smart Life.\n2. Sincronize a conta com o projeto Tuya “Irrigação Café”.\n3. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente: 01–08, 09–16, 17–24...');
+$('addController').onclick=()=>alert('Para adicionar outro IIC-800:\n\n1. Adicione o novo controlador na mesma conta Smart Life.\n2. Volte aqui e toque em “Buscar controladores”.\n\nA numeração continuará automaticamente: 01–08, 09–16, 17–24...');
 $('checkDevice').onclick=()=>syncStatus(true);
 $('manualMapBtn').onclick=openManualMapping;
 $('resumeAutoBtn').onclick=resumeAutomaticMode;
@@ -1312,10 +1314,10 @@ async function checkCloudLinkage(){
     $('checkLinkage').disabled=true;
     const r=await api('/api/irrigation/linkage');
     $('linkageRaw').textContent=JSON.stringify(r,null,2);
-    const hasWeather=Boolean(r?.weather?.linkage);
-    const hasController=(r?.controllers||[]).some(x=>x.linkage);
-    toast(hasWeather&&hasController?'Automação Tuya compatível detectada':'Diagnóstico da automação concluído');
-  }catch(e){$('linkageRaw').textContent='Falha: '+e.message;toast('Falha ao verificar automação Tuya')}
+    const hasWeather=Boolean(r?.weather?.linked&&r?.weather?.online!==false);
+    const hasController=(r?.controllers||[]).some(x=>x.online!==false&&x.dp45);
+    toast(hasWeather&&hasController?'Integração Smart Life operacional':'Diagnóstico da integração concluído');
+  }catch(e){$('linkageRaw').textContent='Falha: '+e.message;toast('Falha ao verificar integração Smart Life')}
   finally{$('checkLinkage').disabled=false}
 }
 

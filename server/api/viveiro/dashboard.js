@@ -200,6 +200,30 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
     level:'critical',code:'recent_error',
     message:recentErrors.length===1?'Uma falha foi registrada nos últimos 30 min.':recentErrors.length+' falhas foram registradas nos últimos 30 min.'
   });
+  const local=localNowParts(now);
+  const startSec=Math.max(0,Math.min(1439,Number(seconds.start_minutes||0)))*60;
+  const endSec=Math.max(1,Math.min(1440,Number(seconds.end_minutes||1440)))*60;
+  const mask=Math.max(0,Number(seconds.days_mask??127));
+  const insideSchedule=Boolean(mask&(1<<local.weekday))&&local.seconds>=startSec&&local.seconds<endSec;
+  const baseOn=Math.max(1,Number(seconds.base_on_seconds||seconds.on_seconds||30));
+  const baseOff=Math.max(1,Number(seconds.base_off_seconds||seconds.off_seconds||120));
+  const currentOn=Math.max(1,Number(seconds.on_seconds||baseOn));
+  const currentOff=Math.max(1,Number(seconds.off_seconds||baseOff));
+  const baseDuty=baseOn/(baseOn+baseOff);
+  const currentDuty=currentOn/(currentOn+currentOff);
+  const extreme=String(climateState?.extreme_level||'');
+  const freshClimate=now-Number(climateState?.last_evaluated_at||0)<12*60000;
+  if(
+    insideSchedule&&freshClimate&&
+    ['critico'].includes(extreme)&&
+    String(climateState?.last_mode||'')==='automatic'&&
+    currentDuty<baseDuty*1.05
+  ){
+    issues.push({
+      level:'critical',code:'extreme_without_response',
+      message:'Clima crítico sem aumento confirmado da irrigação automática.'
+    });
+  }
 
   const critical=issues.some(x=>x.level==='critical');
   return{

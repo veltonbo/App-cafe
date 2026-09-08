@@ -55,6 +55,24 @@ function carregarFinanceiro(callback) {
   refFinanceiro.on('value', listenerFinanceiro);
 }
 
+// Soma meses sem converter a data para o fuso local.
+// Ex.: 31/01 + 1 mês vira o último dia válido de fevereiro.
+function adicionarMesesDataISO(dataISO, meses) {
+  const partes = String(dataISO || '').split('-').map(Number);
+  if (partes.length !== 3 || partes.some(n => !Number.isInteger(n))) return dataISO;
+  const [ano, mes, dia] = partes;
+  const base = new Date(Date.UTC(ano, mes - 1 + Number(meses || 0), 1));
+  const anoDestino = base.getUTCFullYear();
+  const mesDestino = base.getUTCMonth();
+  const ultimoDia = new Date(Date.UTC(anoDestino, mesDestino + 1, 0)).getUTCDate();
+  const diaDestino = Math.max(1, Math.min(dia, ultimoDia));
+  return [
+    anoDestino,
+    String(mesDestino + 1).padStart(2, '0'),
+    String(diaDestino).padStart(2, '0')
+  ].join('-');
+}
+
 // ====== ADICIONAR OU EDITAR FINANCEIRO ======
 function salvarOuEditarFinanceiro() {
   const novo = {
@@ -65,7 +83,7 @@ function salvarOuEditarFinanceiro() {
     tipo: document.getElementById('tipoFin').value,
     pago: false, // ou lógica anterior
     parcelado: document.getElementById('parceladoFin')?.checked || false,
-    numParcelas: parseInt(document.getElementById('parcelasFin')?.value) || 1
+    numParcelas: Math.max(1, Math.min(120, parseInt(document.getElementById('parcelasFin')?.value) || 1))
   };
 
   // Validação básica
@@ -87,10 +105,8 @@ function salvarOuEditarFinanceiro() {
         // Corrige o valor da última parcela para fechar o total
         let valorAtual = (i === novo.numParcelas) ? (novo.valor - somaParcelas) : valorParcela;
         somaParcelas += valorAtual;
-        // Calcula a data da parcela (mês a mês)
-        let dataParcela = new Date(novo.data);
-        dataParcela.setMonth(dataParcela.getMonth() + (i - 1));
-        let dataFormatada = dataParcela.toISOString().split('T')[0];
+        // Calcula a data da parcela sem sofrer deslocamento de fuso horário.
+        const dataFormatada = adicionarMesesDataISO(novo.data, i - 1);
         gastos.push({
           data: dataFormatada,
           produto: novo.produto + ` (Parcela ${i}/${novo.numParcelas})`,
@@ -161,7 +177,7 @@ function limparCamposFinanceiro() {
 
 // ===== FORMATAR VALOR EM REAL BRASILEIRO =====
 function formatarValorBR(valor) {
-  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 // ===== FORMATAR DATA NO PADRÃO BRASILEIRO =====

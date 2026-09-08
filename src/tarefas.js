@@ -119,11 +119,11 @@ function atualizarTarefas() {
     item.innerHTML = `
       <div class="tarefa-info">
         <div class="tarefa-topo">
-          <span class="tarefa-data">${formatarDataBR(t.data)}</span>
-          <span class="tarefa-prioridade" style="color:${prioridadeCor};">${t.prioridade}</span>
+          <span class="tarefa-data">${escapeHtml(formatarDataBR(t.data))}</span>
+          <span class="tarefa-prioridade" style="color:${prioridadeCor};">${escapeHtml(t.prioridade)}</span>
         </div>
-        <div class="tarefa-desc">${t.descricao}</div>
-        <div class="tarefa-setor">${t.setor ? `<i class='fas fa-map-marker-alt'></i> ${t.setor}` : ''}</div>
+        <div class="tarefa-desc">${escapeHtml(t.descricao)}</div>
+        <div class="tarefa-setor">${t.setor ? `<i class='fas fa-map-marker-alt'></i> ${escapeHtml(t.setor)}` : ''}</div>
       </div>
       <div class="opcoes-wrapper">
         <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>

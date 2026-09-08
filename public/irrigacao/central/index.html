@@ -69,20 +69,42 @@
 .diagStatus{font-size:.68rem;font-weight:900;text-transform:uppercase}
 .backupRow{grid-template-columns:1fr auto}.backupRow button{min-height:38px;padding:8px 10px}
 
+
+/* Central v2 — somente seletor de áreas */
+body.centralSelector .wrap{max-width:760px;padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+body.centralSelector .hero{padding:18px;border-radius:22px}
+body.centralSelector .profilesBox{margin-top:12px}
+body.centralSelector .profileGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.centralSelector .profileCard{min-height:210px;display:flex;flex-direction:column}
+body.centralSelector .profileOpen{margin-top:auto}
+body.centralSelector .moreBox{display:none!important}
+body.centralSelector #alertsBox.quiet{display:none!important}
+body.centralSelector #alertsBox .head button,
+body.centralSelector #alertsBox .actions,
+body.centralSelector #alertsBox #pushNote{display:none!important}
+body.centralSelector #alertsBox{border-color:#efd3a8;background:#fffaf1}
+body.centralSelector #alertsBox .head{margin-bottom:8px}
+body.centralSelector .topActions #refreshBtn{display:none}
+@media(max-width:760px){
+  body.centralSelector .profileGrid{grid-template-columns:1fr}
+  body.centralSelector .profileCard{min-height:0}
+  body.centralSelector .hero{padding:17px}
+}
+
 </style>
 </head>
-<body>
+<body class="centralSelector">
 <header class="top">
-  <div class="brand"><small>FAZENDA 2E</small><h1>Central de Irrigação</h1></div>
+  <div class="brand"><small>FAZENDA 2E</small><h1>Escolher irrigação</h1></div>
   <div class="topActions"><button id="refreshBtn" class="iconBtn">Atualizar</button><button id="menuBtn" class="iconBtn">Menu</button></div>
 </header>
 <main class="wrap">
 <section class="hero">
-  <div class="heroTop"><div><div class="ey">FAZENDA 2E • IRRIGAÇÃO</div><h2 id="heroTitle">Escolha um perfil</h2><p id="heroSub">Entre no Viveiro ou no Café. Cada perfil guarda suas próprias configurações.</p><span id="heroStatus" class="heroStatus">AGUARDANDO LEITURA</span></div></div>
+  <div class="heroTop"><div><div class="ey">FAZENDA 2E • IRRIGAÇÃO</div><h2 id="heroTitle">Onde você quer entrar?</h2><p id="heroSub">Viveiro e Café funcionam como áreas separadas. Escolha uma para continuar.</p><span id="heroStatus" class="heroStatus">AGUARDANDO LEITURA</span></div></div>
 </section>
 
 <section class="box profilesBox">
-  <div class="head"><div><div class="ey" style="color:var(--green)">PERFIS</div><h2>Perfis de irrigação</h2></div></div>
+  <div class="head"><div><div class="ey" style="color:var(--green)">ESCOLHA</div><h2>Viveiro ou Café</h2></div></div>
   <div id="systems" class="profileGrid"></div>
 </section>
 
@@ -120,7 +142,7 @@
 </details>
 </main>
 
-<nav class="bottom"><a class="active" href="/irrigacao/central/">Central</a><a href="/irrigacao/">Viveiro</a><a href="/irrigacao/inkbird/">Café</a></nav>
+
 
 <dialog id="flowDlg"><div class="modal">
   <div><div class="ey" style="color:var(--green)">VOLUME DE ÁGUA</div><h2 style="margin:2px 0">Vazão dos setores</h2></div>
@@ -231,8 +253,8 @@ function render(){
   $('sumControllers').textContent=online+'/'+total+' online';$('sumControllers').className=online===total?'ok':'bad';
   $('sumWater').textContent=fmtL(o.volume?.today_liters);
   const critical=(o.alerts||[]).some(a=>a.level==='critical');
-  $('heroTitle').textContent=critical?'Atenção necessária':'Escolha um perfil';
-  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s). Entre no perfil para ver os detalhes.'):'Viveiro e Café organizados em perfis separados.';
+  $('heroTitle').textContent=critical?'Atenção necessária':'Onde você quer entrar?';
+  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s). Escolha Viveiro ou Café para ver os detalhes.'):'Viveiro e Café ficam totalmente separados. Escolha uma área para continuar.';
   $('heroStatus').textContent=critical?'VERIFICAR ALERTAS':(o.alerts||[]).length?'ATENÇÃO':'SISTEMA NORMAL';
   if($('alertsBox'))$('alertsBox').classList.toggle('quiet',!(o.alerts||[]).length);
   if($('alertsTitle'))$('alertsTitle').textContent=(o.alerts||[]).length?'Alertas':'Tudo certo';

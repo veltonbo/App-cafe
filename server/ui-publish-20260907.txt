@@ -7,3 +7,5 @@ Publicar central por perfis Viveiro e Cafe
 Publicar notificacoes diagnostico e backups da central
 
 Publicar separacao definitiva entre Viveiro e Cafe
+
+Publicar menu padrao unico em Central Viveiro e Cafe

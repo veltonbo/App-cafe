@@ -35,11 +35,22 @@ function sanitize(body = {}) {
   }
 
   if (body.alerts && typeof body.alerts === 'object') {
+    const priorities=body.alerts.priorities&&typeof body.alerts.priorities==='object'?body.alerts.priorities:{};
+    const channels=body.alerts.channels&&typeof body.alerts.channels==='object'?body.alerts.channels:{};
     out.alerts = {
       weather: body.alerts.weather !== false,
       offline: body.alerts.offline !== false,
       overdue: body.alerts.overdue !== false,
-      irrigation: body.alerts.irrigation !== false
+      irrigation: body.alerts.irrigation !== false,
+      priorities:{
+        critical:priorities.critical !== false,
+        warning:priorities.warning !== false,
+        info:priorities.info === true
+      },
+      channels:{
+        push:channels.push !== false,
+        whatsapp:channels.whatsapp === true
+      }
     };
   }
 

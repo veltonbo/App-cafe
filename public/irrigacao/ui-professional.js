@@ -192,11 +192,12 @@
       cc=(typeof data!=='undefined'&&data.dashboard?.climate?.config)||{};
       cs=(typeof data!=='undefined'&&data.dashboard?.climate?.state)||{};
     }catch{}
-    const mode=cc.observation?'OBSERVAÇÃO':cc.automatic?'AUTOMÁTICO':'MANUAL';
+    const outside=String(cs.last_decision||'')==='outside_schedule';
+    const mode=outside?'AGUARDANDO HORÁRIO':cc.observation?'OBSERVAÇÃO':cc.automatic?'AUTOMÁTICO':'MANUAL';
     const badge=byId('smartClimateBadge');
     if(badge){
       badge.textContent=mode;
-      badge.classList.toggle('warn',mode==='MANUAL'||mode==='OBSERVAÇÃO');
+      badge.classList.toggle('warn',outside||mode==='MANUAL'||mode==='OBSERVAÇÃO');
     }
     const baseOn=Number(sec.base_on_seconds||sec.on_seconds||30);
     const baseOff=Number(sec.base_off_seconds||sec.off_seconds||120);
@@ -208,8 +209,11 @@
     const humidity=Number(cs.last_humidity);
     if(byId('smartOverviewTemp'))byId('smartOverviewTemp').textContent=Number.isFinite(temp)?temp.toFixed(1)+' °C':'—';
     if(byId('smartOverviewHumidity'))byId('smartOverviewHumidity').textContent=Number.isFinite(humidity)?Math.round(humidity)+'%':'—';
-    if(byId('smartClimateReason'))byId('smartClimateReason').textContent=
-      String(cs.last_reason||'Aguardando avaliação climática.');
+    if(byId('smartClimateReason')){
+      byId('smartClimateReason').textContent=outside
+        ?'Automático 2.0 aguardando o horário programado. Fora da janela ele não altera o ciclo.'
+        :String(cs.last_reason||'Aguardando avaliação climática.');
+    }
   }
   function fmtDuration(seconds){
     const s=Math.max(0,Math.round(Number(seconds)||0));

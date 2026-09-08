@@ -193,3 +193,104 @@ export function decodeDp104(value) {
     valve_state: data[3] & 0x0f
   };
 }
+
+
+function parseNormalTimerHex(value){
+  const text=String(value||'').trim();
+  if(!/^[0-9a-f]+$/i.test(text)||text.length<40||text.length%40!==0)return[];
+  const blocks=[];
+  for(let i=0;i<text.length;i+=40){
+    blocks.push(Buffer.from(text.slice(i,i+40),'hex'));
+  }
+  return blocks;
+}
+
+export function decodeNormalTimer(value){
+  const blocks=parseNormalTimerHex(value);
+  if(!blocks.length)return{raw_length:0,channels:[]};
+  const channels=blocks.map((block,index)=>{
+    const times=[];
+    for(let t=0;t<6;t++){
+      const hour=block[2+t*2];
+      const minute=block[3+t*2];
+      if(!(hour===0xff&&minute===0xff)&&hour<=23&&minute<=59){
+        times.push({hour,minute,value:`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`});
+      }
+    }
+    const cycleMode=block[14]&0x03;
+    return{
+      zone:block[0]||index+1,
+      duration_minutes:block[1],
+      enabled:block[1]>0&&times.length>0,
+      start_times:times,
+      cycle_mode:cycleMode,
+      days_mask:block[15],
+      interval_days:cycleMode===3?block[15]:null,
+      interval_start:{
+        day:block[16],
+        month:block[17],
+        year_offset:block[18]
+      },
+      rain_sensor_follow:Boolean(block[19]&0x01),
+      raw:block.toString('hex').toUpperCase()
+    };
+  });
+  return{raw_length:blocks.length*20,channels};
+}
+
+export function encodeNormalTimerZone(currentValue,zone,config={}){
+  if(!Number.isInteger(zone)||zone<1||zone>8)throw new Error('Zona inválida.');
+  const currentBlocks=parseNormalTimerHex(currentValue);
+  const existing=currentBlocks.find(block=>Number(block[0])===zone);
+  const block=existing?Buffer.from(existing):Buffer.alloc(20,0);
+  block[0]=zone;
+
+  const enabled=config.enabled!==false;
+  block[1]=enabled?Math.max(1,Math.min(255,Math.round(Number(config.duration_minutes||10)))):0;
+  for(let i=0;i<6;i++){
+    block[2+i*2]=0xff;
+    block[3+i*2]=0xff;
+  }
+  const times=enabled&&Array.isArray(config.start_times)?config.start_times.slice(0,6):[];
+  times.forEach((item,i)=>{
+    const text=String(typeof item==='string'?item:item?.value||'').trim();
+    const m=text.match(/^(\d{1,2}):(\d{2})$/);
+    if(!m)return;
+    const h=Number(m[1]),min=Number(m[2]);
+    if(h<0||h>23||min<0||min>59)return;
+    block[2+i*2]=h;
+    block[3+i*2]=min;
+  });
+
+  const cycleMode=Math.max(0,Math.min(3,Number(config.cycle_mode||0)));
+  block[14]=(block[14]&0xfc)|cycleMode;
+  block[15]=cycleMode===0
+    ?Math.max(0,Math.min(127,Number(config.days_mask??127)))
+    :cycleMode===3
+      ?Math.max(1,Math.min(9,Number(config.interval_days||1)))
+      :0;
+
+  const date=config.interval_start||{};
+  block[16]=Math.max(0,Math.min(31,Number(date.day||0)));
+  block[17]=Math.max(0,Math.min(12,Number(date.month||0)));
+  block[18]=Math.max(0,Math.min(255,Number(date.year_offset||0)));
+
+  // Nos IIC observados o nibble alto vem em 0x10; preservamos para não
+  // sobrescrever flags internas e alteramos somente o bit "seguir sensor de chuva".
+  const high=existing?(existing[19]&0xf0):0x10;
+  block[19]=high|(config.rain_sensor_follow===false?0:1);
+
+  return{
+    raw:block.toString('hex').toUpperCase(),
+    decoded:decodeNormalTimer(block.toString('hex'))
+  };
+}
+
+export function dp45HasWatering(value,zone=null){
+  const decoded=decodeDp45(value);
+  const zones=zone?[Number(zone)]:[1,2,3,4,5,6,7,8];
+  return zones.some(z=>
+    Number(decoded?.running_time?.[z]||0)>0||
+    Number(decoded?.duration?.[z]||0)>0
+  );
+}

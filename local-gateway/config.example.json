@@ -1,0 +1,25 @@
+{
+  "devices": [
+    {
+      "name": "EKAZA Viveiro",
+      "id": "DEVICE_ID",
+      "ip": "192.168.1.100",
+      "local_key": "LOCAL_KEY",
+      "version": 3.3
+    },
+    {
+      "name": "INKBIRD Cafe",
+      "id": "DEVICE_ID",
+      "ip": "192.168.1.101",
+      "local_key": "LOCAL_KEY",
+      "version": 3.3
+    },
+    {
+      "name": "Weather2-2",
+      "id": "DEVICE_ID",
+      "ip": "192.168.1.102",
+      "local_key": "LOCAL_KEY",
+      "version": 3.3
+    }
+  ]
+}

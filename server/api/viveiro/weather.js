@@ -1,4 +1,4 @@
-import { applyCors, authorize, ensureConfig } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { verifyGitHubOidc } from './_github_oidc.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
@@ -18,7 +18,7 @@ export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
   if(!['GET','POST'].includes(req.method))return res.status(405).json({ok:false,error:'Método não permitido.'});
-  if(!(await authorized(req,res))||!ensureConfig(res))return;
+  if(!(await authorized(req,res)))return;
 
   try{
     if(req.method==='POST'&&req.body?.action==='save_config'){

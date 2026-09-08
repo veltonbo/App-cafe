@@ -496,6 +496,8 @@ if(!Array.isArray(data.notifiedEventIds))data.notifiedEventIds=[];
 if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
 let syncing=false;
 let weatherSyncing=false;
+let secondsSyncing=false;
+let dashboardSyncing=false;
 let secondsFreshAt=0;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'')
@@ -794,6 +796,8 @@ function updateSecondsLive(){
   }
 }
 async function syncSecondsMode(showToast=false){
+  if(secondsSyncing||!data.settings.apiUrl||!data.settings.token)return;
+  secondsSyncing=true;
   try{
     const r=await api('/api/viveiro/seconds');
     if(r?.state){
@@ -810,6 +814,8 @@ async function syncSecondsMode(showToast=false){
     }
   }catch(e){
     if(showToast)toast('Modo rápido: '+String(e.message||'falha ao consultar'));
+  }finally{
+    secondsSyncing=false;
   }
 }
 function fastCycleNowMinutes(){
@@ -1548,6 +1554,8 @@ function maybePromptClimateSuggestion(payload){
   if(confirm(msg))answerClimateSuggestion(true);
 }
 async function syncDashboard(showToast=false){
+  if(dashboardSyncing||!data.settings.apiUrl||!data.settings.token)return;
+  dashboardSyncing=true;
   try{
     const r=await api('/api/viveiro/dashboard');
     processDashboardNotifications(r);
@@ -1556,6 +1564,8 @@ async function syncDashboard(showToast=false){
     if(showToast)toast('Painel atualizado');
   }catch(e){
     if(showToast)toast('Painel: '+String(e.message||e));
+  }finally{
+    dashboardSyncing=false;
   }
 }
 async function setMaintenance(minutes){
@@ -1780,10 +1790,12 @@ $('saveCycle').onclick=async e=>{
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
 reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},10000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},300000);
+// Atualização rápida da interface sem transformar cada repaint em chamada ao Smart Life.
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},2500);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncDashboard(false)}},10000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false)}},15000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},20000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false);syncDashboard(false)}},60000);
 function updateOfflineBanner(){
   const el=$('offlineBanner');
   if(!el)return;
@@ -1803,10 +1815,21 @@ function updateOfflineBanner(){
   }
   el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>EKAZA sem resposta</b><span>Estado ao vivo não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">O servidor não recebeu uma leitura válida do EKAZA/Tuya neste momento.</div></details>';
 }
-window.addEventListener('online',()=>{updateOfflineBanner();syncStatus(false);syncDashboard(false)});
+window.addEventListener('online',()=>{
+  updateOfflineBanner();
+  syncSecondsMode(false);
+  syncStatus(false);
+  syncWeatherProtection(false);
+  syncDashboard(false);
+});
 window.addEventListener('offline',updateOfflineBanner);
 setInterval(updateOfflineBanner,3000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
+  syncSecondsMode(false);
+  syncStatus(false);
+  syncWeatherProtection(false);
+  syncDashboard(false);
+}});
 </script>
 <script src="/irrigacao/ui-shell.js?v=20260907-1" defer></script>
 </body></html>

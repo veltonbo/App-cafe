@@ -51,13 +51,22 @@ export function decodeDp45(value, zones = 8) {
 }
 
 export function encodeDp45Manual(durations = {}, zones = 8) {
-  const data = Buffer.alloc(34);
+  const data = Buffer.alloc(2 + zones * 4);
   data[0] = 0x01;
   data[1] = 0x01;
   for (let zone = 1; zone <= zones; zone++) {
-    const value = Math.max(0, Math.min(65535, Number(durations[zone] || 0)));
-    data.writeUInt16BE(value, 2 + (zone - 1) * 2);
+    const value = Math.max(0, Math.min(65535, Math.round(Number(durations[zone] || 0))));
+    const runOffset = 2 + (zone - 1) * 2;
+    const singleUseOffset = 2 + zones * 2 + (zone - 1) * 2;
+    data.writeUInt16BE(value, runOffset);
+    data.writeUInt16BE(value, singleUseOffset);
   }
+  return encodeRawValue(data);
+}
+
+export function encodeDp45Stop(zones = 8) {
+  const data = Buffer.alloc(2 + zones * 4);
+  data[0] = 0x01;
   return encodeRawValue(data);
 }
 
@@ -199,9 +208,7 @@ function parseNormalTimerHex(value){
   const text=String(value||'').trim();
   if(!/^[0-9a-f]+$/i.test(text)||text.length<40||text.length%40!==0)return[];
   const blocks=[];
-  for(let i=0;i<text.length;i+=40){
-    blocks.push(Buffer.from(text.slice(i,i+40),'hex'));
-  }
+  for(let i=0;i<text.length;i+=40)blocks.push(Buffer.from(text.slice(i,i+40),'hex'));
   return blocks;
 }
 
@@ -210,10 +217,10 @@ export function decodeNormalTimer(value){
   if(!blocks.length)return{raw_length:0,channels:[]};
   const channels=blocks.map((block,index)=>{
     const times=[];
-    for(let t=0;t<6;t++){
-      const hour=block[2+t*2];
-      const minute=block[3+t*2];
-      if(!(hour===0xff&&minute===0xff)&&hour<=23&&minute<=59){
+    for(let i=0;i<6;i++){
+      const hour=block[2+i];
+      const minute=block[8+i];
+      if(hour!==0xff&&minute!==0xff&&hour<=23&&minute<=59){
         times.push({hour,minute,value:`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`});
       }
     }
@@ -224,65 +231,71 @@ export function decodeNormalTimer(value){
       enabled:block[1]>0&&times.length>0,
       start_times:times,
       cycle_mode:cycleMode,
-      days_mask:block[15],
+      days_mask:cycleMode===0?block[15]:0,
       interval_days:cycleMode===3?block[15]:null,
       interval_start:{
-        day:block[16],
+        year_offset:block[16],
         month:block[17],
-        year_offset:block[18]
+        day:block[18]
       },
-      rain_sensor_follow:Boolean(block[19]&0x01),
+      rain_sensor_follow:block[19]!==0,
       raw:block.toString('hex').toUpperCase()
     };
   });
   return{raw_length:blocks.length*20,channels};
 }
 
-export function encodeNormalTimerZone(currentValue,zone,config={}){
+export function encodeNormalTimerZone(_currentValue,zone,config={}){
   if(!Number.isInteger(zone)||zone<1||zone>8)throw new Error('Zona inválida.');
-  const currentBlocks=parseNormalTimerHex(currentValue);
-  const existing=currentBlocks.find(block=>Number(block[0])===zone);
-  const block=existing?Buffer.from(existing):Buffer.alloc(20,0);
-  block[0]=zone;
+  const block=Buffer.alloc(20,0);
+  // Na escrita do DP38, o primeiro byte é máscara; na leitura, o dispositivo
+  // devolve o número simples da zona.
+  block[0]=1<<(zone-1);
 
   const enabled=config.enabled!==false;
   block[1]=enabled?Math.max(1,Math.min(255,Math.round(Number(config.duration_minutes||10)))):0;
-  for(let i=0;i<6;i++){
-    block[2+i*2]=0xff;
-    block[3+i*2]=0xff;
-  }
+
+  for(let i=2;i<14;i++)block[i]=0xff;
   const times=enabled&&Array.isArray(config.start_times)?config.start_times.slice(0,6):[];
   times.forEach((item,i)=>{
     const text=String(typeof item==='string'?item:item?.value||'').trim();
     const m=text.match(/^(\d{1,2}):(\d{2})$/);
     if(!m)return;
-    const h=Number(m[1]),min=Number(m[2]);
-    if(h<0||h>23||min<0||min>59)return;
-    block[2+i*2]=h;
-    block[3+i*2]=min;
+    const hour=Number(m[1]),minute=Number(m[2]);
+    if(hour<0||hour>23||minute<0||minute>59)return;
+    block[2+i]=hour;
+    block[8+i]=minute;
   });
 
   const cycleMode=Math.max(0,Math.min(3,Number(config.cycle_mode||0)));
-  block[14]=(block[14]&0xfc)|cycleMode;
-  block[15]=cycleMode===0
-    ?Math.max(0,Math.min(127,Number(config.days_mask??127)))
-    :cycleMode===3
-      ?Math.max(1,Math.min(9,Number(config.interval_days||1)))
-      :0;
+  block[14]=cycleMode;
+  if(!enabled){
+    block[15]=0x7f;
+    block[16]=0;
+    block[17]=0;
+    block[18]=0;
+  }else if(cycleMode===0){
+    block[15]=Math.max(0,Math.min(127,Number(config.days_mask??127)));
+  }else if(cycleMode===3){
+    block[15]=Math.max(1,Math.min(99,Number(config.interval_days||1)));
+    const date=config.interval_start||{};
+    block[16]=Math.max(0,Math.min(99,Number(date.year_offset||0)));
+    block[17]=Math.max(0,Math.min(12,Number(date.month||0)));
+    block[18]=Math.max(0,Math.min(31,Number(date.day||0)));
+  }else{
+    block[15]=0;
+  }
 
-  const date=config.interval_start||{};
-  block[16]=Math.max(0,Math.min(31,Number(date.day||0)));
-  block[17]=Math.max(0,Math.min(12,Number(date.month||0)));
-  block[18]=Math.max(0,Math.min(255,Number(date.year_offset||0)));
-
-  // Nos IIC observados o nibble alto vem em 0x10; preservamos para não
-  // sobrescrever flags internas e alteramos somente o bit "seguir sensor de chuva".
-  const high=existing?(existing[19]&0xf0):0x10;
-  block[19]=high|(config.rain_sensor_follow===false?0:1);
+  block[19]=config.rain_sensor_follow===false?0x00:0x11;
 
   return{
     raw:block.toString('hex').toUpperCase(),
-    decoded:decodeNormalTimer(block.toString('hex'))
+    decoded:decodeNormalTimer(
+      Buffer.concat([
+        Buffer.from([zone]),
+        block.subarray(1)
+      ]).toString('hex')
+    )
   };
 }
 

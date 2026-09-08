@@ -138,6 +138,13 @@ function dryingLevel(vpd){
   return{level:'muito_seco',factor:1.30,label:'Muito quente/seco'};
 }
 
+export function climateConfidenceAdjustmentLimit(confidence,maxAdjustPercent=30){
+  const maxPct=Math.max(10,Math.min(30,Math.round(Number(maxAdjustPercent)||30)));
+  if(String(confidence||'low')==='high')return maxPct;
+  if(String(confidence||'low')==='medium')return Math.min(maxPct,15);
+  return Math.min(maxPct,10);
+}
+
 export function climateSuggestion(snapshot={},secondsState={},config={},trendData=null){
   const cfg=normalizeClimateConfig(config);
   const instantTemperature=metricValue(snapshot?.metrics?.temperature);
@@ -184,7 +191,9 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   if(temperature>=35&&humidity<=40)factor=Math.max(factor,1.30);
   if(temperature<=23&&humidity>=90)factor=Math.min(factor,.85);
 
-  const maxPct=cfg.max_adjust_percent/100;
+  const confidence=String(trendData?.confidence||'low');
+  const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
+  const maxPct=confidenceLimitPct/100;
   factor=Math.max(1-maxPct,Math.min(1+maxPct,factor));
 
   // Automático 2.0: preserva o pulso-base configurado e ajusta principalmente o intervalo.
@@ -219,6 +228,7 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     temperature,humidity,vpd,
     factor,
     water_factor:factor,
+    confidence_adjust_limit_percent:confidenceLimitPct,
     level:drying.level,
     level_label:drying.label,
     confidence:trendData?.confidence||'low',

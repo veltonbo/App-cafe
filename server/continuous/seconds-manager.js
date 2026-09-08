@@ -575,7 +575,8 @@ async function run(){
     }
 
     const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
-    const delayed=!Number(state.first_pulse_window_at||0)&&Date.now()-expectedFrom>=30000;
+    const firstPulseOfWindow=!Number(state.first_pulse_window_at||0);
+    const delayed=firstPulseOfWindow&&Date.now()-expectedFrom>=30000;
     state={
       ...state,
       phase:'on',
@@ -600,7 +601,17 @@ async function run(){
         true
       );
     }
-    await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn});
+    await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn,first_of_window:firstPulseOfWindow});
+    if(firstPulseOfWindow&&!delayed){
+      await pushNotice(
+        'Irrigação iniciada',
+        'Primeiro pulso confirmado. Ciclo atual: '+Number(state.on_seconds||30)+' s ligado / '+Number(state.off_seconds||120)+' s desligado.',
+        'viveiro-window-start-'+String(windowStartAt||localDayKey()),
+        'info',
+        20,
+        true
+      );
+    }
 
     let elapsed=0;
     let interrupted=false;

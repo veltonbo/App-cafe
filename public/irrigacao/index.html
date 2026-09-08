@@ -306,6 +306,11 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
     <div class="opsCard"><small>Firebase</small><strong id="healthFirebase"><span class="healthDot"></span>Aguardando</strong></div>
     <div class="opsCard"><small>Weather2-2</small><strong id="healthWeather"><span class="healthDot"></span>Aguardando</strong></div>
   </div>
+  <div id="emergencyLatchBox" class="maintenanceActive" style="display:none;margin-top:10px">
+    <b>PARADA DE EMERGÊNCIA ATIVA</b>
+    <div style="margin-top:5px">A irrigação permanece bloqueada até liberação manual.</div>
+    <button type="button" id="clearEmergency" class="btn danger" style="margin-top:10px;width:100%">Liberar parada de emergência</button>
+  </div>
   <div id="systemAlert" class="alertBox"></div>
   <details class="diag" style="margin-top:10px"><summary>Diagnóstico técnico</summary><pre id="systemDiag">Aguardando dados...</pre></details>
 </section>
@@ -992,22 +997,39 @@ async function disableSecondsMode(){
 }
 
 async function emergencyStop(){
-  if(!confirm('PARAR A IRRIGAÇÃO AGORA?\n\nO modo rápido será encerrado e a saída do viveiro será desligada.'))return;
+  if(!confirm('PARAR A IRRIGAÇÃO AGORA?\n\nA parada ficará TRAVADA no servidor. A bomba só poderá voltar depois que você liberar a emergência e rearmar a programação.'))return;
   const btn=$('emergencyStop');
   try{
     btn.disabled=true;
-    if(secondsActive()){
-      const r=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'disable'})});
-      if(r?.state)data.secondsMode=r.state;
-    }
-    await api('/api/switch',{method:'POST',body:JSON.stringify({on:false})}).catch(()=>{});
+    const r=await api('/api/viveiro/seconds',{
+      method:'POST',
+      body:JSON.stringify({action:'emergency_stop',reason:'Parada de emergência pelo aplicativo'})
+    });
+    if(r?.state)data.secondsMode=r.state;
+    data.dashboard={...(data.dashboard||{}),safety:r?.safety||{emergency_latched:true}};
     data.relay=false;
     log('PARADA DE EMERGÊNCIA acionada');
-    save();render();toast('Irrigação parada');
-    setTimeout(()=>{syncStatus(false);syncSecondsMode(false)},800);
+    save();render();renderDashboard();toast('Emergência ativa • irrigação bloqueada');
+    setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
   }catch(e){
     toast('Falha ao parar: '+String(e.message||e));
   }finally{btn.disabled=false}
+}
+async function clearEmergencyStopUi(){
+  if(!confirm('Liberar a parada de emergência?\n\nA irrigação continuará DESLIGADA. Depois será necessário rearmar a programação manualmente.'))return;
+  try{
+    const r=await api('/api/viveiro/seconds',{
+      method:'POST',
+      body:JSON.stringify({action:'clear_emergency'})
+    });
+    if(r?.state)data.secondsMode=r.state;
+    data.dashboard={...(data.dashboard||{}),safety:r?.safety||{emergency_latched:false}};
+    data.relay=false;
+    save();render();renderDashboard();toast('Emergência liberada • sistema continua parado');
+    setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
+  }catch(e){
+    toast('Falha ao liberar: '+String(e.message||e));
+  }
 }
 async function manual(on){
   if(secondsActive()){
@@ -1287,7 +1309,9 @@ function renderDashboard(){
   setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':'Aguardando',data.online==null);
   const weatherOk=Boolean(data.weatherProtection?.weather?.linked);
   setHealth('healthWeather',weatherOk,weatherOk?'Online':'Sem dados',!weatherOk);
-  const allOk=Boolean(d.server?.online&&d.firebase?.online&&data.online===true&&weatherOk);
+  const emergencyActive=Boolean(d.safety?.emergency_latched);
+  if($('emergencyLatchBox'))$('emergencyLatchBox').style.display=emergencyActive?'block':'none';
+  const allOk=Boolean(d.server?.online&&d.firebase?.online&&data.online===true&&weatherOk&&!emergencyActive);
   if($('healthOverall')){
     $('healthOverall').textContent=allOk?'TUDO OK':'ATENÇÃO';
     $('healthOverall').className='phase '+(allOk?'':'off');
@@ -1295,11 +1319,14 @@ function renderDashboard(){
 
   let alert='';
   const sec=data.secondsMode||{};
+  if(emergencyActive)alert='PARADA DE EMERGÊNCIA ATIVA. A irrigação está bloqueada até liberação manual.';
   const now=Date.now();
-  if(sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
-  else if(sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
-  else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
-  else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
+  if(!emergencyActive){
+    if(sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
+    else if(sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
+    else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
+    else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
+  }
   const latestCritical=(Array.isArray(d.audit_today)?d.audit_today:[]).find(x=>
     ['viveiro_start_failure','viveiro_start_delay','viveiro_error'].includes(String(x.type||'')) &&
     Date.now()-Number(x.ts||0)<10*60*1000
@@ -1695,6 +1722,7 @@ $('editCycle').onclick=openCycleEditor;
 $('toggleCycle').onclick=toggleCycleState;
 $('manualOn').onclick=()=>manual(true);
 $('emergencyStop').onclick=emergencyStop;
+if($('clearEmergency'))$('clearEmergency').onclick=clearEmergencyStopUi;
 $('manualOff').onclick=()=>manual(false);
 $('clear').onclick=()=>{data.history=[];save();render()};
 $('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};

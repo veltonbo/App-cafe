@@ -369,6 +369,7 @@
   }
 
   const viewMap={inicio:'smartViewHome',perfil:'smartViewProfile',historico:'smartViewHistory',sistema:'smartViewSystem'};
+  window.__viveiroShowView=(name)=>showView(name);
   function showView(name='inicio'){
     const key=viewMap[name]?name:'inicio';
     Object.entries(viewMap).forEach(([k,id])=>{

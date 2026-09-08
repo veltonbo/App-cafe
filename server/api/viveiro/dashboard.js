@@ -3,6 +3,7 @@ import { storeGet, storeSet } from '../irrigation/_store.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
+import { createConfigBackup } from '../irrigation/_backup.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -193,6 +194,7 @@ export default async function handler(req,res){
         return res.status(200).json({ok:true,maintenance:{...payload,active:enabled}});
       }
       if(action==='climate_config'){
+        await createConfigBackup('antes_de_alterar_automatico_2').catch(()=>null);
         const cfg=await setClimateConfig({
           automatic:Boolean(req.body?.automatic),
           observation:Boolean(req.body?.observation),

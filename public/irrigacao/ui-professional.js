@@ -341,6 +341,18 @@
       const ops=qs('.opsGrid',box);
       if(ops)box.insertBefore(el,ops);else box.appendChild(el);
     }
+    let details=byId('smartSystemDetails');
+    if(!details){
+      details=document.createElement('details');
+      details.id='smartSystemDetails';
+      details.className='smartSystemDetails';
+      details.innerHTML='<summary>Ver detalhes técnicos</summary>';
+      const ops=qs('.opsGrid',box);
+      const diag=qs('.diag',box);
+      if(ops)details.appendChild(ops);
+      if(diag)details.appendChild(diag);
+      box.appendChild(details);
+    }
     return el;
   }
   function renderOperationalIntelligence(){
@@ -410,16 +422,17 @@
     const sum=d.summary?.today||{};
     if(byId('smartTodayIrrigated'))byId('smartTodayIrrigated').textContent=fmtDuration(sum.irrigated_seconds);
     if(byId('smartTodayBase'))byId('smartTodayBase').textContent=fmtDuration(sum.base_expected_irrigated_seconds);
-    const delta=Number(sum.versus_base_percent);
+    const delta=sum.versus_base_percent==null?null:Number(sum.versus_base_percent);
     if(byId('smartTodayDelta')){
-      byId('smartTodayDelta').textContent=Number.isFinite(delta)
+      byId('smartTodayDelta').textContent=delta!=null&&Number.isFinite(delta)
         ?(delta>0?'+':'')+delta.toFixed(0)+'% em relação ao base'
         :'Aguardando janela ativa';
     }
     const compare=byId('smartCompareFill');
     if(compare){
-      const pos=Number.isFinite(delta)?Math.max(5,Math.min(100,50+delta)):50;
+      const pos=delta!=null&&Number.isFinite(delta)?Math.max(5,Math.min(100,50+delta)):50;
       compare.style.width=pos+'%';
+      compare.style.opacity=delta==null?'.35':'1';
     }
 
     const list=byId('smartDecisionList');

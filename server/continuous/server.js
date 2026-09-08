@@ -14,6 +14,7 @@ import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
+// Viveiro clean UI v7 rollout
 // UI cycle-alert freshness rollout v1
 // Automatico 2.0 extreme-heat rollout v1
 // Automatico 2.0 final rollout v1

@@ -5,3 +5,5 @@ Publicar layout com menus e perfil - 2026-09-08T00:31:29.523Z
 Publicar central por perfis Viveiro e Cafe
 
 Publicar notificacoes diagnostico e backups da central
+
+Publicar separacao definitiva entre Viveiro e Cafe

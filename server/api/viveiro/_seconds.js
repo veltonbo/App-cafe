@@ -158,13 +158,13 @@ export async function pulseStillActive(state={}){
   return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
 }
 
-export async function prepareServerPulse({onSeconds=30,offSeconds=90,resumeDelayMinutes=30,startMinutes=null,endMinutes=null,daysMask=null}={}){
+export async function prepareServerPulse({onSeconds=30,offSeconds=120,resumeDelayMinutes=30,startMinutes=null,endMinutes=null,daysMask=null}={}){
   const current=await readViveiroDevice();
   const cycle=current.cycleConfig;
   if(!cycle)throw new Error('Atualize a programação do EKAZA antes de ativar o modo em segundos.');
 
   const on=Math.max(1,Math.min(300,Math.round(Number(onSeconds)||30)));
-  const off=Math.max(1,Math.min(900,Math.round(Number(offSeconds)||90)));
+  const off=Math.max(1,Math.min(900,Math.round(Number(offSeconds)||120)));
   if(on+off>1200)throw new Error('Ligado + desligado deve totalizar no máximo 1200 segundos.');
 
   const nativeCycleRaw=current.cycleRaw;

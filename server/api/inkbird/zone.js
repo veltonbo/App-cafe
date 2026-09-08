@@ -1,462 +1,207 @@
-import { applyCors, authorize, ensureCloudConfig, tuyaRequest } from '../_tuya.js';
-import { resolveInkbirdDevice } from './_device.js';
+import { applyCors, authorize } from '../_tuya.js';
+import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
+import { encodeDp45Manual, encodeDp45Stop, dp45HasWatering } from './_iic800.js';
 import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
 import { appendHistory, getAutomationConfig, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
 
-function encodeStartPayload(zone, durationMinutes) {
-  const payload = Buffer.alloc(34);
-  payload[0] = 0x01;
-  payload[1] = 0x01;
-  const offset = 2 + (zone - 1) * 2;
-  payload.writeUInt16BE(durationMinutes, offset);
-  return payload.toString('base64');
-}
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
-function encodeStopPayload() {
-  const payload = Buffer.alloc(34);
-  payload[0] = 0x01;
-  payload[1] = 0x01;
-  return payload.toString('base64');
-}
-
-function normalizeFunctions(result) {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.functions)) return result.functions;
-  if (Array.isArray(result?.result)) return result.result;
-  return [];
-}
-
-function normalizeStatus(result) {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.status)) return result.status;
-  if (Array.isArray(result?.result)) return result.result;
-  return [];
-}
-
-function statusMapFrom(result) {
-  return Object.fromEntries(normalizeStatus(result).map(item => [item.code, item.value]));
-}
-
-function fulfilled(result, fallback = null) {
-  return result.status === 'fulfilled' ? result.value : fallback;
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function readRuntimeState(deviceId) {
-  const status = await tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/status`);
-  const map = statusMapFrom(status);
-  return {
-    operation_mode: map.operation_mode ?? null,
-    zonerun_state: Number.isFinite(Number(map.zonerun_state)) ? Number(map.zonerun_state) : 0,
-    pendingzone_state: Number.isFinite(Number(map.pendingzone_state)) ? Number(map.pendingzone_state) : 0,
-    irrigation_mode: map.irrigation_mode ?? null
+async function evaluateServerWeather(){
+  const config=await getAutomationConfig().catch(()=>({}));
+  const policy=config?.weather||{
+    enabled:true,rainThreshold:5,rainHoldHours:12,blockWhileRaining:true
   };
-}
-
-async function waitForZoneState(deviceId, zone, expectedOn, attempts = 5) {
-  const bit = 1 << (zone - 1);
-  let last = null;
-
-  for (let i = 0; i < attempts; i++) {
-    if (i) await sleep(700);
-    try {
-      last = await readRuntimeState(deviceId);
-      const isOn = Boolean(last.zonerun_state & bit);
-      if (isOn === expectedOn) return { confirmed:true, state:last };
-    } catch {}
-  }
-
-  return { confirmed:false, state:last };
-}
-
-async function waitForAllZonesOff(deviceId, attempts = 6) {
-  let last = null;
-
-  for (let i = 0; i < attempts; i++) {
-    if (i) await sleep(700);
-    try {
-      last = await readRuntimeState(deviceId);
-      if (Number(last.zonerun_state || 0) === 0 && Number(last.pendingzone_state || 0) === 0) return { confirmed:true, state:last };
-    } catch {}
-  }
-
-  return { confirmed:false, state:last };
-}
-
-
-async function evaluateServerWeather() {
-  const config = await getAutomationConfig().catch(() => ({}));
-  const policy = config?.weather || {
-    enabled:true,
-    rainThreshold:5,
-    rainHoldHours:12,
-    blockWhileRaining:true,
-    backgroundProtection:false
-  };
-
-  const snapshot = await fetchWeatherSnapshot().catch(() => null);
-  const weatherState = (await storeGet('IrrigacaoFazenda2E/weatherState').catch(() => null)) || {};
-
-  if (snapshot?.metrics?.rainDetected) {
-    weatherState.lastRainAt = Date.now();
-  }
-
-  const decision = decideWeather(snapshot, policy, weatherState);
-  await storePatch('IrrigacaoFazenda2E/weatherState', {
-    lastRainAt:weatherState.lastRainAt || null,
+  const snapshot=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
+  const weatherState=(await storeGet('IrrigacaoFazenda2E/weatherState').catch(()=>null))||{};
+  if(snapshot?.metrics?.rainDetected)weatherState.lastRainAt=Date.now();
+  const decision=decideWeather(snapshot,policy,weatherState);
+  await storePatch('IrrigacaoFazenda2E/weatherState',{
+    lastRainAt:weatherState.lastRainAt||null,
     checkedAt:Date.now(),
     decision,
     snapshot:{
-      linked:snapshot?.linked || false,
-      online:snapshot?.device?.online ?? null,
-      metrics:snapshot?.metrics || null
+      linked:Boolean(snapshot?.linked),
+      online:snapshot?.device?.online??null,
+      metrics:snapshot?.metrics||null
     }
-  }).catch(() => null);
-
-  return { policy, snapshot, decision };
+  }).catch(()=>null);
+  return{snapshot,decision};
 }
 
-function controllerMeta(resolved, deviceId, zone) {
-  const index = Math.max(0, (resolved.devices || []).findIndex(d => d.id === deviceId));
-  return {
-    controller_index:index + 1,
-    sector:index * 8 + zone
+function controllerMeta(state,zone){
+  const devices=state.resolved.devices||[];
+  const index=Math.max(0,devices.findIndex(d=>d.id===state.deviceId));
+  return{controller_index:index+1,sector:index*8+Number(zone||0)};
+}
+
+function runtimeResponse(state){
+  return{
+    ...state.runtime,
+    operation_mode:(state.runtime.active_mask||state.runtime.pending_mask)?'Manual':'Auto',
+    zonerun_state:Number(state.runtime.active_mask||0),
+    pendingzone_state:Number(state.runtime.pending_mask||0),
+    irrigation_mode:state.statusMap.irrigation_mode??null
   };
 }
 
-async function recordCommand(entry) {
-  await appendHistory(entry).catch(() => null);
+async function waitForWatering(deviceId,zone,expectedOn,attempts=6){
+  let last=null;
+  for(let i=0;i<attempts;i++){
+    if(i)await sleep(650);
+    try{
+      last=await readInkbirdState({deviceId,force:true,maxAgeMs:0});
+      const on=dp45HasWatering(last.statusMap.irrigation_time_all,expectedOn?zone:null);
+      if(expectedOn?on:!dp45HasWatering(last.statusMap.irrigation_time_all)){
+        return{confirmed:true,state:last};
+      }
+    }catch{}
+  }
+  return{confirmed:false,state:last};
 }
 
-export default async function handler(req, res) {
-  applyCors(req, res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'Método não permitido.' });
-  if (!authorize(req, res) || !ensureCloudConfig(res)) return;
+export default async function handler(req,res){
+  applyCors(req,res);
+  if(req.method==='OPTIONS')return res.status(204).end();
+  if(req.method!=='POST')return res.status(405).json({ok:false,error:'Método não permitido.'});
+  if(!authorize(req,res))return;
 
-  const preferredId = String(req.body?.device_id || '').trim();
-  const action = String(req.body?.action || '').trim().toLowerCase();
-  const zone = Number(req.body?.zone);
-  const duration = Number(req.body?.duration_minutes);
+  const preferredId=String(req.body?.device_id||'').trim();
+  const action=String(req.body?.action||'').trim().toLowerCase();
+  const zone=Number(req.body?.zone);
+  const duration=Math.round(Number(req.body?.duration_minutes||0));
 
-  if (!['start','stop','auto'].includes(action)) {
-    return res.status(400).json({ ok:false, error:'Ação inválida.' });
+  if(!['start','stop','auto'].includes(action)){
+    return res.status(400).json({ok:false,error:'Ação inválida.'});
   }
-  if (action !== 'auto' && (!Number.isInteger(zone) || zone < 1 || zone > 8)) {
-    return res.status(400).json({ ok:false, error:'Setor inválido. Use zona de 1 a 8.' });
+  if(action==='start'&&(!Number.isInteger(zone)||zone<1||zone>8)){
+    return res.status(400).json({ok:false,error:'Setor inválido. Use zona de 1 a 8.'});
   }
-  if (action === 'start' && (!Number.isInteger(duration) || duration < 1 || duration > 1440)) {
-    return res.status(400).json({ ok:false, error:'Duração deve ficar entre 1 e 1440 minutos.' });
+  if(action==='start'&&(!Number.isInteger(duration)||duration<1||duration>1440)){
+    return res.status(400).json({ok:false,error:'Duração deve ficar entre 1 e 1440 minutos.'});
   }
 
-  try {
-    const resolved = await resolveInkbirdDevice(preferredId);
-    const deviceId = resolved.id;
-    if (!deviceId) {
-      return res.status(400).json({ ok:false, error:'IIC-800 não sincronizado com o projeto Tuya.' });
+  try{
+    const before=await readInkbirdState({deviceId:preferredId,force:true,maxAgeMs:0});
+    if(before.online===false){
+      return res.status(409).json({ok:false,error:'Controlador offline. O comando não foi enviado.'});
     }
+    const deviceId=before.deviceId;
+    const meta=controllerMeta(before,zone);
 
-    const [functionsR, specificationR, statusR, infoR] = await Promise.allSettled([
-      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/functions`),
-      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/specification`),
-      tuyaRequest('GET', `/v1.0/iot-03/devices/${deviceId}/status`),
-      tuyaRequest('GET', `/v1.0/devices/${deviceId}`)
-    ]);
-
-    const functions = normalizeFunctions(fulfilled(functionsR));
-    const specification = fulfilled(specificationR, {});
-    const specFunctions = normalizeFunctions(specification);
-    const specStatus = Array.isArray(specification?.status) ? specification.status : [];
-    const statusList = normalizeStatus(fulfilled(statusR, []));
-    const info = fulfilled(infoR, {});
-
-    const knownCodes = new Set([
-      ...functions.map(x => x?.code),
-      ...specFunctions.map(x => x?.code),
-      ...specStatus.map(x => x?.code),
-      ...statusList.map(x => x?.code)
-    ].filter(Boolean));
-
-    const nativeSignature =
-      knownCodes.has('irrigation_time_all') ||
-      knownCodes.has('zonerun_state') ||
-      String(info?.product_id || '') === 'h71ip90tp4mfd6mx';
-
-    const meta = controllerMeta(resolved, deviceId, Number.isInteger(zone) ? zone : 0);
-    const initialMap = Object.fromEntries(statusList.map(item => [item.code,item.value]));
-    const initialActive = Number(initialMap.zonerun_state || 0);
-    const initialPending = Number(initialMap.pendingzone_state || 0);
-
-    if (!nativeSignature) {
-      return res.status(400).json({
-        ok:false,
-        error:'O dispositivo não apresentou a assinatura esperada do IIC-800 DP45.'
-      });
-    }
-
-    if (action === 'start') {
-      if (info?.online === false) {
+    if(action==='start'){
+      const session=await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(()=>null);
+      const alreadyWatering=dp45HasWatering(before.statusMap.irrigation_time_all);
+      const sessionStillActive=Boolean(session&&Number(session.expected_end_at||0)>Date.now()-120000);
+      if(alreadyWatering||sessionStillActive){
         return res.status(409).json({
           ok:false,
-          error:'Controlador offline. O comando não foi enviado.'
+          error:'Já existe uma irrigação ativa ou aguardando neste controlador. Pare o ciclo atual antes de iniciar outro.',
+          state:runtimeResponse(before)
         });
       }
-      if (initialActive || initialPending) {
-        const requestedBit = 1 << (zone - 1);
+
+      const weather=await evaluateServerWeather();
+      if(weather.decision?.blocked){
+        await appendHistory({
+          type:'blocked',controller_id:deviceId,controller_index:meta.controller_index,
+          zone,sector:meta.sector,duration_minutes:duration,mode:'Manual',
+          source:'server_weather',status:'blocked',detail:weather.decision.reason,weather:weather.decision
+        }).catch(()=>null);
+        return res.status(423).json({
+          ok:false,blocked:true,error:'Irrigação bloqueada pela proteção meteorológica.',
+          weather:weather.decision
+        });
+      }
+
+      const raw=encodeDp45Manual({[zone]:duration},8);
+      const sent=await sendInkbirdCommands({
+        deviceId,
+        commands:[{code:'irrigation_time_all',value:raw}]
+      });
+      let verification=dp45HasWatering(sent.statusMap.irrigation_time_all,zone)
+        ?{confirmed:true,state:sent}
+        :await waitForWatering(deviceId,zone,true,6);
+
+      if(!verification.confirmed){
+        // O Device Sharing pode demorar para refletir o RAW. Não repetimos o
+        // comando automaticamente para evitar iniciar duas vezes.
         return res.status(409).json({
           ok:false,
-          error:(initialActive & requestedBit)
-            ? 'Este setor já está irrigando.'
-            : 'Já existe uma irrigação ativa ou aguardando neste controlador. Pare o ciclo atual antes de iniciar outro.',
-          state:{ zonerun_state:initialActive,pendingzone_state:initialPending }
-        });
-      }
-    }
-
-    if (action === 'auto') {
-      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-        commands: [{ code:'operation_mode', value:'Auto' }]
-      });
-      await sleep(500);
-      const state = await readRuntimeState(deviceId).catch(() => null);
-      const verified = state?.operation_mode === 'Auto';
-      await recordCommand({
-        type:'mode',
-        controller_id:deviceId,
-        controller_index:meta.controller_index,
-        mode:'Auto',
-        source:'app',
-        status:verified?'confirmed':'sent',
-        detail:'Controlador alterado para modo automático'
-      });
-      return res.status(200).json({
-        ok:true,
-        device_id:deviceId,
-        action:'auto',
-        verified,
-        state
-      });
-    }
-
-    if (action === 'stop') {
-      let offCommandError = null;
-      try {
-        await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-          commands: [{ code:'operation_mode', value:'OFF' }]
-        });
-      } catch (error) {
-        offCommandError = error?.message || String(error);
-      }
-
-      let verification = await waitForAllZonesOff(deviceId, 5);
-
-      if (!verification.confirmed) {
-        try {
-          await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-            commands: [{ code:'irrigation_time_all', value:encodeStopPayload() }]
-          });
-        } catch {}
-
-        verification = await waitForAllZonesOff(deviceId, 5);
-      }
-
-      if (!verification.confirmed) {
-        return res.status(409).json({
-          ok:false,
-          error:'O IIC-800 não confirmou a parada da irrigação.',
-          detail:offCommandError,
+          sent:true,
+          error:'O comando foi enviado, mas o Smart Life ainda não confirmou o início. Não repita até atualizar o estado.',
           device_id:deviceId,
-          action:'stop',
+          action:'start',
           zone,
-          state:verification.state
+          duration_minutes:duration,
+          state:verification.state?runtimeResponse(verification.state):runtimeResponse(before)
         });
       }
 
-      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, null).catch(() => null);
-      await recordCommand({
-        type:'stop',
-        controller_id:deviceId,
-        controller_index:meta.controller_index,
-        zone,
-        sector:meta.sector,
-        mode:'Manual',
-        source:'app',
-        status:'confirmed',
-        detail:'Irrigação manual parada'
-      });
+      const startedAt=Date.now();
+      const expectedEndAt=startedAt+duration*60000;
+      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,{
+        kind:'zone',zone,sector:meta.sector,controller_index:meta.controller_index,
+        duration_minutes:duration,started_at:startedAt,expected_end_at:expectedEndAt,
+        mode:'Manual',source:'smartlife'
+      }).catch(()=>null);
+      await appendHistory({
+        type:'start',controller_id:deviceId,controller_index:meta.controller_index,
+        zone,sector:meta.sector,duration_minutes:duration,mode:'Manual',
+        source:'smartlife',status:'confirmed',detail:'Irrigação manual iniciada',
+        weather:weather.decision
+      }).catch(()=>null);
+
       return res.status(200).json({
-        ok:true,
-        device_id:deviceId,
-        action:'stop',
-        zone,
-        verified:true,
-        state:verification.state,
-        warning:offCommandError || null,
-        stopped_at:Date.now()
+        ok:true,verified:true,provider:'smartlife',device_id:deviceId,
+        action:'start',zone,duration_minutes:duration,started_at:startedAt,
+        expected_end_at:expectedEndAt,state:runtimeResponse(verification.state),
+        weather:weather.decision,profile:'IIC-800-DP45-SMARTLIFE'
       });
     }
 
-    if (!knownCodes.has('irrigation_time_all') && String(info?.product_id || '') !== 'h71ip90tp4mfd6mx') {
-      return res.status(400).json({
-        ok:false,
-        error:'O controlador não apresentou irrigation_time_all (DP45).'
-      });
-    }
-
-    const weather = await evaluateServerWeather();
-    if (weather.decision?.blocked) {
-      await recordCommand({
-        type:'blocked',
-        controller_id:deviceId,
-        controller_index:meta.controller_index,
-        zone,
-        sector:meta.sector,
-        duration_minutes:duration,
-        mode:'Manual',
-        source:'server_weather',
-        status:'blocked',
-        detail:weather.decision.reason,
-        weather:weather.decision
-      });
-      return res.status(423).json({
-        ok:false,
-        blocked:true,
-        error:'Irrigação bloqueada pela proteção meteorológica.',
-        weather:weather.decision
-      });
-    }
-
-    const rawBase64 = encodeStartPayload(zone, duration);
-
-    // O IIC-800 pode entrar em Manual automaticamente quando recebe o DP45.
-    // Portanto, primeiro enviamos SOMENTE o RAW e confirmamos zonerun_state.
-    await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-      commands: [{ code:'irrigation_time_all', value:rawBase64 }]
+    // Tanto "stop" como o antigo botão "voltar ao automático" encerram o
+    // comando manual DP45. A agenda nativa DP38 permanece armazenada no IIC.
+    const stopRaw=encodeDp45Stop(8);
+    const sent=await sendInkbirdCommands({
+      deviceId,
+      commands:[{code:'irrigation_time_all',value:stopRaw}],
+      priority:true
     });
+    let verification=!dp45HasWatering(sent.statusMap.irrigation_time_all)
+      ?{confirmed:true,state:sent}
+      :await waitForWatering(deviceId,null,false,6);
 
-    let verification = await waitForZoneState(deviceId, zone, true, 5);
-
-    if (verification.confirmed) {
-      const startedAt = Date.now();
-      const expectedEndAt = startedAt + duration * 60000;
-      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, {
-        zone,
-        sector:meta.sector,
-        controller_index:meta.controller_index,
-        duration_minutes:duration,
-        started_at:startedAt,
-        expected_end_at:expectedEndAt,
-        source:'app'
-      }).catch(() => null);
-      await recordCommand({
-        type:'start',
-        controller_id:deviceId,
-        controller_index:meta.controller_index,
-        zone,
-        sector:meta.sector,
-        duration_minutes:duration,
-        mode:'Manual',
-        source:'app',
-        status:'confirmed',
-        detail:'Irrigação manual iniciada',
-        weather:weather.decision
-      });
-      return res.status(200).json({
-        ok:true,
-        verified:true,
-        device_id:deviceId,
-        action:'start',
-        zone,
-        duration_minutes:duration,
-        started_at:startedAt,
-        expected_end_at:expectedEndAt,
-        state:verification.state,
-        weather:weather.decision,
-        profile:'IIC-800-DP45',
-        path:'dp45-only'
+    if(!verification.confirmed){
+      return res.status(409).json({
+        ok:false,sent:true,
+        error:'O comando de parada foi enviado, mas o Smart Life ainda não confirmou todas as zonas desligadas.',
+        device_id:deviceId,action,state:verification.state?runtimeResponse(verification.state):runtimeResponse(before)
       });
     }
 
-    // Alguns firmwares exigem a troca explícita para Manual.
-    // Se a Tuya rejeitar esse comando (ex.: 2008), ainda verificamos o estado
-    // porque o DP45 pode ter iniciado a irrigação mesmo assim.
-    let manualCommandError = null;
-    try {
-      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-        commands: [{ code:'operation_mode', value:'Manual' }]
-      });
-    } catch (error) {
-      manualCommandError = error?.message || String(error);
-    }
+    await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,null).catch(()=>null);
+    await appendHistory({
+      type:action==='auto'?'mode':'stop',
+      controller_id:deviceId,controller_index:meta.controller_index,
+      zone:Number.isInteger(zone)?zone:0,sector:meta.sector||0,
+      mode:'Auto',source:'smartlife',status:'confirmed',
+      detail:action==='auto'
+        ?'Irrigação manual encerrada; programação automática mantida'
+        :'Irrigação manual parada'
+    }).catch(()=>null);
 
-    verification = await waitForZoneState(deviceId, zone, true, 5);
-
-    if (verification.confirmed) {
-      const startedAt = Date.now();
-      const expectedEndAt = startedAt + duration * 60000;
-      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`, {
-        zone,
-        sector:meta.sector,
-        controller_index:meta.controller_index,
-        duration_minutes:duration,
-        started_at:startedAt,
-        expected_end_at:expectedEndAt,
-        source:'app'
-      }).catch(() => null);
-      await recordCommand({
-        type:'start',
-        controller_id:deviceId,
-        controller_index:meta.controller_index,
-        zone,
-        sector:meta.sector,
-        duration_minutes:duration,
-        mode:'Manual',
-        source:'app',
-        status:'confirmed',
-        detail:'Irrigação manual iniciada',
-        weather:weather.decision
-      });
-      return res.status(200).json({
-        ok:true,
-        verified:true,
-        device_id:deviceId,
-        action:'start',
-        zone,
-        duration_minutes:duration,
-        started_at:startedAt,
-        expected_end_at:expectedEndAt,
-        state:verification.state,
-        weather:weather.decision,
-        profile:'IIC-800-DP45',
-        path:'dp45-plus-manual',
-        warning:manualCommandError || null
-      });
-    }
-
-    if (verification.state?.operation_mode === 'Manual' && verification.state?.zonerun_state === 0) {
-      await tuyaRequest('POST', `/v1.0/iot-03/devices/${deviceId}/commands`, {
-        commands: [{ code:'operation_mode', value:'Auto' }]
-      }).catch(() => null);
-    }
-
-    return res.status(409).json({
-      ok:false,
-      error:'O IIC-800 não confirmou a abertura do setor após o comando.',
-      detail:manualCommandError,
-      device_id:deviceId,
-      action:'start',
-      zone,
-      duration_minutes:duration,
-      state:verification.state,
-      profile:'IIC-800-DP45'
+    return res.status(200).json({
+      ok:true,verified:true,provider:'smartlife',device_id:deviceId,
+      action,zone:Number.isInteger(zone)?zone:null,stopped_at:Date.now(),
+      state:{
+        ...runtimeResponse(verification.state),
+        operation_mode:'Auto',
+        zonerun_state:0,pendingzone_state:0,active_mask:0,pending_mask:0
+      }
     });
-  } catch (error) {
+  }catch(error){
     return res.status(502).json({
-      ok:false,
-      error:error.message || 'Falha ao controlar o setor no IIC-800.'
+      ok:false,error:error?.message||'Falha ao controlar o setor no IIC-800 pelo Smart Life.'
     });
   }
 }

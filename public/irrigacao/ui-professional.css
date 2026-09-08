@@ -311,3 +311,95 @@ body.smartIrrigationV6{background:#f3f6f4}
   .smartIrrigationV7 #todayBox .todayGrid{grid-template-columns:1fr 1fr}
   .smartIrrigationV7 .toast{bottom:calc(82px + env(safe-area-inset-bottom))!important}
 }
+
+
+/* Viveiro Intelligence UI v8 */
+.smartIrrigationV7 .smartHealthStrip{
+  width:100%;display:grid;grid-template-columns:12px minmax(0,1fr) auto;align-items:center;gap:10px;
+  border:1px solid #d9e7e2;background:#fff;border-radius:14px;padding:11px 12px;margin:8px 0 0;
+  color:var(--ui-ink);text-align:left;box-shadow:0 5px 16px rgba(20,55,46,.05)
+}
+.smartIrrigationV7 .smartHealthStrip i{
+  width:10px;height:10px;border-radius:50%;background:#caa33b;box-shadow:0 0 0 4px rgba(202,163,59,.12)
+}
+.smartIrrigationV7 .smartHealthStrip[data-level="ok"] i{background:#2c9c68;box-shadow:0 0 0 4px rgba(44,156,104,.12)}
+.smartIrrigationV7 .smartHealthStrip[data-level="critical"] i{background:#c74b42;box-shadow:0 0 0 4px rgba(199,75,66,.12)}
+.smartIrrigationV7 .smartHealthStrip span{min-width:0}
+.smartIrrigationV7 .smartHealthStrip b{display:block;font-size:.82rem}
+.smartIrrigationV7 .smartHealthStrip small{display:block;color:var(--ui-muted);font-size:.67rem;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smartIrrigationV7 .smartHealthStrip em{font-size:1.2rem;color:var(--ui-muted);font-style:normal}
+
+.smartIrrigationV7 .smartIntensity{margin-top:9px;padding:10px;border:1px solid var(--ui-line);border-radius:12px;background:#fbfdfc}
+.smartIrrigationV7 .smartIntensityTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}
+.smartIrrigationV7 .smartIntensityTop small{display:block;color:var(--ui-muted);font-size:.65rem}
+.smartIrrigationV7 .smartIntensityTop b{font-size:.86rem}
+.smartIrrigationV7 .smartIntensityTop>span:last-child{font-size:.72rem;font-weight:850;color:var(--ui-muted)}
+.smartIrrigationV7 .smartIntensityTrack,.smartIrrigationV7 .smartCompareTrack{
+  height:7px;background:#e8efec;border-radius:999px;overflow:hidden;margin-top:8px
+}
+.smartIrrigationV7 .smartIntensityTrack i,.smartIrrigationV7 .smartCompareTrack i{
+  display:block;height:100%;width:50%;border-radius:inherit;background:#4f9f7f;transition:width .35s ease
+}
+.smartIrrigationV7 .smartIntensityTrack i[data-level="high"]{background:#d29338}
+.smartIrrigationV7 .smartIntensityTrack i[data-level="very_high"]{background:#c95d43}
+.smartIrrigationV7 .smartIntensityTrack i[data-level="low"]{background:#5c89aa}
+
+.smartIrrigationV7 .smartClimateLine{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px
+}
+.smartIrrigationV7 .smartClimateLine>span{
+  display:block;border:1px solid var(--ui-line);border-radius:12px;padding:9px 10px;background:#fff
+}
+.smartIrrigationV7 .smartClimateLine small{display:block;color:var(--ui-muted);font-size:.64rem}
+.smartIrrigationV7 .smartClimateLine b{font-size:.79rem}
+.smartIrrigationV7 .smartDecisionSummary{
+  margin-top:7px;border-left:3px solid var(--ui-brand);background:#f6faf8;border-radius:10px;padding:9px 10px
+}
+.smartIrrigationV7 .smartDecisionSummary small{display:block;color:var(--ui-muted);font-size:.63rem}
+.smartIrrigationV7 .smartDecisionSummary strong{display:block;font-size:.76rem;line-height:1.35;margin-top:2px}
+.smartIrrigationV7 .smartDecisionSummary span{display:block;color:var(--ui-muted);font-size:.62rem;margin-top:3px}
+.smartIrrigationV7 .smartOverviewMeta{grid-template-columns:1fr 1fr}
+
+.smartIrrigationV7 .smartDailyCompare{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--ui-line)
+}
+.smartIrrigationV7 .smartDailyCompare>div{border:1px solid var(--ui-line);border-radius:12px;padding:9px 10px;background:#fbfdfc}
+.smartIrrigationV7 .smartDailyCompare .wide{grid-column:1/-1}
+.smartIrrigationV7 .smartDailyCompare small{display:block;color:var(--ui-muted);font-size:.64rem}
+.smartIrrigationV7 .smartDailyCompare strong{font-size:.8rem}
+
+.smartIrrigationV7 .smartDecisionBox .note{margin-top:-3px}
+.smartIrrigationV7 .smartDecisionList{display:grid;gap:7px}
+.smartIrrigationV7 .smartDecisionItem{
+  display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:start;
+  border:1px solid var(--ui-line);border-radius:12px;padding:10px;background:#fff
+}
+.smartIrrigationV7 .smartDecisionItem>i{width:9px;height:9px;border-radius:50%;background:#7a9189;margin-top:3px}
+.smartIrrigationV7 .smartDecisionItem[data-kind="climate"]>i{background:#d29438}
+.smartIrrigationV7 .smartDecisionItem[data-kind="weather"]>i{background:#4d89b1}
+.smartIrrigationV7 .smartDecisionItem[data-kind="critical"]>i{background:#c74b42}
+.smartIrrigationV7 .smartDecisionItem[data-kind="warning"]>i{background:#d28a37}
+.smartIrrigationV7 .smartDecisionItem b{display:block;font-size:.76rem}
+.smartIrrigationV7 .smartDecisionItem small{display:block;color:var(--ui-muted);font-size:.66rem;line-height:1.35;margin-top:2px}
+.smartIrrigationV7 .smartDecisionItem time{font-size:.62rem;color:var(--ui-muted);white-space:nowrap}
+
+.smartIrrigationV7 .smartSystemSummary{
+  display:grid;grid-template-columns:12px 1fr;gap:10px;align-items:start;
+  border-radius:13px;padding:11px 12px;margin:6px 0 10px;background:#f7faf8;border:1px solid var(--ui-line)
+}
+.smartIrrigationV7 .smartSystemDot{width:10px;height:10px;border-radius:50%;background:#caa33b;margin-top:3px}
+.smartIrrigationV7 .smartSystemSummary[data-level="ok"] .smartSystemDot{background:#2c9c68}
+.smartIrrigationV7 .smartSystemSummary[data-level="critical"] .smartSystemDot{background:#c74b42}
+.smartIrrigationV7 .smartSystemSummary b{display:block;font-size:.82rem}
+.smartIrrigationV7 .smartSystemSummary small{display:block;color:var(--ui-muted);font-size:.67rem;line-height:1.35;margin-top:2px}
+
+.smartIrrigationV7 #eventsBox.smartUiHidden{display:none!important}
+.smartIrrigationV7 #systemHealthBox .opsGrid{margin-top:8px}
+.smartIrrigationV7 #systemHealthBox .diag{opacity:.85}
+@media(max-width:380px){
+  .smartIrrigationV7 .smartOverviewGrid,
+  .smartIrrigationV7 .smartClimateLine,
+  .smartIrrigationV7 .smartOverviewMeta,
+  .smartIrrigationV7 .smartDailyCompare{grid-template-columns:1fr}
+  .smartIrrigationV7 .smartDailyCompare .wide{grid-column:auto}
+}

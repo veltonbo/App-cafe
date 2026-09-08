@@ -1,6 +1,7 @@
 // ====== VARIÁVEIS ======
 window.colheita = window.colheita || [];
 let valorLataGlobal = 0;
+let indiceEdicaoColheita = null;
 
 // ====== CARREGAMENTO DO VALOR DA LATA ======
 function carregarValorLata() {
@@ -34,7 +35,25 @@ function adicionarColheita() {
     return;
   }
 
-  colheita.push(nova);
+  if (indiceEdicaoColheita !== null) {
+    const anterior = colheita[indiceEdicaoColheita];
+    if (!anterior) {
+      indiceEdicaoColheita = null;
+      alert('Lançamento não encontrado para edição.');
+      return;
+    }
+    colheita[indiceEdicaoColheita] = {
+      ...anterior,
+      data:nova.data,
+      colhedor:nova.colhedor,
+      quantidade:nova.quantidade,
+      valorLata:nova.valorLata
+    };
+    indiceEdicaoColheita = null;
+  } else {
+    colheita.push(nova);
+  }
+
   db.ref('Colheita').set(colheita);
   atualizarColheita();
 
@@ -145,7 +164,7 @@ function montarGrupoColheita(grupo, container, pago) {
             menu.classList.remove('aberta');
             menu.style.display = '';
             seta.setAttribute('aria-expanded', 'false');
-            if (opcao.dataset.acao === 'editar') abrirModalColheita(true); /* implementar edição se necessário */
+            if (opcao.dataset.acao === 'editar') editarColheita(i);
             if (opcao.dataset.acao === 'deletar') excluirColheita(i);
           };
         });
@@ -162,6 +181,23 @@ function montarGrupoColheita(grupo, container, pago) {
 
     container.appendChild(bloco);
   }
+}
+
+// ====== EDITAR COLHEITA ======
+function editarColheita(index) {
+  const registro = colheita[index];
+  if (!registro) return;
+
+  indiceEdicaoColheita = index;
+  dataColheita.value = registro.data || '';
+  colhedor.value = registro.colhedor || '';
+  quantidadeLatas.value = Number(registro.quantidade || 0);
+  valorLataGlobal = Number(registro.valorLata || valorLataGlobal || 0);
+  document.getElementById('valorLata').value = valorLataGlobal;
+
+  const btn = document.getElementById('btnSalvarColheita');
+  if (btn) btn.innerText = 'Salvar Edição';
+  if (typeof abrirModalColheita === 'function') abrirModalColheita(true);
 }
 
 // ====== EXCLUIR COLHEITA ======

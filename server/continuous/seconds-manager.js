@@ -199,14 +199,48 @@ async function evaluateClimateControl(){
       trend_vpd_delta:trend.vpd_delta,
       trend_temp_delta:trend.temp_delta,
       trend_humidity_delta:trend.humidity_delta,
+      trend_vpd_slope_per_10m:trend.vpd_slope_per_10m,
+      trend_temp_slope_per_10m:trend.temp_slope_per_10m,
+      trend_humidity_slope_per_10m:trend.humidity_slope_per_10m,
       trend_samples:trend.samples,
       sample_age_minutes:trend.age_minutes,
       temp_range:trend.temp_range,
       humidity_range:trend.humidity_range,
       normal_streak:normalStreak,
       last_mode:mode,
-      version:2
+      version:2,
+      last_condition_signature:[
+        suggestion.level,
+        suggestion.extreme_level||'normal'
+      ].join(':')
     });
+
+    const conditionSignature=[
+      suggestion.level,
+      suggestion.extreme_level||'normal'
+    ].join(':');
+    const previousCondition=String(climateState?.last_condition_signature||'');
+    if(
+      previousCondition&&
+      previousCondition!==conditionSignature&&
+      suggestion.confidence!=='low'
+    ){
+      await event('viveiro_climate_condition',
+        'Condição climática mudou para '+String(suggestion.level_label||suggestion.level)+'.',{
+          temperature:suggestion.temperature,
+          humidity:suggestion.humidity,
+          vpd:suggestion.vpd,
+          level:suggestion.level,
+          extreme_level:suggestion.extreme_level,
+          confidence:suggestion.confidence,
+          detail:
+            String(suggestion.level_label||suggestion.level)+
+            ' • '+Number(suggestion.temperature||0).toFixed(1)+' °C'+
+            ' • '+Number(suggestion.humidity||0).toFixed(0)+'%'+
+            ' • VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa'
+        }
+      );
+    }
 
     console.log('Automatico 2.0 evaluation',{
       mode,

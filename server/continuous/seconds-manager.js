@@ -68,7 +68,7 @@ async function evaluateClimateControl(){
       const nextWindowAt=Date.now()+Math.max(0,secondsUntilNextWindow(state))*1000;
       const alreadyOutside=
         String(climateState?.last_decision||'')==='outside_schedule'&&
-        Number(climateState?.next_schedule_window_at||0)===Number(nextWindowAt||0);
+        Math.abs(Number(climateState?.next_schedule_window_at||0)-Number(nextWindowAt||0))<60000;
       if(!alreadyOutside){
         await patchClimateState({
           pending:null,

@@ -132,3 +132,11 @@ body.smartIrrigationV5{min-width:0;background:linear-gradient(180deg,#edf7f3 0,#
 }
 
 /* deploy-marker-20260907-1450 */
+
+.smartIrrigationV5 .smartAlerts{border-color:#d7e7e1;background:linear-gradient(180deg,#fff,#fbfdfc)}
+.smartIrrigationV5 .smartAlertGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 10px}
+.smartIrrigationV5 .smartAlertCard{border:1px solid var(--ui-line);border-radius:14px;padding:12px;background:#fff}
+.smartIrrigationV5 .smartAlertCard small{display:block;color:var(--ui-muted);font-size:.72rem;margin-bottom:4px}
+.smartIrrigationV5 .smartAlertCard strong{font-size:.94rem}
+.smartIrrigationV5 .smartAlertNote{margin-bottom:0}
+@media(max-width:350px){.smartIrrigationV5 .smartAlertGrid{grid-template-columns:1fr}}

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { getDeviceId, tuyaRequest } from '../_tuya.js';
+import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 
 const TZ='America/Porto_Velho';
@@ -74,67 +74,64 @@ export function secondsUntilNextWindow(state,nowDate=new Date()){
 }
 
 export async function readViveiroDevice(){
-  const deviceId=getDeviceId();
-  const [statusR,shadowR]=await Promise.allSettled([
-    tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`),
-    tuyaRequest('GET',`/v2.0/cloud/thing/${deviceId}/shadow/properties`)
-  ]);
-
-  const status=statusR.status==='fulfilled'?normalizeStatus(statusR.value):[];
-  const sm=Object.fromEntries(status.map(x=>[x.code,x.value]));
-  const props=shadowR.status==='fulfilled'&&Array.isArray(shadowR.value?.properties)?shadowR.value.properties:[];
-  const shm=Object.fromEntries(props.map(x=>[x.code,x.value]));
-
-  const cycleRaw=typeof shm.cycle_time==='string'
-    ?shm.cycle_time
-    :(typeof sm.cycle_time==='string'?sm.cycle_time:'');
+  const state=await readViveiroState();
+  const sm=state?.statusMap||{};
+  const cycleRaw=typeof sm.cycle_time==='string'?sm.cycle_time:'';
 
   return{
-    deviceId,
+    deviceId:state?.deviceId||null,
+    provider:state?.provider||null,
     cycleRaw,
     cycleConfig:decodeCycle(cycleRaw),
     relay:typeof sm.switch_1==='boolean'?sm.switch_1:null,
-    online:true
+    online:state?.online!==false
   };
 }
 
 export async function setViveiroRelay(on,{attempts=on?4:10}={}){
-  const deviceId=getDeviceId();
   let lastError='';
+  const wanted=Boolean(on);
 
   for(let i=0;i<Math.max(1,attempts);i++){
     try{
-      await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-        commands:[{code:'switch_1',value:Boolean(on)}]
-      });
+      const result=await sendViveiroCommands([
+        {code:'switch_1',value:wanted}
+      ]);
+      if(result?.statusMap?.switch_1===wanted){
+        return{ok:true,on:wanted,provider:result.provider};
+      }
     }catch(error){
       lastError=error?.message||String(error);
     }
 
-    await sleep(450);
+    await sleep(500);
 
     try{
-      const r=await tuyaRequest('GET',`/v1.0/iot-03/devices/${deviceId}/status`);
-      const map=Object.fromEntries(normalizeStatus(r).map(x=>[x.code,x.value]));
-      if(map.switch_1===Boolean(on))return{ok:true,on:Boolean(on)};
+      const current=await readViveiroDevice();
+      if(current.relay===wanted){
+        return{ok:true,on:wanted,provider:current.provider};
+      }
     }catch(error){
       lastError=error?.message||String(error);
     }
   }
 
   throw new Error(
-    (on?'Não foi possível confirmar que o viveiro ligou. ':'Não foi possível confirmar que o viveiro desligou. ')+lastError
+    (wanted?'Não foi possível confirmar que o viveiro ligou. ':'Não foi possível confirmar que o viveiro desligou. ')+lastError
   );
 }
 
 export async function writeViveiroCycle(raw){
-  const deviceId=getDeviceId();
-  await tuyaRequest('POST',`/v1.0/iot-03/devices/${deviceId}/commands`,{
-    commands:[{code:'cycle_time',value:raw}]
-  });
+  const result=await sendViveiroCommands([
+    {code:'cycle_time',value:raw}
+  ]);
+
+  if(String(result?.statusMap?.cycle_time||'')===String(raw||'')){
+    return true;
+  }
 
   for(let i=0;i<6;i++){
-    if(i)await sleep(450);
+    await sleep(i===0?500:750);
     const current=await readViveiroDevice().catch(()=>null);
     if(String(current?.cycleRaw||'')===String(raw||''))return true;
   }

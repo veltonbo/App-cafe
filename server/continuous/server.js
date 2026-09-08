@@ -15,6 +15,7 @@ import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 // UI cycle-alert freshness rollout v1
+// Automatico 2.0 extreme-heat rollout v1
 // Automatico 2.0 final rollout v1
 // Publish marker: climate auto v8
 // Publish marker: viveiro full intelligence v7

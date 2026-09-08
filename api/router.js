@@ -13,6 +13,8 @@ import irrigationMonitor from '../server/api/irrigation/monitor.js';
 import irrigationLinkage from '../server/api/irrigation/linkage.js';
 import irrigationOverview from '../server/api/irrigation/overview.js';
 import irrigationBackground from '../server/api/irrigation/background.js';
+import irrigationDiagnostics from '../server/api/irrigation/diagnostics.js';
+import irrigationBackups from '../server/api/irrigation/backups.js';
 import inkbirdControllers from '../server/api/inkbird/controllers.js';
 import inkbirdCommand from '../server/api/inkbird/command.js';
 import inkbirdGroup from '../server/api/inkbird/group.js';
@@ -36,6 +38,8 @@ const ROUTES={
   'irrigation/linkage':irrigationLinkage,
   'irrigation/overview':irrigationOverview,
   'irrigation/background':irrigationBackground,
+  'irrigation/diagnostics':irrigationDiagnostics,
+  'irrigation/backups':irrigationBackups,
   'inkbird/controllers':inkbirdControllers,
   'inkbird/command':inkbirdCommand,
   'inkbird/group':inkbirdGroup,

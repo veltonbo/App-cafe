@@ -20,6 +20,8 @@ import {
 const STATE_FILE=(process.env.IRRIGATION_STATE_FILE||'/data/viveiro-seconds.json').trim();
 let state={enabled:false,phase:'idle'};
 let loopPromise=null;
+let ownershipCheckedAt=0;
+let ownershipActive=true;
 let remoteStoreAvailable=null;
 let remoteStoreRetryAt=0;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
@@ -341,8 +343,15 @@ function activeWindowStartAt(schedule){
   const elapsed=Math.max(0,Number(schedule.now_seconds||0)-Number(schedule.start_seconds||0));
   return Math.floor((Date.now()-elapsed*1000)/60000)*60000;
 }
-async function active(){
-  return Boolean(state.enabled&&await pulseStillActive(state).catch(()=>false));
+async function active(force=false){
+  if(!state.enabled)return false;
+  const now=Date.now();
+  if(!force&&ownershipCheckedAt&&now-ownershipCheckedAt<30000){
+    return ownershipActive;
+  }
+  ownershipCheckedAt=now;
+  ownershipActive=Boolean(await pulseStillActive(state,{force:true}).catch(()=>false));
+  return ownershipActive;
 }
 
 async function finishAndRestore(reason='stopped'){
@@ -755,7 +764,7 @@ export async function initSecondsManager(){
   }
 
   if(state.enabled){
-    if(await active()){
+    if(await active(true)){
       ensureLoop();
       await pushNotice(
         'Irrigação online novamente',
@@ -803,6 +812,8 @@ export async function configureSeconds(input={}){
     daysMask:input.days_mask
   });
 
+  ownershipCheckedAt=0;
+  ownershipActive=true;
   state={
     ...prepared,
     base_on_seconds:prepared.on_seconds,

@@ -151,7 +151,7 @@
         '</div>'+
         '<div class="profileSummary">'+
           '<div><small>Modo</small><strong id="profileMode">Automático 2.0</strong></div>'+
-          '<div><small>Ciclo-base</small><strong>30 s / 120 s</strong></div>'+
+          '<div><small>Ciclo-base</small><strong id="profileCycle">—</strong></div>'+
           '<div><small>Clima</small><strong id="profileWeather">Weather2-2</strong></div>'+
           '<div><small>Horário</small><strong id="profileSchedule">—</strong></div>'+
         '</div>'+
@@ -194,8 +194,11 @@
     }catch{}
     const mode=cc.observation?'OBSERVAÇÃO':cc.automatic?'ATIVO':'MANUAL';
     if(byId('smartClimateBadge'))byId('smartClimateBadge').textContent=mode;
+    const baseOn=Number(sec.base_on_seconds||sec.on_seconds||30);
+    const baseOff=Number(sec.base_off_seconds||sec.off_seconds||120);
+    if(byId('profileCycle'))byId('profileCycle').textContent=baseOn+' s / '+baseOff+' s';
     if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=
-      Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||120)+' s';
+      Number(sec.on_seconds||baseOn)+' s / '+Number(sec.off_seconds||baseOff)+' s';
     if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=String(cs.drying_level_label||'Aguardando');
     if(byId('smartClimateReason'))byId('smartClimateReason').textContent=
       String(cs.last_reason||'Aguardando avaliação climática.');

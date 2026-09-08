@@ -14,7 +14,7 @@ function adicionarTarefa() {
 
   if (!dataTarefa || !descricaoTarefa || !prioridadeTarefa || !setorTarefa) {
     alert("Preencha todos os campos corretamente.");
-    return;
+    return false;
   }
 
   const nova = {
@@ -30,7 +30,7 @@ function adicionarTarefa() {
 
   if (!nova.data || !nova.descricao) {
     alert("Preencha todos os campos obrigatórios!");
-    return;
+    return false;
   }
 
   if (indiceEdicaoTarefa !== null) {
@@ -47,6 +47,7 @@ function adicionarTarefa() {
   db.ref('Tarefas').set(tarefas);
   atualizarTarefas();
   limparCamposTarefa();
+  return true;
 }
 
 // ====== EDITAR TAREFA ======

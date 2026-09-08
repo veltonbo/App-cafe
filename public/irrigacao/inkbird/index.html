@@ -86,15 +86,30 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 .installCard{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:15px;background:var(--surface2)}.installCard b{display:block}.installCard small{color:var(--muted)}
 @media(max-width:760px){.todayGrid{grid-template-columns:1fr 1fr}.historyItem{grid-template-columns:auto 1fr}.historyTime{grid-column:2}.formGrid{grid-template-columns:1fr}.daysGrid{grid-template-columns:repeat(4,1fr)}.timeSlots{grid-template-columns:1fr 1fr}.profileBar{display:grid;grid-template-columns:1fr 1fr}.profileBar select{grid-column:1/-1}.installCard{align-items:flex-start;flex-direction:column}}
 
+
+.profileContext{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:center;margin:0 0 10px;padding:11px 13px;border:1px solid var(--l);border-radius:15px;background:#fff}
+.profileContext span{grid-row:1/3;padding:6px 8px;border-radius:999px;background:var(--gs);color:var(--g);font-size:.62rem;font-weight:900}
+.profileContext strong{font-size:.92rem}
+.profileContext small{color:var(--m);font-size:.7rem}
+.switchProfile{color:var(--g)!important}
+@media(max-width:760px){
+  .actions .switchProfile{display:inline-flex}
+  .actions #settingsBtn{display:none}
+  .top{align-items:center}
+  .brand h1{font-size:1.05rem}
+  .tabs{position:sticky;top:72px;z-index:6;background:#f3f7f4;padding:6px 0;grid-template-columns:repeat(4,1fr)}
+  .tabBtn{font-size:.74rem;padding:10px 5px}
+}
+
 </style>
 </head>
 <body>
 <header class="top">
   <div class="brand"><small>FAZENDA 2E • INKBIRD IIC-800</small><h1>Irrigação do Café</h1></div>
-  <div class="actions"><a class="navbtn" href="/irrigacao/central/">Central</a><a class="navbtn" href="/irrigacao/">Viveiro</a><button id="settingsBtn" class="pill">Configurar</button><button id="refresh" class="pill">● Atualizar</button></div>
+  <div class="actions"><a class="navbtn switchProfile" href="/irrigacao/central/">← Trocar perfil</a><button id="settingsBtn" class="pill">Configurar Café</button><button id="refresh" class="pill">● Atualizar</button></div>
 </header>
 <main class="wrap">
-<div class="tabs"><button class="tabBtn active" data-tab="overview">Visão geral</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
+<div class="profileContext"><span>PERFIL ATIVO</span><strong>Café</strong><small>Somente controles e dados da lavoura</small></div><div class="tabs"><button class="tabBtn active" data-tab="overview">Resumo</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Configurações</button></div>
 <div id="globalError" class="errorBanner" hidden></div>
 <div id="tab-overview" class="tabPanel active">
 <section class="box" style="margin-top:0">

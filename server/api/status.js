@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!authorize(req, res)) return;
 
   try {
-    const state=await readViveiroState();
+    const state=await readViveiroState({maxAgeMs:10000});
     const map=state.statusMap||{};
     const cycleTime=typeof map.cycle_time==='string'?map.cycle_time:null;
 

@@ -328,7 +328,7 @@
       btn.id='smartMenuBtn';
       btn.type='button';
       btn.className='smartMenuBtn';
-      btn.textContent='☰ Menu';
+      btn.textContent='☰ Viveiro';
       top.appendChild(btn);
     }
 
@@ -337,21 +337,17 @@
       overlay.id='smartMenuOverlay';
       overlay.className='smartMenuOverlay';
       overlay.innerHTML=
-        '<aside class="smartMenuPanel" role="dialog" aria-label="Menu de irrigação">'+
-          '<div class="smartMenuHead"><div><span>FAZENDA 2E</span><strong>Irrigação</strong></div><button type="button" id="smartMenuClose">✕</button></div>'+
-          '<nav class="smartMainNav">'+
-            '<a href="/irrigacao/central/"><span>⌂</span><div><b>Início</b><small>Central de irrigação</small></div></a>'+
-            '<a class="active" href="/irrigacao/"><span>◉</span><div><b>Viveiro</b><small>Irrigação inteligente</small></div></a>'+
-            '<a href="/irrigacao/inkbird/"><span>☕</span><div><b>Café</b><small>Setores da lavoura</small></div></a>'+
-          '</nav>'+
+        '<aside class="smartMenuPanel" role="dialog" aria-label="Menu do Viveiro">'+
+          '<div class="smartMenuHead"><div><span>FAZENDA 2E</span><strong>Viveiro</strong></div><button type="button" id="smartMenuClose">✕</button></div>'+
+          '<a class="smartSwitchProfile" href="/irrigacao/central/">← Trocar perfil</a>'+
           '<div class="smartMenuLabel">Viveiro</div>'+
           '<nav class="smartSubNav">'+
-            '<button type="button" data-smart-view="inicio">Resumo</button>'+
-            '<button type="button" data-smart-view="perfil">Perfil e configurações</button>'+
-            '<button type="button" data-smart-view="historico">Histórico</button>'+
+            '<button type="button" data-smart-view="inicio">Resumo do Viveiro</button>'+
+            '<button type="button" data-smart-view="perfil">Configurações do Viveiro</button>'+
+            '<button type="button" data-smart-view="historico">Histórico do Viveiro</button>'+
             '<button type="button" data-smart-view="sistema">Sistema e manutenção</button>'+
           '</nav>'+
-          '<button type="button" id="smartConnectionBtn" class="smartConnectionBtn">Conexão do app</button>'+
+          '<button type="button" id="smartConnectionBtn" class="smartConnectionBtn">Conexão do Viveiro</button>'+
         '</aside>';
       document.body.appendChild(overlay);
     }

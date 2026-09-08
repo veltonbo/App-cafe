@@ -127,8 +127,17 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 .presetTools select{flex:1;min-width:160px;border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;color:var(--ink);font:inherit}
 .shortcutRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.shortcutRow .btn{flex:0 0 auto;min-width:0;padding:8px 10px;font-size:.75rem}
 .configMeta{font-size:.72rem;color:var(--muted);margin-top:8px}
-.offlineBanner{display:none;position:sticky;top:74px;z-index:4;padding:9px 12px;border-radius:12px;background:#fff4dd;color:#8a5b10;font-size:.8rem;font-weight:850;margin-bottom:9px;border:1px solid #f0d59d}
+.offlineBanner{display:none;position:sticky;top:74px;z-index:4;margin-bottom:9px;border:1px solid #f0d59d;border-radius:13px;background:#fff8e8;color:#7b5312;box-shadow:0 5px 16px rgba(122,83,18,.05);overflow:hidden}
 .offlineBanner.show{display:block}
+.offlineBanner details{margin:0;border:0;border-radius:0;background:transparent}
+.offlineBanner summary{list-style:none;display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;font-size:.78rem;line-height:1.35}
+.offlineBanner summary::-webkit-details-marker{display:none}
+.offlineBanner .offlineIcon{flex:0 0 auto;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:#ffe8b7;font-weight:950}
+.offlineBanner .offlineMain{min-width:0;flex:1}
+.offlineBanner .offlineMain b{display:block;color:#81520a;font-size:.8rem}
+.offlineBanner .offlineMain span{display:block;color:#98702f;font-weight:650;font-size:.7rem;margin-top:1px}
+.offlineBanner .offlineMore{font-size:.68rem;font-weight:900;color:#875b13;white-space:nowrap}
+.offlineBanner .offlineDetail{padding:0 12px 11px 45px;color:#7f6740;font-size:.7rem;line-height:1.45}
 @media(max-width:760px){.opsGrid{grid-template-columns:1fr 1fr}.weekGrid{grid-template-columns:repeat(4,1fr)}.eventRow{grid-template-columns:auto 1fr}.eventRow>small:last-child{grid-column:2}.offlineBanner{top:70px}}
 
 /* Viveiro Alerts v6 */
@@ -169,7 +178,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 </head>
 <body>
 <header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
-<main class="wrap"><div id="offlineBanner" class="offlineBanner">Sem conexão com o painel. A automação no servidor continua independente desta tela.</div>
+<main class="wrap"><div id="offlineBanner" class="offlineBanner"></div>
 <section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">VIVEIRO • CONTROLE AUTOMÁTICO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
 <section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Tuya</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
 
@@ -431,7 +440,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 <section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
 
 <section class="box"><div class="head"><h2>Conexão segura • Fazenda 2E</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">O viveiro usa o <b>servidor contínuo da Fazenda 2E no Railway</b>. As credenciais da Tuya ficam somente no servidor e não são expostas no aplicativo.</p></section>
-<div style="text-align:center;color:var(--m);font-size:.78rem;margin:18px 0 6px">Fazenda 2E • Painel de Irrigação do Viveiro • EKAZA / Tuya</div></main>
+</main>
 <nav class="bottomNav" aria-label="Navegação principal"><a href="/irrigacao/central/">Central</a><a class="active" href="/irrigacao/">Viveiro</a><a href="/irrigacao/inkbird/">Café</a></nav>
 
 <dialog id="cycleDlg"><form method="dialog" class="modal"><div class="ey">PROGRAMAÇÃO</div><h2>Ajustar irrigação</h2>
@@ -1722,11 +1731,16 @@ function updateOfflineBanner(){
   const offline=data.online===false;
   const show=noNetwork||quota||offline;
   el.className='offlineBanner '+(show?'show':'');
-  el.textContent=noNetwork
-    ?'Sem internet neste aparelho. A tela não consegue atualizar o sistema.'
-    :quota
-      ?'Tuya indisponível: cota do IoT Core esgotada. O estado do EKAZA não pode ser confirmado pela nuvem.'
-      :'Sem resposta do EKAZA/Tuya. O estado ao vivo não está confirmado.';
+  if(!show){el.innerHTML='';return}
+  if(noNetwork){
+    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Sem internet</b><span>A tela não consegue atualizar agora</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">Verifique a conexão deste iPhone e tente novamente.</div></details>';
+    return;
+  }
+  if(quota){
+    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Tuya indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A cota do IoT Core está esgotada (28841004). Enquanto a Tuya não liberar novas chamadas, o aplicativo não consegue confirmar o estado ao vivo do EKAZA pela nuvem.</div></details>';
+    return;
+  }
+  el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>EKAZA sem resposta</b><span>Estado ao vivo não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">O servidor não recebeu uma leitura válida do EKAZA/Tuya neste momento.</div></details>';
 }
 window.addEventListener('online',()=>{updateOfflineBanner();syncStatus(false);syncDashboard(false)});
 window.addEventListener('offline',updateOfflineBanner);

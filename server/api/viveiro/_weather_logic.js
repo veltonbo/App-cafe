@@ -268,6 +268,10 @@ export async function runViveiroWeatherCheck(){
 
     next.wasCycleEnabled=wasEnabled;
     next.pausedByWeather=Boolean(previous.pausedByWeather||wasEnabled);
+    // Se a estação voltou já chovendo, transfere a posse da pausa "sensor offline"
+    // para a pausa real de chuva. Isso impede uma restauração imediata quando a chuva parar.
+    next.pausedByWeatherUnavailable=false;
+    next.wasCycleEnabledUnavailable=false;
     next.status='paused_rain';
 
     if(seconds.enabled){

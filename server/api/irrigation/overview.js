@@ -4,6 +4,7 @@ import { listInkbirdDevices } from '../inkbird/_device.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getViveiroWeatherConfig, getViveiroWeatherState } from '../viveiro/_weather_logic.js';
 import { getAutomationConfig, storeGet } from './_store.js';
+import { getClimateConfig, getClimateState } from '../viveiro/_climate.js';
 
 const TZ='America/Porto_Velho';
 
@@ -162,19 +163,44 @@ export default async function handler(req,res){
   if(req.method!=='GET')return res.status(405).json({ok:false,error:'Método não permitido.'});
   if(!authorize(req,res)||!ensureCloudConfig(res))return;
   try{
-    const [weather,inkbirds,viveiro,config,historyRaw]=await Promise.all([
+    const [weather,inkbirds,viveiro,config,historyRaw,viveiroSeconds,climateConfig,climateState]=await Promise.all([
       fetchWeatherSnapshot().catch(e=>({ok:false,linked:false,error:e?.message||String(e)})),
       listInkbirdDevices(),
       readViveiro(),
       getAutomationConfig().catch(()=>({})),
-      storeGet('IrrigacaoFazenda2E/history').catch(()=>null)
+      storeGet('IrrigacaoFazenda2E/history').catch(()=>null),
+      storeGet('IrrigacaoFazenda2E/viveiroSecondsState').catch(()=>null),
+      getClimateConfig().catch(()=>null),
+      getClimateState().catch(()=>null)
     ]);
     const controllers=await Promise.all(inkbirds.map((c,i)=>readController(c,i)));
     const allHistory=historyArray(historyRaw);
     const volume=waterSummary(volumeEvents(allHistory,config));
     const alerts=buildAlerts({weather,viveiro,controllers,config});
     return res.status(200).json({
-      ok:true,checked_at:Date.now(),weather,viveiro,controllers,config,history:allHistory.slice(0,80),volume,alerts
+      ok:true,
+      checked_at:Date.now(),
+      weather,
+      viveiro,
+      controllers,
+      config,
+      history:allHistory.slice(0,80),
+      volume,
+      alerts,
+      profiles:{
+        viveiro:{
+          name:'Viveiro de mudas',
+          seconds:viveiroSeconds||{},
+          climate_config:climateConfig||{},
+          climate_state:climateState||{}
+        },
+        cafe:{
+          name:'Café',
+          controllers_total:controllers.length,
+          controllers_online:controllers.filter(c=>c.online!==false).length,
+          active_sectors:controllers.flatMap(c=>(c.active_zones||[]).map(z=>c.sector_start+z-1))
+        }
+      }
     });
   }catch(error){
     return res.status(502).json({ok:false,error:error?.message||'Falha ao montar a Central Fazenda 2E.'});

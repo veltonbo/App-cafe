@@ -1,6 +1,11 @@
 import { tuyaRequest } from '../_tuya.js';
 
 const TARGET_NAME = (process.env.WEATHER_DEVICE_NAME || 'Weather2-2').trim().toLowerCase();
+const WEATHER_CACHE_MS=5*60*1000;
+const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
+const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
+let weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
+function isQuotaError(error){return /28841004|quota is exhausted|trial quota/i.test(String(error?.message||error||''));}
 
 function normalizeList(result) {
   if (Array.isArray(result)) return result;
@@ -88,7 +93,7 @@ function collectMetrics(statusMap, shadowMap, spec) {
   };
 }
 
-export async function fetchWeatherSnapshot() {
+async function fetchWeatherSnapshotFresh() {
   const deviceListResult = await tuyaRequest('GET', '/v2.0/cloud/thing/device?page_size=20');
   const devices = normalizeList(deviceListResult);
   const device = devices.find(d => String(d.name || d.custom_name || '').trim().toLowerCase() === TARGET_NAME)
@@ -143,6 +148,49 @@ export async function fetchWeatherSnapshot() {
       status:statusR.status === 'rejected' ? (statusR.reason?.message || String(statusR.reason)) : null,
       shadow:shadowR.status === 'rejected' ? (shadowR.reason?.message || String(shadowR.reason)) : null
     }
+  };
+}
+
+
+export async function fetchWeatherSnapshot(options = {}) {
+  const force=Boolean(options?.force);
+  const now=Date.now();
+  if(!force){
+    if(weatherSnapshotCache.value&&now-weatherSnapshotCache.at<WEATHER_CACHE_MS){
+      return weatherSnapshotCache.value;
+    }
+    if(weatherSnapshotCache.error){
+      const backoff=weatherSnapshotCache.errorQuota?WEATHER_QUOTA_BACKOFF_MS:WEATHER_ERROR_BACKOFF_MS;
+      if(now-weatherSnapshotCache.errorAt<backoff){
+        throw new Error(weatherSnapshotCache.error);
+      }
+    }
+  }
+
+  try{
+    const value=await fetchWeatherSnapshotFresh();
+    weatherSnapshotCache={value,at:now,error:null,errorAt:0,errorQuota:false};
+    return value;
+  }catch(error){
+    const message=error?.message||String(error);
+    weatherSnapshotCache={
+      value:null,
+      at:0,
+      error:message,
+      errorAt:now,
+      errorQuota:isQuotaError(error)
+    };
+    throw error;
+  }
+}
+
+export function weatherSnapshotCacheStatus(){
+  return{
+    has_value:Boolean(weatherSnapshotCache.value),
+    cached_at:weatherSnapshotCache.at||null,
+    error:weatherSnapshotCache.error||null,
+    error_at:weatherSnapshotCache.errorAt||null,
+    quota_backoff:Boolean(weatherSnapshotCache.errorQuota)
   };
 }
 

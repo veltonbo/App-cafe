@@ -5,6 +5,10 @@ const accessKey = (process.env.TUYA_ACCESS_ID || '').trim();
 const secretKey = (process.env.TUYA_ACCESS_SECRET || '').trim();
 const deviceId = (process.env.TUYA_DEVICE_ID || '').trim();
 const controlToken = (process.env.APP_CONTROL_TOKEN || '').trim();
+let quotaBlockedUntil=0;
+let quotaMessage='IoT Core trial quota is exhausted. [28841004]';
+const TUYA_QUOTA_BACKOFF_MS=10*60*1000;
+function quotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 
 export function applyCors(req, res) {
   const origin = req.headers.origin;
@@ -61,6 +65,10 @@ function context() {
 }
 
 export async function tuyaRequest(method, path, body = {}) {
+  if(Date.now()<quotaBlockedUntil){
+    throw new Error(quotaMessage);
+  }
+
   const ctx = context();
   const response = await ctx.request({ method, path, body });
   const data = response?.data ?? response;
@@ -68,10 +76,24 @@ export async function tuyaRequest(method, path, body = {}) {
   if (!data || data.success === false) {
     const code = data?.code ? ` [${data.code}]` : '';
     const msg = data?.msg || data?.message || 'Falha na Tuya';
-    throw new Error(msg + code);
+    const full=msg+code;
+    if(quotaErrorMessage(full)){
+      quotaMessage=full;
+      quotaBlockedUntil=Date.now()+TUYA_QUOTA_BACKOFF_MS;
+    }
+    throw new Error(full);
   }
 
+  quotaBlockedUntil=0;
   return data.result;
+}
+
+export function tuyaQuotaState(){
+  return{
+    blocked:Date.now()<quotaBlockedUntil,
+    until:quotaBlockedUntil||null,
+    message:Date.now()<quotaBlockedUntil?quotaMessage:null
+  };
 }
 
 export function getDeviceId() {

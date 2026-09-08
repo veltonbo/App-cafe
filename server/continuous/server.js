@@ -8,6 +8,7 @@ import secondsHandler from './seconds-handler.js';
 import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.js';
 import { listInkbirdDevices } from '../api/inkbird/_device.js';
 import { tuyaRequest } from '../api/_tuya.js';
+import { smartLifeConfigured, smartLifeListDevices } from '../api/_smartlife.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
 
@@ -173,6 +174,30 @@ console.log('Firebase credential diagnostic',{
 
 async function runReadOnlyBootDiagnostics(){
   try{
+    if(await smartLifeConfigured()){
+      const devices=await smartLifeListDevices();
+      const rows=devices.slice(0,8).map(device=>({
+        name:device?.name||'Sem nome',
+        online:device?.online!==false,
+        category:device?.category||null,
+        supportLocal:device?.support_local===true,
+        statusKeys:Object.keys(device?.status||{}).slice(0,24)
+      }));
+      const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
+        error:error?.message||String(error)
+      }));
+      console.log('Smart Life read-only diagnostic',{
+        deviceCount:devices.length,
+        devices:rows,
+        weatherLinked:Boolean(weather?.linked),
+        weatherOnline:weather?.device?.online??null,
+        weatherProvider:weather?.provider||null,
+        weatherError:weather?.error||null,
+        weatherMetricKeys:Object.keys(weather?.metrics||{}).filter(k=>weather?.metrics?.[k]!=null)
+      });
+      return;
+    }
+
     const controllers=await listInkbirdDevices();
     const rows=[];
     for(const ctrl of controllers.slice(0,4)){
@@ -201,7 +226,7 @@ async function runReadOnlyBootDiagnostics(){
       rainDetected:Boolean(weather?.metrics?.rainDetected)
     });
   }catch(error){
-    console.warn('INKBIRD read-only diagnostic unavailable:',error?.message||error);
+    console.warn('Read-only irrigation diagnostic unavailable:',error?.message||error);
   }
 }
 

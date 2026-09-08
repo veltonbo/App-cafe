@@ -578,27 +578,29 @@ function renderWeatherRuntimeOnly(){
   const wp=data.weatherProtection;
   const s=wp?.state||{};
   const cfg=wp?.config||{};
+  const quota=Boolean(data.tuyaUnavailable)||s.status==='cloud_unavailable'||isTuyaQuotaErrorMessage(s.cloudError||s.lastWeatherError||'');
   const blocked=isWeatherProtected();
   const raining=Boolean(wp?.weather?.metrics?.rainDetected);
   if($('viveiroRainState')){
-    $('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
-    $('viveiroRainState').className=raining?'bad':'ok';
+    $('viveiroRainState').textContent=quota?'Não confirmado':wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
+    $('viveiroRainState').className=quota?'bad':raining?'bad':'ok';
   }
   if($('viveiroProtectState')){
-    $('viveiroProtectState').textContent=weatherStatusLabel(s.status);
-    $('viveiroProtectState').className=blocked?'bad':(['clear','resumed_inside_window','restored_outside_window'].includes(s.status)?'ok':'');
+    $('viveiroProtectState').textContent=quota?'Tuya indisponível':weatherStatusLabel(s.status);
+    $('viveiroProtectState').className=quota||blocked?'bad':(['clear','resumed_inside_window','restored_outside_window'].includes(s.status)?'ok':'');
   }
   if($('viveiroResumeState')){
-    $('viveiroResumeState').textContent=s.status==='paused_rain'?'Após parar de chover'
+    $('viveiroResumeState').textContent=quota?'Não confirmado':s.status==='paused_rain'?'Após parar de chover'
       :s.status==='waiting_resume_delay'?formatResumeTime(s.resumeEligibleAt)
       :s.status==='restored_outside_window'?'Próxima janela'
       :s.status==='resumed_inside_window'?'Retomado'
       :s.resumeEligibleAt?formatResumeTime(s.resumeEligibleAt):'—';
   }
   if($('protectFlag')){
-    $('protectFlag').className='protectFlag '+(blocked?'blocked':'');
-    $('protectFlag').textContent=blocked
-      ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
+    $('protectFlag').className='protectFlag '+(quota||blocked?'blocked':'');
+    $('protectFlag').textContent=quota
+      ?'Tuya indisponível • proteção climática sem leitura ao vivo confirmada'
+      :blocked?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
       :(cfg.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
   }
 }
@@ -672,6 +674,8 @@ function weatherStatusLabel(status){
     paused_rain:'Pausado por chuva',
     paused_waiting_weather:'Pausado • aguardando clima',
     weather_unavailable:'Weather2-2 sem dados',
+    cloud_unavailable:'Tuya indisponível',
+    device_unavailable:'EKAZA indisponível',
     waiting_resume_delay:'Aguardando retomada',
     resumed_inside_window:'Retomado nesta janela',
     restored_outside_window:'Próxima janela',

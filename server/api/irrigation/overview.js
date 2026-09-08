@@ -1,6 +1,7 @@
-import { applyCors, authorize, tuyaRequest } from '../_tuya.js';
+import { applyCors, authorize } from '../_tuya.js';
 import { decodeCycle } from '../_cycle.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
+import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getViveiroWeatherConfig, getViveiroWeatherState } from '../viveiro/_weather_logic.js';
 import { getAutomationConfig, storeGet } from './_store.js';
@@ -10,15 +11,6 @@ import { getViveiroSafety, getViveiroMaintenance } from '../viveiro/_interlock.j
 
 const TZ='America/Porto_Velho';
 
-function normalizeStatus(result){
-  if(Array.isArray(result))return result;
-  if(Array.isArray(result?.status))return result.status;
-  if(Array.isArray(result?.result))return result.result;
-  return [];
-}
-function mapStatus(result){
-  return Object.fromEntries(normalizeStatus(result).map(x=>[x.code,x.value]));
-}
 function localDateKey(value=Date.now()){
   const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
     timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
@@ -123,22 +115,24 @@ async function readViveiro(){
 }
 async function readController(ctrl,index){
   try{
-    const r=await tuyaRequest('GET',`/v1.0/iot-03/devices/${ctrl.id}/status`);
-    const m=mapStatus(r);
-    const activeMask=Number(m.zonerun_state||0);
-    const pendingMask=Number(m.pendingzone_state||0);
+    const state=await readInkbirdState({deviceId:ctrl.id,maxAgeMs:2000});
+    const activeMask=Number(state.runtime.active_mask||0);
+    const pendingMask=Number(state.runtime.pending_mask||0);
     const activeZones=[1,2,3,4,5,6,7,8].filter(z=>activeMask&(1<<(z-1)));
     const pendingZones=[1,2,3,4,5,6,7,8].filter(z=>pendingMask&(1<<(z-1)));
     const session=await storeGet(`IrrigacaoFazenda2E/active/${ctrl.id}`).catch(()=>null);
     return{
       id:ctrl.id,name:ctrl.name,controller_index:index+1,sector_start:index*8+1,sector_end:index*8+8,
-      online:ctrl.online!==false,operation_mode:m.operation_mode??null,irrigation_mode:m.irrigation_mode??null,
+      provider:'smartlife',online:state.online!==false,
+      operation_mode:(activeMask||pendingMask)?'Manual':'Auto',
+      irrigation_mode:state.statusMap.irrigation_mode??null,
       active_mask:activeMask,pending_mask:pendingMask,active_zones:activeZones,pending_zones:pendingZones,session
     };
   }catch(error){
     return{
       id:ctrl.id,name:ctrl.name,controller_index:index+1,sector_start:index*8+1,sector_end:index*8+8,
-      online:false,error:error?.message||String(error),active_mask:0,pending_mask:0,active_zones:[],pending_zones:[]
+      provider:'smartlife',online:false,error:error?.message||String(error),
+      active_mask:0,pending_mask:0,active_zones:[],pending_zones:[]
     };
   }
 }

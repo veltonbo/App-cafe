@@ -92,6 +92,7 @@ body.centralSelector .topActions #refreshBtn{display:none}
 }
 
 </style>
+<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260907-1">
 </head>
 <body class="centralSelector">
 <header class="top">
@@ -462,5 +463,6 @@ if(state.settings.token)refresh(false);else openSettings();
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)},20000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)});
 </script>
+<script src="/irrigacao/ui-shell.js?v=20260907-1" defer></script>
 </body>
 </html>

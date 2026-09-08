@@ -160,7 +160,12 @@ test('Automatico 2.0 limita agressividade conforme a confianca',()=>{
   assert.equal(medium.confidence_adjust_limit_percent,15);
   assert.equal(high.confidence_adjust_limit_percent,30);
   assert.ok(low.target_off_seconds>medium.target_off_seconds);
-  assert.ok(medium.target_off_seconds>high.target_off_seconds);
+  // Em calor extremo, confiança alta ganha teto maior, mas o primeiro passo é
+  // limitado para evitar uma redução brusca do intervalo.
+  assert.ok(high.effective_adjust_limit_percent>medium.effective_adjust_limit_percent);
+  assert.equal(high.max_off_step_seconds,12);
+  assert.ok(high.target_off_seconds>=78);
+  assert.ok(high.target_off_seconds<low.target_off_seconds);
   assert.equal(low.target_on_seconds,30);
   assert.equal(medium.target_on_seconds,30);
   assert.equal(high.target_on_seconds,30);

@@ -32,7 +32,7 @@ function adicionarColheita() {
 
   if (!nova.data || !nova.colhedor || isNaN(nova.quantidade) || nova.quantidade <= 0) {
     alert("Preencha todos os campos corretamente!");
-    return;
+    return false;
   }
 
   if (indiceEdicaoColheita !== null) {
@@ -40,7 +40,7 @@ function adicionarColheita() {
     if (!anterior) {
       indiceEdicaoColheita = null;
       alert('Lançamento não encontrado para edição.');
-      return;
+      return false;
     }
     colheita[indiceEdicaoColheita] = {
       ...anterior,
@@ -60,6 +60,7 @@ function adicionarColheita() {
   dataColheita.value = '';
   colhedor.value = '';
   quantidadeLatas.value = '';
+  return true;
 }
 
 // ====== CARREGAR COLHEITA ======

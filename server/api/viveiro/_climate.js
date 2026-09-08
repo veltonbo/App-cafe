@@ -191,7 +191,8 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const baseDuty=baseOn/(baseOn+baseOff);
   const targetDuty=Math.max(.08,Math.min(.45,baseDuty*factor));
   const targetOn=baseOn;
-  const targetOff=Math.max(30,Math.min(900,Math.round(targetOn*(1-targetDuty)/targetDuty)));
+  const minOff=Math.max(1,Math.min(30,baseOff));
+  const targetOff=Math.max(minOff,Math.min(900,Math.round(targetOn*(1-targetDuty)/targetDuty)));
 
   const returningToBase=targetOn===baseOn&&targetOff===baseOff&&(currentOn!==baseOn||currentOff!==baseOff);
   const deltaOn=Math.abs(targetOn-currentOn);

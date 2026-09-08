@@ -242,8 +242,21 @@ function weatherLabel(){
 function render(){
   const o=state.overview;
   if(!o){
-    $('systems').innerHTML='<div class="empty">Aguardando primeira leitura.</div>';
-    $('alerts').innerHTML='<div class="empty">Nenhum dado carregado.</div>';
+    const quota=isTuyaQuotaErrorMessage(state.cloudError);
+    if(quota){
+      $('heroTitle').textContent='Tuya temporariamente indisponível';
+      $('heroSub').textContent='A cota do IoT Core está esgotada. Os estados ao vivo não podem ser confirmados agora.';
+      $('heroStatus').textContent='ESTADO NÃO CONFIRMADO';
+      $('systems').innerHTML=
+        '<a class="profileCard" href="/irrigacao/"><div class="profileCardTop"><div><div class="ey" style="color:var(--green)">PERFIL</div><h3>Viveiro de mudas</h3><div class="profileSub">Irrigação das mudas</div></div><span class="profileBadge warn">SEM LEITURA</span></div><div class="profileOpen"><span>Abrir perfil</span><span>›</span></div></a>'+
+        '<a class="profileCard" href="/irrigacao/inkbird/"><div class="profileCardTop"><div><div class="ey" style="color:var(--green)">PERFIL</div><h3>Café</h3><div class="profileSub">Irrigação da lavoura</div></div><span class="profileBadge warn">SEM LEITURA</span></div><div class="profileOpen"><span>Abrir perfil</span><span>›</span></div></a>';
+      $('alerts').innerHTML='<div class="alert warning"><div class="alertIcon">!</div><div><b>Tuya indisponível</b><small>Cota do IoT Core esgotada. Aguarde a renovação/reativação da cota.</small></div></div>';
+      if($('alertsBox'))$('alertsBox').classList.remove('quiet');
+      if($('alertsTitle'))$('alertsTitle').textContent='Atenção';
+    }else{
+      $('systems').innerHTML='<div class="empty">Aguardando primeira leitura.</div>';
+      $('alerts').innerHTML='<div class="empty">Nenhum dado carregado.</div>';
+    }
     $('history').innerHTML='<div class="empty">Nenhuma atividade carregada.</div>';
     return;
   }

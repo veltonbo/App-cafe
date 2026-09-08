@@ -3,10 +3,12 @@ import { smartLifeConfigured, smartLifeReadDevice } from '../_smartlife.js';
 
 const TARGET_DISPLAY_NAME=(process.env.WEATHER_DEVICE_NAME||'Weather2-2').trim();
 const TARGET_NAME=TARGET_DISPLAY_NAME.toLowerCase();
-const WEATHER_CACHE_MS=5*60*1000;
+const WEATHER_CACHE_MS=10*1000;
 const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
 const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
 let weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
+let weatherFetchPromise=null;
+const SMARTLIFE_PRIMARY_ONLY=!/^(0|false|no)$/i.test(String(process.env.SMARTLIFE_PRIMARY_ONLY||'true').trim());
 let weatherDeviceMeta=null;
 function isQuotaError(error){return /28841004|quota is exhausted|trial quota/i.test(String(error?.message||error||''));}
 
@@ -173,6 +175,7 @@ async function fetchWeatherSnapshotFresh() {
       return await fetchWeatherSnapshotSmartLife();
     }catch(error){
       smartLifeError=error?.message||String(error);
+      if(SMARTLIFE_PRIMARY_ONLY)throw new Error('Smart Life: '+smartLifeError);
     }
   }
 
@@ -240,8 +243,13 @@ async function fetchWeatherSnapshotFresh() {
 export async function fetchWeatherSnapshot(options = {}) {
   const force=Boolean(options?.force);
   const now=Date.now();
+  const requestedMaxAge=Number(options?.maxAgeMs);
+  const maxAgeMs=Number.isFinite(requestedMaxAge)
+    ?Math.max(0,Math.min(WEATHER_CACHE_MS,requestedMaxAge))
+    :WEATHER_CACHE_MS;
+
   if(!force){
-    if(weatherSnapshotCache.value&&now-weatherSnapshotCache.at<WEATHER_CACHE_MS){
+    if(weatherSnapshotCache.value&&now-weatherSnapshotCache.at<maxAgeMs){
       return weatherSnapshotCache.value;
     }
     if(weatherSnapshotCache.error){
@@ -256,22 +264,34 @@ export async function fetchWeatherSnapshot(options = {}) {
         weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
       }
     }
+    if(weatherFetchPromise)return weatherFetchPromise;
   }
 
+  const task=(async()=>{
+    const startedAt=Date.now();
+    try{
+      const value=await fetchWeatherSnapshotFresh();
+      const stamped={...value,checked_at:Date.now()};
+      weatherSnapshotCache={value:stamped,at:Date.now(),error:null,errorAt:0,errorQuota:false};
+      return stamped;
+    }catch(error){
+      const message=error?.message||String(error);
+      weatherSnapshotCache={
+        value:null,
+        at:0,
+        error:message,
+        errorAt:startedAt,
+        errorQuota:isQuotaError(error)
+      };
+      throw error;
+    }
+  })();
+
+  if(!force)weatherFetchPromise=task;
   try{
-    const value=await fetchWeatherSnapshotFresh();
-    weatherSnapshotCache={value,at:now,error:null,errorAt:0,errorQuota:false};
-    return value;
-  }catch(error){
-    const message=error?.message||String(error);
-    weatherSnapshotCache={
-      value:null,
-      at:0,
-      error:message,
-      errorAt:now,
-      errorQuota:isQuotaError(error)
-    };
-    throw error;
+    return await task;
+  }finally{
+    if(weatherFetchPromise===task)weatherFetchPromise=null;
   }
 }
 

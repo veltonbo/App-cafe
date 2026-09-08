@@ -100,13 +100,13 @@ function montarGrupoColheita(grupo, container, pago) {
   for (const nome in grupo) {
     const bloco = document.createElement('div');
     bloco.className = 'bloco-colhedor';
-    bloco.innerHTML = `<strong>${nome}</strong>`;
+    bloco.innerHTML = `<strong>${escapeHtml(nome)}</strong>`;
 
     grupo[nome].forEach(({ data, quantidade, i }) => {
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
-        <span>${formatarDataBR(data)} - ${quantidade} latas</span>
+        <span>${escapeHtml(formatarDataBR(data))} - ${escapeHtml(quantidade)} latas</span>
         <div class="opcoes-wrapper">
           <button class="seta-menu-opcoes-padrao" aria-label="Abrir opções">&#8250;</button>
           <ul class="menu-opcoes-padrao-lista" style="display:none;">

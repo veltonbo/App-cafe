@@ -388,15 +388,19 @@ async function evaluateClimateControl(){
         water_factor:suggestion.water_factor,level:suggestion.level,
         confidence:suggestion.confidence,reason:suggestion.reason
       });
-      await pushNotice(
-        suggestion.returning_to_base?'Irrigação voltou ao padrão':'Automático 2.0 ajustou a irrigação',
-        oldOn+'s ligado / '+oldOff+'s intervalo → '+targetOn+'s / '+targetOff+'s. '+
-          'VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa • '+suggestion.confidence_label+'. '+suggestion.reason,
-        'viveiro-climate-auto-'+suggestionId,
-        suggestion.level==='muito_seco'?'warning':'info',
-        20,
-        true
-      );
+      // Ajustes automáticos normais ficam na linha do tempo. Só viram alerta
+      // quando a condição climática chegou ao nível crítico.
+      if(String(suggestion.extreme_level||'')==='critico'){
+        await pushNotice(
+          'Calor crítico • irrigação ajustada',
+          oldOn+'s ligado / '+oldOff+'s intervalo → '+targetOn+'s / '+targetOff+'s. '+
+            'VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa. O Automático 2.0 aumentou a irrigação.',
+          'viveiro-climate-critical-'+suggestionId,
+          'warning',
+          30,
+          true
+        );
+      }
       return;
     }
 

@@ -450,3 +450,13 @@ body.smartIrrigationV6{background:#f3f6f4}
   .smartIrrigationV7 .smartOperatingCard{grid-template-columns:1fr;gap:8px}
   .smartIrrigationV7 .smartOperatingNext{text-align:left;padding-left:23px}
 }
+
+
+/* Remove legacy visual duplicates; DOM stays available to runtime scripts */
+.smartIrrigationV7 .smartLegacyVisual{display:none!important}
+.smartIrrigationV7 #todayBox .todayGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr))
+}
+@media(max-width:520px){
+  .smartIrrigationV7 #todayBox .todayGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

@@ -215,10 +215,12 @@ let state=JSON.parse(localStorage.getItem(KEY)||'null')||{
 if(!state.settings)state.settings={apiUrl:DEFAULT_API,token:''};
 if(!state.settings.apiUrl)state.settings.apiUrl=DEFAULT_API;
 if(!state.settings.token)state.settings.token=inkbird?.settings?.token||viveiro?.settings?.token||'';
+if(!('cloudError' in state))state.cloudError=null;
 const $=id=>document.getElementById(id);
 let busy=false,deferredPrompt=null;
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2400)}
+function isTuyaQuotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 function pad(n){return String(n).padStart(2,'0')}
 function fmtL(v){const n=Number(v||0);return n>=1000?(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:2})+' mil L':n.toLocaleString('pt-BR',{maximumFractionDigits:0})+' L'}
 async function api(path,opt={}){
@@ -245,18 +247,19 @@ function render(){
     $('history').innerHTML='<div class="empty">Nenhuma atividade carregada.</div>';
     return;
   }
-  const [wl,wc]=weatherLabel();$('sumWeather').textContent=wl;$('sumWeather').className=wc;
+  const quota=isTuyaQuotaErrorMessage(state.cloudError);
+  const [wl,wc]=weatherLabel();$('sumWeather').textContent=quota?'Indisponível':wl;$('sumWeather').className=quota?'warn':wc;
   const vw=o.viveiro||{},vs=vw.weather_state||{};
   const viveiroBlocked=['paused_rain','waiting_resume_delay','paused_waiting_weather'].includes(String(vs.status||''));
-  $('sumViveiro').textContent=vw.online===false?'Offline':viveiroBlocked?'Protegido':vw.relay?'Irrigando':'Em espera';
-  $('sumViveiro').className=vw.online===false?'bad':viveiroBlocked?'warn':'ok';
+  $('sumViveiro').textContent=quota?'Não confirmado':vw.online===false?'Offline':viveiroBlocked?'Protegido':vw.relay?'Irrigando':'Em espera';
+  $('sumViveiro').className=quota?'warn':vw.online===false?'bad':viveiroBlocked?'warn':'ok';
   const online=(o.controllers||[]).filter(c=>c.online!==false).length,total=(o.controllers||[]).length;
-  $('sumControllers').textContent=online+'/'+total+' online';$('sumControllers').className=online===total?'ok':'bad';
+  $('sumControllers').textContent=quota?'Não confirmado':online+'/'+total+' online';$('sumControllers').className=quota?'warn':online===total?'ok':'bad';
   $('sumWater').textContent=fmtL(o.volume?.today_liters);
   const critical=(o.alerts||[]).some(a=>a.level==='critical');
-  $('heroTitle').textContent=critical?'Atenção necessária':'Onde você quer entrar?';
-  $('heroSub').textContent=(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s). Escolha Viveiro ou Café para ver os detalhes.'):'Viveiro e Café ficam totalmente separados. Escolha uma área para continuar.';
-  $('heroStatus').textContent=critical?'VERIFICAR ALERTAS':(o.alerts||[]).length?'ATENÇÃO':'SISTEMA NORMAL';
+  $('heroTitle').textContent=quota?'Tuya temporariamente indisponível':critical?'Atenção necessária':'Onde você quer entrar?';
+  $('heroSub').textContent=quota?'A cota do IoT Core está esgotada. Os estados ao vivo do Viveiro e do Café não podem ser confirmados pela nuvem agora.':(o.alerts||[]).length?(o.alerts.length+' alerta(s) ativo(s). Escolha Viveiro ou Café para ver os detalhes.'):'Viveiro e Café ficam totalmente separados. Escolha uma área para continuar.';
+  $('heroStatus').textContent=quota?'ESTADO NÃO CONFIRMADO':critical?'VERIFICAR ALERTAS':(o.alerts||[]).length?'ATENÇÃO':'SISTEMA NORMAL';
   if($('alertsBox'))$('alertsBox').classList.toggle('quiet',!(o.alerts||[]).length);
   if($('alertsTitle'))$('alertsTitle').textContent=(o.alerts||[]).length?'Alertas':'Tudo certo';
 
@@ -265,15 +268,15 @@ function render(){
   const cp=profiles.cafe||{};
   const viveiroMode=cc.observation?'Observação':cc.automatic?'Automático 2.0':'Manual';
   const viveiroCycle=Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||120)+' s';
-  const viveiroState=vw.online===false?'OFFLINE':viveiroBlocked?'PROTEGIDO':vw.relay?'IRRIGANDO':'ONLINE';
-  const viveiroBadge=vw.online===false?'bad':viveiroBlocked?'warn':'on';
-  const weatherTxt=o.weather?.linked?(o.weather?.metrics?.rainDetected?'Chovendo':'Weather2-2 online'):'Sem clima';
+  const viveiroState=quota?'SEM LEITURA':vw.online===false?'OFFLINE':viveiroBlocked?'PROTEGIDO':vw.relay?'IRRIGANDO':'ONLINE';
+  const viveiroBadge=quota?'warn':vw.online===false?'bad':viveiroBlocked?'warn':'on';
+  const weatherTxt=quota?'Tuya indisponível':o.weather?.linked?(o.weather?.metrics?.rainDetected?'Chovendo':'Weather2-2 online'):'Sem clima';
 
   const coffeeControllers=o.controllers||[];
   const coffeeOnline=coffeeControllers.filter(x=>x.online!==false).length;
   const coffeeActive=coffeeControllers.flatMap(x=>(x.active_zones||[]).map(z=>x.sector_start+z-1));
-  const coffeeState=coffeeOnline<coffeeControllers.length?'ATENÇÃO':coffeeActive.length?'IRRIGANDO':'ONLINE';
-  const coffeeBadge=coffeeOnline<coffeeControllers.length?'bad':'on';
+  const coffeeState=quota?'SEM LEITURA':coffeeOnline<coffeeControllers.length?'ATENÇÃO':coffeeActive.length?'IRRIGANDO':'ONLINE';
+  const coffeeBadge=quota?'warn':coffeeOnline<coffeeControllers.length?'bad':'on';
   const firstSector=coffeeControllers.length?Math.min(...coffeeControllers.map(x=>Number(x.sector_start||1))):1;
   const lastSector=coffeeControllers.length?Math.max(...coffeeControllers.map(x=>Number(x.sector_end||8))):8;
 
@@ -322,9 +325,12 @@ async function refresh(show=true){
   if(busy)return;busy=true;$('refreshBtn').disabled=true;
   try{
     const o=await api('/api/irrigation/overview');
-    state.overview=o;state.lastUpdate=Date.now();save();render();
+    state.overview=o;state.lastUpdate=Date.now();state.cloudError=null;save();render();
     if(show)toast('Central atualizada');
-  }catch(e){toast('Falha: '+e.message)}
+  }catch(e){
+    state.cloudError=e.message||String(e);state.lastUpdate=Date.now();save();render();
+    if(show)toast(isTuyaQuotaErrorMessage(state.cloudError)?'Tuya: cota IoT Core esgotada':'Falha: '+state.cloudError);
+  }
   finally{busy=false;$('refreshBtn').disabled=false}
 }
 function openSettings(){$('apiUrl').value=state.settings.apiUrl||DEFAULT_API;$('token').value=state.settings.token||'';$('settingsDlg').showModal()}
@@ -460,7 +466,7 @@ $('connectionBtn').onclick=()=>{closeMenu();openSettings()};
 if('serviceWorker'in navigator){swReg().then(()=>refreshPushState()).catch(()=>null)}
 render();
 if(state.settings.token)refresh(false);else openSettings();
-setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)},20000);
+setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)},120000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.settings.token)refresh(false)});
 </script>
 <script src="/irrigacao/ui-shell.js?v=20260907-1" defer></script>

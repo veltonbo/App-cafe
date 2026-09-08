@@ -2,6 +2,7 @@ import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js'
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { appendHistory, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
+import { getViveiroSafety, getViveiroMaintenance } from './_interlock.js';
 
 const TZ='America/Porto_Velho';
 const CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
@@ -148,6 +149,10 @@ export async function runViveiroWeatherCheck(){
     };
   }
   const seconds=(await storeGet(SECONDS_STATE_PATH).catch(()=>null))||{};
+  const [safety,maintenance]=await Promise.all([
+    getViveiroSafety().catch(()=>({})),
+    getViveiroMaintenance().catch(()=>({}))
+  ]);
   const position=schedulePosition(seconds.enabled
     ?{daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
     :ekaza.cycleConfig);
@@ -161,6 +166,22 @@ export async function runViveiroWeatherCheck(){
     schedule_position:position,
     action:'none'
   };
+
+  if(safety?.emergency_latched||maintenance?.active){
+    const blockedBy=safety?.emergency_latched?'emergency':'maintenance';
+    next.status=blockedBy==='emergency'?'emergency_stopped':'maintenance';
+    next.lastWeatherError=null;
+    if(!seconds.enabled&&ekaza.cycleConfig?.enabled){
+      await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false).catch(()=>null);
+      result.action='cycle_paused_'+blockedBy;
+    }
+    if(ekaza.relay===true){
+      await setRelay(false).catch(()=>null);
+      result.action=result.action==='none'?'relay_off_'+blockedBy:result.action+'+relay_off';
+    }
+    await storeSet(STATE_PATH,next);
+    return{...result,state:next};
+  }
 
   if(!config.enabled){
     next.status='disabled';

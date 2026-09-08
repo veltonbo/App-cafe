@@ -101,6 +101,7 @@ function sanitizeConfig(input={}){
     rainThresholdMm:Math.max(0,Math.min(500,Number(input.rainThresholdMm??5)))
   };
 }
+function isTuyaQuotaMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
 function rainAmountMm(metrics={}){
   const values=[metrics.rain24h,metrics.rainToday,metrics.rainGeneric].map(x=>Number(x?.value)).filter(Number.isFinite);
   return values.length?Math.max(...values):null;
@@ -140,12 +141,36 @@ export async function runViveiroWeatherCheck(){
     weather={ok:false,linked:false,error:error?.message||String(error)};
   }
 
-  const ekaza=await readEkaza(deviceId);
+  let ekaza=null;
+  try{
+    ekaza=await readEkaza(deviceId);
+  }catch(error){
+    const message=error?.message||String(error);
+    const next={
+      ...previous,
+      lastCheckedAt:checkedAt,
+      status:isTuyaQuotaMessage(message)?'cloud_unavailable':'device_unavailable',
+      lastWeatherError:weather?.error||message,
+      cloudError:message
+    };
+    await storeSet(STATE_PATH,next);
+    return{
+      ok:false,
+      config,
+      weather,
+      state:next,
+      relay:null,
+      cycle_config:null,
+      schedule_position:null,
+      action:'none',
+      error:message
+    };
+  }
   const seconds=(await storeGet(SECONDS_STATE_PATH).catch(()=>null))||{};
   const position=schedulePosition(seconds.enabled
     ?{daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
     :ekaza.cycleConfig);
-  const next={...previous,lastCheckedAt:checkedAt};
+  const next={...previous,lastCheckedAt:checkedAt,cloudError:null};
   const result={
     ok:true,
     config,

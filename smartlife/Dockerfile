@@ -15,7 +15,8 @@ RUN python3 -m venv /opt/smartlife \
 
 COPY . .
 
-RUN npm run build \
+RUN npm test \
+    && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && npm prune --omit=dev
 

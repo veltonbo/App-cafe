@@ -11,9 +11,23 @@ function atualizarResumoInicio() {
     const dataHoje = hoje.toISOString().slice(0, 10);
     let tarefas = window.tarefas || [];
     const tarefasHoje = tarefas.filter(t => t.data === dataHoje && !t.feita);
-    listaTarefasDia.innerHTML = tarefasHoje.length
-      ? tarefasHoje.map(t => `<li>${t.descricao} <span style='color:#aaa;font-size:0.95em;'>(${t.prioridade}, ${t.setor})</span></li>`).join('')
-      : '<li style="color:#888;">Nenhuma tarefa para hoje.</li>';
+    listaTarefasDia.replaceChildren();
+    if (tarefasHoje.length) {
+      tarefasHoje.forEach(t => {
+        const li = document.createElement('li');
+        li.append(document.createTextNode(String(t.descricao || '') + ' '));
+        const meta = document.createElement('span');
+        meta.style.cssText = 'color:#aaa;font-size:0.95em;';
+        meta.textContent = '(' + String(t.prioridade || '') + ', ' + String(t.setor || '') + ')';
+        li.appendChild(meta);
+        listaTarefasDia.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.style.color = '#888';
+      li.textContent = 'Nenhuma tarefa para hoje.';
+      listaTarefasDia.appendChild(li);
+    }
   }
 
   // ===== TOTAL A PAGAR DO DIA =====

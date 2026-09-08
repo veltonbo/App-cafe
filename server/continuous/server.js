@@ -183,7 +183,18 @@ async function runReadOnlyBootDiagnostics(){
         online:device?.online!==false,
         category:device?.category||null,
         supportLocal:device?.support_local===true,
-        statusKeys:Object.keys(device?.status||{}).slice(0,24)
+        statusKeys:Object.keys(device?.status||{}).slice(0,40),
+        functionKeys:Object.keys(device?.function||{}).slice(0,40),
+        statusRangeKeys:Object.keys(device?.status_range||{}).slice(0,40),
+        localStrategyKeys:Object.keys(device?.local_strategy||{}).slice(0,40),
+        iic800:/iic[- ]?800|inkbird/i.test(String(device?.name||''))
+          ?{
+              status:device?.status||{},
+              functions:device?.function||{},
+              status_range:device?.status_range||{},
+              local_strategy:device?.local_strategy||{}
+            }
+          :undefined
       }));
       const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
         error:error?.message||String(error)

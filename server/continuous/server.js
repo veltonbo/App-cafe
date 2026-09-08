@@ -14,7 +14,7 @@ import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
-// Security dependency refresh trigger v1
+// Security dependency refresh trigger v2
 // Publish marker: climate auto v8
 // Publish marker: viveiro full intelligence v7
 // Publish marker: alerts audit notifications v6

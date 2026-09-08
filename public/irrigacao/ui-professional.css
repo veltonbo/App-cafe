@@ -227,3 +227,9 @@ body.smartIrrigationV6{background:#f3f6f4}
 .smartIrrigationV6 #openClimateConfig{width:100%}
 .smartIrrigationV6 #smartViewProfile>.climateControl{margin-top:10px}
 .smartIrrigationV6 #smartViewProfile>.box{box-shadow:0 8px 22px rgba(22,56,46,.06)}
+
+.smartSwitchProfile{
+  display:block;margin:0 0 12px;padding:12px 13px;border:1px solid var(--ui-line);border-radius:13px;
+  background:#fff;color:var(--ui-brand);text-decoration:none;font-weight:900;font-size:.82rem
+}
+.smartIrrigationV6 .smartMainNav{display:none!important}

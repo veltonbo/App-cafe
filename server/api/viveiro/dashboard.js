@@ -312,8 +312,10 @@ export default async function handler(req,res){
       const summary=summarize(history,activeSeconds,now);
       const decisions=decisionTimeline(history);
       const intensity=irrigationIntensity(activeSeconds);
-      const nextEvaluationAt=Number(climateState?.last_evaluated_at||0)
-        +Math.max(5,Number(climateConfig?.evaluation_minutes||5))*60000;
+      const nextEvaluationAt=String(climateState?.last_decision||'')==='outside_schedule'
+        ?Number(climateState?.next_schedule_window_at||now)
+        :Number(climateState?.last_evaluated_at||0)
+          +Math.max(5,Number(climateConfig?.evaluation_minutes||5))*60000;
       const health=buildHealth({
         seconds:activeSeconds,
         weatherSnapshot,

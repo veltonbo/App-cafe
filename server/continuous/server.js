@@ -11,6 +11,7 @@ import { tuyaRequest } from '../api/_tuya.js';
 import { smartLifeConfigured, smartLifeListDevices } from '../api/_smartlife.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
+import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 // Publish marker: climate auto v8
@@ -257,6 +258,26 @@ async function startViveiroWeatherWatch(){
 
 await startViveiroWeatherWatch();
 
+let interlockTimer=null;
+let interlockBusy=false;
+async function startViveiroInterlockWatch(){
+  const tick=async()=>{
+    if(interlockBusy||shuttingDown)return;
+    interlockBusy=true;
+    try{
+      await enforceViveiroInterlocks();
+    }catch(error){
+      console.warn('viveiro interlock watch:',error?.message||error);
+    }finally{
+      interlockBusy=false;
+    }
+  };
+  interlockTimer=setInterval(tick,5000);
+  interlockTimer.unref();
+  setTimeout(tick,1200).unref();
+}
+await startViveiroInterlockWatch();
+
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);
 });
@@ -266,6 +287,7 @@ async function shutdown(signal){
   if(shuttingDown)return;
   shuttingDown=true;
   if(weatherWatchTimer)clearInterval(weatherWatchTimer);
+  if(interlockTimer)clearInterval(interlockTimer);
   console.log('Encerrando servidor:',signal);
   try{await suspendSecondsForRestart()}catch(error){console.error('Falha ao suspender modo rápido para reinício:',error)}
   server.close(()=>process.exit(0));

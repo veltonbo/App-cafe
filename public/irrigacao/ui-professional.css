@@ -140,3 +140,79 @@ body.smartIrrigationV5{min-width:0;background:linear-gradient(180deg,#edf7f3 0,#
 .smartIrrigationV5 .smartAlertCard strong{font-size:.94rem}
 .smartIrrigationV5 .smartAlertNote{margin-bottom:0}
 @media(max-width:350px){.smartIrrigationV5 .smartAlertGrid{grid-template-columns:1fr}}
+
+
+/* Fazenda 2E — navegação simples v6 */
+body.smartIrrigationV6{background:#f3f6f4}
+.smartIrrigationV6 .top{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 10px!important
+}
+.smartIrrigationV6 .top>div:last-child{display:none!important}
+.smartIrrigationV6 .smartMenuBtn{
+  border:1px solid var(--ui-line);background:#fff;color:var(--ui-ink);border-radius:12px;
+  min-height:42px;padding:8px 12px;font-weight:850;font-size:.82rem;box-shadow:0 4px 14px rgba(22,56,46,.06)
+}
+.smartIrrigationV6 .wrap{width:min(100%,760px);max-width:760px;padding:12px 10px calc(28px + env(safe-area-inset-bottom))}
+.smartIrrigationV6 .smartView{display:none}
+.smartIrrigationV6 .smartView.active{display:block}
+.smartIrrigationV6 .smartPageTitle{padding:8px 4px 2px}
+.smartIrrigationV6 .smartPageTitle h2{margin:2px 0 4px;font-size:1.28rem;letter-spacing:-.03em}
+.smartIrrigationV6 .smartViewHome>.smartPageTitle{display:none}
+.smartIrrigationV6 .smartProfileCard{background:linear-gradient(180deg,#fff,#fbfdfc);border-color:#d6e7e0}
+.smartIrrigationV6 .profileTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.smartIrrigationV6 .profileTop h2{margin:2px 0 3px}
+.smartIrrigationV6 .profileBadge{
+  flex:0 0 auto;padding:6px 9px;border-radius:999px;background:var(--ui-soft);color:var(--ui-brand);
+  font-size:.68rem;font-weight:900
+}
+.smartIrrigationV6 .profileSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.smartIrrigationV6 .profileSummary>div{border:1px solid var(--ui-line);border-radius:13px;padding:11px;background:#fff}
+.smartIrrigationV6 .profileSummary small{display:block;color:var(--ui-muted);font-size:.68rem;margin-bottom:3px}
+.smartIrrigationV6 .profileSummary strong{font-size:.86rem;line-height:1.25}
+.smartIrrigationV6 #openProfileConfig{width:100%}
+.smartIrrigationV6 #smartViewHome .climateGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.smartIrrigationV6 #smartViewHome #todayBox{box-shadow:none;background:#fbfdfc}
+.smartIrrigationV6 #smartViewProfile .smartAlerts{box-shadow:none}
+.smartIrrigationV6 .smartSafety{margin:10px 0}
+.smartIrrigationV6 .bottomNav{display:none!important}
+.smartIrrigationV6 .smartAdvanced{display:none!important}
+
+.smartMenuOverlay{
+  display:none;position:fixed;inset:0;z-index:100;background:rgba(10,31,25,.38);backdrop-filter:blur(5px)
+}
+.smartMenuOverlay.open{display:block}
+.smartMenuPanel{
+  position:absolute;top:0;right:0;width:min(88vw,360px);height:100dvh;overflow:auto;
+  padding:calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+  background:#f7faf8;box-shadow:-18px 0 48px rgba(8,35,27,.18)
+}
+.smartMenuHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 14px}
+.smartMenuHead span{display:block;font-size:.62rem;letter-spacing:.13em;font-weight:900;color:var(--ui-brand)}
+.smartMenuHead strong{display:block;font-size:1.12rem;margin-top:2px}
+.smartMenuHead button{
+  width:42px;height:42px;border-radius:12px;border:1px solid var(--ui-line);background:#fff;color:var(--ui-ink);font-size:1rem
+}
+.smartMainNav,.smartSubNav{display:grid;gap:7px}
+.smartMainNav a{
+  display:grid;grid-template-columns:38px 1fr;align-items:center;gap:10px;text-decoration:none;color:var(--ui-ink);
+  padding:11px;border:1px solid var(--ui-line);border-radius:15px;background:#fff
+}
+.smartMainNav a>span{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#eef6f2;font-size:1rem}
+.smartMainNav a b{display:block;font-size:.88rem}
+.smartMainNav a small{display:block;color:var(--ui-muted);font-size:.7rem;margin-top:1px}
+.smartMainNav a.active{border-color:#9bcfbd;background:#f2faf7}
+.smartMenuLabel{margin:17px 4px 7px;font-size:.65rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--ui-muted)}
+.smartSubNav button,.smartConnectionBtn{
+  width:100%;min-height:46px;text-align:left;border:1px solid var(--ui-line);border-radius:13px;background:#fff;
+  color:var(--ui-ink);padding:11px 12px;font-weight:800
+}
+.smartSubNav button.active{background:var(--ui-brand);color:#fff;border-color:var(--ui-brand)}
+.smartConnectionBtn{margin-top:16px;color:var(--ui-brand)}
+@media(max-width:430px){
+  .smartIrrigationV6 .hero,.smartIrrigationV6 .box{padding:15px;border-radius:18px}
+  .smartIrrigationV6 .climateTop>div:last-child{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:350px){
+  .smartIrrigationV6 .profileSummary{grid-template-columns:1fr}
+}

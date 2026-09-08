@@ -6,8 +6,14 @@ import { storeGet, storeSet } from './irrigation/_store.js';
 
 const SESSION_STORE_PATH='IrrigacaoFazenda2E/smartLife/sessionEncrypted';
 const PY_MARKER='__SMARTLIFE_JSON__';
+const READ_CACHE_MS=2500;
+const LIST_CACHE_MS=4000;
+
 let sessionCache=null;
 let sessionLoaded=false;
+let savedSessionFingerprint='';
+let bridgeQueue=Promise.resolve();
+let listCache={at:0,devices:null};
 
 function encryptionKey(){
   const secret=String(process.env.SMARTLIFE_SESSION_KEY||'').trim();
@@ -59,6 +65,16 @@ function validateSession(session){
   return session;
 }
 
+function sessionFingerprint(session){
+  return JSON.stringify({
+    client_id:session?.client_id||'',
+    user_code:session?.user_code||'',
+    terminal_id:session?.terminal_id||'',
+    endpoint:session?.endpoint||'',
+    token_info:session?.token_info||{}
+  });
+}
+
 async function loadSession(){
   if(sessionLoaded)return sessionCache;
   sessionLoaded=true;
@@ -68,6 +84,7 @@ async function loadSession(){
     return null;
   }
   sessionCache=validateSession(decryptJson(record));
+  savedSessionFingerprint=sessionFingerprint(sessionCache);
   return sessionCache;
 }
 
@@ -75,7 +92,10 @@ async function saveSession(session){
   const clean=validateSession(session);
   sessionCache=clean;
   sessionLoaded=true;
+  const fingerprint=sessionFingerprint(clean);
+  if(fingerprint===savedSessionFingerprint)return;
   await storeSet(SESSION_STORE_PATH,encryptJson(clean));
+  savedSessionFingerprint=fingerprint;
 }
 
 function pythonBin(){
@@ -101,7 +121,7 @@ function runBridge(input){
       finished=true;
       child.kill('SIGKILL');
       reject(new Error('Tempo esgotado ao acessar o Smart Life.'));
-    },90000);
+    },30000);
 
     const append=(current,chunk)=>(
       current.length>2_000_000?current:current+chunk.toString('utf8')
@@ -135,12 +155,46 @@ function runBridge(input){
   });
 }
 
+function queuedBridge(input){
+  const job=bridgeQueue.then(
+    ()=>runBridge(input),
+    ()=>runBridge(input)
+  );
+  bridgeQueue=job.catch(()=>null);
+  return job;
+}
+
 async function callWithStoredSession(payload){
   const session=await loadSession();
   if(!session)throw new Error('Smart Life ainda não conectado ao servidor.');
-  const result=await runBridge({...payload,session});
+  const result=await queuedBridge({...payload,session});
   if(result.session)await saveSession(result.session);
   return result;
+}
+
+function matchDevice(devices,{deviceId=null,deviceName=null}={}){
+  if(deviceId){
+    const found=devices.find(d=>String(d?.id||'')===String(deviceId));
+    if(found)return found;
+  }
+  const target=String(deviceName||'').trim().toLowerCase();
+  if(target){
+    const exact=devices.find(d=>String(d?.name||'').trim().toLowerCase()===target);
+    if(exact)return exact;
+    const partial=devices.find(d=>String(d?.name||'').trim().toLowerCase().includes(target));
+    if(partial)return partial;
+  }
+  return null;
+}
+
+function mergeDeviceIntoCache(device){
+  if(!device||!Array.isArray(listCache.devices))return;
+  const id=String(device.id||'');
+  const index=listCache.devices.findIndex(d=>String(d?.id||'')===id);
+  if(index>=0){
+    listCache.devices[index]={...listCache.devices[index],...device};
+    listCache.at=Date.now();
+  }
 }
 
 export async function smartLifeConfigured(){
@@ -149,9 +203,10 @@ export async function smartLifeConfigured(){
 
 export async function importSmartLifeSession(session){
   validateSession(session);
-  const result=await runBridge({action:'list',session});
+  const result=await queuedBridge({action:'list',session});
   if(result.session)session=result.session;
   await saveSession(session);
+  listCache={at:Date.now(),devices:result.devices||[]};
   return{
     ok:true,
     devices:(result.devices||[]).map(d=>({
@@ -164,27 +219,39 @@ export async function importSmartLifeSession(session){
   };
 }
 
-export async function smartLifeListDevices(){
+export async function smartLifeListDevices({maxAgeMs=LIST_CACHE_MS,force=false}={}){
+  const age=Date.now()-Number(listCache.at||0);
+  if(!force&&Array.isArray(listCache.devices)&&age>=0&&age<=Math.max(0,Number(maxAgeMs)||0)){
+    return listCache.devices;
+  }
   const result=await callWithStoredSession({action:'list'});
-  return result.devices||[];
+  listCache={at:Date.now(),devices:result.devices||[]};
+  return listCache.devices;
 }
 
-export async function smartLifeReadDevice({deviceId=null,deviceName=null}={}){
-  const result=await callWithStoredSession({
-    action:'device',
-    device_id:deviceId||undefined,
-    device_name:deviceName||undefined
-  });
-  return result.device;
+export async function smartLifeReadDevice({deviceId=null,deviceName=null,maxAgeMs=READ_CACHE_MS,force=false}={}){
+  const devices=await smartLifeListDevices({maxAgeMs,force});
+  const device=matchDevice(devices,{deviceId,deviceName});
+  if(!device){
+    const names=devices.map(d=>String(d?.name||'')).filter(Boolean);
+    throw new Error('Dispositivo não encontrado. Disponíveis: '+names.join(', '));
+  }
+  return device;
 }
 
 export async function smartLifeSendCommands({deviceId=null,deviceName=null,commands=[]}={}){
-  const result=await callWithStoredSession({
+  const session=await loadSession();
+  if(!session)throw new Error('Smart Life ainda não conectado ao servidor.');
+  const result=await queuedBridge({
     action:'command',
+    session,
     device_id:deviceId||undefined,
     device_name:deviceName||undefined,
     commands,
-    confirm_delay:0.8
+    confirm_delay:0.35
   });
+  if(result.session)await saveSession(result.session);
+  if(result.device)mergeDeviceIntoCache(result.device);
+  else listCache={at:0,devices:null};
   return result.device;
 }

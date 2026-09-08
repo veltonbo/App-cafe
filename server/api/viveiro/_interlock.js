@@ -1,5 +1,6 @@
 import { storeGet, storePatch, storeSet } from '../irrigation/_store.js';
 import { encodeCycle } from '../_cycle.js';
+import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import {
   readViveiroDevice,
   setViveiroRelay,
@@ -10,6 +11,8 @@ const ROOT='IrrigacaoFazenda2E';
 const SAFETY_PATH=ROOT+'/viveiroSafety';
 const MAINTENANCE_PATH=ROOT+'/viveiroMaintenance';
 const SECONDS_PATH=ROOT+'/viveiroSecondsState';
+const WEATHER_CONFIG_PATH=ROOT+'/viveiroWeather/config';
+const WEATHER_STATE_PATH=ROOT+'/viveiroWeather/state';
 
 function now(){return Date.now()}
 
@@ -93,21 +96,61 @@ async function pauseNativeCycle(recordPath,record){
   return next;
 }
 
+async function weatherSafeForRestore(){
+  const [cfg,state]=await Promise.all([
+    storeGet(WEATHER_CONFIG_PATH).catch(()=>null),
+    storeGet(WEATHER_STATE_PATH).catch(()=>null)
+  ]);
+  if(cfg?.enabled===false)return{safe:true,reason:'weather_protection_disabled'};
+
+  const status=String(state?.status||'');
+  if(['paused_rain','waiting_resume_delay','paused_waiting_weather','weather_unavailable'].includes(status)){
+    return{safe:false,reason:status};
+  }
+
+  const weather=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(error=>({
+    linked:false,error:error?.message||String(error)
+  }));
+  if(!weather?.linked||weather?.device?.online===false||!weather?.metrics){
+    return{safe:false,reason:'weather_unavailable'};
+  }
+  if(weather.metrics.rainDetected){
+    return{safe:false,reason:'paused_rain'};
+  }
+  return{safe:true,reason:'clear'};
+}
+
 async function restoreMaintenanceCycle(record){
-  if(!record?.native_cycle_was_enabled||!record?.native_cycle_raw)return false;
-  if(await secondsRunning())return false;
-  if(await emergencyLatched())return false;
+  if(!record?.native_cycle_was_enabled||!record?.native_cycle_raw){
+    return{restored:false,pending:false,reason:'not_applicable'};
+  }
+  if(await secondsRunning()){
+    return{restored:false,pending:false,reason:'seconds_running'};
+  }
+  if(await emergencyLatched()){
+    return{restored:false,pending:false,reason:'emergency'};
+  }
+
+  const climate=await weatherSafeForRestore();
+  if(!climate.safe){
+    return{restored:false,pending:true,reason:climate.reason};
+  }
 
   const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
-  if(!current)return false;
+  if(!current){
+    return{restored:false,pending:true,reason:'device_unavailable'};
+  }
 
   const owns=record?.disabled_cycle_raw
     ?String(current.cycleRaw||'')===String(record.disabled_cycle_raw||'')
     :current.cycleConfig?.enabled===false;
 
-  if(!owns)return false;
+  if(!owns){
+    return{restored:false,pending:false,reason:'external_change'};
+  }
+
   await writeViveiroCycle(record.native_cycle_raw);
-  return true;
+  return{restored:true,pending:false,reason:'restored'};
 }
 
 export async function activateEmergency(reason='Parada de emergência'){
@@ -157,7 +200,10 @@ export async function setMaintenanceInterlock(minutes,reason='Modo manutenção'
     return{...next,active:true};
   }
 
-  const restored=await restoreMaintenanceCycle(previous).catch(()=>false);
+  const restore=await restoreMaintenanceCycle(previous).catch(error=>({
+    restored:false,pending:true,reason:error?.message||String(error)
+  }));
+  const keepOwnership=Boolean(restore.pending);
   const payload={
     ...previous,
     enabled:false,
@@ -165,15 +211,21 @@ export async function setMaintenanceInterlock(minutes,reason='Modo manutenção'
     until:0,
     minutes:0,
     ended_at:now(),
-    restored_native_cycle:Boolean(restored),
+    restored_native_cycle:Boolean(restore.restored),
+    pending_native_restore:keepOwnership,
+    pending_restore_reason:keepOwnership?String(restore.reason||'aguardando'):null,
     updated_at:now(),
-    native_cycle_raw:null,
-    disabled_cycle_raw:null,
-    native_cycle_was_enabled:false
+    native_cycle_raw:keepOwnership?previous.native_cycle_raw:null,
+    disabled_cycle_raw:keepOwnership?previous.disabled_cycle_raw:null,
+    native_cycle_was_enabled:keepOwnership?Boolean(previous.native_cycle_was_enabled):false
   };
   await storeSet(MAINTENANCE_PATH,payload);
-  if(!restored){
-    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+
+  if(!(await secondsRunning())&&!restore.restored){
+    const current=await readViveiroDevice({maxAgeMs:2000}).catch(()=>null);
+    if(current?.relay===true){
+      await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+    }
   }
   return payload;
 }
@@ -206,6 +258,28 @@ export async function enforceViveiroInterlocks(){
 
   if(maintenance?.enabled&&!maintenance.active){
     await setMaintenanceInterlock(0,maintenance.reason||'Modo manutenção').catch(()=>null);
+  }else if(maintenance?.pending_native_restore){
+    const restore=await restoreMaintenanceCycle(maintenance).catch(error=>({
+      restored:false,pending:true,reason:error?.message||String(error)
+    }));
+    if(restore.restored||!restore.pending){
+      await storeSet(MAINTENANCE_PATH,{
+        ...maintenance,
+        pending_native_restore:false,
+        pending_restore_reason:null,
+        restored_native_cycle:Boolean(restore.restored),
+        restored_at:restore.restored?now():maintenance.restored_at||0,
+        native_cycle_raw:null,
+        disabled_cycle_raw:null,
+        native_cycle_was_enabled:false,
+        updated_at:now()
+      });
+    }else{
+      await storePatch(MAINTENANCE_PATH,{
+        pending_restore_reason:String(restore.reason||'aguardando'),
+        updated_at:now()
+      }).catch(()=>null);
+    }
   }
 
   return{

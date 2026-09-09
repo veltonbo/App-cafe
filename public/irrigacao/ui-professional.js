@@ -164,18 +164,23 @@
           '<span><small>Tendência</small><b id="smartTrendText">Aguardando</b></span>'+
         '</div>'+
         '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
-        '<div class="smartWhyCycle"><small>Por que este ciclo?</small><strong id="smartWhyCycleTitle">Aguardando</strong><span id="smartWhyCycleDetail"></span></div>'+
-        '<div class="smartDecisionSummary">'+
-          '<small>Última decisão</small><strong id="smartLastDecision">Aguardando</strong>'+
-          '<span id="smartLastDecisionTime"></span>'+
-        '</div>'+
-        '<div class="smartOverviewMeta">'+
-          '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
+        '<div class="smartQuickMeta">'+
           '<span><small>Próxima avaliação</small><b id="smartNextEval">—</b></span>'+
-          '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
-          '<span><small>Confiança</small><b id="smartClimateConfidence">—</b></span>'+
+          '<button type="button" id="openProfileConfig" class="btn soft">Ajustar automação</button>'+
         '</div>'+
-        '<button type="button" id="openProfileConfig" class="btn soft smartOverviewAction">Automação e horários</button>';
+        '<details class="smartDecisionDetails">'+
+          '<summary>Detalhes da automação</summary>'+
+          '<div class="smartWhyCycle"><small>Por que este ciclo?</small><strong id="smartWhyCycleTitle">Aguardando</strong><span id="smartWhyCycleDetail"></span></div>'+
+          '<div class="smartDecisionSummary">'+
+            '<small>Última decisão</small><strong id="smartLastDecision">Aguardando</strong>'+
+            '<span id="smartLastDecisionTime"></span>'+
+          '</div>'+
+          '<div class="smartOverviewMeta">'+
+            '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
+            '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
+            '<span><small>Confiança</small><b id="smartClimateConfidence">—</b></span>'+
+          '</div>'+
+        '</details>';
       main.appendChild(card);
     }
     bind(byId('openProfileConfig'),'smartBound',()=>showView('perfil'));
@@ -202,8 +207,8 @@
     }
     const baseOn=Number(sec.base_on_seconds||sec.on_seconds||30);
     const baseOff=Number(sec.base_off_seconds||sec.off_seconds||120);
-    const on=Number(sec.on_seconds||baseOn);
-    const off=Number(sec.off_seconds||baseOff);
+    const on=outside?baseOn:Number(sec.on_seconds||baseOn);
+    const off=outside?baseOff:Number(sec.off_seconds||baseOff);
     if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=on+' s / '+off+' s';
     if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=outside
       ?'Aguardando janela'

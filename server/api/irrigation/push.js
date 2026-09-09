@@ -42,9 +42,9 @@ export default async function handler(req,res){
     if(action==='test'){
       const result=await sendPushAlert({
         title:'Fazenda 2E • Teste de alerta',
-        body:'As notificações da Central de Irrigação estão funcionando.',
+        body:'As notificações do Viveiro estão funcionando.',
         tag:'fazenda2e-test',
-        url:'/irrigacao/central/'
+        url:'/irrigacao/'
       });
       return res.status(200).json({ok:true,...result});
     }

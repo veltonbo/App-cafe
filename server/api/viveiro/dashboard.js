@@ -394,8 +394,15 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
 function summarize(history,seconds={},now=Date.now()){
   const todayKey=localDateKey(now);
   const today=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey);
+  const pulseStartRows=today.filter(x=>x.type==='viveiro_pulse_start');
   const pulseRows=today.filter(x=>x.type==='viveiro_pulse_complete');
-  const completedIrrigatedSeconds=pulseRows.reduce((s,x)=>s+Math.max(0,Number(x.duration_seconds||0)),0);
+  const interruptedRows=today.filter(x=>x.type==='viveiro_pulse_interrupted');
+  const physicalRows=[...pulseRows,...interruptedRows];
+  const completedIrrigatedSeconds=physicalRows.reduce((s,x)=>{
+    const actual=Number(x.actual_duration_seconds);
+    const planned=Number(x.duration_seconds||x.planned_duration_seconds||0);
+    return s+Math.max(0,Number.isFinite(actual)?actual:planned);
+  },0);
   const ongoingSeconds=
     String(seconds?.phase||'')==='on'&&Number(seconds?.pulse_started_at||0)>0
       ?Math.max(0,Math.min(
@@ -413,11 +420,20 @@ function summarize(history,seconds={},now=Date.now()){
     const dt=new Date(now-i*86400000);
     const key=localDateKey(dt.getTime());
     const rows=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===key);
+    const starts=rows.filter(x=>x.type==='viveiro_pulse_start');
     const pulses=rows.filter(x=>x.type==='viveiro_pulse_complete');
+    const interrupted=rows.filter(x=>x.type==='viveiro_pulse_interrupted');
+    const physical=[...pulses,...interrupted];
     days.push({
       key,label:dayLabel(key),
-      pulses:pulses.length,
-      irrigated_seconds:pulses.reduce((s,x)=>s+Math.max(0,Number(x.duration_seconds||0)),0),
+      pulses:starts.length,
+      completed_pulses:pulses.length,
+      interrupted_pulses:interrupted.length,
+      irrigated_seconds:physical.reduce((s,x)=>{
+        const actual=Number(x.actual_duration_seconds);
+        const planned=Number(x.duration_seconds||x.planned_duration_seconds||0);
+        return s+Math.max(0,Number.isFinite(actual)?actual:planned);
+      },0),
       rain_pauses:rows.filter(x=>x.type==='viveiro_weather_pause').length,
       errors:rows.filter(x=>String(x.type||'').includes('error')).length
     });
@@ -440,7 +456,9 @@ function summarize(history,seconds={},now=Date.now()){
     :null;
   return{
     today:{
-      pulses:pulseRows.length,
+      pulses:pulseStartRows.length,
+      completed_pulses:pulseRows.length,
+      interrupted_pulses:interruptedRows.length,
       irrigated_seconds:irrigatedSeconds,
       rain_pauses:pauses,
       errors,

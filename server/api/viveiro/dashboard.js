@@ -422,9 +422,22 @@ function summarize(history,seconds={},now=Date.now()){
       errors:rows.filter(x=>String(x.type||'').includes('error')).length
     });
   }
+  const firstPulseAt=(today.find(x=>x.type==='viveiro_pulse_start'&&x.first_of_window)||today.find(x=>x.type==='viveiro_pulse_start'))?.ts||null;
+  const startDelays=today.filter(x=>x.type==='viveiro_start_delay').length;
   const baseline=baseExpectedToday(seconds,now);
   const baselineSeconds=Number(baseline.expected_irrigated_seconds||0);
-  const versusBasePct=baselineSeconds>0?((irrigatedSeconds/baselineSeconds)-1)*100:null;
+  const configuredStartSeconds=Math.max(0,Math.min(1439,Number(seconds.start_minutes||0)))*60;
+  const firstPulseSeconds=firstPulseAt?localNowParts(firstPulseAt).seconds:null;
+  const comparisonComplete=Boolean(
+    firstPulseAt&&
+    firstPulseSeconds!=null&&
+    firstPulseSeconds<=configuredStartSeconds+15*60&&
+    startDelays===0&&
+    errors===0
+  );
+  const versusBasePct=comparisonComplete&&baselineSeconds>0
+    ?((irrigatedSeconds/baselineSeconds)-1)*100
+    :null;
   return{
     today:{
       pulses:pulseRows.length,
@@ -432,11 +445,15 @@ function summarize(history,seconds={},now=Date.now()){
       rain_pauses:pauses,
       errors,
       last_pulse_at:lastPulse?.ts||null,
-      first_pulse_at:(today.find(x=>x.type==='viveiro_pulse_start'&&x.first_of_window)||today.find(x=>x.type==='viveiro_pulse_start'))?.ts||null,
-      start_delays:today.filter(x=>x.type==='viveiro_start_delay').length,
-      base_expected_irrigated_seconds:baselineSeconds,
+      first_pulse_at:firstPulseAt,
+      start_delays:startDelays,
+      base_expected_irrigated_seconds:comparisonComplete?baselineSeconds:null,
       elapsed_window_seconds:Number(baseline.elapsed_window_seconds||0),
-      versus_base_percent:versusBasePct==null?null:Number(versusBasePct.toFixed(1))
+      versus_base_percent:versusBasePct==null?null:Number(versusBasePct.toFixed(1)),
+      comparison_status:comparisonComplete?'complete':'partial',
+      comparison_note:comparisonComplete
+        ?'Comparação válida para a janela acompanhada desde o início.'
+        :'Dados parciais: a comparação com o ciclo-base fica oculta para não induzir erro.'
     },
     week:days,
     week_totals:{

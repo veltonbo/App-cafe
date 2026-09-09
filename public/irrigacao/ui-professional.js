@@ -806,7 +806,7 @@
       overlay.innerHTML=
         '<aside class="smartMenuPanel" role="dialog" aria-label="Menu do Viveiro">'+
           '<div class="smartMenuHead"><div><span>FAZENDA 2E</span><strong>Viveiro</strong></div><button type="button" id="smartMenuClose">✕</button></div>'+
-          '<a class="smartSwitchProfile" href="/irrigacao/central/">← Trocar perfil</a>'+
+
           '<div class="smartMenuLabel">Viveiro</div>'+
           '<nav class="smartSubNav">'+
             '<button type="button" data-smart-view="inicio">Resumo do Viveiro</button>'+

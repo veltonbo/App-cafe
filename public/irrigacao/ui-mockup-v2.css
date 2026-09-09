@@ -1,0 +1,168 @@
+/* Fazenda 2E — Viveiro Mockup UI v2 */
+:root{
+  --m2-bg:#f1f7f3;--m2-card:#fff;--m2-ink:#0d2d25;--m2-muted:#71827b;
+  --m2-green:#0b7b5c;--m2-green-2:#13a073;--m2-soft:#eaf7f1;--m2-line:#dbe9e3;
+  --m2-warn:#d99622;--m2-danger:#cf382f;--m2-shadow:0 12px 34px rgba(25,70,56,.08)
+}
+html{background:var(--m2-bg)!important}
+body.smartIrrigationV7{
+  background:
+    radial-gradient(circle at 90% 2%,rgba(63,154,103,.14),transparent 190px),
+    radial-gradient(circle at 12% 18%,rgba(132,200,163,.11),transparent 220px),
+    linear-gradient(180deg,#f8fcf9 0,#f2f8f4 42%,#edf5f0 100%)!important;
+  color:var(--m2-ink)!important
+}
+body.mockupV2 .wrap{width:min(100%,720px)!important;padding:12px 12px calc(128px + env(safe-area-inset-bottom))!important}
+body.mockupV2 #smartViewHome>.smartPageTitle{display:none!important}
+
+/* HEADER — parecido com o conceito */
+body.mockupV2 .f2eShellTop{
+  position:relative!important;top:auto!important;overflow:hidden;
+  min-height:152px!important;padding:calc(18px + env(safe-area-inset-top)) 18px 22px!important;
+  border:0!important;background:
+    radial-gradient(circle at 88% 26%,rgba(70,154,91,.2),transparent 115px),
+    linear-gradient(135deg,#f8fcf8 0,#f0f9f3 56%,#e8f5eb 100%)!important;
+  box-shadow:none!important;backdrop-filter:none!important;align-items:start!important
+}
+body.mockupV2 .f2eShellTop:after{
+  content:"";position:absolute;right:-34px;bottom:-62px;width:230px;height:180px;opacity:.34;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(38,135,77,.35) 0 22%,transparent 23%),
+    radial-gradient(ellipse at 32% 70%,rgba(64,159,96,.28) 0 21%,transparent 22%),
+    radial-gradient(ellipse at 69% 73%,rgba(29,116,68,.24) 0 18%,transparent 19%);
+  transform:rotate(-14deg)
+}
+body.mockupV2 .f2eShellBrand{position:relative;z-index:2;padding-top:4px}
+body.mockupV2 .f2eShellBrand small{font-size:.66rem!important;letter-spacing:.18em!important;color:var(--m2-green)!important}
+body.mockupV2 .f2eShellBrand h1{font-size:2rem!important;line-height:1!important;letter-spacing:-.055em!important;margin-top:6px!important;color:var(--m2-ink)!important}
+body.mockupV2 .f2eHeaderSubtitle{display:block;margin-top:9px;max-width:245px;color:#667a72;font-size:.78rem;line-height:1.4}
+body.mockupV2 .f2eHeaderBadge{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(210,228,219,.9);color:var(--m2-green);font-size:.69rem;font-weight:850;box-shadow:0 7px 18px rgba(27,76,60,.07)}
+body.mockupV2 .f2eHeaderBadge:before{content:"";width:7px;height:7px;border-radius:50%;background:#23ad6c;box-shadow:0 0 0 4px rgba(35,173,108,.12)}
+body.mockupV2 .f2eShellMenuBtn{position:relative;z-index:3;min-width:84px!important;min-height:44px!important;border-radius:17px!important;background:rgba(255,255,255,.9)!important;border:1px solid rgba(212,226,220,.95)!important;font-size:.75rem!important;box-shadow:0 8px 20px rgba(30,67,55,.08)!important}
+
+/* HOME — sequência fiel ao mockup */
+body.mockupV2 #smartViewHome{padding-top:0!important}
+body.mockupV2 #smartViewHome>*{margin-top:10px!important}
+body.mockupV2 .smartOperatingCard{
+  display:block!important;position:relative;overflow:hidden;margin-top:-22px!important;padding:20px 18px 18px!important;
+  border-radius:24px!important;border:1px solid rgba(211,228,219,.95)!important;
+  background:linear-gradient(145deg,rgba(255,255,252,.98),rgba(246,251,246,.98))!important;
+  box-shadow:0 16px 38px rgba(26,72,57,.09)!important
+}
+body.mockupV2 .smartOperatingCard:before{content:"";position:absolute;right:-22px;bottom:-42px;width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,rgba(86,166,104,.14),transparent 68%)}
+body.mockupV2 .smartOperatingState{display:grid!important;grid-template-columns:54px 1fr!important;gap:14px!important;align-items:start!important}
+body.mockupV2 .smartOperatingState>i{
+  display:grid!important;place-items:center!important;width:54px!important;height:54px!important;border-radius:50%!important;
+  background:#e3f5e8!important;color:#0c704d!important;font-style:normal!important;font-size:1.35rem!important;font-weight:800!important;
+  box-shadow:inset 0 0 0 9px rgba(18,134,84,.055)!important
+}
+body.mockupV2 .smartOperatingState small{font-size:.58rem!important;letter-spacing:.16em!important;color:#75856f!important}
+body.mockupV2 .smartOperatingState strong{display:block;margin-top:4px!important;font-size:1.22rem!important;line-height:1.08!important;letter-spacing:-.035em!important;color:#102d26!important}
+body.mockupV2 .smartOperatingState span{display:block;margin-top:6px!important;font-size:.74rem!important;line-height:1.4!important;color:#687b73!important}
+body.mockupV2 .smartOperatingNext{margin:13px 0 0 68px!important;padding-top:10px!important;border-top:1px solid var(--m2-line)!important;text-align:left!important}
+body.mockupV2 .smartOperatingNext small{font-size:.62rem!important;color:#7a8b84!important}
+body.mockupV2 .smartOperatingNext strong{display:block;margin-top:2px!important;font-size:.9rem!important;color:#122f27!important}
+
+body.mockupV2 .smartHealthStrip{
+  min-height:62px!important;padding:10px 13px!important;grid-template-columns:40px 1fr auto!important;gap:11px!important;
+  border-radius:18px!important;background:rgba(255,255,255,.96)!important;border:1px solid var(--m2-line)!important;box-shadow:0 10px 26px rgba(27,71,56,.06)!important
+}
+body.mockupV2 .smartHealthStrip>i{display:grid!important;place-items:center!important;width:40px!important;height:40px!important;border-radius:13px!important;background:#e5f8ef!important;color:var(--m2-green)!important;font-style:normal!important;font-weight:950!important}
+body.mockupV2 .smartHealthStrip b{font-size:.82rem!important;color:#112f27!important}
+body.mockupV2 .smartHealthStrip small{font-size:.66rem!important;color:#70827b!important;margin-top:3px!important}
+
+body.mockupV2 .smartSafety.show{margin-top:10px!important}
+body.mockupV2 .smartSafety .emergency{
+  min-height:52px!important;border-radius:17px!important;border:1px solid #efaaa5!important;background:linear-gradient(180deg,#fff8f7,#fff0ef)!important;
+  color:#c62e28!important;font-size:.76rem!important;letter-spacing:.03em!important;box-shadow:0 8px 20px rgba(163,52,45,.06)!important
+}
+body.mockupV2 .smartSafety .emergency:before{content:"■";display:inline-grid;place-items:center;margin-right:9px;width:24px;height:24px;border-radius:50%;background:#d92822;color:#fff;font-size:.55rem;vertical-align:middle}
+
+body.mockupV2 .smartOverviewCard{padding:16px!important;border-radius:22px!important;background:rgba(255,255,255,.96)!important;border:1px solid var(--m2-line)!important;box-shadow:var(--m2-shadow)!important}
+body.mockupV2 .smartOverviewHead{margin-bottom:10px!important}
+body.mockupV2 .smartOverviewHead .sectionKicker{display:none!important}
+body.mockupV2 .smartOverviewHead h2{font-size:1rem!important;letter-spacing:-.025em!important;margin:0!important}
+body.mockupV2 .profileBadge{background:#e8f7f0!important;color:var(--m2-green)!important;border-radius:999px!important;padding:5px 8px!important;font-size:.55rem!important}
+body.mockupV2 .smartOverviewGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-top:0!important}
+body.mockupV2 .smartOverviewGrid>div{
+  position:relative;min-height:76px!important;padding:11px 11px 10px 46px!important;border-radius:15px!important;background:#fbfdfc!important;border:1px solid #dfeae5!important;box-shadow:none!important
+}
+body.mockupV2 .smartOverviewGrid>div .m2Icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:#edf7f2;color:#0a805b;font-size:.82rem}
+body.mockupV2 .smartOverviewGrid small{font-size:.61rem!important;color:#74867f!important}
+body.mockupV2 .smartOverviewGrid strong{display:block;margin-top:4px!important;font-size:.88rem!important;color:#112f27!important}
+body.mockupV2 .smartClimateLine{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+body.mockupV2 .smartClimateLine>span{min-height:66px!important;padding:11px!important;border-radius:15px!important;background:#fbfdfc!important;border:1px solid #dfeae5!important}
+body.mockupV2 .smartClimateLine b{font-size:.78rem!important}
+body.mockupV2 .smartIntensity{padding:11px 12px!important;border-radius:15px!important;background:#fbfdfc!important;border:1px solid #dfeae5!important}
+body.mockupV2 .smartIntensityTrack{height:6px!important;background:#e8efec!important}
+body.mockupV2 .smartOverviewReason{display:none!important}
+body.mockupV2 .smartQuickMeta{grid-template-columns:1fr auto!important;margin-top:10px!important}
+body.mockupV2 .smartQuickMeta .btn{border-radius:12px!important;background:#eaf7f1!important;color:var(--m2-green)!important;border:0!important;min-height:38px!important}
+body.mockupV2 .smartDecisionDetails{margin-top:9px!important;border-radius:14px!important;background:#fbfdfc!important}
+
+/* HOJE fica secundário */
+body.mockupV2 #todayBox{padding:14px!important;border-radius:20px!important;background:rgba(255,255,255,.9)!important;box-shadow:none!important}
+body.mockupV2 #todayBox .sectionKicker{display:none!important}
+body.mockupV2 #todayBox h2{font-size:.95rem!important}
+body.mockupV2 #todayBox .todayGrid{gap:7px!important}
+body.mockupV2 #todayBox .todayCard{min-height:62px!important;padding:9px 10px!important;border-radius:13px!important}
+
+/* Automação */
+body.mockupV2 #smartViewProfile>.smartPageTitle,body.mockupV2 #smartViewHistory>.smartPageTitle,body.mockupV2 #smartViewSystem>.smartPageTitle{padding:12px 2px 8px!important}
+body.mockupV2 #smartViewProfile>.smartPageTitle h2,body.mockupV2 #smartViewHistory>.smartPageTitle h2,body.mockupV2 #smartViewSystem>.smartPageTitle h2{font-size:1.45rem!important}
+body.mockupV2 #smartViewProfile .climateControl,body.mockupV2 #smartViewProfile .secondsBox,body.mockupV2 #smartViewProfile .weatherProtect,body.mockupV2 #smartViewProfile #calendarBox{
+  border-radius:22px!important;border:1px solid var(--m2-line)!important;background:rgba(255,255,255,.96)!important;box-shadow:var(--m2-shadow)!important;padding:15px!important
+}
+body.mockupV2 #smartViewProfile .climateControl{background:linear-gradient(150deg,#ffffff,#f5faf7)!important;border-color:#cae3d8!important}
+body.mockupV2 #smartViewProfile .climateTop h2{font-size:1.15rem!important}
+body.mockupV2 #smartViewProfile .smartModeGroup{border-radius:14px!important;padding:4px!important;background:#edf3f0!important}
+body.mockupV2 #smartViewProfile .climateSwitch{min-height:39px!important;font-size:.66rem!important;border-radius:11px!important}
+body.mockupV2 #smartViewProfile .climateGrid{gap:7px!important}
+body.mockupV2 #smartViewProfile .climateCard{min-height:70px!important;border-radius:14px!important;background:#fbfdfc!important}
+body.mockupV2 #smartViewProfile .configGroup{border-radius:16px!important;padding:11px!important;background:#fafcfb!important}
+body.mockupV2 #smartViewProfile .secondsField{border-radius:14px!important;background:#fff!important}
+body.mockupV2 #smartViewProfile .presetRow .btn,body.mockupV2 #smartViewProfile .shortcutRow .btn{border-radius:12px!important;background:#edf8f3!important;color:#08765a!important}
+body.mockupV2 #smartViewProfile #saveSecondsConfig{background:linear-gradient(135deg,#0a795a,#0e9b70)!important;color:#fff!important;box-shadow:0 8px 18px rgba(11,123,92,.16)!important}
+body.mockupV2 #smartViewProfile .protectGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body.mockupV2 #smartViewProfile #calendarBox .scheduleRow{border-radius:13px!important;background:#fbfdfc!important}
+
+/* Histórico */
+body.mockupV2 #smartViewHistory .smartDecisionBox,body.mockupV2 #smartViewHistory #weeklyBox{border-radius:22px!important;border:1px solid var(--m2-line)!important;background:rgba(255,255,255,.96)!important;box-shadow:var(--m2-shadow)!important}
+body.mockupV2 .smartDecisionList{gap:0!important}
+body.mockupV2 .smartDecisionItem{border:0!important;border-bottom:1px solid #e5eee9!important;border-radius:0!important;background:transparent!important;padding:12px 4px!important}
+body.mockupV2 .smartDecisionItem:last-child{border-bottom:0!important}
+body.mockupV2 .smartDecisionItem b{font-size:.77rem!important}
+body.mockupV2 .smartDecisionItem small{font-size:.64rem!important}
+body.mockupV2 .weeklyGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}
+body.mockupV2 .weekDay{min-height:78px!important;padding:9px 6px!important;border-radius:14px!important;background:#fbfdfc!important}
+
+/* Footer decorativo do mockup */
+body.mockupV2 .m2Footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 3px 2px;padding:13px 14px 18px;border-radius:20px;background:linear-gradient(180deg,rgba(239,249,242,.25),rgba(222,241,226,.72));color:#6f8179;font-size:.67rem;font-style:italic}
+body.mockupV2 .m2Footer b{font-style:normal;color:#3f735f;font-size:.62rem;letter-spacing:.15em}
+
+/* Bottom nav próxima do conceito */
+@media(max-width:760px){
+  body.mockupV2{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+  body.mockupV2 .f2eBottomNav{left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;padding:6px!important;border-radius:22px!important;background:rgba(255,255,255,.95)!important;border:1px solid rgba(214,227,221,.95)!important;box-shadow:0 16px 38px rgba(22,62,49,.16)!important}
+  body.mockupV2 .f2eBottomNav button{min-height:54px!important;border-radius:16px!important;padding:7px 3px!important}
+  body.mockupV2 .f2eBottomNav button span{font-size:1.05rem!important}
+  body.mockupV2 .f2eBottomNav button small{font-size:.6rem!important}
+  body.mockupV2 .f2eBottomNav button.active{background:#e7f7ef!important;color:#08765a!important}
+}
+
+/* Menu */
+body.mockupV2 .f2eShellOverlay{background:rgba(10,35,28,.38)!important;backdrop-filter:blur(7px)!important}
+body.mockupV2 .f2eShellPanel{width:min(88vw,360px)!important;background:#f7fbf8!important;padding:calc(17px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom))!important}
+body.mockupV2 .f2eShellHead strong{font-size:1.35rem!important;letter-spacing:-.03em!important}
+body.mockupV2 .f2eShellItem{min-height:56px!important;border-radius:16px!important;border:1px solid var(--m2-line)!important;background:#fff!important;padding:10px 11px!important}
+body.mockupV2 .f2eShellItem .ico{width:37px!important;height:37px!important;border-radius:12px!important;background:#edf7f2!important}
+body.mockupV2 .f2eShellItem.active{background:#edf8f3!important;border-color:#9ed2bf!important}
+body.mockupV2 .f2eShellClose{border-radius:14px!important}
+
+@media(max-width:390px){
+  body.mockupV2 .f2eShellTop{min-height:144px!important;padding-left:15px!important;padding-right:15px!important}
+  body.mockupV2 .f2eShellBrand h1{font-size:1.85rem!important}
+  body.mockupV2 .f2eHeaderSubtitle{font-size:.73rem}
+  body.mockupV2 .smartOverviewGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.mockupV2 .weeklyGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

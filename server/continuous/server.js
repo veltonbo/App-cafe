@@ -140,6 +140,8 @@ async function handleApi(req,res,url){
     res.setHeader('Cache-Control','no-cache, no-transform');
     res.setHeader('Connection','keep-alive');
     res.setHeader('X-Accel-Buffering','no');
+    req.socket?.setTimeout?.(0);
+    req.socket?.setKeepAlive?.(true,10000);
     res.flushHeaders?.();
 
     const send=event=>{
@@ -149,9 +151,10 @@ async function handleApi(req,res,url){
       res.write('data: '+JSON.stringify(event)+'\n\n');
     };
     const unsubscribe=subscribeLive(send,{replay:true});
+    send({id:'hello-'+Date.now(),type:'heartbeat',at:Date.now(),payload:{status:'connected'}});
     const heartbeat=setInterval(()=>{
-      if(!res.writableEnded)res.write(': heartbeat '+Date.now()+'\n\n');
-    },12000);
+      if(!res.writableEnded)send({id:'hb-'+Date.now(),type:'heartbeat',at:Date.now(),payload:{status:'alive'}});
+    },8000);
     heartbeat.unref?.();
     publishLive('connection',{status:'connected',clients:liveClientCount()});
     req.on('close',()=>{

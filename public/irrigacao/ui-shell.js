@@ -59,15 +59,9 @@
       ]}
     ];
     if(area==='viveiro')return[
-      {label:'Viveiro',items:[
-        {icon:'⌂',label:'Resumo',sub:'Situação de agora',action:()=>viveiroView('inicio'),key:'inicio'},
-        {icon:'◷',label:'Automação',sub:'Ciclo, clima e horários',action:()=>viveiroView('perfil'),key:'perfil'},
-        {icon:'≡',label:'Histórico',sub:'Irrigações e eventos',action:()=>viveiroView('historico'),key:'historico'},
-        {icon:'⚙',label:'Sistema',sub:'Segurança e manutenção',action:()=>viveiroView('sistema'),key:'sistema'}
-      ]},
       {label:'Navegação',items:[
-        {icon:'↔',label:'Trocar área',sub:'Voltar para Viveiro ou Café',href:'/irrigacao/central/'},
-        {icon:'●',label:'Conexão',sub:'Conexão do Viveiro',action:()=>clickId('settings')||clickId('conn')}
+        {icon:'↔',label:'Trocar área',sub:'Ir para Viveiro ou Café',href:'/irrigacao/central/'},
+        {icon:'●',label:'Conexão',sub:'Configuração de acesso do Viveiro',action:()=>clickId('settings')||clickId('conn')}
       ]}
     ];
     return[
@@ -127,7 +121,7 @@
       {key:'inicio',icon:'⌂',label:'Resumo'},
       {key:'perfil',icon:'◷',label:'Automação'},
       {key:'historico',icon:'≡',label:'Histórico'},
-      {key:'sistema',icon:'⚙',label:'Sistema'}
+      {key:'sistema',icon:'⚙︎',label:'Sistema'}
     ];
     items.forEach(x=>{
       const b=document.createElement('button');

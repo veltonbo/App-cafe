@@ -522,16 +522,23 @@ export default async function handler(req,res){
           humidity:Number.isFinite(lastHum)?{value:lastHum,unit:'%'}:null
         }
       };
-      const history=historyRows(historyRaw).filter(x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')).slice(0,160);
+      // O cálculo diário/semanal precisa considerar TODOS os eventos do período.
+      // O limite fica somente na lista devolvida para a interface.
+      const historyFull=historyRows(historyRaw).filter(
+        x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')
+      );
+      const history=historyFull.slice(0,160);
       const now=Date.now();
       const todayKey=localDateKey(now);
-      const auditToday=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey).slice(0,100);
+      const auditToday=historyFull.filter(
+        x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey
+      ).slice(0,100);
       const maintenanceActive=Boolean(maintenance?.active||(
         maintenance?.enabled&&Number(maintenance?.until||0)>now
       ));
       const activeSeconds=seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{});
-      const summary=summarize(history,activeSeconds,now);
-      const decisions=decisionTimeline(history);
+      const summary=summarize(historyFull,activeSeconds,now);
+      const decisions=decisionTimeline(historyFull);
       const rawIntensity=irrigationIntensity(activeSeconds);
       const outsideAutomatic=String(climateState?.last_decision||'')==='outside_schedule';
       const intensity=outsideAutomatic
@@ -556,7 +563,7 @@ export default async function handler(req,res){
         climateState:climateState||{},
         maintenance:activeMaintenance,
         safety:safety||{},
-        history,
+        history:historyFull,
         now
       });
       const operation=operationalState({

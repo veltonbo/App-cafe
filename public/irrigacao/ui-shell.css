@@ -19,7 +19,6 @@ body{--shell-top-h:64px}
 }
 .f2eShellMenuBtn.active{background:var(--shell-soft);color:var(--shell-brand);border-color:#b8d9cd}
 body.f2eShellApplied>header.top{display:none!important}
-body.f2eShellApplied #smartMenuOverlay,
 body.f2eShellApplied #menuDlg,
 body.f2eShellApplied .profileContext,
 body.f2eShellApplied .tabs{display:none!important}
@@ -44,3 +43,8 @@ body.f2eShellApplied .wrap{padding-top:10px!important}
   .f2eBottomNav button.active span{font-weight:950}
   .f2eShellMenuBtn{min-height:38px;padding:7px 10px;font-size:.72rem}
 }
+
+.f2eHeaderBadge[data-level="warning"]{color:#9b6a16!important}
+.f2eHeaderBadge[data-level="warning"]:before{background:#d39a2e!important;box-shadow:0 0 0 4px rgba(211,154,46,.12)!important}
+.f2eHeaderBadge[data-level="critical"]{color:#b83d36!important}
+.f2eHeaderBadge[data-level="critical"]:before{background:#c94c43!important;box-shadow:0 0 0 4px rgba(201,76,67,.12)!important}

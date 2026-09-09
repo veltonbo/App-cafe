@@ -23,7 +23,7 @@
       brand.appendChild(badge);
     }
     const menu=q('.f2eShellMenuBtn',top);
-    if(menu)menu.textContent='☰  Mais';
+    if(menu&&menu.textContent!=='☰  Mais')menu.textContent='☰  Mais';
   }
 
   function decorateOperational(){
@@ -34,12 +34,7 @@
   }
 
   function decorateMetrics(){
-    const map={
-      'Ciclo atual':'◉',
-      'Ciclo-base':'◷',
-      'Temperatura':'♨',
-      'Umidade':'◌'
-    };
+    const map={'Ciclo atual':'◉','Ciclo-base':'◷','Temperatura':'♨','Umidade':'◌'};
     qa('.smartOverviewGrid>div').forEach(card=>{
       const label=q('small',card)?.textContent?.trim()||'';
       if(q('.m2Icon',card))return;
@@ -60,37 +55,22 @@
   }
 
   function refineLabels(){
-    const home=document.getElementById('smartViewHome');
-    const profile=document.getElementById('smartViewProfile');
-    const history=document.getElementById('smartViewHistory');
-    const system=document.getElementById('smartViewSystem');
     const setTitle=(view,kicker,title)=>{
       const box=q('.smartPageTitle',view||document);
       if(!box)return;
-      const k=q('.sectionKicker',box);if(k)k.textContent=kicker;
-      const h=q('h2',box);if(h)h.textContent=title;
+      const k=q('.sectionKicker',box);if(k&&k.textContent!==kicker)k.textContent=kicker;
+      const h=q('h2',box);if(h&&h.textContent!==title)h.textContent=title;
     };
-    setTitle(profile,'CICLO, CLIMA E HORÁRIOS','Automação');
-    setTitle(history,'ACOMPANHAMENTO','Histórico');
-    setTitle(system,'SEGURANÇA E MANUTENÇÃO','Sistema');
-    if(home){
-      const title=q('.smartPageTitle',home);
-      if(title)title.style.display='none';
-    }
+    const home=document.getElementById('smartViewHome');
+    setTitle(document.getElementById('smartViewProfile'),'CICLO, CLIMA E HORÁRIOS','Automação');
+    setTitle(document.getElementById('smartViewHistory'),'ACOMPANHAMENTO','Histórico');
+    setTitle(document.getElementById('smartViewSystem'),'SEGURANÇA E MANUTENÇÃO','Sistema');
+    if(home){const title=q('.smartPageTitle',home);if(title)title.style.display='none';}
   }
 
-  function run(){
-    enhanceHeader();
-    decorateOperational();
-    decorateMetrics();
-    addFooter();
-    refineLabels();
-  }
-
-  const obs=new MutationObserver(()=>run());
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-  document.addEventListener('DOMContentLoaded',run,{once:true});
-  setTimeout(run,50);
-  setTimeout(run,600);
-  setTimeout(run,1800);
+  function run(){enhanceHeader();decorateOperational();decorateMetrics();addFooter();refineLabels();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});
+  else run();
+  setTimeout(run,250);
+  setTimeout(run,1200);
 })();

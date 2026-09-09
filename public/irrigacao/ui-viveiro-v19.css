@@ -518,3 +518,10 @@ body.mockupV2 .smartHealthStrip small{font-size:.50rem!important}
   }
   body.mockupV2 .smartOperatingNext{width:100%!important}
 }
+
+
+/* v19.1 — comparação com ciclo-base removida da interface */
+#smartDailyCompare{display:none!important}
+#todayBox .todayCard:has(#todayWaterTime).smartUiHidden{
+  display:block!important
+}

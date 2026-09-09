@@ -8,13 +8,6 @@
       "version": 3.3
     },
     {
-      "name": "INKBIRD Cafe",
-      "id": "DEVICE_ID",
-      "ip": "192.168.1.101",
-      "local_key": "LOCAL_KEY",
-      "version": 3.3
-    },
-    {
       "name": "Weather2-2",
       "id": "DEVICE_ID",
       "ip": "192.168.1.102",

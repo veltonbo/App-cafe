@@ -151,35 +151,35 @@
         '</div>'+
         '<div class="smartOverviewGrid">'+
           '<div><small>Ciclo atual</small><strong id="smartClimateCycle">—</strong></div>'+
-          '<div><small>Ciclo-base</small><strong id="smartBaseCycle">—</strong></div>'+
           '<div><small>Temperatura</small><strong id="smartOverviewTemp">—</strong></div>'+
           '<div><small>Umidade</small><strong id="smartOverviewHumidity">—</strong></div>'+
           '<div><small>Chuva</small><strong id="smartOverviewRain">—</strong></div>'+
         '</div>'+
-        '<div class="smartIntensity">'+
-          '<div class="smartIntensityTop"><span><small>Intensidade</small><b id="smartIntensityText">Normal</b></span><span id="smartIntensityDelta">0%</span></div>'+
-          '<div class="smartIntensityTrack"><i id="smartIntensityFill"></i></div>'+
-        '</div>'+
-        '<div class="smartClimateLine">'+
+        '<div class="smartHomeStatus">'+
           '<span><small>Condição</small><b id="smartClimateLevel">Aguardando</b></span>'+
-          '<span><small>Tendência</small><b id="smartTrendText">Aguardando</b></span>'+
-        '</div>'+
-        '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
-        '<div class="smartQuickMeta">'+
           '<span><small>Próxima avaliação</small><b id="smartNextEval">—</b></span>'+
           '<button type="button" id="openProfileConfig" class="btn soft">Ajustar automação</button>'+
         '</div>'+
-        '<details class="smartDecisionDetails">'+
-          '<summary>Detalhes da automação</summary>'+
+        '<details class="smartDecisionDetails smartAutomationDetails">'+
+          '<summary>Entender o ajuste automático</summary>'+
+          '<div class="smartOverviewMeta">'+
+            '<span><small>Ciclo-base</small><b id="smartBaseCycle">—</b></span>'+
+            '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
+            '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
+            '<span><small>Confiança</small><b id="smartClimateConfidence">—</b></span>'+
+          '</div>'+
+          '<div class="smartIntensity">'+
+            '<div class="smartIntensityTop"><span><small>Intensidade</small><b id="smartIntensityText">Normal</b></span><span id="smartIntensityDelta">0%</span></div>'+
+            '<div class="smartIntensityTrack"><i id="smartIntensityFill"></i></div>'+
+          '</div>'+
+          '<div class="smartClimateLine">'+
+            '<span><small>Tendência</small><b id="smartTrendText">Aguardando</b></span>'+
+          '</div>'+
+          '<p id="smartClimateReason" class="note smartOverviewReason">Aguardando avaliação climática.</p>'+
           '<div class="smartWhyCycle"><small>Por que este ciclo?</small><strong id="smartWhyCycleTitle">Aguardando</strong><span id="smartWhyCycleDetail"></span></div>'+
           '<div class="smartDecisionSummary">'+
             '<small>Última decisão</small><strong id="smartLastDecision">Aguardando</strong>'+
             '<span id="smartLastDecisionTime"></span>'+
-          '</div>'+
-          '<div class="smartOverviewMeta">'+
-            '<span><small>Modo</small><b id="profileMode">Automático 2.0</b></span>'+
-            '<span><small>Horário</small><b id="profileSchedule">—</b></span>'+
-            '<span><small>Confiança</small><b id="smartClimateConfidence">—</b></span>'+
           '</div>'+
         '</details>';
       main.appendChild(card);
@@ -748,7 +748,7 @@
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
     const weather=sectionByTitle('Proteção por chuva')||sectionByTitle('Proteção automática por chuva');
     const calendar=byId('calendarBox');
-    [climate,seconds,weather,calendar].filter(Boolean).forEach(el=>profile.appendChild(el));
+    [seconds,climate,weather,calendar].filter(Boolean).forEach(el=>profile.appendChild(el));
 
     [today,byId('smartDecisionBox'),byId('weeklyBox')]
       .filter(Boolean).forEach(el=>history.appendChild(el));
@@ -782,59 +782,6 @@
     const offline=byId('offlineBanner');
     if(offline)main.insertBefore(offline,main.firstChild);
   }
-  function ensureMenu(){
-    const top=qs('.top');
-    if(!top)return;
-
-    qsa('.top a.pill').forEach(a=>a.style.display='none');
-    if(byId('conn'))byId('conn').style.display='none';
-
-    let btn=byId('smartMenuBtn');
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='smartMenuBtn';
-      btn.type='button';
-      btn.className='smartMenuBtn';
-      btn.textContent='☰ Viveiro';
-      top.appendChild(btn);
-    }
-
-    if(!byId('smartMenuOverlay')){
-      const overlay=document.createElement('div');
-      overlay.id='smartMenuOverlay';
-      overlay.className='smartMenuOverlay';
-      overlay.innerHTML=
-        '<aside class="smartMenuPanel" role="dialog" aria-label="Menu do Viveiro">'+
-          '<div class="smartMenuHead"><div><span>FAZENDA 2E</span><strong>Viveiro</strong></div><button type="button" id="smartMenuClose">✕</button></div>'+
-
-          '<div class="smartMenuLabel">Viveiro</div>'+
-          '<nav class="smartSubNav">'+
-            '<button type="button" data-smart-view="inicio">Resumo do Viveiro</button>'+
-            '<button type="button" data-smart-view="perfil">Configurações do Viveiro</button>'+
-            '<button type="button" data-smart-view="historico">Histórico do Viveiro</button>'+
-            '<button type="button" data-smart-view="sistema">Sistema e manutenção</button>'+
-          '</nav>'+
-          '<button type="button" id="smartConnectionBtn" class="smartConnectionBtn">Conexão do Viveiro</button>'+
-        '</aside>';
-      document.body.appendChild(overlay);
-    }
-
-    const overlay=byId('smartMenuOverlay');
-    const open=()=>overlay.classList.add('open');
-    const close=()=>overlay.classList.remove('open');
-    bind(btn,'smartBound',open);
-    bind(byId('smartMenuClose'),'smartBound',close);
-    bind(overlay,'smartOverlayBound',e=>{if(e.target===overlay)close()});
-    qsa('[data-smart-view]',overlay).forEach(b=>bind(b,'smartBound',()=>{
-      showView(String(b.dataset.smartView||'inicio'));close();
-    }));
-    bind(byId('smartConnectionBtn'),'smartBound',()=>{
-      close();
-      const target=byId('settings')||byId('conn');
-      if(target)target.click();
-    });
-  }
-
   const viewMap={inicio:'smartViewHome',perfil:'smartViewProfile',historico:'smartViewHistory',sistema:'smartViewSystem'};
   window.__viveiroShowView=(name)=>showView(name);
   function showView(name='inicio'){

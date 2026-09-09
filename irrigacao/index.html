@@ -499,6 +499,10 @@ let weatherSyncing=false;
 let secondsSyncing=false;
 let dashboardSyncing=false;
 let secondsFreshAt=0;
+let serverClockOffsetMs=0;
+let liveClockFrame=0;
+let liveClockLastPaint=0;
+let liveClockSecond=-1;
 let secondsEditorTouched=false;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'')
@@ -796,10 +800,11 @@ function secondsPhaseLabel(phase){
   };
   return labels[String(phase||'')]||String(phase||'Desativado').replaceAll('_',' ');
 }
+function serverNowMs(){return Date.now()+Number(serverClockOffsetMs||0)}
 function secondsRemaining(target){
   const t=Number(target||0);
   if(!t)return '—';
-  const s=Math.max(0,Math.ceil((t-Date.now())/1000));
+  const s=Math.max(0,Math.ceil((t-serverNowMs())/1000));
   if(s>=60)return Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
   return s+'s';
 }
@@ -821,11 +826,19 @@ function updateSecondsLive(){
 async function syncSecondsMode(showToast=false){
   if(secondsSyncing||!data.settings.apiUrl||!data.settings.token)return;
   secondsSyncing=true;
+  const requestStartedAt=Date.now();
   try{
     const r=await api('/api/viveiro/seconds');
     if(r?.state){
       const wasActive=secondsActive();
-      secondsFreshAt=Date.now();
+      const receivedAt=Date.now();
+      const serverReadAt=Number(r.state.server_read_at||0);
+      if(serverReadAt){
+        const midpoint=requestStartedAt+(receivedAt-requestStartedAt)/2;
+        const sampleOffset=serverReadAt-midpoint;
+        if(Math.abs(sampleOffset)<5*60*1000)serverClockOffsetMs=sampleOffset;
+      }
+      secondsFreshAt=receivedAt;
       data.secondsMode={...data.secondsMode,...r.state};
       syncSecondsEditorFromState(data.secondsMode,false);
       if(typeof r.state.device_relay==='boolean')data.relay=r.state.device_relay;
@@ -1862,7 +1875,24 @@ setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},4000);
 // A Weather2-2 é atualizada pelo servidor a cada ~4 s e chega pelo dashboard.
 setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false)}},30000);
-setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
+function startPreciseLiveClock(){
+  if(liveClockFrame)return;
+  const tick=ts=>{
+    liveClockFrame=requestAnimationFrame(tick);
+    if(document.visibilityState!=='visible')return;
+    if(ts-liveClockLastPaint<150)return;
+    liveClockLastPaint=ts;
+    updateSecondsLive();
+    updateWeatherCountdownLive();
+    const currentSecond=Math.floor(serverNowMs()/1000);
+    if(currentSecond!==liveClockSecond){
+      liveClockSecond=currentSecond;
+      updateTodaySummary();
+    }
+  };
+  liveClockFrame=requestAnimationFrame(tick);
+}
+startPreciseLiveClock();
 function updateOfflineBanner(){
   const el=$('offlineBanner');
   if(!el)return;

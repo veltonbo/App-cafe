@@ -82,6 +82,9 @@ body.mockupV2 .smartOverviewCard{padding:16px!important;border-radius:22px!impor
 body.mockupV2 .smartOverviewHead{margin-bottom:10px!important}
 body.mockupV2 .smartOverviewHead .sectionKicker{display:none!important}
 body.mockupV2 .smartOverviewHead h2{font-size:1rem!important;letter-spacing:-.025em!important;margin:0!important}
+body.mockupV2 #smartViewHome .smartOverviewHead>.profileBadge{display:none!important}
+body.mockupV2 .m2Realtime{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#edf8f3;color:#08765a;font-size:.52rem;font-weight:900;letter-spacing:.045em;white-space:nowrap}
+body.mockupV2 .m2Realtime i{width:6px;height:6px;border-radius:50%;background:#18a76f;box-shadow:0 0 0 4px rgba(24,167,111,.11)}
 body.mockupV2 .profileBadge{background:#e8f7f0!important;color:var(--m2-green)!important;border-radius:999px!important;padding:5px 8px!important;font-size:.55rem!important}
 body.mockupV2 .smartOverviewGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-top:0!important}
 body.mockupV2 .smartOverviewGrid>div{

@@ -425,7 +425,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 <div class="head"><h2>Estado em tempo real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar agora</button></div>
 <div class="statusLine"><span>Fase atual</span><strong id="phaseState">Desconhecida</strong></div>
 <div class="statusLine"><span>Ciclo detectado</span><strong id="cycleDetected">Aguardando</strong></div>
-<div class="statusLine"><span>Contagem Tuya</span><strong id="countdownState">—</strong></div>
+<div class="statusLine"><span>Contagem do dispositivo</span><strong id="countdownState">—</strong></div>
 <p class="note" id="cycleInfo">A programação 1/2 já existente no EKAZA será preservada.</p>
 </section>
 
@@ -631,7 +631,7 @@ function renderWeatherRuntimeOnly(){
     $('viveiroRainState').className=quota?'bad':raining?'bad':'ok';
   }
   if($('viveiroProtectState')){
-    $('viveiroProtectState').textContent=quota?'Tuya indisponível':weatherStatusLabel(s.status);
+    $('viveiroProtectState').textContent=quota?'Smart Life indisponível':weatherStatusLabel(s.status);
     $('viveiroProtectState').className=quota||blocked?'bad':(['clear','resumed_inside_window','restored_outside_window'].includes(s.status)?'ok':'');
   }
   if($('viveiroResumeState')){
@@ -644,7 +644,7 @@ function renderWeatherRuntimeOnly(){
   if($('protectFlag')){
     $('protectFlag').className='protectFlag '+(quota||blocked?'blocked':'');
     $('protectFlag').textContent=quota
-      ?'Tuya indisponível • proteção climática sem leitura ao vivo confirmada'
+      ?'Smart Life indisponível • proteção climática sem leitura ao vivo confirmada'
       :blocked?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
       :(cfg.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
   }
@@ -656,21 +656,21 @@ function renderConnectionRuntimeOnly(){
   const secActive=secondsActive();
   if($('relayState'))$('relayState').textContent=quota?'Não confirmado':data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
   if($('connectionState')){
-    $('connectionState').textContent=!data.settings.token?'Token não configurado':quota?'Tuya indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
+    $('connectionState').textContent=!data.settings.token?'Token não configurado':quota?'Smart Life indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
     $('connectionState').className=online?'ok':(quota||data.online===false)?'bad':'';
   }
-  if($('conn'))$('conn').textContent=syncing?'● Atualizando':quota?'● Tuya indisponível':online?'● Online':'● Tuya';
+  if($('conn'))$('conn').textContent=syncing?'● Atualizando':quota?'● Smart Life indisponível':online?'● Online':'● Smart Life';
   if($('liveDot'))$('liveDot').className='liveDot '+(online&&!quota?'on':'');
-  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':quota?'Tuya indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
+  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':quota?'Smart Life indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
   if($('lastSync'))$('lastSync').textContent=quota?'Leitura ao vivo não confirmada':data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
   if($('phase')){
     $('phase').textContent=quota?'ESTADO NÃO CONFIRMADO':blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA')
       :data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
     $('phase').className='phase '+(data.relay===true&&!blocked&&!quota?'':'off');
   }
-  if($('heroTitle'))$('heroTitle').textContent=quota?'Tuya temporariamente indisponível':blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
+  if($('heroTitle'))$('heroTitle').textContent=quota?'Smart Life temporariamente indisponível':blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
   if($('heroSub'))$('heroSub').textContent=quota
-    ?'A cota do IoT Core está esgotada. O aplicativo não consegue confirmar o estado do EKAZA pela nuvem neste momento.'
+    ?'A integração Smart Life não conseguiu confirmar o estado do EKAZA neste momento.'
     :blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'A chuva interrompeu a irrigação.':'Aguardando o tempo configurado para retomar.')
     :data.relay===true?'Saída do viveiro ligada neste momento.':data.relay===false?'Saída desligada neste momento.':'Aguardando leitura do equipamento.';
   if($('refresh'))$('refresh').disabled=syncing;
@@ -719,7 +719,7 @@ function weatherStatusLabel(status){
     paused_rain:'Pausado por chuva',
     paused_waiting_weather:'Pausado • aguardando clima',
     weather_unavailable:'Weather2-2 sem dados',
-    cloud_unavailable:'Tuya indisponível',
+    cloud_unavailable:'Smart Life indisponível',
     device_unavailable:'EKAZA indisponível',
     waiting_resume_delay:'Aguardando retomada',
     resumed_inside_window:'Retomado nesta janela',
@@ -1725,7 +1725,7 @@ function render(){
   $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
   $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
   $('connectionState').className=online?'ok':data.online===false?'bad':'';
-  $('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Tuya';
+  $('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Smart Life';
   $('heroTitle').textContent=weatherBlocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Modo rápido em segundos':'Ciclo nativo do EKAZA';
   $('heroSub').textContent=weatherBlocked
     ?(raining?'A Weather2-2 detectou chuva e a irrigação foi interrompida.':'Aguardando o tempo configurado para retomar a irrigação.')
@@ -1849,7 +1849,7 @@ function updateOfflineBanner(){
     return;
   }
   if(quota){
-    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Tuya indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A cota do IoT Core está esgotada (28841004). Enquanto a Tuya não liberar novas chamadas, o aplicativo não consegue confirmar o estado ao vivo do EKAZA pela nuvem.</div></details>';
+    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Smart Life indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A cota do IoT Core está esgotada (28841004). Enquanto a Tuya não liberar novas chamadas, o aplicativo não consegue confirmar o estado ao vivo do EKAZA pela nuvem.</div></details>';
     return;
   }
   el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>EKAZA sem resposta</b><span>Estado ao vivo não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">O servidor não recebeu uma leitura válida do EKAZA/Tuya neste momento.</div></details>';

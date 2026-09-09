@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#0b6b52">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Fazenda 2E">
-<link rel="manifest" href="/irrigacao/inkbird/manifest.webmanifest">
-<link rel="icon" href="/irrigacao/inkbird/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/irrigacao/inkbird/icon.svg">
-<title>Fazenda 2E • INKBIRD IIC-800</title>
+<meta name="apple-mobile-web-app-title" content="Irrigação Café">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>Fazenda 2E • Irrigação Café</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--g2:#0d8464;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2;--w:#fff}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}button,input,select{font:inherit}
@@ -101,7 +101,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 <body>
 <header class="top">
   <div class="brand"><small>FAZENDA 2E • INKBIRD IIC-800</small><h1>Irrigação do Café</h1></div>
-  <div class="actions"><a class="navbtn" href="/irrigacao/central/">Central</a><a class="navbtn" href="/irrigacao/">Viveiro</a><button id="settingsBtn" class="pill">Configurar</button><button id="refresh" class="pill">● Atualizar</button></div>
+  <div class="actions"><button id="settingsBtn" class="pill">Configurar Café</button><button id="refresh" class="pill">● Atualizar</button></div>
 </header>
 <main class="wrap">
 <div class="tabs"><button class="tabBtn active" data-tab="overview">Visão geral</button><button class="tabBtn" data-tab="sectors">Setores</button><button class="tabBtn" data-tab="weather">Clima</button><button class="tabBtn" data-tab="system">Sistema</button></div>
@@ -1318,7 +1318,7 @@ $('blockWhileRaining').checked=state.weatherRules.blockWhileRaining!==false;
 $('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 
 renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/inkbird/sw.js').catch(()=>null);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>null);
 if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},120000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);

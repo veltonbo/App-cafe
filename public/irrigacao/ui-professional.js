@@ -105,8 +105,8 @@
     }));
 
     qsa('.dayShortcut').forEach(btn=>bind(btn,'smartBound',()=>{
-      if(typeof secondsActive==='function'&&secondsActive())return typeof toast==='function'&&toast('Pare o ciclo antes de alterar os dias');
       const mask=Number(btn.dataset.mask||0);
+      if(typeof secondsEditorTouched!=='undefined')secondsEditorTouched=true;
       qsa('#secondsDays input').forEach(cb=>{cb.checked=Boolean(mask&Number(cb.value))});
       if(typeof updateFastCycleDraftUI==='function')updateFastCycleDraftUI();
       if(typeof validateFastCycle==='function')validateFastCycle();
@@ -305,8 +305,8 @@
       el.className='smartDailyCompare';
       el.innerHTML=
         '<div><small>Tempo irrigado</small><strong id="smartTodayIrrigated">—</strong></div>'+
-        '<div><small>Base esperada até agora</small><strong id="smartTodayBase">—</strong></div>'+
-        '<div class="wide"><small>Comparação com o ciclo-base</small><strong id="smartTodayDelta">—</strong><div class="smartCompareTrack"><i id="smartCompareFill"></i></div></div>';
+        '<div><small>Referência do ciclo-base</small><strong id="smartTodayBase">—</strong></div>'+
+        '<div class="wide"><small>Comparação com o ciclo-base</small><strong id="smartTodayDelta">—</strong><div class="smartCompareTrack"><i id="smartCompareFill"></i></div><span id="smartTodayCompareNote" class="smartCompareNote"></span></div>';
       box.appendChild(el);
     }
     const legacyWater=byId('todayWaterTime')?.closest('.todayCard');
@@ -421,18 +421,23 @@
 
     const sum=d.summary?.today||{};
     if(byId('smartTodayIrrigated'))byId('smartTodayIrrigated').textContent=fmtDuration(sum.irrigated_seconds);
-    if(byId('smartTodayBase'))byId('smartTodayBase').textContent=fmtDuration(sum.base_expected_irrigated_seconds);
+    const comparisonComplete=String(sum.comparison_status||'')==='complete';
+    if(byId('smartTodayBase'))byId('smartTodayBase').textContent=comparisonComplete
+      ?fmtDuration(sum.base_expected_irrigated_seconds)
+      :'Dados parciais';
     const delta=sum.versus_base_percent==null?null:Number(sum.versus_base_percent);
     if(byId('smartTodayDelta')){
-      byId('smartTodayDelta').textContent=delta!=null&&Number.isFinite(delta)
+      byId('smartTodayDelta').textContent=comparisonComplete&&delta!=null&&Number.isFinite(delta)
         ?(delta>0?'+':'')+delta.toFixed(0)+'% em relação ao base'
-        :'Aguardando janela ativa';
+        :'Comparação indisponível hoje';
     }
+    if(byId('smartTodayCompareNote'))byId('smartTodayCompareNote').textContent=
+      String(sum.comparison_note||'');
     const compare=byId('smartCompareFill');
     if(compare){
-      const pos=delta!=null&&Number.isFinite(delta)?Math.max(5,Math.min(100,50+delta)):50;
+      const pos=comparisonComplete&&delta!=null&&Number.isFinite(delta)?Math.max(5,Math.min(100,50+delta)):0;
       compare.style.width=pos+'%';
-      compare.style.opacity=delta==null?'.35':'1';
+      compare.style.opacity=comparisonComplete?'1':'0';
     }
 
     const list=byId('smartDecisionList');
@@ -535,7 +540,7 @@
     const main=qs('main.wrap');
     if(!main)return;
 
-    const home=makeView('smartViewHome','Viveiro','VISÃO RÁPIDA');
+    const home=makeView('smartViewHome','Resumo','VISÃO RÁPIDA');
     const profile=makeView('smartViewProfile','Automação','CICLO, CLIMA E HORÁRIOS');
     const history=makeView('smartViewHistory','Histórico','ACOMPANHAMENTO');
     const system=makeView('smartViewSystem','Sistema','SEGURANÇA E MANUTENÇÃO');

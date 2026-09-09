@@ -1,1 +1,1 @@
-Smart Life self-service reauth — QR no app e validação automática — 2026-09-09
+Weather2-2 live-state fix — painel usa leitura atual da estação — 2026-09-09

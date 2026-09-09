@@ -509,7 +509,18 @@ export default async function handler(req,res){
       const activeSeconds=seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{});
       const summary=summarize(history,activeSeconds,now);
       const decisions=decisionTimeline(history);
-      const intensity=irrigationIntensity(activeSeconds);
+      const rawIntensity=irrigationIntensity(activeSeconds);
+      const outsideAutomatic=String(climateState?.last_decision||'')==='outside_schedule';
+      const intensity=outsideAutomatic
+        ?{
+          ...rawIntensity,
+          level:'normal',
+          label:'Normal',
+          change_percent:0,
+          current_duty:rawIntensity.base_duty,
+          suspended_outside_schedule:true
+        }
+        :rawIntensity;
       const cycle_reason=cycleExplanation(activeSeconds,climateState||{});
       const nextEvaluationAt=String(climateState?.last_decision||'')==='outside_schedule'
         ?Number(climateState?.next_schedule_window_at||now)

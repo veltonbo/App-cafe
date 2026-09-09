@@ -1,1 +1,1 @@
-Precise timer v4 — deadlines absolutos no servidor + relógio visual sincronizado — 2026-09-09
+Live Control v12 — SSE, confirmação física, precisão, watchdog, clima ao vivo e interface simplificada — 2026-09-09

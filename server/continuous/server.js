@@ -10,7 +10,7 @@ import { smartLifeConfigured, smartLifeListDevices } from '../api/_smartlife.js'
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { readInkbirdState } from '../api/inkbird/_transport.js';
 import { decodeNormalTimer } from '../api/inkbird/_iic800.js';
-import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
+import { runViveiroWeatherCheck, getViveiroWeatherConfig, getViveiroWeatherState } from '../api/viveiro/_weather_logic.js';
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 import { authorize } from '../api/_tuya.js';
 import { liveClientCount, publishLive, subscribeLive } from './live-bus.js';
@@ -153,7 +153,7 @@ async function handleApi(req,res,url){
       if(!res.writableEnded)res.write(': heartbeat '+Date.now()+'\n\n');
     },12000);
     heartbeat.unref?.();
-    publishLive('connection',{status:'connected',clients:liveClientCount()+1});
+    publishLive('connection',{status:'connected',clients:liveClientCount()});
     req.on('close',()=>{
       clearInterval(heartbeat);
       unsubscribe();
@@ -283,32 +283,44 @@ async function startViveiroWeatherWatch(){
     try{
       const cfg=await getViveiroWeatherConfig();
       if(cfg.enabled!==false){
-        const result=await runViveiroWeatherCheck();
-        const weather=result?.weather||{};
+        // Publica a leitura da estação assim que ela chega. A lógica de proteção
+        // continua rodando depois e não segura temperatura/umidade na interface.
+        const rawWeather=await fetchWeatherSnapshot({maxAgeMs:4000}).catch(error=>({
+          ok:false,linked:false,error:error?.message||String(error)
+        }));
+        const previousState=await getViveiroWeatherState().catch(()=>({}));
         publishLive('weather',{
-          state:result?.state||{},
-          config:result?.config||cfg||{},
+          state:previousState,
+          config:cfg||{},
           weather:{
-            ok:weather?.ok!==false,
-            linked:Boolean(weather?.linked),
-            checked_at:Number(weather?.checked_at||Date.now()),
-            provider:weather?.provider||'smartlife',
-            error:weather?.error||null,
+            ok:rawWeather?.ok!==false,
+            linked:Boolean(rawWeather?.linked),
+            checked_at:Number(rawWeather?.checked_at||Date.now()),
+            provider:rawWeather?.provider||'smartlife',
+            error:rawWeather?.error||null,
             device:{
-              name:weather?.device?.name||'Weather2-2',
-              online:weather?.device?.online!==false
+              name:rawWeather?.device?.name||'Weather2-2',
+              online:rawWeather?.device?.online!==false
             },
             metrics:{
-              rainDetected:Boolean(weather?.metrics?.rainDetected),
-              rainGeneric:weather?.metrics?.rainGeneric||weather?.metrics?.rain24h||null,
-              rain24h:weather?.metrics?.rain24h||null,
-              rainRate:weather?.metrics?.rainRate||null,
-              temperature:weather?.metrics?.temperature||null,
-              humidity:weather?.metrics?.humidity||null,
-              windSpeed:weather?.metrics?.windSpeed||null,
-              pressure:weather?.metrics?.pressure||null
+              rainDetected:Boolean(rawWeather?.metrics?.rainDetected),
+              rainGeneric:rawWeather?.metrics?.rainGeneric||rawWeather?.metrics?.rain24h||null,
+              rain24h:rawWeather?.metrics?.rain24h||null,
+              rainRate:rawWeather?.metrics?.rainRate||null,
+              temperature:rawWeather?.metrics?.temperature||null,
+              humidity:rawWeather?.metrics?.humidity||null,
+              windSpeed:rawWeather?.metrics?.windSpeed||null,
+              pressure:rawWeather?.metrics?.pressure||null
             }
           }
+        });
+
+        const result=await runViveiroWeatherCheck();
+        publishLive('protection',{
+          state:result?.state||{},
+          config:result?.config||cfg||{},
+          action:result?.action||'none',
+          at:Date.now()
         });
       }
     }catch(error){

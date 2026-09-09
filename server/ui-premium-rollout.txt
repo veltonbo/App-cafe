@@ -1,1 +1,1 @@
-Viveiro UI v16 — nova camada visual isolada, sem alterações funcionais — 2026-09-09
+Viveiro UI v17 — layout minimalista com estado em destaque, sem alterar lógica — 2026-09-09

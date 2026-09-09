@@ -1,1 +1,1 @@
-Viveiro UI v19 — barra inferior corrigida, resumo compacto e visual profissional — 2026-09-09
+Viveiro UI v19.1 — comparação com ciclo-base removida; tempo irrigado real restaurado — 2026-09-09

@@ -1,8 +1,8 @@
-const CACHE='fazenda2e-irrigacao-v1';
+const CACHE='fazenda2e-cafe-v2';
 const SHELL=[
-  '/irrigacao/inkbird/',
-  '/irrigacao/inkbird/manifest.webmanifest',
-  '/irrigacao/inkbird/icon.svg'
+  '/',
+  '/manifest.webmanifest',
+  '/icon.svg'
 ];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).catch(()=>null));

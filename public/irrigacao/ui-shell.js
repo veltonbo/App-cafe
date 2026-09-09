@@ -80,10 +80,11 @@
 
   const top=document.createElement('header');
   top.className='f2eShellTop';
-  top.innerHTML='<div class="f2eShellBrand"><small>FAZENDA 2E</small><h1>'+meta.title+'</h1></div><button type="button" class="f2eShellMenuBtn">☰ Menu</button>';
+  top.innerHTML='<div class="f2eShellBrand"><small>FAZENDA 2E</small><h1>'+meta.title+'</h1></div><button type="button" class="f2eShellMenuBtn">'+(area==='viveiro'?'☰ Mais':'☰ Menu')+'</button>';
 
   const overlay=document.createElement('div');
   overlay.className='f2eShellOverlay';
+  overlay.dataset.area=area;
   overlay.innerHTML='<aside class="f2eShellPanel" role="dialog" aria-label="Menu">'+
     '<div class="f2eShellHead"><div><small>FAZENDA 2E</small><strong>Menu</strong></div><button type="button" class="f2eShellClose">✕</button></div>'+
     '<div class="f2eShellContext"><span>ATIVO</span><b>'+meta.context+'</b><small>'+meta.sub+'</small></div>'+

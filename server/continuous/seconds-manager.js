@@ -4,7 +4,7 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
-import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples } from '../api/viveiro/_climate.js';
+import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import { publishLive } from './live-bus.js';
 import {
@@ -221,9 +221,28 @@ async function evaluateClimateControl(){
     }
 
     const lastEval=Number(climateState?.last_evaluated_at||0);
-    if(Date.now()-lastEval<Math.max(5,Number(cfg.evaluation_minutes||5))*60000)return;
+    const sinceLastEval=Math.max(0,Date.now()-lastEval);
+    const configuredEvalMs=Math.max(5,Number(cfg.evaluation_minutes||5))*60000;
+    if(sinceLastEval<60000)return;
 
-    const snapshot=await fetchWeatherSnapshot().catch(()=>null);
+    let snapshot=null;
+    if(sinceLastEval<configuredEvalMs){
+      snapshot=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
+      const liveTemp=Number(snapshot?.metrics?.temperature?.value);
+      const liveHumidity=Number(snapshot?.metrics?.humidity?.value);
+      const liveVpd=vaporPressureDeficit(liveTemp,liveHumidity);
+      const extremeNow=
+        Number.isFinite(liveTemp)&&Number.isFinite(liveHumidity)&&(
+          liveTemp>=33||
+          liveHumidity<=40||
+          (Number.isFinite(liveVpd)&&liveVpd>=2.0)
+        );
+      // Situação normal mantém a cadência configurada. Calor/sequidão fortes
+      // podem antecipar uma avaliação, sem ignorar os limites e cooldowns.
+      if(!extremeNow)return;
+    }
+
+    snapshot=snapshot||await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
     const samples=updateClimateSamples(climateState?.samples||[],snapshot||{},cfg,Date.now());
     const trend=climateTrend(samples,Date.now());
     const suggestion=climateSuggestion(snapshot||{},state,cfg,trend);

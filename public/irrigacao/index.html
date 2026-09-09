@@ -1850,12 +1850,19 @@ $('saveCycle').onclick=async e=>{
   if(ok)$('cycleDlg').close();
 };
 $('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){loadSecondsCloudConfig();syncStatus();syncSecondsMode(false);syncWeatherProtection(false);syncDashboard(false)}
-// Atualização rápida da interface sem transformar cada repaint em chamada ao Smart Life.
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},2500);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncDashboard(false)}},10000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false)}},15000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},20000);
+reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){
+  loadSecondsCloudConfig();
+  syncSecondsMode(false);
+  syncDashboard(false);
+  setTimeout(()=>syncStatus(false),180);
+}
+// Atualização coordenada: dados locais muito rápidos e apenas uma leitura
+// periódica do Smart Life para o estado físico do Viveiro.
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},1500);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncDashboard(false)}},2000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},4000);
+// A Weather2-2 é atualizada pelo servidor a cada ~4 s e chega pelo dashboard.
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false)}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&secondsActive())updateSecondsLive();updateWeatherCountdownLive();updateTodaySummary()},1000);
 function updateOfflineBanner(){
   const el=$('offlineBanner');
@@ -1879,17 +1886,15 @@ function updateOfflineBanner(){
 window.addEventListener('online',()=>{
   updateOfflineBanner();
   syncSecondsMode(false);
-  syncStatus(false);
-  syncWeatherProtection(false);
   syncDashboard(false);
+  setTimeout(()=>syncStatus(false),180);
 });
 window.addEventListener('offline',updateOfflineBanner);
 setInterval(updateOfflineBanner,3000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
   syncSecondsMode(false);
-  syncStatus(false);
-  syncWeatherProtection(false);
   syncDashboard(false);
+  setTimeout(()=>syncStatus(false),180);
 }});
 </script>
 <script src="/irrigacao/ui-professional.js?v=20260909-15" defer></script>

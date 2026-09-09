@@ -1,1 +1,1 @@
-Live Control v12 — SSE, confirmação física, precisão, watchdog, clima ao vivo e interface simplificada — 2026-09-09
+Live Control v12.1 — relógio unificado e heartbeat SSE reforçado — 2026-09-09

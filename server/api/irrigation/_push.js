@@ -73,7 +73,7 @@ export async function sendPushAlert(alert){
     title:alert.title||'Fazenda 2E',
     body:alert.body||'Atualização da irrigação.',
     tag:alert.tag||'fazenda2e',
-    url:alert.url||'/irrigacao/central/',
+    url:alert.url||'/irrigacao/',
     level:alert.level||'info',
     ts:Date.now()
   });

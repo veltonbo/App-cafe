@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import cafeRouter from './router.js';
+import { listInkbirdDevices } from '../api/inkbird/_device.js';
+import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||8080));
 const ROOT=process.cwd();
@@ -155,4 +157,21 @@ server.headersTimeout=66000;
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Irrigação Café online na porta ${PORT}`);
+  Promise.all([
+    fsp.access(path.join(CAFE_DIST,'index.html')).then(()=>true).catch(()=>false),
+    listInkbirdDevices().catch(error=>({error:error?.message||String(error)})),
+    fetchWeatherSnapshot({maxAgeMs:0}).catch(error=>({error:error?.message||String(error)}))
+  ]).then(([staticOk,controllers,weather])=>{
+    const rows=Array.isArray(controllers)?controllers:[];
+    console.log('Café startup diagnostic',{
+      static_ok:staticOk,
+      controller_count:rows.length,
+      controllers:rows.map(d=>({name:d.name||null,online:d.online!==false,model:d.model||null})),
+      weather_linked:Boolean(weather?.linked),
+      weather_online:weather?.device?.online!==false&&!weather?.error,
+      weather_name:weather?.device?.name||null,
+      weather_error:weather?.error||weather?.error===null?weather?.error:null,
+      controller_error:controllers?.error||null
+    });
+  }).catch(error=>console.warn('Café startup diagnostic falhou:',error?.message||error));
 });

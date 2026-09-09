@@ -819,7 +819,7 @@ function updateSecondsLive(){
   else if(sec.phase==='waiting_after_rain'&&sec.rain_last_at)target=Number(sec.rain_last_at)+Number(sec.resume_delay_minutes||0)*60000;
   const remaining=secondsActive()?secondsRemaining(target):'—';
   if($('secondsNext'))$('secondsNext').textContent=remaining;
-  if($('secondsPulses'))$('secondsPulses').textContent=String(Number(sec.pulse_count||0));
+  if($('secondsPulses'))$('secondsPulses').textContent=String(Number(sec.daily_pulses_completed??sec.pulse_count??0));
   if($('heroCountdown')){
     const label=sec.phase==='on'?'Desliga em':sec.phase==='off'?'Liga novamente em':sec.phase==='waiting_after_rain'?'Retoma em':'Próxima mudança';
     $('heroCountdown').innerHTML='<small>'+label+'</small><span>'+remaining+'</span>';

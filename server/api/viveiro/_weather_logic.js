@@ -228,6 +228,13 @@ export async function runViveiroWeatherCheck(){
   const rainBlocksNow=Boolean(rainingNow&&(config.blockWhileRaining||thresholdReached));
   next.lastWeatherError=null;
   next.weatherUnavailableSince=0;
+  next.lastWeatherAt=Number(weather?.checked_at||checkedAt);
+  next.weatherOnline=weather?.device?.online!==false;
+  next.weatherProvider=weather?.provider||null;
+  next.lastTemperature=Number.isFinite(Number(weather?.metrics?.temperature?.value))
+    ?Number(weather.metrics.temperature.value):null;
+  next.lastHumidity=Number.isFinite(Number(weather?.metrics?.humidity?.value))
+    ?Number(weather.metrics.humidity.value):null;
   next.rainDetected=rainingNow;
   next.rainAmountMm=rainMm;
   next.rainThresholdReached=thresholdReached;

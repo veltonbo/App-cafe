@@ -491,6 +491,7 @@ if(!('secondsMode' in data)) data.secondsMode=null;
 if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
 if(!('secondsCloud' in data))data.secondsCloud={loaded:false,synced:false,lastSync:0};
 if(!('dashboard' in data))data.dashboard=null;
+if(!data.live)data.live={connected:false,lastEventAt:0,secondsAt:0,weatherAt:0,confirmationAt:0};
 if(!('auditFilter' in data))data.auditFilter='all';
 if(!Array.isArray(data.notifiedEventIds))data.notifiedEventIds=[];
 if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
@@ -1799,7 +1800,7 @@ function render(){
   $('liveDot').className='liveDot '+(online?'on':'');
   $('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
   $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
-  $('autoState').textContent=data.settings.token?'Automática • 10 s':'Aguardando token';
+  $('autoState').textContent=!data.settings.token?'Aguardando token':data.live?.connected?'Tempo real':'Reconectando…';
   $('refresh').disabled=syncing;
   if($('emergencyStop'))$('emergencyStop').disabled=syncing;
   $('manualOn').disabled=syncing||weatherBlocked||secActive;
@@ -1868,13 +1869,22 @@ reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()
   syncDashboard(false);
   setTimeout(()=>syncStatus(false),180);
 }
-// Atualização coordenada: dados locais muito rápidos e apenas uma leitura
-// periódica do Smart Life para o estado físico do Viveiro.
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncSecondsMode(false)}},1500);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncDashboard(false)}},2000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncStatus(false)}},4000);
-// A Weather2-2 é atualizada pelo servidor a cada ~4 s e chega pelo dashboard.
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){syncWeatherProtection(false)}},30000);
+function liveTransportActive(){return Boolean(data.live?.connected&&Date.now()-Number(data.live?.lastEventAt||0)<20000)}
+// O streaming é a via principal. Estas consultas viraram apenas redundância/fallback.
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
+  if(!liveTransportActive()||Date.now()-Number(data.live?.secondsAt||0)>15000)syncSecondsMode(false);
+}},1500);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
+  const interval=liveTransportActive()?15000:2500;
+  const last=Number(data.dashboard?.server?.at||0);
+  if(!last||Date.now()-last>=interval)syncDashboard(false);
+}},2500);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
+  if(!liveTransportActive()||Date.now()-Number(data.lastSync||0)>30000)syncStatus(false);
+}},4000);
+setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
+  if(!liveTransportActive()||Date.now()-Number(data.live?.weatherAt||0)>45000)syncWeatherProtection(false);
+}},15000);
 function startPreciseLiveClock(){
   if(liveClockFrame)return;
   const tick=ts=>{
@@ -1925,6 +1935,21 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
   syncDashboard(false);
   setTimeout(()=>syncStatus(false),180);
 }});
+window.__viveiroRuntime={
+  getData:()=>data,
+  save,
+  markSecondsFresh:(serverAt=Date.now())=>{secondsFreshAt=Date.now();if(serverAt)serverClockOffsetMs=Number(serverAt)-Date.now()},
+  syncSecondsEditorFromState,
+  renderSecondsControlsOnly,
+  renderSecondsRuntimeOnly,
+  renderConnectionRuntimeOnly,
+  renderWeatherRuntimeOnly,
+  renderDashboard,
+  syncSecondsMode,
+  syncDashboard,
+  syncStatus,
+  syncWeatherProtection
+};
 </script>
 <script src="/irrigacao/ui-shell.js?v=20260909-4" defer></script>
 </body></html>

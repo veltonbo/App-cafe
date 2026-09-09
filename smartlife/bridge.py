@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import base64
+import io
 import json
 import sys
 import time
@@ -103,6 +105,75 @@ def device_payload(device):
 
 def main():
     payload = json.load(sys.stdin)
+    action = str(payload.get("action") or "device")
+
+    if action == "reauth_start":
+        from tuya_sharing import LoginControl
+        import qrcode
+
+        user_code = str(payload.get("user_code") or "").strip()
+        client_id = str(payload.get("client_id") or "HA_3y9q4ak7g4ephrvke").strip()
+        if not user_code:
+            raise ValueError("User Code do Smart Life não disponível.")
+
+        response = LoginControl().qr_code(client_id, "haauthorize", user_code)
+        if not response.get("success"):
+            raise ValueError(
+                "Não foi possível gerar o QR do Smart Life: "
+                + str(response.get("msg") or response.get("code") or "erro desconhecido")
+            )
+        token = str((response.get("result") or {}).get("qrcode") or "").strip()
+        if not token:
+            raise ValueError("Smart Life não retornou o token do QR.")
+
+        qr_data = "tuyaSmart--qrLogin?token=" + token
+        image = qrcode.make(qr_data)
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return {
+            "ok": True,
+            "token": token,
+            "qr_data": qr_data,
+            "qr_image": "data:image/png;base64,"
+            + base64.b64encode(buffer.getvalue()).decode("ascii"),
+        }
+
+    if action == "reauth_finish":
+        from tuya_sharing import LoginControl
+
+        user_code = str(payload.get("user_code") or "").strip()
+        client_id = str(payload.get("client_id") or "HA_3y9q4ak7g4ephrvke").strip()
+        token = str(payload.get("token") or "").strip()
+        if not user_code or not token:
+            raise ValueError("Dados de reconexão Smart Life incompletos.")
+
+        authorized, info = LoginControl().login_result(token, client_id, user_code)
+        if not authorized:
+            return {
+                "ok": True,
+                "authorized": False,
+                "error": str(info.get("msg") or "Autorização ainda não confirmada no Smart Life."),
+            }
+
+        token_info = {
+            "t": info["t"],
+            "uid": info["uid"],
+            "expire_time": info["expire_time"],
+            "access_token": info["access_token"],
+            "refresh_token": info["refresh_token"],
+        }
+        return {
+            "ok": True,
+            "authorized": True,
+            "session": {
+                "client_id": client_id,
+                "user_code": user_code,
+                "terminal_id": info["terminal_id"],
+                "endpoint": info["endpoint"],
+                "token_info": token_info,
+            },
+        }
+
     session = payload.get("session")
     if not isinstance(session, dict):
         raise ValueError("Sessão Smart Life ausente.")
@@ -110,7 +181,6 @@ def main():
     manager, saver = build_manager(session)
     manager, saver = update_device_cache_resilient(manager, saver)
 
-    action = str(payload.get("action") or "device")
     device = find_device(
         manager,
         payload.get("device_id"),

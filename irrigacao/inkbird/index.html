@@ -41,7 +41,7 @@ details{border:1px solid var(--l);border-radius:14px;background:#fbfdfc;margin-t
 .errorBanner .errorDetail{padding:0 12px 11px 45px;color:#7f6740;font-size:.7rem;line-height:1.45}.sectorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sectorActions .btn{width:100%}.zone.mapped{border-color:#a9d8ca}.zone.running{background:#edf9f5}.sysGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sysCard{border:1px solid var(--l);border-radius:15px;padding:14px;background:#fbfdfc}.sysCard small{display:block;color:var(--m);margin-bottom:5px}.mapGrid{display:grid;gap:10px}.mapRow{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center}.mapRow b{font-size:.9rem}.mapRow select{width:100%;border:1px solid var(--l);border-radius:11px;padding:10px;background:#fff}.mappingHelp{background:#eef9f5;border:1px solid #b6dfd2;border-radius:14px;padding:12px;color:#385d52;font-size:.84rem;line-height:1.45}.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:12}.toast.show{transform:translate(-50%,0)}
 @media(max-width:760px){.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}.zoneGrid,.capGrid,.weatherGrid,.ruleGrid,.controllerBar,.sysGrid{grid-template-columns:1fr}.tabs{grid-template-columns:1fr 1fr}.heroTop{flex-direction:column}.head{align-items:flex-start;flex-direction:column}.head .btn{width:100%}.controllerBar .btn{width:100%}.quickTimes{grid-template-columns:repeat(3,1fr)}}
 
-/* Fazenda 2E • Central de Irrigação V4 */
+/* Fazenda 2E • Irrigação Café */
 :root{--bg:#f4f7f5;--surface:#ffffff;--surface2:#f8fbf9;--ink:#173d33;--muted:#778881;--border:#dce9e4;--green:#0d765b;--green2:#0b604b;--greenSoft:#e9f6f1;--danger:#bd443e;--dangerSoft:#fff0ef;--shadow:0 10px 28px rgba(24,65,53,.07)}
 body{background:var(--bg);color:var(--ink)}
 .top{padding:calc(10px + env(safe-area-inset-top)) max(16px,calc((100vw - 1040px)/2 + 14px)) 10px;background:rgba(244,247,245,.94);border-bottom:1px solid var(--border);box-shadow:0 4px 18px rgba(24,65,53,.04)}
@@ -72,7 +72,7 @@ details{border-color:var(--border);background:var(--surface2)}
 dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.22)}dialog::backdrop{background:rgba(8,31,24,.45);backdrop-filter:blur(3px)}
 .toast{bottom:calc(84px + env(safe-area-inset-bottom));border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.2);font-size:.86rem}
 @media(max-width:760px){
-  .top{flex-direction:row;align-items:center;padding-left:14px;padding-right:14px}.brand h1{font-size:1rem;white-space:nowrap}.brand small{font-size:.61rem}.actions{width:auto;margin-left:auto}.actions>*{flex:0}.actions #settingsBtn{display:none}.navbtn{font-size:0;padding:8px 9px}.navbtn:after{content:"Viveiro";font-size:.75rem}.pill{font-size:.75rem;padding:8px 9px}
+  .top{flex-direction:row;align-items:center;padding-left:14px;padding-right:14px}.brand h1{font-size:1rem;white-space:nowrap}.brand small{font-size:.61rem}.actions{width:auto;margin-left:auto}.actions>*{flex:0}.actions #settingsBtn{display:none}.pill{font-size:.75rem;padding:8px 9px}
   .wrap{padding:12px 11px calc(92px + env(safe-area-inset-bottom))}
   .tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));top:auto;z-index:20;grid-template-columns:repeat(4,1fr);margin:0;padding:6px;background:rgba(247,250,248,.96);box-shadow:0 12px 35px rgba(20,58,48,.18);border-radius:18px}.tabBtn{padding:10px 3px;font-size:.73rem}.tabBtn.active{background:var(--green);color:#fff;box-shadow:none}
   .grid{grid-template-columns:1fr 1fr}.box{padding:15px;border-radius:18px}.hero{padding:19px;border-radius:20px}.hero h2{font-size:1.35rem}.hero p{font-size:.84rem}
@@ -81,7 +81,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
   .weatherGrid{grid-template-columns:1fr 1fr}.ruleGrid,.capGrid,.sysGrid{grid-template-columns:1fr}
   .head{align-items:flex-start}.head h2{margin-bottom:8px}.head>div{width:100%}
 }
-@media(max-width:390px){.brand h1{font-size:.92rem}.navbtn{display:none}.quickTimes{grid-template-columns:repeat(3,1fr)}.operationStrip{grid-template-columns:1fr 1fr}.operationStrip .opCard:last-child{grid-column:1/-1}}
+@media(max-width:390px){.brand h1{font-size:.92rem}.quickTimes{grid-template-columns:repeat(3,1fr)}.operationStrip{grid-template-columns:1fr 1fr}.operationStrip .opCard:last-child{grid-column:1/-1}}
 
 
 .todayGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}.todayCard{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.todayCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:5px}.todayCard strong{font-size:.96rem}.todayCard em{display:block;font-style:normal;color:var(--muted);font-size:.72rem;margin-top:4px}
@@ -97,6 +97,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 @media(max-width:760px){.todayGrid{grid-template-columns:1fr 1fr}.historyItem{grid-template-columns:auto 1fr}.historyTime{grid-column:2}.formGrid{grid-template-columns:1fr}.daysGrid{grid-template-columns:repeat(4,1fr)}.timeSlots{grid-template-columns:1fr 1fr}.profileBar{display:grid;grid-template-columns:1fr 1fr}.profileBar select{grid-column:1/-1}.installCard{align-items:flex-start;flex-direction:column}}
 
 </style>
+<link rel="stylesheet" href="/cafe-ui-v2.css?v=20260909-1">
 </head>
 <body>
 <header class="top">
@@ -261,7 +262,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 
 <section class="box"><div class="head"><h2>Conexão do app</h2><button id="settingsBtn2" class="btn soft">Configurar conexão</button></div><div class="sysGrid"><div class="sysCard"><small>Backend</small><strong id="backendState">Railway • Fazenda 2E</strong></div><div class="sysCard"><small>Token</small><strong id="tokenState">Não configurado</strong></div></div><p class="note">O acesso ao Smart Life fica protegido no servidor Railway. Neste aparelho permanece apenas o token de controle do app.</p></section>
 </div>
-<div class="note" style="text-align:center;margin-top:18px">Fazenda 2E • Central de Irrigação • INKBIRD IIC-800-WIFI</div>
+<div class="cafeFooter">Fazenda 2E • Irrigação Café • INKBIRD IIC-800-WIFI</div>
 </main>
 <dialog id="scheduleDlg">
 <form method="dialog" class="modalForm">
@@ -325,7 +326,7 @@ dialog{border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(0,0,0,.
 </form>
 </dialog>
 
-<dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão da Central</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
+<dialog id="settingsDlg"><form method="dialog" style="padding:20px;display:grid;gap:12px"><div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Conexão do Café</h2></div><label style="display:grid;gap:6px;font-weight:800">URL do backend<input id="apiUrlInput" type="url" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><label style="display:grid;gap:6px;font-weight:800">Token de controle<input id="tokenInput" type="password" style="border:1px solid var(--l);border-radius:12px;padding:11px"></label><div style="display:flex;gap:8px"><button value="cancel" class="btn soft" style="flex:1">Cancelar</button><button id="saveSettings" value="default" class="btn primary" style="flex:1">Salvar</button></div></form></dialog>
 <dialog id="mappingDlg"><form method="dialog" style="padding:20px;display:grid;gap:14px;min-width:min(92vw,560px)">
   <div class="brand"><small>FAZENDA 2E</small><h2 style="margin:0">Configurar saídas do IIC-800</h2></div>
   <div class="mappingHelp">Use esta tela somente quando o mapeamento automático não fechar 8/8. Escolha para cada setor a função Smart Life correspondente. O app não enviará nenhum comando enquanto você apenas configura esta tela.</div>
@@ -1068,7 +1069,7 @@ async function installPwa(){
     deferredInstallPrompt=null;
     return;
   }
-  alert('No iPhone:\n\n1. Toque no botão Compartilhar do Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Confirme “Adicionar”.\n\nA Central Fazenda 2E abrirá como aplicativo em tela cheia.');
+  alert('No iPhone:\n\n1. Toque no botão Compartilhar do Safari.\n2. Escolha “Adicionar à Tela de Início”.\n3. Confirme “Adicionar”.\n\nO Irrigação Café abrirá como aplicativo em tela cheia.');
 }
 
 function booleanFunctionOptions(){
@@ -1253,7 +1254,7 @@ async function refreshAll(){
     await syncControllers(false);
     await Promise.all([syncAllStatuses(),syncWeather(false),loadServerConfig(),loadHistory(false),syncAllSchedules()]);
     renderToday();renderProfiles();
-    toast('Central atualizada');
+    toast('Café atualizado');
   }finally{busy=false;$('refresh').textContent='● Atualizar'}
 }
 
@@ -1319,7 +1320,7 @@ $('serverWeatherGuard').checked=state.weatherRules.serverGuard!==false;
 
 renderControllers();renderStatus();renderWeather();renderSystem();renderProfiles();renderHistory();renderToday();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>null);
-if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar a Central de Irrigação.');setTimeout(openSettings,350)}
+if(state.settings.token)refreshAll();else{showError('Configure o token de controle em Sistema para conectar o Irrigação Café.');setTimeout(openSettings,350)}
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncAllStatuses();}},120000);
 setInterval(()=>{if(document.visibilityState==='visible'&&state.settings.token){syncWeather(false);}},Math.max(1,Number(state.weatherRules.refreshMinutes)||5)*60000);
 setInterval(()=>{

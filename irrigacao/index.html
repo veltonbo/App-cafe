@@ -698,9 +698,11 @@ async function syncStatus(showToast=false){
   }catch(e){
     data.lastError=e.message||String(e);
     data.tuyaUnavailable=isTuyaQuotaErrorMessage(data.lastError);
-    data.online=data.tuyaUnavailable?null:false;
-    if(data.tuyaUnavailable)data.relay=null;
-    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Smart Life indisponível':'Falha: '+data.lastError);
+    // Falha da integração não prova que o equipamento físico esteja offline.
+    // Mantém o estado como "não confirmado" até uma leitura válida voltar.
+    data.online=null;
+    data.relay=null;
+    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Smart Life indisponível':'Estado ao vivo não confirmado');
   }finally{
     syncing=false;renderConnectionRuntimeOnly();
   }
@@ -1344,7 +1346,7 @@ function renderDashboard(){
   };
   setHealth('healthServer',Boolean(d.server?.online),d.server?.online?'Online':'Offline');
   setHealth('healthFirebase',Boolean(d.firebase?.online),d.firebase?.online?'Online':'Falha');
-  setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':'Aguardando',data.online==null);
+  setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':data.lastError?'Sem confirmação':'Aguardando',data.online==null);
   const weatherOk=Boolean(data.weatherProtection?.weather?.linked);
   setHealth('healthWeather',weatherOk,weatherOk?'Online':'Sem dados',!weatherOk);
   const emergencyActive=Boolean(d.safety?.emergency_latched);

@@ -9,6 +9,7 @@ html=html.split('\n').filter(line=>
   !line.includes('ui-premium.css')&&
   !line.includes('ui-mockup-v2.css')&&
   !line.includes('ui-viveiro-v16.css')&&
+  !line.includes('ui-viveiro-v17.css')&&
   !line.includes('ui-professional.js')&&
   !line.includes('live-runtime.js')&&
   !line.includes('ui-shell.css')&&
@@ -19,7 +20,7 @@ const css='<link rel="stylesheet" href="/irrigacao/ui-professional.css?v=2026090
   '<link rel="stylesheet" href="/irrigacao/ui-premium.css?v=20260909-1">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-6">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-mockup-v2.css?v=20260909-3">\n'+
-  '<link rel="stylesheet" href="/irrigacao/ui-viveiro-v16.css?v=20260909-1">';
+  '<link rel="stylesheet" href="/irrigacao/ui-viveiro-v17.css?v=20260909-1">';
 const js='<script src="/irrigacao/live-runtime.js?v=20260909-5" defer></script>\n'+
   '<script src="/irrigacao/ui-professional.js?v=20260909-18" defer></script>\n'+
   '<script src="/irrigacao/ui-shell.js?v=20260909-6" defer></script>\n'+

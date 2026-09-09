@@ -205,7 +205,9 @@
     const on=Number(sec.on_seconds||baseOn);
     const off=Number(sec.off_seconds||baseOff);
     if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=on+' s / '+off+' s';
-    if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=String(cs.drying_level_label||'Aguardando');
+    if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=outside
+      ?'Aguardando janela'
+      :String(cs.drying_level_label||'Aguardando');
     let liveWeather={};
     try{liveWeather=(typeof data!=='undefined'&&data.weatherProtection?.weather?.metrics)||{}}catch{}
     const liveTemp=Number(liveWeather?.temperature?.value);
@@ -388,6 +390,11 @@
 
     const op=intel.operation||{};
     const opCard=byId('smartOperatingCard');
+    const safetyRow=byId('smartSafety');
+    const emergencyBtn=byId('emergencyStop');
+    const showEmergency=['irrigating','interval','starting'].includes(String(op.code||''));
+    if(safetyRow)safetyRow.classList.toggle('show',showEmergency);
+    if(emergencyBtn)emergencyBtn.setAttribute('aria-hidden',String(!showEmergency));
     if(opCard){
       opCard.dataset.tone=String(op.tone||'neutral');
       if(byId('smartOperatingLabel'))byId('smartOperatingLabel').textContent=String(op.label||'VERIFICANDO');

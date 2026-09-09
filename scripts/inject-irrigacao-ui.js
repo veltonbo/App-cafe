@@ -23,7 +23,7 @@ const css='<link rel="stylesheet" href="/irrigacao/ui-professional.css?v=2026090
   '<link rel="stylesheet" href="/irrigacao/ui-premium.css?v=20260909-1">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-6">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-mockup-v2.css?v=20260909-3">\n'+
-  '<link rel="stylesheet" href="/irrigacao/ui-viveiro-v19.css?v=20260909-1">';
+  '<link rel="stylesheet" href="/irrigacao/ui-viveiro-v19.css?v=20260909-2">';
 const js='<script src="/irrigacao/live-runtime.js?v=20260909-5" defer></script>\n'+
   '<script src="/irrigacao/ui-professional.js?v=20260909-18" defer></script>\n'+
   '<script src="/irrigacao/ui-shell.js?v=20260909-6" defer></script>\n'+

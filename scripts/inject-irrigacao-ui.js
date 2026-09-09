@@ -15,11 +15,11 @@ html=html.split('\n').filter(line=>
 ).join('\n');
 const css='<link rel="stylesheet" href="/irrigacao/ui-professional.css?v=20260909-15">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-premium.css?v=20260909-1">\n'+
-  '<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-4">\n'+
-  '<link rel="stylesheet" href="/irrigacao/ui-mockup-v2.css?v=20260909-2">';
+  '<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-6">\n'+
+  '<link rel="stylesheet" href="/irrigacao/ui-mockup-v2.css?v=20260909-3">';
 const js='<script src="/irrigacao/ui-professional.js?v=20260909-15" defer></script>\n'+
-  '<script src="/irrigacao/ui-shell.js?v=20260909-5" defer></script>\n'+
-  '<script src="/irrigacao/ui-mockup-v2.js?v=20260909-2" defer></script>';
+  '<script src="/irrigacao/ui-shell.js?v=20260909-6" defer></script>\n'+
+  '<script src="/irrigacao/ui-mockup-v2.js?v=20260909-3" defer></script>';
 html=html.replace('</head>',css+'\n</head>');
 html=html.replace('</body>',js+'\n</body>');
 fs.writeFileSync(file,html);

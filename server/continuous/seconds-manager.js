@@ -648,6 +648,11 @@ async function run(){
         ...state,
         phase:'waiting_window',
         relay_expected:false,
+        on_seconds:Number(state.base_on_seconds||state.on_seconds||30),
+        off_seconds:Number(state.base_off_seconds||state.off_seconds||120),
+        climate_reason:'Fora do horário: ciclo-base restaurado até a próxima janela.',
+        expected_off_at:0,
+        expected_next_on_at:0,
         next_window_at:Date.now()+waitSeconds*1000,
         last_error:null
       };
@@ -895,6 +900,11 @@ async function run(){
         ...state,
         phase:'waiting_window',
         relay_expected:false,
+        on_seconds:Number(state.base_on_seconds||state.on_seconds||30),
+        off_seconds:Number(state.base_off_seconds||state.off_seconds||120),
+        climate_reason:'Horário encerrado: ciclo-base restaurado para a próxima janela.',
+        expected_off_at:0,
+        expected_next_on_at:0,
         next_window_at:Date.now()+waitSeconds*1000
       };
       await persist();

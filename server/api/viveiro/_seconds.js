@@ -92,14 +92,24 @@ export async function setViveiroRelay(on,{attempts=on?4:8}={}){
   let lastError='';
   const wanted=Boolean(on);
   const confirmations=Math.max(1,Math.min(10,Number(attempts)||1));
+  const commandStartedAt=Date.now();
 
   for(let sendTry=0;sendTry<2;sendTry++){
+    const commandSentAt=Date.now();
     try{
       const result=await sendViveiroCommands([
         {code:'switch_1',value:wanted}
       ]);
       if(result?.statusMap?.switch_1===wanted){
-        return{ok:true,on:wanted,provider:result.provider};
+        const confirmedAt=Date.now();
+        return{
+          ok:true,on:wanted,provider:result.provider,
+          command_started_at:commandStartedAt,
+          command_sent_at:commandSentAt,
+          confirmed_at:confirmedAt,
+          confirmation_latency_ms:Math.max(0,confirmedAt-commandSentAt),
+          confirmed_by:'command_response'
+        };
       }
     }catch(error){
       lastError=error?.message||String(error);
@@ -110,7 +120,15 @@ export async function setViveiroRelay(on,{attempts=on?4:8}={}){
       try{
         const current=await readViveiroDevice({force:true,maxAgeMs:0});
         if(current.relay===wanted){
-          return{ok:true,on:wanted,provider:current.provider};
+          const confirmedAt=Date.now();
+          return{
+            ok:true,on:wanted,provider:current.provider,
+            command_started_at:commandStartedAt,
+            command_sent_at:commandSentAt,
+            confirmed_at:confirmedAt,
+            confirmation_latency_ms:Math.max(0,confirmedAt-commandSentAt),
+            confirmed_by:'status_read'
+          };
         }
       }catch(error){
         lastError=error?.message||String(error);
@@ -118,9 +136,11 @@ export async function setViveiroRelay(on,{attempts=on?4:8}={}){
     }
   }
 
-  throw new Error(
+  const error=new Error(
     (wanted?'Não foi possível confirmar que o viveiro ligou. ':'Não foi possível confirmar que o viveiro desligou. ')+lastError
   );
+  error.command_started_at=commandStartedAt;
+  throw error;
 }
 
 export async function writeViveiroCycle(raw){

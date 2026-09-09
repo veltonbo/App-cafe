@@ -22,6 +22,7 @@ import inkbirdSchedule from '../server/api/inkbird/schedule.js';
 import inkbirdZone from '../server/api/inkbird/zone.js';
 import inkbirdStatus from '../server/api/inkbird/status.js';
 import smartLifeImport from '../server/api/smartlife/import.js';
+import smartLifeReauth from '../server/api/smartlife/reauth.js';
 
 const ROUTES={
   'cycle':cycle,
@@ -47,7 +48,8 @@ const ROUTES={
   'inkbird/schedule':inkbirdSchedule,
   'inkbird/zone':inkbirdZone,
   'inkbird/status':inkbirdStatus,
-  'smartlife/import':smartLifeImport
+  'smartlife/import':smartLifeImport,
+  'smartlife/reauth':smartLifeReauth
 };
 
 export default async function handler(req,res){

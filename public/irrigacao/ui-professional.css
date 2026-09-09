@@ -303,7 +303,7 @@ body.smartIrrigationV6{background:#f3f6f4}
 .smartIrrigationV7 .layoutOverflow{outline:2px dashed #d6852b!important}
 
 @media(max-width:760px){
-  .smartIrrigationV7 .wrap{padding:8px 9px calc(92px + env(safe-area-inset-bottom))}
+  .smartIrrigationV7 .wrap{padding:8px 9px calc(126px + env(safe-area-inset-bottom))}
   .smartIrrigationV7 .hero{padding:17px;border-radius:19px}
   .smartIrrigationV7 .box{padding:13px;border-radius:17px}
   .smartIrrigationV7 .smartOverviewGrid{grid-template-columns:1fr 1fr}
@@ -473,3 +473,32 @@ body.smartIrrigationV6{background:#f3f6f4}
 .smartIrrigationV7 .smartSystemDetails[open]>summary::after{content:'−'}
 .smartIrrigationV7 .smartSystemDetails .opsGrid{margin:0 0 9px}
 .smartIrrigationV7 .smartSystemDetails .diag{margin:0 0 10px!important}
+
+
+/* Viveiro mobile polish v10 */
+.smartIrrigationV7 #todayStatus{display:none!important}
+.smartIrrigationV7 .protectCard:has(#viveiroResumeState){display:none!important}
+.smartIrrigationV7 .protectGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.smartIrrigationV7 .scheduleMore{
+  padding:9px 11px;text-align:center;color:var(--ui-muted);font-size:.68rem;font-weight:800
+}
+.smartIrrigationV7 .smartCompareNote{
+  display:block;color:var(--ui-muted);font-size:.64rem;line-height:1.35;margin-top:6px
+}
+.smartIrrigationV7 .toast{
+  opacity:0!important;pointer-events:none!important;transform:translateY(140px)!important
+}
+.smartIrrigationV7 .toast.show{
+  opacity:1!important;pointer-events:auto!important;transform:translateY(0)!important
+}
+.smartIrrigationV7 #smartViewHome>.smartPageTitle{padding-bottom:0}
+.smartIrrigationV7 #smartViewHome>.smartPageTitle h2{margin-bottom:4px}
+.smartIrrigationV7 #calendarBox .scheduleList{display:grid;gap:7px}
+.smartIrrigationV7 #calendarBox .scheduleRow{padding:10px 12px}
+@media(max-width:760px){
+  .smartIrrigationV7 #smartViewProfile .climateGrid{gap:7px}
+  .smartIrrigationV7 #smartViewProfile .climateCard{padding:10px}
+  .smartIrrigationV7 #smartViewProfile .climateCard strong{font-size:.91rem}
+  .smartIrrigationV7 #smartViewProfile .secondsHero{gap:8px}
+  .smartIrrigationV7 #smartViewProfile .secondsField{padding:11px}
+}

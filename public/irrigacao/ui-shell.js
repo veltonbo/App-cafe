@@ -2,7 +2,7 @@
   'use strict';
   const path=location.pathname.replace(/\/+$/,'/')||'/';
   const area=path.includes('/irrigacao/central/')?'central':path.includes('/irrigacao/inkbird/')?'cafe':'viveiro';
-  if(area==='viveiro'&&!document.querySelector('link[data-viveiro-premium]')){
+  if(area==='viveiro'&&!document.querySelector('link[href*="/irrigacao/ui-premium.css"]')){
     const premium=document.createElement('link');premium.rel='stylesheet';premium.href='/irrigacao/ui-premium.css?v=20260909-1';premium.dataset.viveiroPremium='1';document.head.appendChild(premium);
   }
   const meta={central:{title:'Irrigação',context:'Escolher área',sub:'Viveiro ou Café'},viveiro:{title:'Viveiro',context:'Viveiro de mudas',sub:'Irrigação inteligente'},cafe:{title:'Café',context:'Café',sub:'Setores da lavoura'}}[area];
@@ -26,5 +26,5 @@
   q('.f2eShellMenuBtn',top).addEventListener('click',open);q('.f2eShellClose',overlay).addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
   document.body.classList.add('f2eShellApplied');document.body.insertBefore(top,document.body.firstChild);document.body.appendChild(overlay);
   let bottomNav=null;if(area==='viveiro'){bottomNav=document.createElement('nav');bottomNav.className='f2eBottomNav';bottomNav.setAttribute('aria-label','Navegação do Viveiro');[{key:'inicio',icon:'⌂',label:'Resumo'},{key:'perfil',icon:'◷',label:'Automação'},{key:'historico',icon:'≡',label:'Histórico'},{key:'sistema',icon:'⚙︎',label:'Sistema'}].forEach(x=>{const b=document.createElement('button');b.type='button';b.dataset.key=x.key;b.innerHTML='<span>'+x.icon+'</span><small>'+x.label+'</small>';b.addEventListener('click',()=>viveiroView(x.key));bottomNav.appendChild(b)});document.body.appendChild(bottomNav)}
-  const updateShellActive=()=>{updateActive();if(bottomNav){const key=currentViveiro();qa('button',bottomNav).forEach(b=>b.classList.toggle('active',b.dataset.key===key))}};window.__f2eShell={open,close,updateActive:updateShellActive};setInterval(updateShellActive,1000);window.addEventListener('hashchange',updateShellActive);setTimeout(updateShellActive,100);
+  const updateShellActive=()=>{updateActive();if(bottomNav){const key=currentViveiro();qa('button',bottomNav).forEach(b=>b.classList.toggle('active',b.dataset.key===key))}};window.__f2eShell={open,close,updateActive:updateShellActive};const syncShellSoon=()=>requestAnimationFrame(updateShellActive);window.addEventListener('hashchange',syncShellSoon);window.addEventListener('popstate',syncShellSoon);document.addEventListener('click',e=>{if(e.target.closest('[data-smart-view],.tabBtn,.f2eBottomNav button,.f2eShellItem'))syncShellSoon()});setTimeout(updateShellActive,100);
 })();

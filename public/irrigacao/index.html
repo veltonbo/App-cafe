@@ -1286,7 +1286,15 @@ function urlB64ToUint8Array(base64String){
 }
 async function viveiroSwReg(){
   if(!('serviceWorker' in navigator))throw new Error('Este navegador não suporta notificações em segundo plano.');
-  return navigator.serviceWorker.register('/irrigacao/sw.js');
+  const regs=await navigator.serviceWorker.getRegistrations().catch(()=>[]);
+  await Promise.all(regs.map(reg=>{
+    const scope=String(reg.scope||'');
+    if(scope.includes('/irrigacao/central/')||scope.includes('/irrigacao/inkbird/')){
+      return reg.unregister().catch(()=>false);
+    }
+    return false;
+  }));
+  return navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'});
 }
 async function updateNotificationState(){
   if(!$('notifyState')||!$('enableNotifications'))return;

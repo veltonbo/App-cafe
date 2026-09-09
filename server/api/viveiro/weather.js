@@ -31,17 +31,33 @@ export default async function handler(req,res){
     }
 
     if(req.method==='POST'&&req.body?.action==='status_only'){
-      const weather=await fetchWeatherSnapshot().catch(error=>({
-        ok:false,
-        linked:false,
-        error:error?.message||String(error)
-      }));
-      return res.status(200).json({
-        ok:true,
-        config:await getViveiroWeatherConfig(),
-        state:await getViveiroWeatherState(),
-        weather
-      });
+      const [config,state]=await Promise.all([
+        getViveiroWeatherConfig(),
+        getViveiroWeatherState()
+      ]);
+      const weatherError=String(state?.lastWeatherError||'');
+      const temperature=Number(state?.lastTemperature);
+      const humidity=Number(state?.lastHumidity);
+      const rain=Number(state?.rainAmountMm);
+      const weather={
+        ok:!weatherError,
+        linked:!weatherError&&state?.weatherOnline!==false,
+        cached:true,
+        provider:state?.weatherProvider||'smartlife',
+        checked_at:Number(state?.lastWeatherAt||state?.lastCheckedAt||0)||null,
+        error:weatherError||null,
+        device:{
+          name:'Weather2-2',
+          online:state?.weatherOnline!==false
+        },
+        metrics:{
+          rainDetected:Boolean(state?.rainDetected),
+          rainGeneric:Number.isFinite(rain)?{value:rain,unit:'mm'}:null,
+          temperature:Number.isFinite(temperature)?{value:temperature,unit:'°C'}:null,
+          humidity:Number.isFinite(humidity)?{value:humidity,unit:'%'}:null
+        }
+      };
+      return res.status(200).json({ok:true,config,state,weather});
     }
 
     const result=await runViveiroWeatherCheck();

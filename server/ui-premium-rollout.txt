@@ -1,1 +1,1 @@
-Viveiro Mockup UI v2 — 2026-09-09
+Viveiro UI hotfix — remover loop de MutationObserver — 2026-09-09

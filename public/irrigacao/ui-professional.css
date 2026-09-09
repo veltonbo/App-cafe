@@ -502,3 +502,54 @@ body.smartIrrigationV6{background:#f3f6f4}
   .smartIrrigationV7 #smartViewProfile .secondsHero{gap:8px}
   .smartIrrigationV7 #smartViewProfile .secondsField{padding:11px}
 }
+
+
+/* Viveiro final cleanup v11 */
+.smartIrrigationV7 .smartSafety{display:none!important}
+.smartIrrigationV7 .smartSafety.show{display:block!important}
+.smartIrrigationV7 #smartViewProfile .secondsLiveGrid{display:none!important}
+.smartIrrigationV7 #smartViewProfile #fastConfigMeta{display:none!important}
+.smartIrrigationV7 #smartViewProfile #secondsCloudState{display:none!important}
+.smartIrrigationV7 #smartViewProfile #checkWeatherProtection{display:none!important}
+.smartIrrigationV7 #smartViewProfile .weatherProtect>p.note{display:none!important}
+.smartIrrigationV7 #smartViewProfile .climateCard:has(#climateTemp),
+.smartIrrigationV7 #smartViewProfile .climateCard:has(#climateHumidity){display:none!important}
+.smartIrrigationV7 #smartViewProfile .climateGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important
+}
+.smartIrrigationV7 #smartViewProfile .secondsBox>.head{
+  align-items:center!important
+}
+.smartIrrigationV7 #smartViewProfile #secondsBadge{
+  width:auto!important;min-width:auto!important;display:inline-flex!important;
+  padding:6px 10px!important;font-size:.67rem!important;border-radius:999px!important
+}
+.smartIrrigationV7 #smartViewProfile .saveRow{
+  gap:8px!important;align-items:center!important
+}
+.smartIrrigationV7 #smartViewProfile .secondsStatus{
+  padding:10px 12px!important;margin-top:9px!important;border-radius:12px!important
+}
+.smartIrrigationV7 #smartViewProfile .actionBar{
+  margin-top:10px!important
+}
+.smartIrrigationV7 #smartViewProfile #disableSeconds{
+  min-height:42px!important
+}
+.smartIrrigationV7 #smartViewProfile #calendarBox{
+  margin-bottom:18px!important
+}
+.smartIrrigationV7 #smartViewHistory .weeklyGrid{
+  gap:7px!important
+}
+.smartIrrigationV7 #smartViewHistory .weekDay{
+  padding:10px 7px!important
+}
+@media(max-width:520px){
+  .smartIrrigationV7 #smartViewProfile .climateGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important
+  }
+  .smartIrrigationV7 #smartViewProfile .climateCard{
+    min-height:76px!important
+  }
+}

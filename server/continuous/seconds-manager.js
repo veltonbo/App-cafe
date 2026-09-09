@@ -785,8 +785,12 @@ async function run(){
       localSchedule(state).seconds_until_end||Number(state.on_seconds||30)
     ));
 
+    let relayOnAt=0;
     try{
       await setViveiroRelay(true,{attempts:5});
+      // Começa a contar no instante em que o comando LIGAR foi confirmado.
+      // O countdown nativo continua sendo apenas a proteção extra.
+      relayOnAt=Date.now();
       await safetyCountdown(maxOn);
     }catch(error){
       await safeOff();
@@ -828,9 +832,9 @@ async function run(){
       ...state,
       phase:'on',
       relay_expected:true,
-      pulse_started_at:Date.now(),
-      expected_off_at:Date.now()+maxOn*1000,
-      first_pulse_window_at:Number(state.first_pulse_window_at||0)||Date.now(),
+      pulse_started_at:relayOnAt||Date.now(),
+      expected_off_at:(relayOnAt||Date.now())+maxOn*1000,
+      first_pulse_window_at:Number(state.first_pulse_window_at||0)||(relayOnAt||Date.now()),
       ...(delayed&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)?{start_alert_window_at:windowStartAt}: {})
     };
     await persist();
@@ -860,13 +864,16 @@ async function run(){
       );
     }
 
-    let elapsed=0;
     let interrupted=false;
-    while(state.enabled&&elapsed<maxOn){
-      const chunk=Math.min(5,maxOn-elapsed);
-      await sleep(chunk*1000);
-      elapsed+=chunk;
+    const onDeadline=Number(state.expected_off_at||0)||(Date.now()+maxOn*1000);
+    while(state.enabled){
+      const remainingMs=onDeadline-Date.now();
+      if(remainingMs<=0)break;
+      await sleep(Math.min(1000,remainingMs));
 
+      // Se o prazo terminou durante o sleep, desliga sem fazer nenhuma consulta
+      // de rede antes. Isso evita que Weather/Smart Life prolonguem o pulso.
+      if(Date.now()>=onDeadline)break;
       if(!(await active())){interrupted=true;break}
       if(!localSchedule(state).inside){interrupted=true;break}
 
@@ -941,13 +948,16 @@ async function run(){
       pulse_count:Number(state.pulse_count||0)
     });
 
-    let offElapsed=0;
-    const offSeconds=Math.max(1,Number(state.off_seconds||120));
-    while(state.enabled&&offElapsed<offSeconds){
-      const chunk=Math.min(10,offSeconds-offElapsed);
-      await sleep(chunk*1000);
-      offElapsed+=chunk;
+    const offDeadline=Number(state.expected_next_on_at||0)
+      ||(Date.now()+Math.max(1,Number(state.off_seconds||120))*1000);
+    while(state.enabled){
+      const remainingMs=offDeadline-Date.now();
+      if(remainingMs<=0)break;
+      await sleep(Math.min(1000,remainingMs));
 
+      // O intervalo termina pelo relógio absoluto. Não executa uma chamada de rede
+      // depois que o prazo já venceu, evitando acumular atraso ciclo após ciclo.
+      if(Date.now()>=offDeadline)break;
       if(!(await active()))break;
       if(!localSchedule(state).inside)break;
 

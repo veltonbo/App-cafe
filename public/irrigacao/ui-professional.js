@@ -241,7 +241,8 @@
   function freshnessLabel(ts){
     const at=Number(ts||0);
     if(!at)return 'aguardando';
-    const sec=Math.max(0,(Date.now()-at)/1000);
+    const now=Number(window.__viveiroRuntime?.serverNow?.()||Date.now());
+    const sec=Math.max(0,(now-at)/1000);
     if(sec<1)return 'agora';
     if(sec<10)return sec.toFixed(1)+' s';
     if(sec<60)return Math.round(sec)+' s';
@@ -250,7 +251,8 @@
   function freshnessTone(ts,goodMs=7000,warnMs=20000){
     const at=Number(ts||0);
     if(!at)return 'warn';
-    const age=Math.max(0,Date.now()-at);
+    const now=Number(window.__viveiroRuntime?.serverNow?.()||Date.now());
+    const age=Math.max(0,now-at);
     return age<=goodMs?'ok':age<=warnMs?'warn':'bad';
   }
   function precisionLabel(sec={}){

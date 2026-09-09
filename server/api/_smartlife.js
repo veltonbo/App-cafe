@@ -11,6 +11,7 @@ const LIST_CACHE_MS=4000;
 
 let sessionCache=null;
 let sessionLoaded=false;
+let sessionLoadPromise=null;
 let savedSessionFingerprint='';
 let bridgeQueue=Promise.resolve();
 let listCache={at:0,devices:null};
@@ -77,15 +78,26 @@ function sessionFingerprint(session){
 
 async function loadSession(){
   if(sessionLoaded)return sessionCache;
-  sessionLoaded=true;
-  const record=await storeGet(SESSION_STORE_PATH).catch(()=>null);
-  if(!record){
-    sessionCache=null;
-    return null;
+  if(sessionLoadPromise)return sessionLoadPromise;
+
+  sessionLoadPromise=(async()=>{
+    const record=await storeGet(SESSION_STORE_PATH).catch(()=>null);
+    if(!record){
+      sessionCache=null;
+      sessionLoaded=true;
+      return null;
+    }
+    sessionCache=validateSession(decryptJson(record));
+    savedSessionFingerprint=sessionFingerprint(sessionCache);
+    sessionLoaded=true;
+    return sessionCache;
+  })();
+
+  try{
+    return await sessionLoadPromise;
+  }finally{
+    sessionLoadPromise=null;
   }
-  sessionCache=validateSession(decryptJson(record));
-  savedSessionFingerprint=sessionFingerprint(sessionCache);
-  return sessionCache;
 }
 
 function tokenIssuedAt(session){

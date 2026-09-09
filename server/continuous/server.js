@@ -226,6 +226,8 @@ async function runReadOnlyBootDiagnostics(){
       weatherOnline:weather?.device?.online??null,
       weatherProvider:weather?.provider||null,
       weatherError:weather?.error||null,
+      weatherStatus:weather?.status||null,
+      weatherMetrics:weather?.metrics||null,
       iic800:iicSummary
     });
   }catch(error){

@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Viveiro">
+<link rel="manifest" href="/irrigacao/manifest.webmanifest">
+<link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/irrigacao/icon.svg">
 <title>Fazenda 2E • Irrigação do Viveiro</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2}
@@ -178,7 +184,7 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 <link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-4">
 </head>
 <body>
-<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><a href="/irrigacao/central/" class="pill" style="text-decoration:none;color:var(--g)">Central</a><a href="/irrigacao/inkbird/" class="pill" style="text-decoration:none;color:var(--g)">Café</a><button id="conn" class="pill">● Não conectado</button></div></header>
+<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><button id="conn" class="pill">● Não conectado</button></div></header>
 <main class="wrap"><div id="offlineBanner" class="offlineBanner"></div>
 <section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">VIVEIRO • CONTROLE AUTOMÁTICO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
 <section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Smart Life</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
@@ -447,7 +453,6 @@ body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);col
 
 <section class="box"><div class="head"><h2>Conexão segura • Fazenda 2E</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">O viveiro usa o <b>servidor contínuo da Fazenda 2E no Railway</b>. As credenciais da Tuya ficam somente no servidor e não são expostas no aplicativo.</p></section>
 </main>
-<nav class="bottomNav" aria-label="Navegação principal"><a href="/irrigacao/central/">Central</a><a class="active" href="/irrigacao/">Viveiro</a><a href="/irrigacao/inkbird/">Café</a></nav>
 
 <dialog id="cycleDlg"><form method="dialog" class="modal"><div class="ey">PROGRAMAÇÃO</div><h2>Ajustar irrigação</h2>
 <div class="scheduleGrid">
@@ -1281,7 +1286,7 @@ function urlB64ToUint8Array(base64String){
 }
 async function viveiroSwReg(){
   if(!('serviceWorker' in navigator))throw new Error('Este navegador não suporta notificações em segundo plano.');
-  return navigator.serviceWorker.register('/irrigacao/central/sw.js');
+  return navigator.serviceWorker.register('/irrigacao/sw.js');
 }
 async function updateNotificationState(){
   if(!$('notifyState')||!$('enableNotifications'))return;

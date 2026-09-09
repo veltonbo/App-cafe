@@ -9,15 +9,17 @@ html=html.split('\n').filter(line=>
   !line.includes('ui-premium.css')&&
   !line.includes('ui-mockup-v2.css')&&
   !line.includes('ui-professional.js')&&
+  !line.includes('live-runtime.js')&&
   !line.includes('ui-shell.css')&&
   !line.includes('ui-shell.js')&&
   !line.includes('ui-mockup-v2.js')
 ).join('\n');
-const css='<link rel="stylesheet" href="/irrigacao/ui-professional.css?v=20260909-16">\n'+
+const css='<link rel="stylesheet" href="/irrigacao/ui-professional.css?v=20260909-17">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-premium.css?v=20260909-1">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-6">\n'+
   '<link rel="stylesheet" href="/irrigacao/ui-mockup-v2.css?v=20260909-3">';
-const js='<script src="/irrigacao/ui-professional.js?v=20260909-16" defer></script>\n'+
+const js='<script src="/irrigacao/live-runtime.js?v=20260909-2" defer></script>\n'+
+  '<script src="/irrigacao/ui-professional.js?v=20260909-17" defer></script>\n'+
   '<script src="/irrigacao/ui-shell.js?v=20260909-6" defer></script>\n'+
   '<script src="/irrigacao/ui-mockup-v2.js?v=20260909-3" defer></script>';
 html=html.replace('</head>',css+'\n</head>');

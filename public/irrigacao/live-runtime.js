@@ -69,6 +69,28 @@
       runtime.renderDashboard?.();
     }
 
+    if(event.type==='protection'){
+      data.weatherProtection={
+        ...(data.weatherProtection||{}),
+        state:payload.state||data.weatherProtection?.state||{},
+        config:payload.config||data.weatherProtection?.config||{}
+      };
+      if(data.dashboard){
+        data.dashboard={
+          ...data.dashboard,
+          weather:{
+            ...(data.dashboard.weather||{}),
+            state:payload.state||data.dashboard.weather?.state||{},
+            config:payload.config||data.dashboard.weather?.config||{}
+          }
+        };
+      }
+      data.live={...(data.live||{}),protectionAt:at};
+      runtime.save?.();
+      runtime.renderWeatherRuntimeOnly?.();
+      runtime.renderDashboard?.();
+    }
+
     if(event.type==='confirmation'){
       data.live={
         ...(data.live||{}),

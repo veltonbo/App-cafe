@@ -88,13 +88,29 @@ async function loadSession(){
   return sessionCache;
 }
 
+function tokenIssuedAt(session){
+  return Number(session?.token_info?.t||0);
+}
+function tokenAbsoluteExpiry(session){
+  const t=tokenIssuedAt(session);
+  const seconds=Number(session?.token_info?.expire_time||0);
+  return t>0&&seconds>0?t+seconds*1000:0;
+}
+
 async function saveSession(session){
   const clean=validateSession(session);
-  const currentExpire=Number(sessionCache?.token_info?.expire_time||0);
-  const nextExpire=Number(clean?.token_info?.expire_time||0);
-  // Em chamadas paralelas de segurança, nunca deixa um token mais antigo
-  // sobrescrever uma sessão que já foi renovada por outra chamada.
-  if(sessionCache&&currentExpire>0&&nextExpire>0&&currentExpire>nextExpire)return;
+  const currentIssued=tokenIssuedAt(sessionCache);
+  const nextIssued=tokenIssuedAt(clean);
+  const currentExpiry=tokenAbsoluteExpiry(sessionCache);
+  const nextExpiry=tokenAbsoluteExpiry(clean);
+
+  // Chamadas de segurança podem rodar em paralelo. O refresh token do Smart Life
+  // pode ser rotacionado; portanto uma resposta atrasada jamais pode devolver
+  // ao Firebase uma sessão mais antiga do que a que já foi renovada.
+  if(sessionCache){
+    if(currentIssued>0&&nextIssued>0&&currentIssued>nextIssued)return;
+    if(currentIssued===nextIssued&&currentExpiry>0&&nextExpiry>0&&currentExpiry>nextExpiry)return;
+  }
 
   sessionCache=clean;
   sessionLoaded=true;

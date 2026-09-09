@@ -1,1 +1,1 @@
-Daily accounting v13.1 — resumo usa todo o histórico do dia, limite só na lista visual — 2026-09-09
+Viveiro standalone v14 — Café removido do projeto principal; app Café permanece separado — 2026-09-09

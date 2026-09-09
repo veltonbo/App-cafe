@@ -2,8 +2,6 @@
   'use strict';
   const q=(s,r=document)=>r.querySelector(s);
   const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const path=location.pathname.replace(/\/+$/,'/')||'/';
-
   function enhanceHeader(){
     const top=q('.f2eShellTop');
     const brand=q('.f2eShellBrand',top||document);
@@ -22,7 +20,7 @@
       brand.appendChild(badge);
     }
     const menu=q('.f2eShellMenuBtn',top);
-    if(menu&&menu.textContent!=='☰  Mais')menu.textContent='☰  Mais';
+    if(menu&&menu.textContent!=='⚙ Sistema')menu.textContent='⚙ Sistema';
   }
 
   function decorateOperational(){

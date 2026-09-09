@@ -593,3 +593,5 @@ body.smartIrrigationV6{background:#f3f6f4}
 .smartIrrigationV7 .smartDecisionDetails .smartWhyCycle,
 .smartIrrigationV7 .smartDecisionDetails .smartDecisionSummary{margin-top:0;margin-bottom:7px}
 .smartIrrigationV7 .smartDecisionDetails .smartOverviewMeta{margin-top:0;padding-bottom:9px}
+
+.smartIrrigationV7 #todayBox .nextEventBox{display:none!important}

@@ -12,6 +12,8 @@ import { readInkbirdState } from '../api/inkbird/_transport.js';
 import { decodeNormalTimer } from '../api/inkbird/_iic800.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig } from '../api/viveiro/_weather_logic.js';
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
+import { authorize } from '../api/_tuya.js';
+import { liveClientCount, publishLive, subscribeLive } from './live-bus.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 // Viveiro UI v11 final cleanup
@@ -129,6 +131,36 @@ async function handleApi(req,res,url){
 
   req.query=Object.fromEntries(url.searchParams.entries());
   req.query.route=route;
+
+  if(route==='viveiro/live'){
+    if(req.method!=='GET')return res.status(405).json({ok:false,error:'Método não permitido.'});
+    if(!authorize(req,res))return;
+    res.statusCode=200;
+    res.setHeader('Content-Type','text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control','no-cache, no-transform');
+    res.setHeader('Connection','keep-alive');
+    res.setHeader('X-Accel-Buffering','no');
+    res.flushHeaders?.();
+
+    const send=event=>{
+      if(res.writableEnded)return;
+      res.write('id: '+String(event.id||'')+'\n');
+      res.write('event: '+String(event.type||'message')+'\n');
+      res.write('data: '+JSON.stringify(event)+'\n\n');
+    };
+    const unsubscribe=subscribeLive(send,{replay:true});
+    const heartbeat=setInterval(()=>{
+      if(!res.writableEnded)res.write(': heartbeat '+Date.now()+'\n\n');
+    },12000);
+    heartbeat.unref?.();
+    publishLive('connection',{status:'connected',clients:liveClientCount()+1});
+    req.on('close',()=>{
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+    return;
+  }
+
   req.body=await parseBody(req);
 
   if(route==='viveiro/seconds'){
@@ -151,7 +183,13 @@ const server=http.createServer(async(req,nativeRes)=>{
     const url=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
 
     if(url.pathname==='/health'){
-      return res.status(200).json({ok:true,service:'fazenda-2e-irrigacao',continuous:true});
+      return res.status(200).json({
+        ok:true,
+        service:'fazenda-2e-irrigacao',
+        continuous:true,
+        live_clients:liveClientCount(),
+        at:Date.now()
+      });
     }
 
     if(url.pathname.startsWith('/api/')){
@@ -244,7 +282,35 @@ async function startViveiroWeatherWatch(){
     weatherWatchBusy=true;
     try{
       const cfg=await getViveiroWeatherConfig();
-      if(cfg.enabled!==false)await runViveiroWeatherCheck();
+      if(cfg.enabled!==false){
+        const result=await runViveiroWeatherCheck();
+        const weather=result?.weather||{};
+        publishLive('weather',{
+          state:result?.state||{},
+          config:result?.config||cfg||{},
+          weather:{
+            ok:weather?.ok!==false,
+            linked:Boolean(weather?.linked),
+            checked_at:Number(weather?.checked_at||Date.now()),
+            provider:weather?.provider||'smartlife',
+            error:weather?.error||null,
+            device:{
+              name:weather?.device?.name||'Weather2-2',
+              online:weather?.device?.online!==false
+            },
+            metrics:{
+              rainDetected:Boolean(weather?.metrics?.rainDetected),
+              rainGeneric:weather?.metrics?.rainGeneric||weather?.metrics?.rain24h||null,
+              rain24h:weather?.metrics?.rain24h||null,
+              rainRate:weather?.metrics?.rainRate||null,
+              temperature:weather?.metrics?.temperature||null,
+              humidity:weather?.metrics?.humidity||null,
+              windSpeed:weather?.metrics?.windSpeed||null,
+              pressure:weather?.metrics?.pressure||null
+            }
+          }
+        });
+      }
     }catch(error){
       console.warn('viveiro weather watch:',error?.message||error);
     }finally{
@@ -287,6 +353,7 @@ await startViveiroInterlockWatch();
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);
+  publishLive('server',{online:true,at:Date.now()});
 });
 
 let shuttingDown=false;

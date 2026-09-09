@@ -1429,11 +1429,13 @@ function renderDashboard(){
     $('climateObserveBtn').textContent=cc.observation?'Observação ativa':'Observação';
     $('climateObserveBtn').className='climateSwitch '+(cc.observation?'auto':'');
   }
-  if($('climateBase'))$('climateBase').textContent=
-    Number(secForClimate.base_on_seconds||30)+' s / '+Number(secForClimate.base_off_seconds||120)+' s';
-  if($('climateCurrent'))$('climateCurrent').textContent=
-    Number(secForClimate.on_seconds||data.secondsDraft?.on_seconds||30)+' s / '+
-    Number(secForClimate.off_seconds||data.secondsDraft?.off_seconds||120)+' s';
+  const outsideClimateWindow=String(cs.last_decision||'')==='outside_schedule';
+  const climateBaseOn=Number(secForClimate.base_on_seconds||data.secondsDraft?.on_seconds||30);
+  const climateBaseOff=Number(secForClimate.base_off_seconds||data.secondsDraft?.off_seconds||120);
+  if($('climateBase'))$('climateBase').textContent=climateBaseOn+' s / '+climateBaseOff+' s';
+  if($('climateCurrent'))$('climateCurrent').textContent=outsideClimateWindow
+    ?climateBaseOn+' s / '+climateBaseOff+' s'
+    :Number(secForClimate.on_seconds||climateBaseOn)+' s / '+Number(secForClimate.off_seconds||climateBaseOff)+' s';
   if($('climateTemp'))$('climateTemp').textContent=cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C';
   if($('climateHumidity'))$('climateHumidity').textContent=cs.trend_humidity==null?(cs.last_humidity==null?'—':Number(cs.last_humidity).toFixed(0)+'%'):Number(cs.trend_humidity).toFixed(0)+'%';
   if($('climateTemp'))$('climateTemp').textContent=cs.trend_temperature==null?(cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C'):Number(cs.trend_temperature).toFixed(1)+' °C';

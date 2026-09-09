@@ -199,7 +199,7 @@
       cs=(typeof data!=='undefined'&&data.dashboard?.climate?.state)||{};
     }catch{}
     const outside=String(cs.last_decision||'')==='outside_schedule';
-    const mode=outside?'AGUARDANDO HORÁRIO':cc.observation?'OBSERVAÇÃO':cc.automatic?'AUTOMÁTICO':'MANUAL';
+    const mode=outside&&cc.automatic?'AUTO ARMADO':outside&&cc.observation?'OBSERVAÇÃO ARMADA':cc.observation?'OBSERVAÇÃO':cc.automatic?'AUTOMÁTICO':'MANUAL';
     const badge=byId('smartClimateBadge');
     if(badge){
       badge.textContent=mode;
@@ -210,9 +210,7 @@
     const on=outside?baseOn:Number(sec.on_seconds||baseOn);
     const off=outside?baseOff:Number(sec.off_seconds||baseOff);
     if(byId('smartClimateCycle'))byId('smartClimateCycle').textContent=on+' s / '+off+' s';
-    if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=outside
-      ?'Aguardando janela'
-      :String(cs.drying_level_label||'Aguardando');
+    if(byId('smartClimateLevel'))byId('smartClimateLevel').textContent=String(cs.drying_level_label||'Aguardando');
     let liveWeather={};
     try{liveWeather=(typeof data!=='undefined'&&data.weatherProtection?.weather?.metrics)||{}}catch{}
     const liveTemp=Number(liveWeather?.temperature?.value);
@@ -384,7 +382,7 @@
       fill.dataset.level=String(intensity.level||'normal');
     }
     if(byId('smartTrendText'))byId('smartTrendText').textContent=
-      String(cs.last_decision||'')==='outside_schedule'?'Aguardando janela':trendLabel(cs);
+      String(cs.last_decision||'')==='outside_schedule'?'Análise na próxima janela':trendLabel(cs);
     if(byId('smartClimateConfidence'))byId('smartClimateConfidence').textContent=String(cs.confidence_label||'—');
     if(byId('smartNextEval'))byId('smartNextEval').textContent=relativeTime(intel.next_evaluation_at);
 

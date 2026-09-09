@@ -701,7 +701,7 @@ async function syncStatus(showToast=false){
     data.tuyaUnavailable=isTuyaQuotaErrorMessage(data.lastError);
     data.online=data.tuyaUnavailable?null:false;
     if(data.tuyaUnavailable)data.relay=null;
-    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Tuya: cota IoT Core esgotada':'Falha: '+data.lastError);
+    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Smart Life indisponível':'Falha: '+data.lastError);
   }finally{
     syncing=false;renderConnectionRuntimeOnly();
   }
@@ -1851,7 +1851,7 @@ function updateOfflineBanner(){
     return;
   }
   if(quota){
-    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Smart Life indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A cota do IoT Core está esgotada (28841004). Enquanto a Tuya não liberar novas chamadas, o aplicativo não consegue confirmar o estado ao vivo do EKAZA pela nuvem.</div></details>';
+    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Smart Life indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A integração Smart Life não conseguiu confirmar o estado ao vivo do EKAZA. O aplicativo continuará tentando atualizar automaticamente.</div></details>';
     return;
   }
   el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>EKAZA sem resposta</b><span>Estado ao vivo não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">O servidor não recebeu uma leitura válida do EKAZA/Tuya neste momento.</div></details>';

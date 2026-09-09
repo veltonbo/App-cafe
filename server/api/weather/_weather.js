@@ -3,7 +3,7 @@ import { smartLifeConfigured, smartLifeReadDevice } from '../_smartlife.js';
 
 const TARGET_DISPLAY_NAME=(process.env.WEATHER_DEVICE_NAME||'Weather2-2').trim();
 const TARGET_NAME=TARGET_DISPLAY_NAME.toLowerCase();
-const WEATHER_CACHE_MS=10*1000;
+const WEATHER_CACHE_MS=4*1000;
 const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
 const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
 let weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};

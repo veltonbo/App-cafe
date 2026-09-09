@@ -1,4 +1,4 @@
-const CACHE='fazenda2e-viveiro-v1';
+const CACHE='fazenda2e-viveiro-v2';
 const SHELL=['/irrigacao/','/irrigacao/manifest.webmanifest','/irrigacao/icon.svg'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).catch(()=>null));

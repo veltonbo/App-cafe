@@ -130,11 +130,12 @@ export async function storePush(path, value) {
 export async function appendHistory(entry) {
   const payload = {
     ...entry,
+    app:entry?.app || 'cafe',
     at: entry?.at || new Date().toISOString(),
     ts: entry?.ts || Date.now()
   };
   try {
-    return await storePush('IrrigacaoFazenda2E/history', payload);
+    return await storePush('IrrigacaoFazenda2E/cafe/history', payload);
   } catch (error) {
     return { error:error.message || String(error) };
   }

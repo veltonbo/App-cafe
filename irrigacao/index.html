@@ -1671,10 +1671,12 @@ function applyNamedPreset(name){
 function updateTodaySummary(){
   const sec=data.secondsMode||{};
   const draft=sec.enabled?sec:(data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127});
-  const pulses=Number(sec.pulse_count||0);
-  let irrigated=pulses*Number(draft.on_seconds||0);
+  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(serverNowMs()));
+  const sameDay=String(sec.daily_day_key||'')===todayKey;
+  const pulses=sameDay?Number(sec.daily_pulses_started||0):0;
+  let irrigated=sameDay?Number(sec.daily_irrigated_seconds||0):0;
   if(sec.enabled&&sec.phase==='on'&&sec.pulse_started_at){
-    irrigated+=Math.max(0,Math.min(Number(draft.on_seconds||0),(Date.now()-Number(sec.pulse_started_at))/1000));
+    irrigated+=Math.max(0,Math.min(Number(draft.on_seconds||0),(serverNowMs()-Number(sec.pulse_started_at))/1000));
   }
   if(!data.dashboard?.summary?.today){
     if($('todayPulses'))$('todayPulses').textContent=String(pulses);

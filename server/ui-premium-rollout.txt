@@ -1,1 +1,1 @@
-Weather2-2 live-state fix — painel usa leitura atual da estação — 2026-09-09
+Live refresh v3 — dashboard 2s, Viveiro 4s, Weather2-2 servidor 4s, sem polling duplicado — 2026-09-09

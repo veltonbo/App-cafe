@@ -3,7 +3,6 @@
   const q=(s,r=document)=>r.querySelector(s);
   const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const path=location.pathname.replace(/\/+$/,'/')||'/';
-  if(path.includes('/irrigacao/inkbird/')||path.includes('/irrigacao/central/'))return;
 
   function enhanceHeader(){
     const top=q('.f2eShellTop');

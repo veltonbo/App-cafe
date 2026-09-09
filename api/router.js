@@ -10,17 +10,7 @@ import irrigationPush from '../server/api/irrigation/push.js';
 import irrigationConfig from '../server/api/irrigation/config.js';
 import irrigationHistory from '../server/api/irrigation/history.js';
 import irrigationMonitor from '../server/api/irrigation/monitor.js';
-import irrigationLinkage from '../server/api/irrigation/linkage.js';
-import irrigationOverview from '../server/api/irrigation/overview.js';
-import irrigationBackground from '../server/api/irrigation/background.js';
-import irrigationDiagnostics from '../server/api/irrigation/diagnostics.js';
 import irrigationBackups from '../server/api/irrigation/backups.js';
-import inkbirdControllers from '../server/api/inkbird/controllers.js';
-import inkbirdCommand from '../server/api/inkbird/command.js';
-import inkbirdGroup from '../server/api/inkbird/group.js';
-import inkbirdSchedule from '../server/api/inkbird/schedule.js';
-import inkbirdZone from '../server/api/inkbird/zone.js';
-import inkbirdStatus from '../server/api/inkbird/status.js';
 import smartLifeImport from '../server/api/smartlife/import.js';
 import smartLifeReauth from '../server/api/smartlife/reauth.js';
 
@@ -37,17 +27,7 @@ const ROUTES={
   'irrigation/config':irrigationConfig,
   'irrigation/history':irrigationHistory,
   'irrigation/monitor':irrigationMonitor,
-  'irrigation/linkage':irrigationLinkage,
-  'irrigation/overview':irrigationOverview,
-  'irrigation/background':irrigationBackground,
-  'irrigation/diagnostics':irrigationDiagnostics,
   'irrigation/backups':irrigationBackups,
-  'inkbird/controllers':inkbirdControllers,
-  'inkbird/command':inkbirdCommand,
-  'inkbird/group':inkbirdGroup,
-  'inkbird/schedule':inkbirdSchedule,
-  'inkbird/zone':inkbirdZone,
-  'inkbird/status':inkbirdStatus,
   'smartlife/import':smartLifeImport,
   'smartlife/reauth':smartLifeReauth
 };

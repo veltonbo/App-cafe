@@ -2,6 +2,8 @@
   'use strict';
   const q=(s,r=document)=>r.querySelector(s);
   const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const path=location.pathname.replace(/\/+$/,'/')||'/';
+
   function enhanceHeader(){
     const top=q('.f2eShellTop');
     const brand=q('.f2eShellBrand',top||document);
@@ -16,12 +18,11 @@
     if(!q('.f2eHeaderBadge',brand)){
       const badge=document.createElement('span');
       badge.className='f2eHeaderBadge';
-      badge.id='f2eHeaderStatus';
-      badge.textContent='Verificando sistema';
+      badge.textContent='Sistema online';
       brand.appendChild(badge);
     }
     const menu=q('.f2eShellMenuBtn',top);
-    if(menu&&menu.textContent!=='⚙ Sistema')menu.textContent='⚙ Sistema';
+    if(menu&&menu.textContent!=='☰  Mais')menu.textContent='☰  Mais';
   }
 
   function decorateOperational(){
@@ -32,7 +33,7 @@
   }
 
   function decorateMetrics(){
-    const map={'Ciclo atual':'◉','Ciclo-base':'◷','Temperatura':'♨','Umidade':'◌','Chuva':'☂'};
+    const map={'Ciclo atual':'◉','Ciclo-base':'◷','Temperatura':'♨','Umidade':'◌'};
     qa('.smartOverviewGrid>div').forEach(card=>{
       const label=q('small',card)?.textContent?.trim()||'';
       if(q('.m2Icon',card))return;

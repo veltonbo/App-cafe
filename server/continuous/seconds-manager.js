@@ -6,6 +6,7 @@ import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
+import { publishLive } from './live-bus.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -30,14 +31,53 @@ const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 // Railway auto-deploy marker v2
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function publicSecondsState(value=state){
+  const {
+    native_cycle_raw,
+    disabled_cycle_raw,
+    ...safe
+  }=value||{};
+  return{...safe,server_read_at:Date.now()};
+}
+function addPrecisionSample(kind,targetMs,actualMs,at=Date.now()){
+  const target=Math.max(0,Number(targetMs)||0);
+  const actual=Math.max(0,Number(actualMs)||0);
+  if(!target||!actual)return;
+  const sample={
+    kind:String(kind||'cycle'),
+    target_ms:Math.round(target),
+    actual_ms:Math.round(actual),
+    error_ms:Math.round(actual-target),
+    abs_error_ms:Math.round(Math.abs(actual-target)),
+    at:Number(at)||Date.now()
+  };
+  const previous=Array.isArray(state.precision_samples)?state.precision_samples:[];
+  const samples=[...previous,sample].slice(-24);
+  const avg=samples.reduce((sum,row)=>sum+Number(row.abs_error_ms||0),0)/Math.max(1,samples.length);
+  const max=Math.max(...samples.map(row=>Number(row.abs_error_ms||0)),0);
+  state={
+    ...state,
+    precision_samples:samples,
+    precision:{
+      last:sample,
+      avg_abs_error_ms:Math.round(avg),
+      max_abs_error_ms:Math.round(max),
+      samples:samples.length,
+      status:avg<=500?'excellent':avg<=1500?'good':'attention'
+    }
+  };
+}
 async function event(type,detail,extra={}){
-  await appendHistory({
+  const row={
     type,
     detail,
     source:'viveiro_fast',
     status:String(state.phase||''),
+    ts:Date.now(),
     ...extra
-  }).catch(()=>null);
+  };
+  await appendHistory(row).catch(()=>null);
+  publishLive('event',row);
 }
 async function pushNotice(title,body,tag,level='info',cooldownMinutes=0,whatsapp=true){
   await notifyIrrigation({title,body,tag,url:'/irrigacao/',level,cooldownMinutes,whatsapp}).catch(()=>null);
@@ -476,6 +516,7 @@ async function persist(){
     }
   }
 
+  publishLive('seconds',{state:publicSecondsState(state)});
   return localOk||remoteStoreAvailable===true;
 }
 
@@ -544,12 +585,70 @@ async function weather(){
   }
 }
 
-async function safeOff(){
+async function safeOff(reason='safety'){
+  const requestedAt=Date.now();
   try{
-    await setViveiroRelay(false,{attempts:10});
+    let result=null;
+    try{
+      result=await setViveiroRelay(false,{attempts:10});
+    }catch(firstError){
+      // Segunda tentativa independente: OFF é sempre o comando de maior prioridade.
+      await sleep(250);
+      result=await setViveiroRelay(false,{attempts:10});
+    }
+    const confirmedAt=Number(result?.confirmed_at||Date.now());
+    state={
+      ...state,
+      device_relay:false,
+      relay_expected:false,
+      last_command:'off',
+      last_command_at:Number(result?.command_sent_at||requestedAt),
+      last_command_reason:String(reason||'safety'),
+      last_confirmation_at:confirmedAt,
+      last_confirmation_latency_ms:Number(result?.confirmation_latency_ms||0),
+      last_confirmation_source:String(result?.confirmed_by||'unknown'),
+      last_off_confirmed_at:confirmedAt,
+      watchdog:{
+        status:'ok',
+        checked_at:confirmedAt,
+        reason:String(reason||'safety'),
+        message:'Saída OFF confirmada fisicamente.'
+      }
+    };
+    publishLive('confirmation',{
+      command:'off',
+      requested_at:requestedAt,
+      confirmed_at:confirmedAt,
+      latency_ms:Number(result?.confirmation_latency_ms||0),
+      source:String(result?.confirmed_by||'unknown'),
+      reason:String(reason||'safety')
+    });
     return true;
   }catch(error){
+    const failedAt=Date.now();
+    state={
+      ...state,
+      relay_expected:false,
+      last_command:'off',
+      last_command_at:requestedAt,
+      watchdog:{
+        status:'critical',
+        checked_at:failedAt,
+        reason:String(reason||'safety'),
+        message:'OFF não confirmado fisicamente.',
+        error:error?.message||String(error)
+      }
+    };
+    publishLive('watchdog',{status:'critical',at:failedAt,reason:String(reason||'safety'),error:error?.message||String(error)});
     console.error('safeOff',error?.message||error);
+    await pushNotice(
+      'ALERTA • desligamento não confirmado',
+      'O servidor mandou desligar o viveiro, mas não recebeu confirmação física do EKAZA. Verifique o equipamento.',
+      'viveiro-watchdog-off',
+      'critical',
+      5,
+      true
+    );
     return false;
   }
 }
@@ -600,7 +699,7 @@ async function finishAndRestore(reason='stopped'){
 async function run(){
   while(state.enabled){
     if(await emergencyLatched().catch(()=>false)){
-      await safeOff();
+      await safeOff('emergency');
       state={...state,enabled:false,phase:'emergency_stopped',relay_expected:false,last_error:null,emergency_stopped_at:Date.now()};
       await persist();
       await event('viveiro_emergency_stop','Parada de emergência manteve o ciclo rápido desligado.');
@@ -624,7 +723,7 @@ async function run(){
 
     const maint=await maintenance();
     if(maint.active){
-      await safeOff();
+      await safeOff('maintenance');
       const wasMaintenance=state.phase==='maintenance';
       state={...state,phase:'maintenance',relay_expected:false,maintenance_until:Number(maint.until||0),last_error:null};
       await persist();
@@ -641,7 +740,7 @@ async function run(){
 
     const schedule=localSchedule(state);
     if(!schedule.inside){
-      await safeOff();
+      await safeOff('outside_schedule');
       const waitSeconds=secondsUntilNextWindow(state);
       const wasWaiting=state.phase==='waiting_window';
       state={
@@ -787,13 +886,35 @@ async function run(){
 
     let relayOnAt=0;
     try{
-      await setViveiroRelay(true,{attempts:5});
-      // Começa a contar no instante em que o comando LIGAR foi confirmado.
-      // O countdown nativo continua sendo apenas a proteção extra.
-      relayOnAt=Date.now();
+      const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
+      const onResult=await setViveiroRelay(true,{attempts:5});
+      relayOnAt=Number(onResult?.confirmed_at||Date.now());
+      if(previousOffConfirmedAt>0&&relayOnAt>previousOffConfirmedAt){
+        addPrecisionSample('interval',Number(state.off_seconds||120)*1000,relayOnAt-previousOffConfirmedAt,relayOnAt);
+      }
+      state={
+        ...state,
+        device_relay:true,
+        last_command:'on',
+        last_command_at:Number(onResult?.command_sent_at||relayOnAt),
+        last_confirmation_at:relayOnAt,
+        last_confirmation_latency_ms:Number(onResult?.confirmation_latency_ms||0),
+        last_confirmation_source:String(onResult?.confirmed_by||'unknown'),
+        last_on_confirmed_at:relayOnAt,
+        watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada fisicamente.'}
+      };
+      publishLive('confirmation',{
+        command:'on',
+        requested_at:Number(onResult?.command_started_at||relayOnAt),
+        confirmed_at:relayOnAt,
+        latency_ms:Number(onResult?.confirmation_latency_ms||0),
+        source:String(onResult?.confirmed_by||'unknown'),
+        reason:'pulse_start'
+      });
+      // O countdown nativo continua sendo uma proteção extra.
       await safetyCountdown(maxOn);
     }catch(error){
-      await safeOff();
+      await safeOff('start_failure');
       const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
       const late=Date.now()-expectedFrom>=30000;
       const shouldAlert=late&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)&&!Number(state.first_pulse_window_at||0);
@@ -896,7 +1017,12 @@ async function run(){
       }
     }
 
-    await safeOff();
+    await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
+    const physicalOffAt=Number(state.last_off_confirmed_at||Date.now());
+    const physicalOnAt=Number(state.last_on_confirmed_at||relayOnAt||state.pulse_started_at||0);
+    if(physicalOnAt>0&&physicalOffAt>=physicalOnAt){
+      addPrecisionSample('on',maxOn*1000,physicalOffAt-physicalOnAt,physicalOffAt);
+    }
 
     if(!state.enabled)break;
     if(!(await active()))break;
@@ -939,12 +1065,16 @@ async function run(){
       phase:'off',
       relay_expected:false,
       pulse_count:Number(state.pulse_count||0)+1,
-      last_pulse_at:Date.now(),
-      expected_next_on_at:Date.now()+Number(state.off_seconds||120)*1000
+      last_pulse_at:Number(state.last_off_confirmed_at||Date.now()),
+      expected_next_on_at:Number(state.last_off_confirmed_at||Date.now())+Number(state.off_seconds||120)*1000
     };
     await persist();
     await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
       duration_seconds:maxOn,
+      actual_duration_seconds:Number(state.precision?.last?.kind==='on'
+        ?(Number(state.precision.last.actual_ms||0)/1000).toFixed(3)
+        :maxOn),
+      timing_error_ms:state.precision?.last?.kind==='on'?Number(state.precision.last.error_ms||0):null,
       pulse_count:Number(state.pulse_count||0)
     });
 

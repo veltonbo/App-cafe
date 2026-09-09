@@ -1,1 +1,1 @@
-Live refresh v3 — dashboard 2s, Viveiro 4s, Weather2-2 servidor 4s, sem polling duplicado — 2026-09-09
+Precise timer v4 — deadlines absolutos no servidor + relógio visual sincronizado — 2026-09-09

@@ -44,6 +44,29 @@ def build_manager(session):
     return manager, saver
 
 
+def update_device_cache_resilient(manager, saver):
+    try:
+        manager.update_device_cache()
+        return manager, saver
+    except Exception as exc:
+        message = str(exc).lower()
+        if "sign invalid" not in message:
+            raise
+
+        # A SDK renova o token automaticamente perto do vencimento, mas uma
+        # sessão que perdeu a rotação pode precisar de uma renovação forçada.
+        # Tentamos uma vez antes de declarar que a autenticação precisa ser refeita.
+        try:
+            manager.customer_api.token_info.expire_time = 0
+            manager.customer_api.refresh_access_token_if_need()
+        except Exception:
+            pass
+
+        retry_manager, retry_saver = build_manager(saver.session)
+        retry_manager.update_device_cache()
+        return retry_manager, retry_saver
+
+
 def find_device(manager, device_id=None, device_name=None):
     devices = list(manager.device_map.values())
 
@@ -85,7 +108,7 @@ def main():
         raise ValueError("Sessão Smart Life ausente.")
 
     manager, saver = build_manager(session)
-    manager.update_device_cache()
+    manager, saver = update_device_cache_resilient(manager, saver)
 
     action = str(payload.get("action") or "device")
     device = find_device(

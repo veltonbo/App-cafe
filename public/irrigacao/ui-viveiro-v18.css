@@ -1,0 +1,549 @@
+/* Fazenda 2E — Viveiro UI v18
+   Layout profissional, completo e com uma única navegação.
+   Camada visual: não altera API, Smart Life, timers ou Automático 2.0. */
+
+:root{
+  --v18-bg:#f3f6f4;
+  --v18-card:#fff;
+  --v18-ink:#152b24;
+  --v18-muted:#708079;
+  --v18-line:#dfe8e4;
+  --v18-green:#0b7458;
+  --v18-green-2:#11916b;
+  --v18-soft:#eaf5f0;
+  --v18-soft-2:#f7faf8;
+  --v18-warn:#b47c21;
+  --v18-danger:#be4039;
+  --v18-shadow:0 8px 26px rgba(22,57,46,.065);
+  --v18-shadow-strong:0 14px 34px rgba(22,57,46,.10);
+}
+
+html{background:var(--v18-bg)!important}
+body.smartIrrigationV7,body.mockupV2{
+  background:linear-gradient(180deg,#f7f9f8 0,#f3f6f4 34%,#f0f4f2 100%)!important;
+  color:var(--v18-ink)!important;
+}
+
+/* Um único menu: o inferior. */
+body.mockupV2 .f2eShellMenuBtn,
+body.mockupV2 .f2eShellOverlay{
+  display:none!important;
+}
+
+/* Cabeçalho limpo */
+body.mockupV2 .f2eShellTop{
+  min-height:78px!important;
+  display:block!important;
+  padding:calc(14px + env(safe-area-inset-top)) 16px 12px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(223,232,228,.9)!important;
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(14px)!important;
+}
+body.mockupV2 .f2eShellTop:after{display:none!important}
+body.mockupV2 .f2eShellBrand{padding:0!important}
+body.mockupV2 .f2eShellBrand small{
+  display:block!important;
+  color:var(--v18-green)!important;
+  font-size:.57rem!important;
+  font-weight:900!important;
+  letter-spacing:.18em!important;
+}
+body.mockupV2 .f2eShellBrand h1{
+  margin:3px 0 0!important;
+  color:var(--v18-ink)!important;
+  font-size:1.45rem!important;
+  line-height:1!important;
+  letter-spacing:-.045em!important;
+}
+body.mockupV2 .f2eHeaderSubtitle,
+body.mockupV2 .f2eHeaderBadge{
+  display:none!important;
+}
+
+/* Estrutura */
+body.mockupV2 .wrap{
+  width:min(100%,700px)!important;
+  padding:10px 12px calc(108px + env(safe-area-inset-bottom))!important;
+}
+.smartIrrigationV7 #smartViewHome.active{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+}
+.smartIrrigationV7 #smartOperatingCard{order:1}
+.smartIrrigationV7 #smartSafety{order:2}
+.smartIrrigationV7 #viveiroProfileCard{order:3}
+.smartIrrigationV7 #todayBox{order:4}
+.smartIrrigationV7 #smartHealthStrip{order:5}
+.smartIrrigationV7 #smartViewHome .m2Footer{display:none!important}
+
+/* AGORA */
+body.mockupV2 .smartOperatingCard{
+  margin:0!important;
+  padding:17px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:12px 16px!important;
+  overflow:hidden!important;
+  border:1px solid #d8e6df!important;
+  border-radius:20px!important;
+  background:
+    radial-gradient(circle at 96% 12%,rgba(65,156,108,.10),transparent 115px),
+    linear-gradient(145deg,#fff 0,#fbfdfc 62%,#f1f8f4 100%)!important;
+  color:var(--v18-ink)!important;
+  box-shadow:var(--v18-shadow-strong)!important;
+}
+body.mockupV2 .smartOperatingCard:before,
+body.mockupV2 .smartOperatingCard:after{display:none!important}
+body.mockupV2 .smartOperatingState{
+  min-width:0!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(0,1fr)!important;
+  gap:12px!important;
+  align-items:center!important;
+}
+body.mockupV2 .smartOperatingState>i{
+  width:46px!important;
+  height:46px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:14px!important;
+  background:var(--v18-soft)!important;
+  color:var(--v18-green)!important;
+  box-shadow:inset 0 0 0 1px rgba(11,116,88,.05)!important;
+  font-size:1rem!important;
+}
+body.mockupV2 .smartOperatingState small{
+  display:block!important;
+  color:var(--v18-muted)!important;
+  font-size:.52rem!important;
+  font-weight:900!important;
+  letter-spacing:.16em!important;
+}
+body.mockupV2 .smartOperatingState strong{
+  display:block!important;
+  margin-top:3px!important;
+  color:var(--v18-ink)!important;
+  font-size:1.17rem!important;
+  line-height:1.08!important;
+  letter-spacing:-.035em!important;
+}
+body.mockupV2 .smartOperatingState span{
+  display:block!important;
+  margin-top:5px!important;
+  color:#687870!important;
+  font-size:.69rem!important;
+  line-height:1.35!important;
+}
+body.mockupV2 .smartOperatingNext{
+  min-width:122px!important;
+  margin:0!important;
+  padding:10px 11px!important;
+  align-self:center!important;
+  border:1px solid #dbe9e3!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.78)!important;
+  text-align:left!important;
+}
+body.mockupV2 .smartOperatingNext small{
+  display:block!important;
+  color:var(--v18-muted)!important;
+  font-size:.54rem!important;
+}
+body.mockupV2 .smartOperatingNext strong{
+  display:block!important;
+  margin-top:3px!important;
+  color:var(--v18-green)!important;
+  font-size:.82rem!important;
+  line-height:1.25!important;
+}
+
+/* Frescor dos dados: linha de status */
+body.mockupV2 .smartLiveQuality{
+  grid-column:1/-1!important;
+  margin:1px 0 0!important;
+  padding:10px 0 0!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px 14px!important;
+  border-top:1px solid var(--v18-line)!important;
+}
+body.mockupV2 .smartLiveQuality>span{
+  min-height:0!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  border:0!important;
+  background:transparent!important;
+}
+body.mockupV2 .smartLiveQuality>span>i{
+  width:6px!important;
+  height:6px!important;
+  flex:0 0 6px!important;
+}
+body.mockupV2 .smartLiveQuality small{
+  color:var(--v18-muted)!important;
+  font-size:.47rem!important;
+}
+body.mockupV2 .smartLiveQuality b{
+  color:#40554c!important;
+  font-size:.58rem!important;
+}
+body.mockupV2 .smartOpsDetails{
+  grid-column:1/-1!important;
+  margin-top:0!important;
+  border-top:0!important;
+}
+body.mockupV2 .smartOpsDetails summary{
+  padding-top:4px!important;
+  color:var(--v18-muted)!important;
+  font-size:.58rem!important;
+}
+
+/* Parada */
+.smartIrrigationV7 .smartSafety.show{margin:0!important}
+.smartIrrigationV7 .smartSafety .emergency{
+  min-height:48px!important;
+  border:1px solid #efc9c6!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  color:var(--v18-danger)!important;
+  box-shadow:none!important;
+  font-size:.74rem!important;
+  font-weight:900!important;
+}
+
+/* RESUMO DO VIVEIRO */
+body.mockupV2 .smartOverviewCard{
+  margin:0!important;
+  padding:15px!important;
+  border:1px solid var(--v18-line)!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:var(--v18-shadow)!important;
+}
+body.mockupV2 .smartOverviewHead{
+  margin:0 0 10px!important;
+  padding:0!important;
+  align-items:center!important;
+}
+body.mockupV2 .smartOverviewHead .sectionKicker{display:none!important}
+body.mockupV2 .smartOverviewHead h2{
+  margin:0!important;
+  color:var(--v18-ink)!important;
+  font-size:.96rem!important;
+  letter-spacing:-.025em!important;
+}
+body.mockupV2 .profileBadge{
+  padding:5px 8px!important;
+  border-radius:999px!important;
+  font-size:.50rem!important;
+  letter-spacing:.04em!important;
+}
+body.mockupV2 .m2Realtime{display:none!important}
+body.mockupV2 .smartOverviewGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:0!important;
+}
+body.mockupV2 .smartOverviewGrid>div{
+  min-height:68px!important;
+  position:relative!important;
+  padding:11px 11px!important;
+  border:1px solid #e2ebe7!important;
+  border-radius:13px!important;
+  background:var(--v18-soft-2)!important;
+}
+body.mockupV2 .smartOverviewGrid>div .m2Icon{
+  position:absolute!important;
+  right:9px!important;
+  top:9px!important;
+  left:auto!important;
+  width:25px!important;
+  height:25px!important;
+  transform:none!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:8px!important;
+  background:#e7f3ed!important;
+  color:var(--v18-green)!important;
+  font-size:.69rem!important;
+}
+body.mockupV2 .smartOverviewGrid small{
+  display:block!important;
+  padding-right:29px!important;
+  color:var(--v18-muted)!important;
+  font-size:.55rem!important;
+}
+body.mockupV2 .smartOverviewGrid strong{
+  display:block!important;
+  margin-top:11px!important;
+  color:var(--v18-ink)!important;
+  font-size:.86rem!important;
+}
+
+/* Inteligência: completa, mas secundária */
+body.mockupV2 .smartIntensity{
+  margin-top:8px!important;
+  padding:9px 10px!important;
+  border:1px solid #e2ebe7!important;
+  border-radius:12px!important;
+  background:#fafcfb!important;
+}
+body.mockupV2 .smartIntensityTop small,
+body.mockupV2 .smartClimateLine small{font-size:.54rem!important}
+body.mockupV2 .smartIntensityTop b,
+body.mockupV2 .smartClimateLine b{font-size:.70rem!important}
+body.mockupV2 .smartClimateLine{
+  margin-top:7px!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+body.mockupV2 .smartClimateLine>span{
+  padding:8px 9px!important;
+  border:1px solid #e2ebe7!important;
+  border-radius:11px!important;
+  background:#fafcfb!important;
+}
+body.mockupV2 .smartOverviewReason{
+  margin:7px 0 0!important;
+  padding:8px 9px!important;
+  border-radius:11px!important;
+  background:#f0f4f2!important;
+  color:#5f7068!important;
+  font-size:.62rem!important;
+  line-height:1.38!important;
+}
+body.mockupV2 .smartQuickMeta{
+  margin-top:7px!important;
+  padding:0!important;
+}
+body.mockupV2 .smartQuickMeta small{font-size:.53rem!important}
+body.mockupV2 .smartQuickMeta b{font-size:.68rem!important}
+body.mockupV2 #openProfileConfig{
+  min-height:39px!important;
+  border-radius:11px!important;
+}
+body.mockupV2 .smartDecisionDetails{
+  margin-top:7px!important;
+  background:transparent!important;
+  border:0!important;
+}
+body.mockupV2 .smartDecisionDetails>summary{
+  color:var(--v18-muted)!important;
+  font-size:.59rem!important;
+}
+
+/* HOJE */
+.smartIrrigationV7 #todayBox{
+  margin:0!important;
+  padding:15px!important;
+  border:1px solid var(--v18-line)!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:var(--v18-shadow)!important;
+}
+.smartIrrigationV7 #todayBox .head{
+  margin-bottom:10px!important;
+}
+.smartIrrigationV7 #todayBox .sectionKicker{display:none!important}
+.smartIrrigationV7 #todayBox .head h2{
+  margin:0!important;
+  font-size:.96rem!important;
+  color:var(--v18-ink)!important;
+}
+.smartIrrigationV7 #todayStatus{
+  padding:5px 8px!important;
+  border-radius:999px!important;
+  font-size:.49rem!important;
+}
+.smartIrrigationV7 #todayBox .todayGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+.smartIrrigationV7 #todayBox .todayCard{
+  min-height:65px!important;
+  padding:10px 11px!important;
+  border:1px solid #e2ebe7!important;
+  border-radius:13px!important;
+  background:#fafcfb!important;
+}
+.smartIrrigationV7 #todayBox .todayCard small{
+  color:var(--v18-muted)!important;
+  font-size:.55rem!important;
+}
+.smartIrrigationV7 #todayBox .todayCard strong{
+  display:block!important;
+  margin-top:8px!important;
+  color:var(--v18-ink)!important;
+  font-size:.88rem!important;
+}
+.smartIrrigationV7 #todayBox .nextEventBox{
+  margin-top:8px!important;
+  padding:9px 11px!important;
+  border:1px solid #dbe9e3!important;
+  border-radius:12px!important;
+  background:var(--v18-soft)!important;
+}
+.smartIrrigationV7 #todayBox .nextEventBox small{
+  color:var(--v18-muted)!important;
+  font-size:.53rem!important;
+}
+.smartIrrigationV7 #todayBox .nextEventBox strong{
+  margin-top:2px!important;
+  color:var(--v18-green)!important;
+  font-size:.72rem!important;
+}
+
+/* SAÚDE */
+body.mockupV2 .smartHealthStrip{
+  margin:0!important;
+  min-height:49px!important;
+  padding:8px 10px!important;
+  display:grid!important;
+  grid-template-columns:32px minmax(0,1fr) auto!important;
+  gap:9px!important;
+  border:1px solid #dfe8e4!important;
+  border-radius:14px!important;
+  background:#edf3f0!important;
+  box-shadow:none!important;
+}
+body.mockupV2 .smartHealthStrip>i{
+  width:32px!important;
+  height:32px!important;
+  border-radius:10px!important;
+  background:#dcebe4!important;
+  color:var(--v18-green)!important;
+}
+body.mockupV2 .smartHealthStrip b{
+  color:var(--v18-ink)!important;
+  font-size:.70rem!important;
+}
+body.mockupV2 .smartHealthStrip small{
+  color:var(--v18-muted)!important;
+  font-size:.56rem!important;
+}
+
+/* Páginas internas: profissionais, não apertadas */
+.smartIrrigationV7 .smartPageTitle{
+  padding:12px 2px 5px!important;
+}
+.smartIrrigationV7 .smartPageTitle .sectionKicker{
+  color:var(--v18-green)!important;
+  font-size:.53rem!important;
+  letter-spacing:.15em!important;
+}
+.smartIrrigationV7 .smartPageTitle h2{
+  margin:3px 0 0!important;
+  color:var(--v18-ink)!important;
+  font-size:1.28rem!important;
+  letter-spacing:-.04em!important;
+}
+.smartIrrigationV7 #smartViewProfile>.box,
+.smartIrrigationV7 #smartViewHistory>.box,
+.smartIrrigationV7 #smartViewSystem>.box{
+  margin-top:8px!important;
+  padding:15px!important;
+  border:1px solid var(--v18-line)!important;
+  border-radius:17px!important;
+  background:#fff!important;
+  box-shadow:var(--v18-shadow)!important;
+}
+.smartIrrigationV7 .head h2,
+.smartIrrigationV7 .climateTop h2{
+  font-size:.98rem!important;
+  letter-spacing:-.02em!important;
+}
+.smartIrrigationV7 .smartModeGroup{
+  padding:4px!important;
+  gap:4px!important;
+  border-radius:11px!important;
+  background:#f0f4f2!important;
+}
+.smartIrrigationV7 .climateSwitch{
+  min-height:36px!important;
+  border-radius:8px!important;
+  font-size:.61rem!important;
+}
+.smartIrrigationV7 .secondsField,
+.smartIrrigationV7 .protectCard,
+.smartIrrigationV7 .windowCard,
+.smartIrrigationV7 .climateCard,
+.smartIrrigationV7 .smartDecisionItem,
+.smartIrrigationV7 .scheduleRow{
+  border-color:#e1eae6!important;
+  border-radius:12px!important;
+  background:#fafcfb!important;
+  box-shadow:none!important;
+}
+.smartIrrigationV7 .btn{border-radius:11px!important}
+.smartIrrigationV7 .actionBar .btn{min-height:42px!important}
+
+/* Navegação única */
+.f2eBottomNav{
+  position:fixed!important;
+  z-index:70!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:calc(8px + env(safe-area-inset-bottom))!important;
+  width:min(calc(100% - 20px),680px)!important;
+  transform:translateX(-50%)!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:4px!important;
+  padding:5px!important;
+  border:1px solid var(--v18-line)!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.97)!important;
+  box-shadow:0 12px 30px rgba(22,56,46,.13)!important;
+  backdrop-filter:blur(16px)!important;
+}
+.f2eBottomNav button{
+  appearance:none!important;
+  min-width:0!important;
+  min-height:49px!important;
+  padding:5px 2px!important;
+  display:grid!important;
+  place-items:center!important;
+  gap:2px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:transparent!important;
+  color:#7b8983!important;
+  font:inherit!important;
+}
+.f2eBottomNav button span{font-size:.91rem!important;line-height:1!important}
+.f2eBottomNav button small{font-size:.56rem!important;font-weight:850!important}
+.f2eBottomNav button.active{
+  background:var(--v18-soft)!important;
+  color:var(--v18-green)!important;
+}
+
+/* A antiga navegação lateral não deve ocupar layout mesmo se existir no DOM */
+.f2eShellOverlay{display:none!important}
+
+/* iPhones estreitos */
+@media(max-width:390px){
+  body.mockupV2 .f2eShellTop{
+    min-height:74px!important;
+    padding-left:13px!important;
+    padding-right:13px!important;
+  }
+  body.mockupV2 .f2eShellBrand h1{font-size:1.36rem!important}
+  body.mockupV2 .smartOperatingCard{
+    grid-template-columns:1fr!important;
+    padding:15px!important;
+  }
+  body.mockupV2 .smartOperatingNext{
+    min-width:0!important;
+    margin-left:58px!important;
+  }
+  body.mockupV2 .smartLiveQuality{grid-column:1!important}
+  body.mockupV2 .smartOpsDetails{grid-column:1!important}
+}

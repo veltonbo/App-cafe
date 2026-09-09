@@ -37,7 +37,7 @@ Execute:
 
    python probe.py
 
-Se os três equipamentos responderem, podemos avançar para o gateway definitivo.
+Se os equipamentos do Viveiro responderem, podemos avançar para o gateway definitivo.
 
 ## Arquitetura final
 
@@ -49,7 +49,6 @@ Gateway local na fazenda
         |
         | LAN / Wi‑Fi (protocolo Tuya local)
         +--> EKAZA Viveiro
-        +--> INKBIRD Café
         +--> Weather2-2
 
 O gateway fará conexão de saída com o servidor, evitando abrir portas no roteador.

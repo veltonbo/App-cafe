@@ -1,1 +1,1 @@
-Viveiro standalone v14.1 — interface estável restaurada após regressão visual — 2026-09-09
+Viveiro UI v16 — nova camada visual isolada, sem alterações funcionais — 2026-09-09

@@ -484,13 +484,18 @@ export default async function handler(req,res){
         getViveiroSafety().catch(()=>null)
       ]);
       const weatherError=String(weatherState?.lastWeatherError||'');
-      const lastTemp=Number(climateState?.last_temperature);
-      const lastHum=Number(climateState?.last_humidity);
+      const stateTemp=Number(weatherState?.lastTemperature);
+      const stateHum=Number(weatherState?.lastHumidity);
+      const climateTemp=Number(climateState?.last_temperature);
+      const climateHum=Number(climateState?.last_humidity);
+      const lastTemp=Number.isFinite(stateTemp)?stateTemp:climateTemp;
+      const lastHum=Number.isFinite(stateHum)?stateHum:climateHum;
       const weatherSnapshot={
         ok:!weatherError,
-        linked:!weatherError,
+        linked:!weatherError&&weatherState?.weatherOnline!==false,
         cached:true,
-        checked_at:Number(weatherState?.lastCheckedAt||climateState?.last_evaluated_at||0)||null,
+        provider:weatherState?.weatherProvider||null,
+        checked_at:Number(weatherState?.lastWeatherAt||weatherState?.lastCheckedAt||climateState?.last_evaluated_at||0)||null,
         error:weatherError||null,
         metrics:{
           rainDetected:Boolean(weatherState?.rainDetected),

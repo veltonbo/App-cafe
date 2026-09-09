@@ -154,6 +154,7 @@
           '<div><small>Ciclo-base</small><strong id="smartBaseCycle">—</strong></div>'+
           '<div><small>Temperatura</small><strong id="smartOverviewTemp">—</strong></div>'+
           '<div><small>Umidade</small><strong id="smartOverviewHumidity">—</strong></div>'+
+          '<div><small>Chuva</small><strong id="smartOverviewRain">—</strong></div>'+
         '</div>'+
         '<div class="smartIntensity">'+
           '<div class="smartIntensityTop"><span><small>Intensidade</small><b id="smartIntensityText">Normal</b></span><span id="smartIntensityDelta">0%</span></div>'+
@@ -219,6 +220,11 @@
     const humidity=Number.isFinite(liveHumidity)?liveHumidity:Number(cs.last_humidity);
     if(byId('smartOverviewTemp'))byId('smartOverviewTemp').textContent=Number.isFinite(temp)?temp.toFixed(1)+' °C':'—';
     if(byId('smartOverviewHumidity'))byId('smartOverviewHumidity').textContent=Number.isFinite(humidity)?Math.round(humidity)+'%':'—';
+    const rainDetected=Boolean(liveWeather?.rainDetected);
+    const rainMm=Number(liveWeather?.rainGeneric?.value??liveWeather?.rain24h?.value);
+    if(byId('smartOverviewRain'))byId('smartOverviewRain').textContent=rainDetected
+      ?'Chovendo'
+      :(Number.isFinite(rainMm)?rainMm.toFixed(1)+' mm':'Sem chuva');
     if(byId('smartClimateReason')){
       byId('smartClimateReason').textContent=outside
         ?'Automático 2.0 aguardando o horário programado. Fora da janela ele não altera o ciclo.'
@@ -232,6 +238,31 @@
     const m=Math.floor(s/60),r=s%60;
     return m+' min'+(r?' '+r+' s':'');
   }
+  function freshnessLabel(ts){
+    const at=Number(ts||0);
+    if(!at)return 'aguardando';
+    const sec=Math.max(0,(Date.now()-at)/1000);
+    if(sec<1)return 'agora';
+    if(sec<10)return sec.toFixed(1)+' s';
+    if(sec<60)return Math.round(sec)+' s';
+    return Math.floor(sec/60)+' min';
+  }
+  function freshnessTone(ts,goodMs=7000,warnMs=20000){
+    const at=Number(ts||0);
+    if(!at)return 'warn';
+    const age=Math.max(0,Date.now()-at);
+    return age<=goodMs?'ok':age<=warnMs?'warn':'bad';
+  }
+  function precisionLabel(sec={}){
+    const p=sec.precision||{};
+    const last=p.last||{};
+    if(!last.actual_ms)return 'Aguardando amostra';
+    const error=Number(last.error_ms||0);
+    const sign=error>0?'+':'';
+    const kind=String(last.kind||'')==='interval'?'intervalo':'pulso';
+    return kind+' '+(Number(last.actual_ms)/1000).toFixed(2)+' s • erro '+sign+(error/1000).toFixed(2)+' s';
+  }
+
   function relativeTime(ts){
     const n=Number(ts||0);
     if(!n)return '—';
@@ -280,7 +311,21 @@
       card.className='smartOperatingCard';
       card.innerHTML=
         '<div class="smartOperatingState"><i></i><div><small>ESTADO AGORA</small><strong id="smartOperatingLabel">VERIFICANDO</strong><span id="smartOperatingDetail">Aguardando o servidor...</span></div></div>'+
-        '<div class="smartOperatingNext"><small id="smartOperatingNextLabel">Próximo evento</small><strong id="smartOperatingNext">—</strong></div>';
+        '<div class="smartOperatingNext"><small id="smartOperatingNextLabel">Próximo evento</small><strong id="smartOperatingNext">—</strong></div>'+
+        '<div class="smartLiveQuality">'+
+          '<span><i></i><small>EKAZA</small><b id="smartEkazaFresh">—</b></span>'+
+          '<span><i></i><small>CLIMA</small><b id="smartWeatherFresh">—</b></span>'+
+          '<span><i></i><small>TEMPO REAL</small><b id="smartStreamFresh">—</b></span>'+
+        '</div>'+
+        '<details class="smartOpsDetails">'+
+          '<summary>Confirmação e precisão</summary>'+
+          '<div class="smartOpsMeta">'+
+            '<span><small>Último comando</small><b id="smartLastCommand">—</b></span>'+
+            '<span><small>Confirmação física</small><b id="smartPhysicalConfirm">—</b></span>'+
+            '<span><small>Precisão do ciclo</small><b id="smartPrecision">—</b></span>'+
+            '<span><small>Watchdog</small><b id="smartWatchdog">—</b></span>'+
+          '</div>'+
+        '</details>';
       main.appendChild(card);
     }
     return card;
@@ -404,6 +449,42 @@
       if(byId('smartOperatingDetail'))byId('smartOperatingDetail').textContent=String(op.detail||'Aguardando estado...');
       if(byId('smartOperatingNextLabel'))byId('smartOperatingNextLabel').textContent=String(op.next_event_label||'Próximo evento');
       if(byId('smartOperatingNext'))byId('smartOperatingNext').textContent=op.next_event_at?relativeTime(op.next_event_at):'—';
+    }
+
+    const live=(typeof data!=='undefined'&&data.live)||{};
+    const secondsAt=Number(live.secondsAt||sec.server_read_at||sec.state_updated_at||0);
+    const weatherAt=Number(live.weatherAt||d.current_weather?.checked_at||0);
+    const streamAt=Number(live.lastEventAt||0);
+    const setFresh=(id,ts,good,warn)=>{
+      const el=byId(id);if(!el)return;
+      el.textContent=freshnessLabel(ts);
+      const parent=el.closest('span');
+      if(parent)parent.dataset.tone=freshnessTone(ts,good,warn);
+    };
+    setFresh('smartEkazaFresh',secondsAt,5000,15000);
+    setFresh('smartWeatherFresh',weatherAt,7000,20000);
+    setFresh('smartStreamFresh',streamAt,5000,15000);
+
+    if(byId('smartLastCommand')){
+      const cmd=String(sec.last_command||'').toUpperCase();
+      byId('smartLastCommand').textContent=cmd
+        ?cmd+' • '+freshnessLabel(sec.last_command_at)
+        :'—';
+    }
+    if(byId('smartPhysicalConfirm')){
+      const latency=Number(sec.last_confirmation_latency_ms);
+      byId('smartPhysicalConfirm').textContent=Number(sec.last_confirmation_at)>0
+        ?'Confirmado • '+(Number.isFinite(latency)?latency+' ms':'—')
+        :'Aguardando';
+    }
+    if(byId('smartPrecision')){
+      byId('smartPrecision').textContent=precisionLabel(sec);
+      byId('smartPrecision').dataset.tone=String(sec.precision?.status||'');
+    }
+    if(byId('smartWatchdog')){
+      const wd=sec.watchdog||live.watchdog||{};
+      byId('smartWatchdog').textContent=String(wd.status||'ok')==='critical'?'ATENÇÃO':'OK';
+      byId('smartWatchdog').dataset.tone=String(wd.status||'ok');
     }
 
     const cycleReason=intel.cycle_reason||{};
@@ -659,7 +740,7 @@
     const safety=byId('smartSafety');
     const profileCard=byId('viveiroProfileCard');
     const today=byId('todayBox');
-    [operation,healthStrip,safety,profileCard,today,hero].filter(Boolean).forEach(el=>home.appendChild(el));
+    [operation,healthStrip,safety,profileCard,hero].filter(Boolean).forEach(el=>home.appendChild(el));
 
     const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');
@@ -667,7 +748,7 @@
     const calendar=byId('calendarBox');
     [climate,seconds,weather,calendar].filter(Boolean).forEach(el=>profile.appendChild(el));
 
-    [byId('smartDecisionBox'),byId('weeklyBox')]
+    [today,byId('smartDecisionBox'),byId('weeklyBox')]
       .filter(Boolean).forEach(el=>history.appendChild(el));
     if(byId('eventsBox'))byId('eventsBox').classList.add('smartUiHidden');
 
@@ -801,13 +882,15 @@
     updateModeState();
     renderOperationalIntelligence();
 
-    setInterval(()=>{
+    const repaint=()=>{
       updateModeState();
       updateProfileSummary();
       updateClimateStatus();
       renderSmartAlerts();
       renderOperationalIntelligence();
-    },3000);
+    };
+    setInterval(repaint,1000);
+    window.addEventListener('viveiro-live-update',()=>requestAnimationFrame(repaint));
 
     window.addEventListener('hashchange',()=>{
       const k=String(location.hash||'#inicio').replace('#','');

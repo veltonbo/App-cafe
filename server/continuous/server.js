@@ -8,8 +8,6 @@ import secondsHandler from './seconds-handler.js';
 import { initSecondsManager, suspendSecondsForRestart } from './seconds-manager.js';
 import { smartLifeConfigured, smartLifeListDevices } from '../api/_smartlife.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
-import { readInkbirdState } from '../api/inkbird/_transport.js';
-import { decodeNormalTimer } from '../api/inkbird/_iic800.js';
 import { runViveiroWeatherCheck, getViveiroWeatherConfig, getViveiroWeatherState } from '../api/viveiro/_weather_logic.js';
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 import { authorize } from '../api/_tuya.js';
@@ -232,45 +230,26 @@ async function runReadOnlyBootDiagnostics(){
     const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
       error:error?.message||String(error)
     }));
-    const rows=devices.slice(0,8).map(device=>({
-      name:device?.name||'Sem nome',
-      online:device?.online!==false,
-      category:device?.category||null,
-      supportLocal:device?.support_local===true,
-      statusKeys:Object.keys(device?.status||{}).slice(0,24)
-    }));
-    const iicDevice=devices.find(device=>/iic[- ]?800|inkbird/i.test(String(device?.name||'')));
-    let iicSummary=null;
-    if(iicDevice){
-      const iic=await readInkbirdState({deviceId:iicDevice.id,force:true,maxAgeMs:0}).catch(error=>({error:error?.message||String(error)}));
-      if(!iic?.error){
-        const schedule=decodeNormalTimer(iic.statusMap?.normal_timer);
-        iicSummary={
-          provider:iic.provider,
-          online:iic.online!==false,
-          statusKeys:Object.keys(iic.statusMap||{}),
-          activeMask:Number(iic.runtime?.active_mask||0),
-          pendingMask:Number(iic.runtime?.pending_mask||0),
-          irrigationMode:iic.statusMap?.irrigation_mode??null,
-          dp45Available:Object.prototype.hasOwnProperty.call(iic.statusMap||{},'irrigation_time_all'),
-          dp38Available:Object.prototype.hasOwnProperty.call(iic.statusMap||{},'normal_timer'),
-          scheduleZones:(schedule?.channels||[]).map(ch=>Number(ch.zone)).filter(Boolean)
-        };
-      }else{
-        iicSummary={error:iic.error};
-      }
-    }
-    console.log('Smart Life read-only diagnostic',{
-      deviceCount:devices.length,
+    const rows=devices
+      .filter(device=>/viveiro|weather2-2/i.test(String(device?.name||'')))
+      .slice(0,4)
+      .map(device=>({
+        name:device?.name||'Sem nome',
+        online:device?.online!==false,
+        category:device?.category||null,
+        supportLocal:device?.support_local===true,
+        statusKeys:Object.keys(device?.status||{}).slice(0,24)
+      }));
+    console.log('Viveiro Smart Life diagnostic',{
+      deviceCount:rows.length,
       devices:rows,
       weatherLinked:Boolean(weather?.linked),
       weatherOnline:weather?.device?.online??null,
       weatherProvider:weather?.provider||null,
-      weatherError:weather?.error||null,
-      iic800:iicSummary
+      weatherError:weather?.error||null
     });
   }catch(error){
-    console.warn('Read-only irrigation diagnostic unavailable:',error?.message||error);
+    console.warn('Viveiro read-only diagnostic unavailable:',error?.message||error);
   }
 }
 

@@ -1348,8 +1348,18 @@ function renderDashboard(){
   setHealth('healthServer',Boolean(d.server?.online),d.server?.online?'Online':'Offline');
   setHealth('healthFirebase',Boolean(d.firebase?.online),d.firebase?.online?'Online':'Falha');
   setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':data.lastError?'Sem confirmação':'Aguardando',data.online==null);
-  const weatherOk=Boolean(data.weatherProtection?.weather?.linked);
-  setHealth('healthWeather',weatherOk,weatherOk?'Online':'Sem dados',!weatherOk);
+  const liveWeather=data.weatherProtection?.weather||d.current_weather||null;
+  const weatherHasMetrics=Boolean(
+    liveWeather?.metrics&&(
+      liveWeather.metrics.temperature||
+      liveWeather.metrics.humidity||
+      liveWeather.metrics.rainGeneric||
+      liveWeather.metrics.rain24h||
+      liveWeather.metrics.rainRate
+    )
+  );
+  const weatherOk=Boolean(liveWeather?.linked&&liveWeather?.error==null);
+  setHealth('healthWeather',weatherOk,weatherOk?(weatherHasMetrics?'Online':'Online • aguardando leitura'):'Sem dados',!weatherOk);
   const emergencyActive=Boolean(d.safety?.emergency_latched);
   if($('emergencyLatchBox'))$('emergencyLatchBox').style.display=emergencyActive?'block':'none';
   const allOk=Boolean(d.server?.online&&d.firebase?.online&&data.online===true&&weatherOk&&!emergencyActive);
@@ -1595,7 +1605,15 @@ async function syncDashboard(showToast=false){
     const r=await api('/api/viveiro/dashboard');
     processDashboardNotifications(r);
     data.dashboard=r;
-    save();renderDashboard();maybePromptClimateSuggestion(r);
+    if(r?.current_weather){
+      data.weatherProtection={
+        ...(data.weatherProtection||{}),
+        weather:r.current_weather,
+        state:r.weather?.state||data.weatherProtection?.state||{},
+        config:r.weather?.config||data.weatherProtection?.config||{}
+      };
+    }
+    save();renderDashboard();renderWeatherRuntimeOnly();maybePromptClimateSuggestion(r);
     if(showToast)toast('Painel atualizado');
   }catch(e){
     if(showToast)toast('Painel: '+String(e.message||e));

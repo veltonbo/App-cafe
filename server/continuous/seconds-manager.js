@@ -87,6 +87,19 @@ function localDayKey(ts=Date.now()){
     timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
   }).format(new Date(ts));
 }
+function ensureDailyCounters(ts=Date.now()){
+  const key=localDayKey(ts);
+  if(String(state.daily_day_key||'')!==key){
+    state={
+      ...state,
+      daily_day_key:key,
+      daily_pulses_started:0,
+      daily_pulses_completed:0,
+      daily_irrigated_seconds:0,
+      daily_last_pulse_at:0
+    };
+  }
+}
 async function maintenance(){
   try{
     const m=await storeGet(MAINTENANCE_PATH);
@@ -914,6 +927,7 @@ async function run(){
       if(previousOffConfirmedAt>0&&relayOnAt>previousOffConfirmedAt){
         addPrecisionSample('interval',Number(state.off_seconds||120)*1000,relayOnAt-previousOffConfirmedAt,relayOnAt);
       }
+      ensureDailyCounters(relayOnAt);
       state={
         ...state,
         device_relay:true,
@@ -923,6 +937,8 @@ async function run(){
         last_confirmation_latency_ms:Number(onResult?.confirmation_latency_ms||0),
         last_confirmation_source:String(onResult?.confirmed_by||'unknown'),
         last_on_confirmed_at:relayOnAt,
+        daily_pulses_started:Number(state.daily_pulses_started||0)+1,
+        daily_last_pulse_at:relayOnAt,
         watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada fisicamente.'}
       };
       publishLive('confirmation',{
@@ -1042,8 +1058,27 @@ async function run(){
     await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
     const physicalOffAt=Number(state.last_off_confirmed_at||Date.now());
     const physicalOnAt=Number(state.last_on_confirmed_at||relayOnAt||state.pulse_started_at||0);
+    let actualPulseSeconds=0;
     if(physicalOnAt>0&&physicalOffAt>=physicalOnAt){
-      addPrecisionSample('on',maxOn*1000,physicalOffAt-physicalOnAt,physicalOffAt);
+      const actualMs=physicalOffAt-physicalOnAt;
+      actualPulseSeconds=Math.max(0,actualMs/1000);
+      addPrecisionSample('on',maxOn*1000,actualMs,physicalOffAt);
+      ensureDailyCounters(physicalOffAt);
+      state={
+        ...state,
+        daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0)+actualPulseSeconds,
+        daily_last_pulse_at:physicalOffAt
+      };
+    }
+
+    if(interrupted&&actualPulseSeconds>0){
+      await persist();
+      await event('viveiro_pulse_interrupted','Pulso interrompido antes do tempo programado.',{
+        planned_duration_seconds:maxOn,
+        actual_duration_seconds:Number(actualPulseSeconds.toFixed(3)),
+        timing_error_ms:Math.round((actualPulseSeconds-maxOn)*1000),
+        reason:String(state.phase||'interrupted')
+      });
     }
 
     if(!state.enabled)break;
@@ -1066,10 +1101,11 @@ async function run(){
       await event('viveiro_window_end','Horário final atingido. Aguardando o próximo horário de início.',{
         next_window_at:state.next_window_at
       });
-      const irrigatedSeconds=Number(state.pulse_count||0)*Number(state.on_seconds||0);
+      ensureDailyCounters();
+      const irrigatedSeconds=Number(state.daily_irrigated_seconds||0);
       await pushNotice(
         'Resumo do viveiro',
-        'Horário encerrado • '+Number(state.pulse_count||0)+' pulsos • '+Math.round(irrigatedSeconds/60)+' min irrigados.',
+        'Horário encerrado • '+Number(state.daily_pulses_started||0)+' pulsos • '+Math.round(irrigatedSeconds/60)+' min irrigados.',
         'viveiro-summary-'+localDayKey()
       );
       continue;
@@ -1082,21 +1118,21 @@ async function run(){
       continue;
     }
 
+    ensureDailyCounters(Number(state.last_off_confirmed_at||Date.now()));
     state={
       ...state,
       phase:'off',
       relay_expected:false,
       pulse_count:Number(state.pulse_count||0)+1,
+      daily_pulses_completed:Number(state.daily_pulses_completed||0)+1,
       last_pulse_at:Number(state.last_off_confirmed_at||Date.now()),
       expected_next_on_at:Number(state.last_off_confirmed_at||Date.now())+Number(state.off_seconds||120)*1000
     };
     await persist();
     await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
       duration_seconds:maxOn,
-      actual_duration_seconds:Number(state.precision?.last?.kind==='on'
-        ?(Number(state.precision.last.actual_ms||0)/1000).toFixed(3)
-        :maxOn),
-      timing_error_ms:state.precision?.last?.kind==='on'?Number(state.precision.last.error_ms||0):null,
+      actual_duration_seconds:Number((actualPulseSeconds||maxOn).toFixed(3)),
+      timing_error_ms:Math.round(((actualPulseSeconds||maxOn)-maxOn)*1000),
       pulse_count:Number(state.pulse_count||0)
     });
 

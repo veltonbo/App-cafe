@@ -494,6 +494,15 @@
     if(byId('smartWhyCycleDetail'))byId('smartWhyCycleDetail').textContent=String(cycleReason.detail||'');
 
     const health=intel.health||{};
+    const headerStatus=byId('f2eHeaderStatus');
+    if(headerStatus){
+      headerStatus.textContent=String(health.level||'warning')==='ok'
+        ?'Sistema online'
+        :String(health.level||'warning')==='critical'
+          ?'Atenção no sistema'
+          :'Verificando sistema';
+      headerStatus.dataset.level=String(health.level||'warning');
+    }
     const strip=byId('smartHealthStrip');
     if(strip){
       strip.dataset.level=String(health.level||'warning');
@@ -735,14 +744,14 @@
 
     const hero=qs('main.wrap > .hero');
     const legacyStats=qs('main.wrap > .grid');
-    if(hero)hero.classList.add('smartLegacyVisual');
+    if(hero)hero.classList.add('smartLegacyVisual','smartUiHidden');
     if(legacyStats)legacyStats.classList.add('smartUiHidden');
     const operation=byId('smartOperatingCard');
     const healthStrip=byId('smartHealthStrip');
     const safety=byId('smartSafety');
     const profileCard=byId('viveiroProfileCard');
     const today=byId('todayBox');
-    [operation,healthStrip,safety,profileCard,hero].filter(Boolean).forEach(el=>home.appendChild(el));
+    [operation,safety,profileCard,healthStrip].filter(Boolean).forEach(el=>home.appendChild(el));
 
     const climate=byId('climateAdviceBox');
     const seconds=sectionByTitle('Programação')||sectionByTitle('Ciclo rápido');

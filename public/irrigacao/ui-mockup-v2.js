@@ -19,7 +19,7 @@
     if(!q('.f2eHeaderBadge',brand)){
       const badge=document.createElement('span');
       badge.className='f2eHeaderBadge';
-      badge.textContent='Viveiro ativo';
+      badge.textContent='Sistema online';
       brand.appendChild(badge);
     }
     const menu=q('.f2eShellMenuBtn',top);
@@ -45,6 +45,15 @@
     });
   }
 
+  function decorateOverview(){
+    const head=q('.smartOverviewHead');
+    if(!head||q('.m2Realtime',head))return;
+    const live=document.createElement('span');
+    live.className='m2Realtime';
+    live.innerHTML='<i></i>DADOS EM TEMPO REAL';
+    head.appendChild(live);
+  }
+
   function addFooter(){
     const home=document.getElementById('smartViewHome');
     if(!home||q('.m2Footer',home))return;
@@ -68,7 +77,7 @@
     if(home){const title=q('.smartPageTitle',home);if(title)title.style.display='none';}
   }
 
-  function run(){enhanceHeader();decorateOperational();decorateMetrics();addFooter();refineLabels();}
+  function run(){enhanceHeader();decorateOperational();decorateMetrics();decorateOverview();addFooter();refineLabels();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});
   else run();
   setTimeout(run,250);

@@ -16,7 +16,8 @@
     if(!q('.f2eHeaderBadge',brand)){
       const badge=document.createElement('span');
       badge.className='f2eHeaderBadge';
-      badge.textContent='Sistema online';
+      badge.id='f2eHeaderStatus';
+      badge.textContent='Verificando sistema';
       brand.appendChild(badge);
     }
     const menu=q('.f2eShellMenuBtn',top);
@@ -31,7 +32,7 @@
   }
 
   function decorateMetrics(){
-    const map={'Ciclo atual':'◉','Ciclo-base':'◷','Temperatura':'♨','Umidade':'◌'};
+    const map={'Ciclo atual':'◉','Ciclo-base':'◷','Temperatura':'♨','Umidade':'◌','Chuva':'☂'};
     qa('.smartOverviewGrid>div').forEach(card=>{
       const label=q('small',card)?.textContent?.trim()||'';
       if(q('.m2Icon',card))return;

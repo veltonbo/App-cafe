@@ -223,6 +223,38 @@ export async function smartLifeConfigured(){
   try{return Boolean(await loadSession())}catch{return false}
 }
 
+export async function smartLifeReauthStart(){
+  const session=await loadSession();
+  if(!session)throw new Error('Não há uma sessão Smart Life anterior para recuperar o User Code.');
+  const result=await queuedBridge({
+    action:'reauth_start',
+    client_id:session.client_id||'HA_3y9q4ak7g4ephrvke',
+    user_code:session.user_code
+  });
+  return{
+    ok:true,
+    token:result.token,
+    qr_data:result.qr_data,
+    qr_image:result.qr_image
+  };
+}
+
+export async function smartLifeReauthFinish(token){
+  const current=await loadSession();
+  if(!current)throw new Error('Sessão Smart Life anterior não encontrada.');
+  const result=await queuedBridge({
+    action:'reauth_finish',
+    client_id:current.client_id||'HA_3y9q4ak7g4ephrvke',
+    user_code:current.user_code,
+    token:String(token||'').trim()
+  });
+  if(!result?.authorized){
+    return{ok:true,authorized:false,error:result?.error||'Autorização ainda não confirmada.'};
+  }
+  const verified=await importSmartLifeSession(result.session);
+  return{ok:true,authorized:true,devices:verified.devices||[]};
+}
+
 export async function importSmartLifeSession(session){
   validateSession(session);
   const result=await queuedBridge({action:'list',session});

@@ -513,6 +513,10 @@ async function persist(){
     expected_off_at:String(state.phase||'')==='on'?Number(state.expected_off_at||0):0,
     expected_next_on_at:String(state.phase||'')==='off'?Number(state.expected_next_on_at||0):0
   };
+  // Envia para a tela imediatamente. Persistência local/Firebase acontece em seguida
+  // e não segura mais a atualização visual.
+  publishLive('seconds',{state:publicSecondsState(state)});
+
   let localOk=false;
   try{
     await fs.mkdir(path.dirname(STATE_FILE),{recursive:true});
@@ -535,7 +539,6 @@ async function persist(){
     }
   }
 
-  publishLive('seconds',{state:publicSecondsState(state)});
   return localOk||remoteStoreAvailable===true;
 }
 

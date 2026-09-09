@@ -1,0 +1,377 @@
+/* Fazenda 2E — Viveiro UI v16
+   Camada exclusivamente visual. Não altera API, automação, timers ou Smart Life. */
+
+:root{
+  --v16-bg:#eef5f1;
+  --v16-surface:#ffffff;
+  --v16-surface-soft:#f7fbf8;
+  --v16-ink:#14362d;
+  --v16-muted:#6f827a;
+  --v16-line:#d9e7e1;
+  --v16-brand:#087558;
+  --v16-brand-2:#0d8d69;
+  --v16-soft:#e8f6ef;
+  --v16-warn:#b77a18;
+  --v16-danger:#bd3c35;
+  --v16-shadow:0 10px 30px rgba(20,66,51,.07);
+  --v16-shadow-strong:0 16px 42px rgba(20,66,51,.11);
+}
+
+html{background:var(--v16-bg)!important}
+body.smartIrrigationV7,
+body.mockupV2{
+  background:
+    radial-gradient(circle at 92% 1%,rgba(70,160,111,.12),transparent 220px),
+    linear-gradient(180deg,#f7fbf8 0,#f1f7f3 44%,#edf4f0 100%)!important;
+  color:var(--v16-ink)!important;
+}
+
+/* Cabeçalho */
+body.mockupV2 .f2eShellTop{
+  min-height:126px!important;
+  padding:calc(15px + env(safe-area-inset-top)) 15px 17px!important;
+  background:
+    radial-gradient(circle at 88% 30%,rgba(75,157,96,.16),transparent 125px),
+    linear-gradient(135deg,#fbfdf9 0,#f1f9f3 58%,#e9f5ec 100%)!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.mockupV2 .f2eShellTop:after{
+  right:-48px!important;
+  bottom:-78px!important;
+  width:240px!important;
+  height:190px!important;
+  opacity:.22!important;
+}
+body.mockupV2 .f2eShellBrand{padding-top:2px!important}
+body.mockupV2 .f2eShellBrand small{
+  font-size:.62rem!important;
+  letter-spacing:.19em!important;
+  color:var(--v16-brand)!important;
+}
+body.mockupV2 .f2eShellBrand h1{
+  margin-top:5px!important;
+  font-size:1.72rem!important;
+  letter-spacing:-.055em!important;
+  color:var(--v16-ink)!important;
+}
+body.mockupV2 .f2eHeaderSubtitle{
+  margin-top:7px!important;
+  max-width:285px!important;
+  font-size:.72rem!important;
+  line-height:1.38!important;
+  color:var(--v16-muted)!important;
+}
+/* O badge antigo era texto fixo e poderia sugerir um estado incorreto. */
+body.mockupV2 .f2eHeaderBadge{display:none!important}
+body.mockupV2 .f2eShellMenuBtn{
+  min-width:78px!important;
+  min-height:39px!important;
+  padding:7px 10px!important;
+  border:1px solid rgba(211,226,219,.98)!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.88)!important;
+  color:var(--v16-ink)!important;
+  box-shadow:0 6px 18px rgba(25,67,53,.06)!important;
+  font-size:.71rem!important;
+}
+
+/* Container */
+body.mockupV2 .wrap{
+  width:min(100%,690px)!important;
+  padding:8px 11px calc(116px + env(safe-area-inset-bottom))!important;
+}
+.smartIrrigationV7 .smartView.active{animation:v16In .18s ease-out}
+@keyframes v16In{from{opacity:.7;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* Home: hierarquia clara sem alterar o DOM */
+.smartIrrigationV7 #smartViewHome.active{
+  display:flex!important;
+  flex-direction:column;
+}
+.smartIrrigationV7 #smartOperatingCard{order:1}
+.smartIrrigationV7 #smartSafety{order:2}
+.smartIrrigationV7 #viveiroProfileCard{order:3}
+.smartIrrigationV7 #smartHealthStrip{order:4}
+.smartIrrigationV7 #smartViewHome .m2Footer{order:5}
+
+/* Estado principal */
+body.mockupV2 .smartOperatingCard{
+  margin-top:-13px!important;
+  padding:18px 16px 16px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(207,225,217,.95)!important;
+  background:linear-gradient(145deg,#fffefb 0,#f8fbf7 68%,#f0f8f2 100%)!important;
+  box-shadow:var(--v16-shadow-strong)!important;
+}
+body.mockupV2 .smartOperatingState{
+  grid-template-columns:48px 1fr!important;
+  gap:12px!important;
+}
+body.mockupV2 .smartOperatingState>i{
+  width:48px!important;
+  height:48px!important;
+  font-size:1.15rem!important;
+  background:#e5f5e9!important;
+  color:var(--v16-brand)!important;
+}
+body.mockupV2 .smartOperatingState small{
+  font-size:.55rem!important;
+  letter-spacing:.16em!important;
+}
+body.mockupV2 .smartOperatingState strong{
+  margin-top:3px!important;
+  font-size:1.12rem!important;
+}
+body.mockupV2 .smartOperatingState span{
+  margin-top:5px!important;
+  font-size:.7rem!important;
+  line-height:1.35!important;
+}
+body.mockupV2 .smartOperatingNext{
+  margin:11px 0 0 60px!important;
+  padding-top:9px!important;
+}
+body.mockupV2 .smartOperatingNext small{font-size:.58rem!important}
+body.mockupV2 .smartOperatingNext strong{font-size:.84rem!important}
+
+/* Dados ao vivo dentro do estado */
+body.mockupV2 .smartLiveQuality{
+  margin-top:12px!important;
+  padding-top:10px!important;
+  border-top:1px solid var(--v16-line)!important;
+  gap:6px!important;
+}
+body.mockupV2 .smartLiveQuality>span{
+  min-height:36px!important;
+  padding:7px 8px!important;
+  border-radius:11px!important;
+  background:rgba(255,255,255,.66)!important;
+}
+body.mockupV2 .smartLiveQuality small{font-size:.49rem!important}
+body.mockupV2 .smartLiveQuality b{font-size:.64rem!important}
+
+/* Precisão fica acessível, mas não compete com a operação */
+body.mockupV2 .smartOpsDetails{
+  margin-top:8px!important;
+  border-top:1px dashed var(--v16-line)!important;
+}
+body.mockupV2 .smartOpsDetails summary{
+  padding-top:8px!important;
+  font-size:.61rem!important;
+  color:var(--v16-muted)!important;
+}
+
+/* Parada de emergência: só aparece quando a própria lógica permite */
+.smartIrrigationV7 .smartSafety.show{margin:8px 0 0!important}
+.smartIrrigationV7 .smartSafety .emergency{
+  min-height:48px!important;
+  border-radius:15px!important;
+  font-size:.76rem!important;
+  letter-spacing:.03em!important;
+  box-shadow:0 9px 23px rgba(142,38,33,.16)!important;
+}
+
+/* Resumo do viveiro */
+body.mockupV2 .smartOverviewCard{
+  padding:15px!important;
+  border-radius:20px!important;
+  border:1px solid var(--v16-line)!important;
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:var(--v16-shadow)!important;
+}
+body.mockupV2 .smartOverviewHead{margin-bottom:10px!important}
+body.mockupV2 .smartOverviewHead h2{
+  font-size:1rem!important;
+  letter-spacing:-.025em!important;
+}
+body.mockupV2 .m2Realtime{
+  padding:5px 7px!important;
+  font-size:.48rem!important;
+}
+body.mockupV2 .smartOverviewGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+body.mockupV2 .smartOverviewGrid>div{
+  min-height:60px!important;
+  padding:9px 9px 9px 42px!important;
+  border-radius:13px!important;
+  border:1px solid #e3ede8!important;
+  background:#fbfdfc!important;
+}
+body.mockupV2 .smartOverviewGrid>div .m2Icon{
+  left:8px!important;
+  width:25px!important;
+  height:25px!important;
+  border-radius:8px!important;
+  font-size:.72rem!important;
+}
+body.mockupV2 .smartOverviewGrid small{font-size:.56rem!important}
+body.mockupV2 .smartOverviewGrid strong{font-size:.81rem!important}
+
+/* Condição, intensidade e motivo ficam secundários */
+body.mockupV2 .smartIntensity,
+body.mockupV2 .smartClimateLine{
+  border-radius:13px!important;
+  background:#f8fbf9!important;
+}
+body.mockupV2 .smartIntensity{padding:10px!important;margin-top:8px!important}
+body.mockupV2 .smartClimateLine{gap:7px!important;margin-top:7px!important}
+body.mockupV2 .smartClimateLine>span{padding:9px 10px!important}
+body.mockupV2 .smartOverviewReason{
+  margin:7px 0!important;
+  padding:9px 10px!important;
+  border-radius:12px!important;
+  font-size:.66rem!important;
+}
+body.mockupV2 .smartQuickMeta{padding-top:6px!important}
+body.mockupV2 .smartDecisionDetails{
+  margin-top:7px!important;
+  border-radius:12px!important;
+  background:#f9fbfa!important;
+}
+
+/* Saúde do sistema */
+body.mockupV2 .smartHealthStrip{
+  min-height:54px!important;
+  padding:9px 11px!important;
+  grid-template-columns:35px 1fr auto!important;
+  gap:9px!important;
+  border-radius:16px!important;
+  border:1px solid var(--v16-line)!important;
+  background:rgba(255,255,255,.92)!important;
+  box-shadow:0 8px 22px rgba(27,71,56,.05)!important;
+}
+body.mockupV2 .smartHealthStrip>i{
+  width:35px!important;
+  height:35px!important;
+  border-radius:11px!important;
+  font-size:.78rem!important;
+}
+body.mockupV2 .smartHealthStrip b{font-size:.77rem!important}
+body.mockupV2 .smartHealthStrip small{font-size:.61rem!important}
+
+/* Páginas internas */
+.smartIrrigationV7 .smartPageTitle{
+  padding:9px 3px 4px!important;
+}
+.smartIrrigationV7 .smartPageTitle .sectionKicker{
+  font-size:.56rem!important;
+  letter-spacing:.15em!important;
+}
+.smartIrrigationV7 .smartPageTitle h2{
+  margin-top:3px!important;
+  font-size:1.32rem!important;
+}
+.smartIrrigationV7 #smartViewProfile>.box,
+.smartIrrigationV7 #smartViewHistory>.box,
+.smartIrrigationV7 #smartViewSystem>.box{
+  border-radius:18px!important;
+  border-color:var(--v16-line)!important;
+  box-shadow:0 8px 24px rgba(21,61,49,.055)!important;
+}
+.smartIrrigationV7 #smartViewProfile .secondsBox,
+.smartIrrigationV7 #smartViewProfile .climateControl,
+.smartIrrigationV7 #smartViewProfile .weatherProtect,
+.smartIrrigationV7 #smartViewProfile #calendarBox{
+  padding:15px!important;
+}
+.smartIrrigationV7 .head h2,
+.smartIrrigationV7 .climateTop h2{font-size:1.02rem!important}
+
+/* Automação: botões e campos mais limpos */
+.smartIrrigationV7 .smartModeGroup{
+  padding:4px!important;
+  gap:4px!important;
+  border-radius:12px!important;
+}
+.smartIrrigationV7 .climateSwitch{
+  min-height:37px!important;
+  border-radius:9px!important;
+  font-size:.63rem!important;
+}
+.smartIrrigationV7 .secondsField,
+.smartIrrigationV7 .windowCard,
+.smartIrrigationV7 .protectCard{
+  border-color:#e0ece7!important;
+  background:#fbfdfc!important;
+}
+.smartIrrigationV7 .actionBar .btn,
+.smartIrrigationV7 #openProfileConfig{
+  min-height:42px!important;
+  border-radius:12px!important;
+}
+
+/* Histórico */
+.smartIrrigationV7 .smartDecisionItem,
+.smartIrrigationV7 .smartHistoryCard,
+.smartIrrigationV7 .scheduleRow{
+  border-color:#e0ebe6!important;
+  border-radius:13px!important;
+  background:#fbfdfc!important;
+}
+
+/* Sistema: detalhes técnicos continuam acessíveis, mas recolhidos */
+.smartIrrigationV7 .smartSystemDetails{
+  margin-top:9px!important;
+  border-top:1px solid var(--v16-line)!important;
+}
+.smartIrrigationV7 .smartSystemDetails summary{
+  padding-top:9px!important;
+  font-size:.65rem!important;
+  color:var(--v16-muted)!important;
+}
+
+/* Menu lateral: mantém apenas o que ainda faz sentido no Viveiro */
+.f2eShellOverlay[data-area="viveiro"] a[href="/irrigacao/central/"]{display:none!important}
+.f2eShellOverlay[data-area="viveiro"] .f2eShellContext{display:none!important}
+.f2eShellOverlay[data-area="viveiro"] .f2eShellPanel{
+  width:min(86vw,335px)!important;
+  background:#f7fbf8!important;
+}
+.f2eShellOverlay[data-area="viveiro"] .f2eShellItem{
+  min-height:51px!important;
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+
+/* Navegação inferior */
+@media(max-width:760px){
+  body.mockupV2 .f2eBottomNav{
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    padding:5px!important;
+    border-radius:18px!important;
+    background:rgba(252,253,252,.96)!important;
+    border:1px solid rgba(214,228,221,.98)!important;
+    box-shadow:0 12px 30px rgba(22,58,47,.15)!important;
+  }
+  body.mockupV2 .f2eBottomNav button{
+    min-height:49px!important;
+    border-radius:13px!important;
+    padding:5px 2px!important;
+  }
+  body.mockupV2 .f2eBottomNav button span{font-size:.94rem!important}
+  body.mockupV2 .f2eBottomNav button small{font-size:.57rem!important}
+  body.mockupV2 .f2eBottomNav button.active{
+    background:#e8f6ef!important;
+    color:var(--v16-brand)!important;
+  }
+}
+
+/* Telefones estreitos */
+@media(max-width:390px){
+  body.mockupV2 .f2eShellTop{min-height:119px!important;padding-left:13px!important;padding-right:13px!important}
+  body.mockupV2 .f2eShellBrand h1{font-size:1.58rem!important}
+  body.mockupV2 .f2eHeaderSubtitle{font-size:.68rem!important;max-width:235px!important}
+  body.mockupV2 .smartOperatingCard{padding:16px 14px 14px!important}
+  body.mockupV2 .smartOperatingNext{margin-left:0!important}
+  body.mockupV2 .smartOverviewGrid{grid-template-columns:1fr 1fr!important}
+}
+
+/* Respeitar acessibilidade */
+@media(prefers-reduced-motion:reduce){
+  .smartIrrigationV7 .smartView.active{animation:none!important}
+}

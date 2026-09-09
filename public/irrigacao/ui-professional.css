@@ -572,3 +572,24 @@ body.smartIrrigationV6{background:#f3f6f4}
     grid-template-columns:1fr!important
   }
 }
+
+
+.smartIrrigationV7 .smartQuickMeta{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--ui-line)
+}
+.smartIrrigationV7 .smartQuickMeta small{display:block;color:var(--ui-muted);font-size:.62rem}
+.smartIrrigationV7 .smartQuickMeta b{font-size:.78rem}
+.smartIrrigationV7 .smartQuickMeta .btn{min-height:38px!important;padding:8px 11px!important;font-size:.72rem!important}
+.smartIrrigationV7 .smartDecisionDetails{
+  margin-top:8px;border:1px solid var(--ui-line);border-radius:12px;background:#fbfdfc;padding:0 10px
+}
+.smartIrrigationV7 .smartDecisionDetails>summary{
+  list-style:none;cursor:pointer;padding:10px 0;font-size:.7rem;font-weight:850;color:var(--ui-muted)
+}
+.smartIrrigationV7 .smartDecisionDetails>summary::-webkit-details-marker{display:none}
+.smartIrrigationV7 .smartDecisionDetails>summary::after{content:'+';float:right}
+.smartIrrigationV7 .smartDecisionDetails[open]>summary::after{content:'−'}
+.smartIrrigationV7 .smartDecisionDetails .smartWhyCycle,
+.smartIrrigationV7 .smartDecisionDetails .smartDecisionSummary{margin-top:0;margin-bottom:7px}
+.smartIrrigationV7 .smartDecisionDetails .smartOverviewMeta{margin-top:0;padding-bottom:9px}

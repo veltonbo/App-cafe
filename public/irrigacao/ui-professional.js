@@ -471,6 +471,101 @@
     }
   }
 
+  function ensureSmartLifeRecovery(){
+    const box=byId('systemHealthBox');
+    if(!box)return null;
+    let btn=byId('smartLifeReconnect');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='smartLifeReconnect';
+      btn.className='btn soft smartLifeReconnect';
+      btn.textContent='Reconectar Smart Life';
+      box.appendChild(btn);
+    }
+
+    let dlg=byId('smartLifeReconnectDlg');
+    if(!dlg){
+      dlg=document.createElement('dialog');
+      dlg.id='smartLifeReconnectDlg';
+      dlg.className='smartLifeQrDialog';
+      dlg.innerHTML=
+        '<div class="modal">'+
+          '<div class="smartLifeQrHead"><div><span class="sectionKicker">CONEXÃO</span><h2>Reconectar Smart Life</h2></div><button type="button" id="smartLifeQrClose" class="smartQrClose">✕</button></div>'+
+          '<p class="note">Escaneie este QR no aplicativo Smart Life e autorize o acesso da Fazenda 2E.</p>'+
+          '<div class="smartLifeQrWrap"><img id="smartLifeQrImage" alt="QR de reconexão Smart Life"></div>'+
+          '<div id="smartLifeQrStatus" class="smartLifeQrStatus">Aguardando autorização.</div>'+
+          '<button type="button" id="smartLifeQrFinish" class="btn primary">Já autorizei no Smart Life</button>'+
+        '</div>';
+      document.body.appendChild(dlg);
+    }
+
+    const status=byId('smartLifeQrStatus');
+    const image=byId('smartLifeQrImage');
+    const finish=byId('smartLifeQrFinish');
+    const close=byId('smartLifeQrClose');
+
+    bind(close,'smartBound',()=>dlg.close());
+    bind(btn,'smartBound',async()=>{
+      btn.disabled=true;
+      btn.textContent='Gerando QR...';
+      try{
+        const result=await api('/api/smartlife/reauth',{
+          method:'POST',
+          body:JSON.stringify({action:'start'})
+        });
+        dlg.dataset.token=String(result.token||'');
+        image.src=String(result.qr_image||'');
+        status.textContent='QR pronto. Autorize no Smart Life e depois toque no botão abaixo.';
+        status.className='smartLifeQrStatus';
+        if(typeof dlg.showModal==='function')dlg.showModal();else dlg.setAttribute('open','');
+      }catch(error){
+        toast('Smart Life: '+String(error?.message||error));
+      }finally{
+        btn.disabled=false;
+        btn.textContent='Reconectar Smart Life';
+      }
+    });
+
+    bind(finish,'smartBound',async()=>{
+      const token=String(dlg.dataset.token||'');
+      if(!token)return;
+      finish.disabled=true;
+      finish.textContent='Confirmando...';
+      status.textContent='Verificando autorização e dispositivos...';
+      try{
+        const result=await api('/api/smartlife/reauth',{
+          method:'POST',
+          body:JSON.stringify({action:'finish',token})
+        });
+        if(!result.authorized){
+          status.textContent=result.error||'Ainda não autorizado. Escaneie o QR e tente novamente.';
+          status.className='smartLifeQrStatus warn';
+          return;
+        }
+        status.textContent='Smart Life reconectado com sucesso.';
+        status.className='smartLifeQrStatus ok';
+        data.lastError=null;
+        data.online=null;
+        save();
+        await Promise.allSettled([
+          typeof syncStatus==='function'?syncStatus(false):Promise.resolve(),
+          typeof syncWeatherProtection==='function'?syncWeatherProtection(true):Promise.resolve(),
+          typeof syncDashboard==='function'?syncDashboard(true):Promise.resolve()
+        ]);
+        setTimeout(()=>dlg.close(),900);
+        toast('Smart Life reconectado');
+      }catch(error){
+        status.textContent='Falha: '+String(error?.message||error);
+        status.className='smartLifeQrStatus bad';
+      }finally{
+        finish.disabled=false;
+        finish.textContent='Já autorizei no Smart Life';
+      }
+    });
+    return btn;
+  }
+
   function ensureAlertCenter(){
     const main=qs('main.wrap');
     if(!main)return null;
@@ -695,6 +790,7 @@
     ensureDailyCompare();
     ensureDecisionTimeline();
     ensureSystemSummary();
+    ensureSmartLifeRecovery();
     ensureAlertCenter();
     organizeViews();
 

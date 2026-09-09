@@ -362,6 +362,11 @@ if(!state.manualControlMap)state.manualControlMap={};
 if(!state.scheduleByController)state.scheduleByController={};
 if(!state.activeSessions)state.activeSessions={};
 if(!Array.isArray(state.history))state.history=[];
+state.history=state.history.filter(entry=>{
+  const type=String(entry?.type||'').toLowerCase();
+  const source=String(entry?.source||'').toLowerCase();
+  return !type.startsWith('viveiro_')&&!source.includes('viveiro');
+});
 if(!state.profiles)state.profiles={};
 if(!state.groups)state.groups={};
 if(!state.serverConfig)state.serverConfig={};

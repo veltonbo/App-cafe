@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
-    "start": "node server/continuous/server.js",
+    "start": "node server/continuous/start.js",
     "test": "node --test tests/*.test.js"
   },
   "devDependencies": {

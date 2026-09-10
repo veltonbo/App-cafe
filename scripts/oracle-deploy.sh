@@ -28,12 +28,9 @@ git fetch origin main
 git checkout main
 git pull --ff-only origin main
 
-say "Executando testes..."
-if [ -f package.json ]; then
-  npm test
-fi
-
-say "Construindo nova imagem..."
+say "Construindo e testando nova imagem..."
+# O Dockerfile já executa npm install, npm test e npm run build dentro do container.
+# Assim a VM Oracle não precisa ter Node.js/npm instalados no sistema hospedeiro.
 docker build -t "$IMAGE" -f "$DOCKERFILE" .
 
 cleanup_candidate(){

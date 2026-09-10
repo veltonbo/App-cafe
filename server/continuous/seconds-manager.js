@@ -1773,7 +1773,16 @@ export async function initSecondsManager(){
         status:String(state.operational_audit?.status||''),
         issues:(state.operational_audit?.issues||[]).map(x=>({code:x.code,level:x.level,message:x.message}))
       },
-      by_day:byDay
+      by_day:byDay,
+      reconciliation_events:rows
+        .filter(row=>String(row?.type||'')==='viveiro_accounting_reconciled')
+        .slice(0,10)
+        .map(row=>({
+          ts:Number(row.ts||0),
+          before:row.before||null,
+          expected:row.expected||null,
+          day_key:row.day_key||null
+        }))
     }));
   }catch(error){
     console.warn('Diagnóstico do histórico indisponível:',error?.message||error);

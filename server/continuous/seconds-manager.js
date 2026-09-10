@@ -279,9 +279,15 @@ async function runOperationalAudit({notify=false}={}){
 
   const previous=state.operational_audit||{};
   const previousCodes=new Set((previous.issues||[]).map(x=>String(x.code)));
+  const notifiedCodes=new Set((previous.notified_codes||[]).map(String));
   const currentCodes=new Set(issues.map(x=>String(x.code)));
-  const newIssues=issues.filter(x=>!previousCodes.has(String(x.code)));
+  const newIssues=issues.filter(x=>!notifiedCodes.has(String(x.code)));
   const cleared=[...previousCodes].filter(code=>!currentCodes.has(code));
+  const toNotify=notify?newIssues.slice(0,3):[];
+  const nextNotified=new Set(
+    [...notifiedCodes].filter(code=>currentCodes.has(code))
+  );
+  for(const issue of toNotify)nextNotified.add(String(issue.code));
   const severity=auditSeverity(issues);
 
   state={
@@ -291,6 +297,7 @@ async function runOperationalAudit({notify=false}={}){
       checked_at:now,
       issues,
       new_codes:newIssues.map(x=>x.code),
+      notified_codes:[...nextNotified],
       cleared_codes:cleared,
       message:severity==='ok'?'Auditoria operacional sem anomalias.':issues[0]?.message||'Auditoria encontrou uma anomalia.'
     }
@@ -298,7 +305,7 @@ async function runOperationalAudit({notify=false}={}){
   await persist().catch(()=>null);
 
   if(notify){
-    for(const issue of newIssues.slice(0,3)){
+    for(const issue of toNotify){
       await pushNotice(
         issue.level==='critical'?'Alerta crítico • Viveiro':'Atenção • Viveiro',
         issue.message,

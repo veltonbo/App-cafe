@@ -1106,10 +1106,12 @@ async function run(){
     ));
 
     let relayOnAt=0;
+    let pulseId='';
     try{
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
       const onResult=await setViveiroRelay(true,{attempts:5});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
+      pulseId='pulse-'+localDayKey(relayOnAt).replaceAll('-','')+'-'+relayOnAt+'-'+randomUUID().slice(0,8);
       if(previousOffConfirmedAt>0&&relayOnAt>previousOffConfirmedAt){
         addPrecisionSample('interval',Number(state.off_seconds||120)*1000,relayOnAt-previousOffConfirmedAt,relayOnAt);
       }
@@ -1123,6 +1125,7 @@ async function run(){
         last_confirmation_latency_ms:Number(onResult?.confirmation_latency_ms||0),
         last_confirmation_source:String(onResult?.confirmed_by||'unknown'),
         last_on_confirmed_at:relayOnAt,
+        current_pulse_id:pulseId,
         daily_pulses_started:Number(state.daily_pulses_started||0)+1,
         daily_last_pulse_at:relayOnAt,
         watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada fisicamente.'}
@@ -1178,6 +1181,7 @@ async function run(){
       phase:'on',
       relay_expected:true,
       pulse_started_at:relayOnAt||Date.now(),
+      current_pulse_id:pulseId,
       expected_off_at:(relayOnAt||Date.now())+maxOn*1000,
       first_pulse_window_at:Number(state.first_pulse_window_at||0)||(relayOnAt||Date.now()),
       ...(delayed&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)?{start_alert_window_at:windowStartAt}: {})
@@ -1186,7 +1190,8 @@ async function run(){
     if(delayed){
       await event('viveiro_start_delay','Alerta: o primeiro pulso iniciou com mais de 30 segundos de atraso.',{
         window_start_at:windowStartAt,
-        pulse_started_at:state.pulse_started_at
+        pulse_started_at:state.pulse_started_at,
+        pulse_id:pulseId
       });
       await pushNotice(
         'Irrigação iniciou com atraso',
@@ -1197,7 +1202,12 @@ async function run(){
         true
       );
     }
-    await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{duration_seconds:maxOn,first_of_window:firstPulseOfWindow});
+    await event('viveiro_pulse_start','Pulso de irrigação iniciado.',{
+      pulse_id:pulseId,
+      pulse_started_at:state.pulse_started_at,
+      duration_seconds:maxOn,
+      first_of_window:firstPulseOfWindow
+    });
     if(firstPulseOfWindow&&!delayed){
       await pushNotice(
         'Irrigação iniciada',
@@ -1257,9 +1267,39 @@ async function run(){
       };
     }
 
-    if(interrupted&&actualPulseSeconds>0){
-      await persist();
+    const pulseCompleted=
+      !interrupted&&
+      actualPulseSeconds>=Math.max(0,maxOn-0.75);
+    const finalInterrupted=!pulseCompleted;
+    ensureDailyCounters(physicalOnAt||physicalOffAt);
+
+    state={
+      ...state,
+      pulse_count:Number(state.pulse_count||0)+(pulseCompleted?1:0),
+      daily_pulses_completed:Number(state.daily_pulses_completed||0)+(pulseCompleted?1:0),
+      daily_pulses_interrupted:Number(state.daily_pulses_interrupted||0)+(finalInterrupted?1:0),
+      last_pulse_at:physicalOffAt,
+      current_pulse_id:null,
+      pulse_started_at:0,
+      expected_off_at:0
+    };
+    await persist();
+
+    if(pulseCompleted){
+      await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
+        pulse_id:pulseId,
+        pulse_started_at:physicalOnAt,
+        pulse_finished_at:physicalOffAt,
+        duration_seconds:maxOn,
+        actual_duration_seconds:Number(actualPulseSeconds.toFixed(3)),
+        timing_error_ms:Math.round((actualPulseSeconds-maxOn)*1000),
+        pulse_count:Number(state.pulse_count||0)
+      });
+    }else{
       await event('viveiro_pulse_interrupted','Pulso interrompido antes do tempo programado.',{
+        pulse_id:pulseId,
+        pulse_started_at:physicalOnAt,
+        pulse_finished_at:physicalOffAt,
         planned_duration_seconds:maxOn,
         actual_duration_seconds:Number(actualPulseSeconds.toFixed(3)),
         timing_error_ms:Math.round((actualPulseSeconds-maxOn)*1000),
@@ -1289,6 +1329,7 @@ async function run(){
       });
       ensureDailyCounters();
       const irrigatedSeconds=Number(state.daily_irrigated_seconds||0);
+      await reconcileDailyAccounting({notify:true}).catch(()=>null);
       await pushNotice(
         'Resumo do viveiro',
         'Horário encerrado • '+Number(state.daily_pulses_started||0)+' pulsos • '+Math.round(irrigatedSeconds/60)+' min irrigados.',
@@ -1297,30 +1338,20 @@ async function run(){
       continue;
     }
 
-    if(interrupted){
+    if(finalInterrupted){
       state={...state,relay_expected:false};
       await persist();
       await sleep(5000);
       continue;
     }
 
-    ensureDailyCounters(Number(state.last_off_confirmed_at||Date.now()));
     state={
       ...state,
       phase:'off',
       relay_expected:false,
-      pulse_count:Number(state.pulse_count||0)+1,
-      daily_pulses_completed:Number(state.daily_pulses_completed||0)+1,
-      last_pulse_at:Number(state.last_off_confirmed_at||Date.now()),
       expected_next_on_at:Number(state.last_off_confirmed_at||Date.now())+Number(state.off_seconds||120)*1000
     };
     await persist();
-    await event('viveiro_pulse_complete','Pulso de irrigação concluído.',{
-      duration_seconds:maxOn,
-      actual_duration_seconds:Number((actualPulseSeconds||maxOn).toFixed(3)),
-      timing_error_ms:Math.round(((actualPulseSeconds||maxOn)-maxOn)*1000),
-      pulse_count:Number(state.pulse_count||0)
-    });
 
     const offDeadline=Number(state.expected_next_on_at||0)
       ||(Date.now()+Math.max(1,Number(state.off_seconds||120))*1000);

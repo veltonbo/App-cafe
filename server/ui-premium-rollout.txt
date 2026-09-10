@@ -1,1 +1,1 @@
-Viveiro Clean UI preview — frontend consolidado em /irrigacao-next/ — 2026-09-09
+Viveiro Clean UI v1 — frontend consolidado ativo em /irrigacao/; camadas legadas desativadas — 2026-09-09

@@ -224,7 +224,7 @@ function renderAutomation(){
   app.autoMode=cc.automatic?'automatic':cc.observation?'observation':'off';
   qsa('#autoMode button').forEach(b=>b.classList.toggle('active',b.dataset.mode===app.autoMode));
   $('evaluationMinutes').value=Math.round(num(cc.evaluation_minutes,5));
-  $('maxAdjustPercent').value=Math.round(num(cc.max_adjust_percent,35));
+  $('maxAdjustPercent').value=Math.round(num(cc.max_adjust_percent,30));
   setBadge($('autoConfigState'),app.autoMode==='automatic'?'AUTOMÁTICO':app.autoMode==='observation'?'OBSERVANDO':'DESLIGADO',app.autoMode==='off'?'warn':'');
 
   $('rainEnabled').checked=wc.enabled!==false;
@@ -549,12 +549,12 @@ async function saveAutomatic(){
       automatic:mode==='automatic',
       observation:mode==='observation',
       enabled:mode!=='off',
-      trend_minutes:num(cc.trend_minutes,20),
+      trend_minutes:num(cc.trend_minutes,30),
       evaluation_minutes:num($('evaluationMinutes').value,5),
       max_adjust_percent:num($('maxAdjustPercent').value,35),
-      min_change_seconds:num(cc.min_change_seconds,1),
-      min_change_off_seconds:num(cc.min_change_off_seconds,10),
-      cooldown_minutes:num(cc.cooldown_minutes,15),
+      min_change_seconds:num(cc.min_change_seconds,3),
+      min_change_off_seconds:num(cc.min_change_off_seconds,6),
+      cooldown_minutes:num(cc.cooldown_minutes,30),
       normal_confirmations:num(cc.normal_confirmations,2),
       post_rain_hold_minutes:num(cc.post_rain_hold_minutes,30)
     })});

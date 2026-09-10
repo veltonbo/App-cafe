@@ -2,7 +2,7 @@ import { applyCors, authorize } from '../_tuya.js';
 import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
 import { decodeNormalTimer, encodeNormalTimerZone } from './_iic800.js';
 import { appendHistory, storeGet, storeSet } from '../irrigation/_store.js';
-import { CAFE_SCHEDULE_ROOT } from '../cafe/_state.js';
+import { CAFE_SCHEDULE_ROOT, getCafeScheduleCache } from '../cafe/_state.js';
 
 const CACHE_ROOT=CAFE_SCHEDULE_ROOT;
 
@@ -60,8 +60,7 @@ function sameConfig(channel,config){
     JSON.stringify(aTimes)===JSON.stringify(config.start_times||[]);
 }
 async function readCache(deviceId){
-  const raw=await storeGet(`${CACHE_ROOT}/${deviceId}`).catch(()=>null);
-  return raw&&typeof raw==='object'?raw:{};
+  return getCafeScheduleCache(deviceId);
 }
 async function mergePassive(deviceId,statusValue){
   const decoded=decodeNormalTimer(statusValue);

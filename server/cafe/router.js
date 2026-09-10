@@ -1,9 +1,7 @@
 import weatherStatus from '../api/weather/status.js';
 import irrigationHistory from '../api/irrigation/history.js';
 import irrigationConfig from '../api/irrigation/config.js';
-import irrigationLinkage from '../api/irrigation/linkage.js';
 import inkbirdControllers from '../api/inkbird/controllers.js';
-import inkbirdCommand from '../api/inkbird/command.js';
 import inkbirdGroup from '../api/inkbird/group.js';
 import inkbirdSchedule from '../api/inkbird/schedule.js';
 import inkbirdZone from '../api/inkbird/zone.js';
@@ -16,9 +14,7 @@ const ROUTES={
   'weather/status':weatherStatus,
   'irrigation/history':irrigationHistory,
   'irrigation/config':irrigationConfig,
-  'irrigation/linkage':irrigationLinkage,
   'inkbird/controllers':inkbirdControllers,
-  'inkbird/command':inkbirdCommand,
   'inkbird/group':inkbirdGroup,
   'inkbird/schedule':inkbirdSchedule,
   'inkbird/zone':inkbirdZone,

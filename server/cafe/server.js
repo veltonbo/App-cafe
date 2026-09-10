@@ -5,10 +5,21 @@ import path from 'node:path';
 import cafeRouter from './router.js';
 import { listInkbirdDevices } from '../api/inkbird/_device.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
+import { markCafeServerBoot, runCafeAudit } from './audit.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||8080));
 const ROOT=process.cwd();
 const CAFE_DIST=path.join(ROOT,'dist','irrigacao','inkbird');
+const CAFE_AUDIT_INTERVAL_MS=5*60*1000;
+let cafeAuditRunning=false;
+
+async function scheduledCafeAudit({notify=true}={}){
+  if(cafeAuditRunning)return;
+  cafeAuditRunning=true;
+  try{await runCafeAudit({notify})}
+  catch(error){console.warn('Café audit falhou:',error?.message||error)}
+  finally{cafeAuditRunning=false}
+}
 
 const MIME={
   '.html':'text/html; charset=utf-8',
@@ -157,6 +168,11 @@ server.headersTimeout=66000;
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Irrigação Café online na porta ${PORT}`);
+  markCafeServerBoot().catch(error=>console.warn('Registro de boot do Café falhou:',error?.message||error));
+  setTimeout(()=>scheduledCafeAudit({notify:false}),4000).unref?.();
+  const auditTimer=setInterval(()=>scheduledCafeAudit({notify:true}),CAFE_AUDIT_INTERVAL_MS);
+  auditTimer.unref?.();
+
   Promise.all([
     fsp.access(path.join(CAFE_DIST,'index.html')).then(()=>true).catch(()=>false),
     listInkbirdDevices().catch(error=>({error:error?.message||String(error)})),

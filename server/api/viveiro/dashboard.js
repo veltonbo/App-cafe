@@ -516,6 +516,63 @@ function summarize(history,seconds={},now=Date.now()){
   };
 }
 
+function overlayCurrentDayFromLive(summary,reports,seconds={},now=Date.now()){
+  const todayKey=localDateKey(now);
+  if(String(seconds?.daily_day_key||'')!==todayKey)return;
+  const completed=Math.max(0,Number(seconds?.daily_pulses_completed||0));
+  const interrupted=Math.max(0,Number(seconds?.daily_pulses_interrupted||0));
+  const confirmed=completed+interrupted;
+  const irrigated=Math.max(0,Number(seconds?.daily_irrigated_seconds||0));
+  const started=Math.max(0,Number(seconds?.daily_pulses_started||0));
+  const lastPulse=Number(seconds?.daily_last_pulse_at||seconds?.last_pulse_at||0);
+  const lastPulseToday=lastPulse&&localDateKey(lastPulse)===todayKey?lastPulse:null;
+
+  if(summary?.today){
+    summary.today.pulses=confirmed;
+    summary.today.completed_pulses=completed;
+    summary.today.interrupted_pulses=interrupted;
+    summary.today.irrigated_seconds=irrigated;
+    summary.today.last_pulse_at=lastPulseToday||summary.today.last_pulse_at||null;
+    summary.today.start_attempts=started;
+  }
+  const weekDay=summary?.week?.find(row=>row.key===todayKey);
+  if(weekDay){
+    weekDay.pulses=confirmed;
+    weekDay.completed_pulses=completed;
+    weekDay.interrupted_pulses=interrupted;
+    weekDay.irrigated_seconds=irrigated;
+    weekDay.start_attempts=started;
+  }
+  if(summary?.week_totals&&Array.isArray(summary.week)){
+    summary.week_totals.pulses=summary.week.reduce((sum,row)=>sum+Number(row.pulses||0),0);
+    summary.week_totals.irrigated_seconds=summary.week.reduce((sum,row)=>sum+Number(row.irrigated_seconds||0),0);
+    summary.week_totals.rain_pauses=summary.week.reduce((sum,row)=>sum+Number(row.rain_pauses||0),0);
+    summary.week_totals.errors=summary.week.reduce((sum,row)=>sum+Number(row.errors||0),0);
+  }
+
+  const trendDay=reports?.trend30?.find(row=>row.key===todayKey);
+  if(trendDay){
+    trendDay.pulses=confirmed;
+    trendDay.completed=completed;
+    trendDay.interrupted=interrupted;
+    trendDay.irrigated_seconds=irrigated;
+    trendDay.start_attempts=started;
+    trendDay.orphaned_starts=Math.max(0,started-confirmed);
+  }
+  if(reports?.today){
+    reports.today={
+      ...reports.today,
+      pulses:confirmed,
+      completed,
+      interrupted,
+      irrigated_seconds:irrigated,
+      start_attempts:started,
+      orphaned_starts:Math.max(0,started-confirmed)
+    };
+  }
+  if(Array.isArray(reports?.trend30))reports.trend7=reports.trend30.slice(-7);
+}
+
 export default async function handler(req,res){
   applyCors(req,res);
   if(req.method==='OPTIONS')return res.status(204).end();
@@ -646,6 +703,7 @@ export default async function handler(req,res){
         activeSeconds?.operational_audit||health?.audit||null,
         now
       );
+      overlayCurrentDayFromLive(summary,reports,activeSeconds,now);
       return res.status(200).json({
         ok:true,
         server:{online:true,at:now},

@@ -455,6 +455,64 @@ async function runOperationalAudit({notify=false}={}){
   return state.operational_audit;
 }
 
+async function recoverDailyCountersFromReconciliation(){
+  ensureDailyCounters();
+  const today=localDayKey();
+  const hasCurrentCounters=
+    Number(state.daily_pulses_started||0)>0||
+    Number(state.daily_pulses_completed||0)>0||
+    Number(state.daily_pulses_interrupted||0)>0||
+    Number(state.daily_irrigated_seconds||0)>0;
+  const lastPulse=Number(state.daily_last_pulse_at||state.last_pulse_at||0);
+  if(hasCurrentCounters||!lastPulse||localDayKey(lastPulse)!==today)return false;
+
+  try{
+    const rows=(await readRecentHistory({
+      sinceMs:Date.now()-36*60*60*1000,
+      limit:HISTORY_RECENT_LIMIT
+    })).filter(row=>
+      String(row?.type||'')==='viveiro_accounting_reconciled'&&
+      String(row?.day_key||'')===today&&
+      row?.before&&typeof row.before==='object'
+    ).sort((a,b)=>Number(a.ts||0)-Number(b.ts||0));
+
+    const first=rows[0];
+    const before=first?.before||null;
+    if(!before)return false;
+
+    const recovered={
+      started:Math.max(0,Number(before.started||0)),
+      completed:Math.max(0,Number(before.completed||0)),
+      interrupted:Math.max(0,Number(before.interrupted||0)),
+      irrigated:Math.max(0,Number(before.irrigated||0))
+    };
+    if(!recovered.started&&!recovered.completed&&!recovered.interrupted&&!recovered.irrigated)return false;
+
+    state={
+      ...state,
+      daily_day_key:today,
+      daily_pulses_started:recovered.started,
+      daily_pulses_completed:recovered.completed,
+      daily_pulses_interrupted:recovered.interrupted,
+      daily_irrigated_seconds:recovered.irrigated,
+      daily_last_pulse_at:lastPulse,
+      accounting_recovery:{
+        status:'recovered',
+        recovered_at:Date.now(),
+        source:'pre_reconciliation_snapshot',
+        source_event_at:Number(first.ts||0)||null,
+        values:recovered
+      }
+    };
+    await persist();
+    console.warn('Contadores do dia recuperados do snapshot anterior à reconciliação',{today,recovered});
+    return true;
+  }catch(error){
+    console.warn('Recuperação dos contadores do dia indisponível:',error?.message||error);
+    return false;
+  }
+}
+
 async function reconcileDailyAccounting({notify=false}={}){
   ensureDailyCounters();
   const before={
@@ -474,7 +532,7 @@ async function reconcileDailyAccounting({notify=false}={}){
         checked_at:Date.now(),
         day_key:localDayKey(),
         pending_history_events:pending,
-        message:'Reconciliação aguardando eventos pendentes do Firebase.'
+        message:'Conferência aguardando eventos pendentes do Firebase.'
       }
     };
     await persist().catch(()=>null);
@@ -490,7 +548,7 @@ async function reconcileDailyAccounting({notify=false}={}){
           status:'warming',
           checked_at:Date.now(),
           day_key:localDayKey(),
-          message:'Histórico temporal sendo preparado; contadores preservados sem correção.'
+          message:'Histórico temporal sendo preparado; contadores ao vivo preservados.'
         }
       };
       await persist().catch(()=>null);
@@ -516,49 +574,25 @@ async function reconcileDailyAccounting({notify=false}={}){
       before.interrupted!==expected.interrupted||
       Math.abs(before.irrigated-expected.irrigated)>0.25;
 
-    if(mismatch){
-      state={
-        ...state,
-        daily_pulses_started:expected.started,
-        daily_pulses_completed:expected.completed,
-        daily_pulses_interrupted:expected.interrupted,
-        daily_irrigated_seconds:expected.irrigated,
-        accounting_reconciliation:{
-          status:'corrected',
-          checked_at:Date.now(),
-          day_key:accounting.day_key,
-          before,
-          expected,
-          message:'Contadores diários reconciliados com o histórico confirmado.'
-        }
-      };
-      await persist();
-      console.warn('Contabilidade do Viveiro reconciliada',{before,expected});
-      await event('viveiro_accounting_reconciled','Contadores diários reconciliados com o histórico confirmado.',{
-        before,expected,day_key:accounting.day_key
-      });
-      if(notify){
-        await pushNotice(
-          'Contagem do Viveiro corrigida',
-          'O sistema encontrou uma diferença entre os contadores e o histórico e fez a correção automaticamente.',
-          'viveiro-accounting-reconciled-'+accounting.day_key,
-          'warning',
-          60,
-          true
-        );
+    // O estado ao vivo é a fonte primária do dia corrente. O histórico serve
+    // para conferência, mas nunca mais altera automaticamente esses contadores.
+    state={
+      ...state,
+      accounting_reconciliation:{
+        status:mismatch?'mismatch':'ok',
+        checked_at:Date.now(),
+        day_key:accounting.day_key,
+        live:before,
+        history:expected,
+        message:mismatch
+          ?'Histórico e contadores ao vivo divergem; os valores ao vivo foram preservados.'
+          :'Contadores ao vivo e histórico conferem.'
       }
-    }else{
-      state={
-        ...state,
-        accounting_reconciliation:{
-          status:'ok',
-          checked_at:Date.now(),
-          day_key:accounting.day_key,
-          expected,
-          message:'Contadores e histórico conferem.'
-        }
-      };
-      await persist();
+    };
+    await persist();
+
+    if(mismatch){
+      console.warn('Divergência contábil preservada sem alterar o estado ao vivo',{before,expected});
     }
     return state.accounting_reconciliation;
   }catch(error){
@@ -573,10 +607,11 @@ async function reconcileDailyAccounting({notify=false}={}){
       }
     };
     await persist().catch(()=>null);
-    console.error('Reconciliação contábil indisponível:',error?.message||error);
+    console.error('Conferência contábil indisponível:',error?.message||error);
     return state.accounting_reconciliation;
   }
 }
+
 async function maintenance(){
   try{
     const m=await storeGet(MAINTENANCE_PATH);
@@ -1727,6 +1762,7 @@ function ensureLoop(){
 
 export async function initSecondsManager(){
   await load();
+  await recoverDailyCountersFromReconciliation();
 
   await reconcileDailyAccounting({notify:false}).catch(error=>
     console.warn('Reconciliação inicial indisponível:',error?.message||error)

@@ -188,4 +188,18 @@ const server=http.createServer(async(req,res)=>{
 
 server.listen(PORT,'0.0.0.0',()=>{
   console.log('Painel Fazenda 2E online na porta '+PORT);
+  setTimeout(async()=>{
+    try{
+      const data=await overview();
+      console.log('Painel startup diagnostic',{
+        status:data.status,
+        viveiro_ok:data.sources?.viveiro_ok===true,
+        cafe_ok:data.sources?.cafe_ok===true,
+        climate_linked:data.climate?.linked===true,
+        alerts:Number(data.alerts?.total||0)
+      });
+    }catch(error){
+      console.warn('Painel startup diagnostic falhou:',error?.message||error);
+    }
+  },2500).unref?.();
 });

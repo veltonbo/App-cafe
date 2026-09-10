@@ -78,3 +78,46 @@ test('atividade por setor resume últimos sete dias',()=>{
   assert.equal(activity['iic-1'][3].starts_7d,1);
   assert.equal(activity['iic-1'][3].planned_minutes_7d,7);
 });
+
+
+test('auditoria do Café não acusa programação criada depois do horário previsto',()=>{
+  const now=Date.parse('2026-09-09T16:00:00Z');
+  const due=Date.parse('2026-09-09T14:00:00Z'); // 10:00 local
+  const out=evaluateCafeAudit({
+    controllers:[controller],
+    states:{'iic-1':{runtime:{active_mask:0,pending_mask:0}}},
+    activeSessions:{},
+    weather:{linked:true,checked_at:now,device:{online:true}},
+    history:[],
+    schedules:{'iic-1':{
+      1:{
+        enabled:true,start_times:['10:00'],days_mask:8,cycle_mode:0,duration_minutes:10,
+        updated_at:due+30*60000,pending_confirmation:false
+      }
+    }},
+    now
+  });
+  assert.equal(out.issues.some(x=>x.code==='schedule_missed_iic-1_1'),false);
+});
+
+test('auditoria do Café aceita execução automática observada como início válido',()=>{
+  const now=Date.parse('2026-09-09T16:00:00Z');
+  const out=evaluateCafeAudit({
+    controllers:[controller],
+    states:{'iic-1':{runtime:{active_mask:0,pending_mask:0}}},
+    activeSessions:{},
+    weather:{linked:true,checked_at:now,device:{online:true}},
+    history:[{
+      type:'auto_start',controller_id:'iic-1',controller_index:1,sector:1,zone:1,
+      session_id:'auto1',ts:Date.parse('2026-09-09T14:01:00Z')
+    }],
+    schedules:{'iic-1':{
+      1:{
+        enabled:true,start_times:['10:00'],days_mask:8,cycle_mode:0,duration_minutes:10,
+        updated_at:Date.parse('2026-09-09T13:00:00Z'),pending_confirmation:false
+      }
+    }},
+    now
+  });
+  assert.equal(out.issues.some(x=>x.code==='schedule_missed_iic-1_1'),false);
+});

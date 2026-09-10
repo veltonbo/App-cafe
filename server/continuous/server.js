@@ -120,9 +120,14 @@ async function serveStatic(req,res,url){
   }
 
   const ext=path.extname(file).toLowerCase();
+  const base=path.basename(file).toLowerCase();
   res.statusCode=200;
   res.setHeader('Content-Type',MIME[ext]||'application/octet-stream');
-  res.setHeader('Cache-Control',ext==='.html'?'no-cache':'public, max-age=3600');
+  res.setHeader('Cache-Control',
+    ext==='.html'||ext==='.webmanifest'||base==='sw.js'
+      ?'no-cache'
+      :'public, max-age=3600'
+  );
   fs.createReadStream(file)
     .on('error',()=>{if(!res.headersSent)res.statusCode=500;res.end('Erro ao ler arquivo.')})
     .pipe(res);

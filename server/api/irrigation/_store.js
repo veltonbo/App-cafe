@@ -7,6 +7,7 @@ const HISTORY_INDEX_META_PATH='IrrigacaoFazenda2E/historyByTimeMeta';
 const HISTORY_BACKFILL_PAGE_SIZE=250;
 const HISTORY_CACHE_FRESH_MS=10000;
 const HISTORY_CACHE_STALE_MS=5*60*1000;
+const HISTORY_CACHE_BUCKET_MS=60*1000;
 
 let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
@@ -218,20 +219,22 @@ function markRecentHistoryStale(){
 }
 
 export async function readRecentHistory({sinceMs=0,limit=60000}={}){
-  const start=Math.max(0,Math.round(Number(sinceMs)||0));
+  const requestedStart=Math.max(0,Math.round(Number(sinceMs)||0));
   const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000)));
-  const key=start+':'+safeLimit;
+  const cacheStart=Math.floor(requestedStart/HISTORY_CACHE_BUCKET_MS)*HISTORY_CACHE_BUCKET_MS;
+  const key=cacheStart+':'+safeLimit;
   const now=Date.now();
   const cached=recentHistoryCache.get(key);
+  const trim=rows=>(rows||[]).filter(row=>historyTimestamp(row)>=requestedStart);
 
-  if(cached?.rows&&now<Number(cached.freshUntil||0))return cached.rows;
+  if(cached?.rows&&now<Number(cached.freshUntil||0))return trim(cached.rows);
 
   if(cached?.rows&&now<Number(cached.staleUntil||0)){
-    refreshRecentHistory(key,start,safeLimit,cached).catch(()=>null);
-    return cached.rows;
+    refreshRecentHistory(key,cacheStart,safeLimit,cached).catch(()=>null);
+    return trim(cached.rows);
   }
 
-  return refreshRecentHistory(key,start,safeLimit,cached||{});
+  return trim(await refreshRecentHistory(key,cacheStart,safeLimit,cached||{}));
 }
 
 export async function historyIndexStatus(){

@@ -1761,7 +1761,13 @@ export async function initSecondsManager(){
         started:Number(state.daily_pulses_started||0),
         completed:Number(state.daily_pulses_completed||0),
         interrupted:Number(state.daily_pulses_interrupted||0),
-        irrigated_seconds:Number(state.daily_irrigated_seconds||0)
+        irrigated_seconds:Number(state.daily_irrigated_seconds||0),
+        last_pulse_at:Number(state.daily_last_pulse_at||state.last_pulse_at||0)||null,
+        last_on_confirmed_at:Number(state.last_on_confirmed_at||0)||null,
+        last_off_confirmed_at:Number(state.last_off_confirmed_at||0)||null,
+        configured_at:Number(state.configured_at||0)||null,
+        start_minutes:Number(state.start_minutes||0),
+        end_minutes:Number(state.end_minutes||0)
       },
       audit:{
         status:String(state.operational_audit?.status||''),

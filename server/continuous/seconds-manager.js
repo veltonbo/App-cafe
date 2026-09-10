@@ -1073,6 +1073,7 @@ async function weather(){
       rainMm:null,
       thresholdReached:false,
       protectionEnabled:false,
+      resumeDelayMinutes:Math.max(0,Number(cfg?.resumeDelayMinutes??state.resume_delay_minutes??0)),
       snapshot:null
     };
   }
@@ -1090,6 +1091,7 @@ async function weather(){
       rainMm,
       thresholdReached,
       protectionEnabled:true,
+      resumeDelayMinutes:Math.max(0,Number(cfg?.resumeDelayMinutes??state.resume_delay_minutes??0)),
       snapshot:w
     };
   }catch(error){
@@ -1355,7 +1357,9 @@ async function run(){
       continue;
     }
 
-    const holdMs=Math.max(0,Number(state.resume_delay_minutes||0))*60000;
+    // Usa a configuração de chuva atual, sem exigir rearmar o ciclo quando
+    // o usuário altera o tempo de retomada no aplicativo.
+    const holdMs=Math.max(0,Number(w.resumeDelayMinutes??state.resume_delay_minutes??0))*60000;
     const rainLast=Number(state.rain_last_at||0);
     if(rainLast&&Date.now()<rainLast+holdMs){
       await safeOff();

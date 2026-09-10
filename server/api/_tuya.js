@@ -6,8 +6,10 @@ const accessKey = (process.env.TUYA_ACCESS_ID || '').trim();
 const secretKey = (process.env.TUYA_ACCESS_SECRET || '').trim();
 const deviceId = (process.env.TUYA_DEVICE_ID || '').trim();
 const controlToken = (process.env.APP_CONTROL_TOKEN || '').trim();
+const firebaseApiKey=(process.env.FIREBASE_API_KEY||process.env.VITE_FIREBASE_API_KEY||'AIzaSyD773S1h91tovlKTPbaeAZbN2o1yxROcOc').trim();
 const SESSION_COOKIE='f2e_session';
 const SESSION_TTL_SECONDS=30*24*60*60;
+const APP_BEARER_PREFIX='f2e';
 let quotaBlockedUntil=0;
 let quotaMessage='IoT Core trial quota is exhausted. [28841004]';
 const TUYA_QUOTA_BACKOFF_MS=10*60*1000;
@@ -40,9 +42,28 @@ function validSession(req){
   if(!Number.isFinite(exp)||exp<=Date.now()||!sig)return false;
   return safeEqualText(sig,sessionSignature(expRaw));
 }
-function bearerMatches(req){
+function rawBearer(req){
   const auth=String(req.headers?.authorization||'');
-  return safeEqualText(auth,`Bearer ${controlToken}`);
+  return auth.startsWith('Bearer ')?auth.slice(7).trim():'';
+}
+function controlBearerMatches(req){
+  return safeEqualText(rawBearer(req),controlToken);
+}
+function appBearerSignature(exp,uidEncoded){
+  return createHmac('sha256',controlToken)
+    .update('f2e-app:'+String(exp)+':'+String(uidEncoded))
+    .digest('base64url');
+}
+function validAppBearerToken(token){
+  if(!controlToken||!token)return false;
+  const [prefix,expRaw,uidEncoded,sig]=String(token).split('.');
+  const exp=Number(expRaw);
+  if(prefix!==APP_BEARER_PREFIX||!Number.isFinite(exp)||exp<=Date.now()||!uidEncoded||!sig)return false;
+  return safeEqualText(sig,appBearerSignature(expRaw,uidEncoded));
+}
+function bearerMatches(req){
+  const token=rawBearer(req);
+  return safeEqualText(token,controlToken)||validAppBearerToken(token);
 }
 
 export function applyCors(req, res) {
@@ -69,11 +90,47 @@ export function authorizeControlToken(req,res){
     res.status(500).json({ok:false,error:'APP_CONTROL_TOKEN não configurado no servidor.'});
     return false;
   }
-  if(!bearerMatches(req)){
+  if(!controlBearerMatches(req)){
     res.status(401).json({ok:false,error:'Token de pareamento inválido.'});
     return false;
   }
   return true;
+}
+
+export async function verifyFirebaseIdToken(idToken){
+  const token=String(idToken||'').trim();
+  if(!token)throw new Error('Token do Firebase não informado.');
+  if(!firebaseApiKey)throw new Error('FIREBASE_API_KEY não configurada no servidor.');
+  const response=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+encodeURIComponent(firebaseApiKey),{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({idToken:token})
+  });
+  const body=await response.json().catch(()=>({}));
+  const user=body?.users?.[0];
+  if(!response.ok||!user?.localId){
+    const message=body?.error?.message||'Sessão do Firebase inválida.';
+    throw new Error(message);
+  }
+  return{
+    uid:String(user.localId),
+    email:String(user.email||''),
+    emailVerified:Boolean(user.emailVerified)
+  };
+}
+
+export function issueAppBearerSession(user){
+  if(!controlToken)throw new Error('APP_CONTROL_TOKEN não configurado no servidor.');
+  const uid=String(user?.uid||'').trim();
+  if(!uid)throw new Error('Usuário Firebase inválido.');
+  const exp=Date.now()+SESSION_TTL_SECONDS*1000;
+  const uidEncoded=Buffer.from(uid).toString('base64url');
+  const sig=appBearerSignature(String(exp),uidEncoded);
+  return{
+    token:[APP_BEARER_PREFIX,String(exp),uidEncoded,sig].join('.'),
+    expires_at:exp,
+    user:{uid,email:String(user?.email||'')}
+  };
 }
 
 export function issueControlSession(res){

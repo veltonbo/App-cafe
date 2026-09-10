@@ -1259,7 +1259,7 @@ async function run(){
       const actualMs=physicalOffAt-physicalOnAt;
       actualPulseSeconds=Math.max(0,actualMs/1000);
       addPrecisionSample('on',maxOn*1000,actualMs,physicalOffAt);
-      ensureDailyCounters(physicalOffAt);
+      ensureDailyCounters(physicalOnAt||physicalOffAt);
       state={
         ...state,
         daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0)+actualPulseSeconds,
@@ -1328,8 +1328,8 @@ async function run(){
         next_window_at:state.next_window_at
       });
       ensureDailyCounters();
-      const irrigatedSeconds=Number(state.daily_irrigated_seconds||0);
       await reconcileDailyAccounting({notify:true}).catch(()=>null);
+      const irrigatedSeconds=Number(state.daily_irrigated_seconds||0);
       await pushNotice(
         'Resumo do viveiro',
         'Horário encerrado • '+Number(state.daily_pulses_started||0)+' pulsos • '+Math.round(irrigatedSeconds/60)+' min irrigados.',

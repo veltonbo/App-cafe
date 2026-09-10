@@ -322,13 +322,10 @@ async function startViveiroWeatherWatch(){
       weatherWatchBusy=false;
     }
   };
-  const cfg=await getViveiroWeatherConfig().catch(()=>({checkMinutes:5}));
-  // Com Smart Life, uma atualização traz os dispositivos em conjunto. Mantemos
-  // a proteção nativa responsiva sem depender do antigo polling de vários minutos.
-  const configuredMs=Math.max(4000,Number(cfg.checkMinutes||5)*60000);
-  // A estação é atualizada no servidor a cada ~4 s. O app lê esse estado
-  // já consolidado e evita criar várias chamadas concorrentes ao Smart Life.
-  const intervalMs=Math.min(4000,configuredMs);
+  // A Weather2-2 é consolidada em tempo quase real. A antiga opção de
+  // "checagem em minutos" não controla mais este relógio: manter 4 s evita
+  // atraso na proteção e torna o comportamento da interface previsível.
+  const intervalMs=4000;
   weatherWatchTimer=setInterval(tick,intervalMs);
   weatherWatchTimer.unref();
   setTimeout(tick,5000).unref();

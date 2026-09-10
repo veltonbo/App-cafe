@@ -1,1 +1,1 @@
-Viveiro Reports v1.1 — relatório 30 dias otimizado em passagem única, incidentes e status do dia — 2026-09-09
+Viveiro Timing v2 — precisão do relógio separada da latência Smart Life, alerta corrigido — 2026-09-09

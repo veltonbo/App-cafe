@@ -1,1971 +1,231 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b6b52">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Viveiro">
-<link rel="manifest" href="/irrigacao/manifest.webmanifest">
-<link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/irrigacao/icon.svg">
-<title>Fazenda 2E • Irrigação do Viveiro</title>
-<style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17372e;background:#f3f7f4;--g:#0b6b52;--gs:#e5f4ef;--r:#c7433b;--rs:#fdebea;--m:#6f7f79;--l:#dbe7e2}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#e9f7f2,#f3f7f4 34rem)}button,input{font:inherit}
-.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;background:#f3f7f4ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--l)}
-h1{font-size:1.2rem;margin:2px 0}.ey{font-size:.7rem;font-weight:850;letter-spacing:.12em;color:var(--g)}.pill{border:1px solid var(--l);background:#fff;border-radius:99px;padding:10px 14px;font-weight:850;box-shadow:0 8px 22px #17372e0c}
-.wrap{max-width:980px;margin:auto;padding:18px 14px 110px}.hero{background:linear-gradient(135deg,#0a5a49,#13806a);color:#fff;border-radius:28px;padding:24px;box-shadow:0 22px 46px #0b6b5238;border:1px solid #ffffff20}
-.heroTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.hero h2{margin:6px 0 2px;font-size:1.55rem}.heroCountdown{margin-top:12px;font-size:2rem;font-weight:950;letter-spacing:-.03em}.heroCountdown small{display:block;font-size:.72rem;font-weight:800;letter-spacing:.08em;color:#bcefe0;text-transform:uppercase;margin-bottom:2px}.emergency{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:20;border:0;border-radius:999px;background:#a61f1f;color:#fff;padding:14px 18px;font-weight:950;box-shadow:0 12px 28px #5b090944;cursor:pointer}.emergency:disabled{opacity:.45}.hero p{margin:0;color:#d8f3ea}.phase{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#ffffff20;font-weight:850}.phase.off{background:#ffffff18}.liveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.liveDot{width:9px;height:9px;border-radius:50%;background:#aab7b2}.liveDot.on{background:#7ff0c0;box-shadow:0 0 0 4px #7ff0c025}.mutedWhite{color:#d8f3ea;font-size:.8rem}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.stat,.box{background:#fff;border:1px solid var(--l);box-shadow:0 12px 30px #17372e12}.stat{border-radius:18px;padding:15px}.stat small{display:block;color:var(--m)}.stat strong{font-size:1.08rem}
-.box{border-radius:24px;padding:19px;margin-top:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{font-size:1.15rem;margin:3px 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:14px;padding:13px 15px;font-weight:850;cursor:pointer;flex:1;min-width:135px;transition:.18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5}.primary{background:var(--g);color:#fff}.danger{background:var(--rs);color:var(--r)}.soft{background:var(--gs);color:var(--g)}.statusLine{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf2ef}.statusLine:last-child{border-bottom:0}.statusLine span{color:var(--m)}.ok{color:var(--g)}.bad{color:var(--r)}.diag{margin-top:10px;border:1px solid var(--l);border-radius:14px;padding:12px;background:#fbfdfc}.diag pre{white-space:pre-wrap;word-break:break-word;font-size:.76rem;max-height:180px;overflow:auto}
-.scheduleGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.dayGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.dayGrid label{display:block}.dayGrid input{display:none}.dayGrid span{display:block;text-align:center;padding:9px 4px;border:1px solid var(--l);border-radius:10px;color:var(--m);font-weight:800;cursor:pointer}.dayGrid input:checked+span{background:var(--gs);color:var(--g);border-color:#92d2bf}.toggleLine{display:flex;align-items:center;gap:10px;font-weight:800}.toggleLine input{width:auto}.timeline{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.step{border-radius:14px;padding:14px;border:1px solid var(--l);background:#fbfdfc}.step b{display:block}.step small{color:var(--m)}.onStep{background:#edf9f5;border-color:#98d8c5}.offStep{background:#f6f8f7}
-.history{display:grid;gap:7px}.hist{border:1px solid var(--l);border-radius:12px;padding:10px}.hist small{display:block;color:var(--m)}.empty{color:var(--m);text-align:center;border:1px dashed var(--l);border-radius:12px;padding:15px}.note{font-size:.84rem;color:var(--m);line-height:1.45}.weatherProtect{background:linear-gradient(180deg,#fbfefd,#f5fbf8);border-color:#bfe1d6}.protectGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.protectCard{border:1px solid var(--l);border-radius:14px;padding:12px;background:#fff}.protectCard small{display:block;color:var(--m);margin-bottom:4px}.protectCard strong{font-size:.93rem}.protectConfig{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;margin-top:12px}.protectFlag{display:flex;gap:8px;align-items:center;padding:11px 12px;border-radius:12px;background:var(--gs);color:var(--g);font-weight:850}.protectFlag.blocked{background:var(--rs);color:var(--r)}.secondsBox{background:linear-gradient(180deg,#fff,#f6fbf9);border-color:#b9ddcf}.secondsHero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.secondsField{border:1px solid var(--l);border-radius:14px;padding:12px;background:#fff}.secondsField small{display:block;color:var(--m);margin-bottom:5px}.secondsField input{font-size:1.15rem;font-weight:900;text-align:center}.secondsStatus{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border-radius:12px;background:#f1f6f4;margin-top:10px}.secondsStatus.on{background:var(--gs);color:var(--g)}.secondsLiveGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.secondsMetric{border:1px solid var(--l);border-radius:14px;padding:12px;background:#fff}.secondsMetric small{display:block;color:var(--m);margin-bottom:4px}.secondsMetric strong{font-size:.95rem}.secondsMetric .big{font-size:1.18rem;color:var(--g)}.assistBox{margin-top:12px;padding:13px;border:1px solid #d9e6e1;border-radius:14px;background:#fffaf0}.assistBox b{display:block;margin-bottom:5px;color:#79530e}.assistBox ol{margin:7px 0 0;padding-left:20px;color:var(--m);font-size:.82rem;line-height:1.5}.assistBox .verified{color:var(--g);font-weight:850}
-dialog{border:0;padding:0;border-radius:20px;width:min(92vw,460px)}dialog::backdrop{background:#092a225c}.modal{padding:20px;display:grid;gap:12px}.modal h2{margin:0}label{display:grid;gap:6px;font-size:.85rem;font-weight:750}input{width:100%;border:1px solid var(--l);border-radius:11px;padding:11px;background:#fff}
-.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,100px);background:#17372e;color:#fff;padding:11px 15px;border-radius:12px;transition:.25s;z-index:10}.toast.show{transform:translate(-50%,0)}
-.bottomNav{display:none}
-.sectionHint{display:none}
-@media(max-width:760px){
-  .bottomNav{display:grid;position:fixed;z-index:19;left:9px;right:9px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(3,1fr);gap:5px;padding:6px;background:#f8faf9f5;border:1px solid var(--l);border-radius:18px;box-shadow:0 12px 35px #17372e2b;backdrop-filter:blur(12px)}
-  .bottomNav a{padding:10px 4px;text-align:center;text-decoration:none;color:var(--m);font-size:.71rem;font-weight:850;border-radius:11px}
-  .bottomNav a.active{background:var(--g);color:#fff}
-  .emergency{bottom:calc(78px + env(safe-area-inset-bottom))}
-  .wrap{padding-bottom:150px}
-  .top a.pill{display:none}
-}
-.advancedBox{background:#fbfdfc;box-shadow:none;border-style:dashed}
-.advancedBox .head h2{color:#52665f}
-
-@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.secondsLiveGrid{grid-template-columns:1fr 1fr}.secondsLiveGrid .secondsMetric:last-child{grid-column:1/-1}.grid .stat:last-child{grid-column:auto}.heroTop{flex-direction:column}.timeline{grid-template-columns:1fr}.scheduleGrid{grid-template-columns:1fr}.dayGrid{grid-template-columns:repeat(4,1fr)}.row{flex-direction:column}.btn{width:100%}.protectGrid{grid-template-columns:1fr 1fr}.protectConfig{grid-template-columns:1fr}.secondsHero{grid-template-columns:1fr 1fr}}
-
-/* Fazenda 2E • UI profissional v3 */
-:root{
-  --bg:#f4f7f5;--card:#ffffff;--ink:#18352d;--muted:#71817b;
-  --line:#e2ebe7;--brand:#0b6b52;--brand2:#0f8064;--brandSoft:#eaf6f1;
-  --warn:#a56512;--warnSoft:#fff6e7;--danger:#b93b34;--dangerSoft:#fff0ef;
-  --shadow:0 12px 32px rgba(21,55,46,.08);--shadowStrong:0 20px 48px rgba(11,107,82,.18)
-}
-body{background:linear-gradient(180deg,#edf6f2 0,#f6f8f7 420px,#f4f7f5 100%);color:var(--ink)}
-.top{background:rgba(248,251,249,.9);border-bottom:1px solid rgba(219,231,226,.9);box-shadow:0 4px 20px rgba(23,55,46,.04)}
-.top h1{font-size:1.08rem;letter-spacing:-.01em}.top .ey{font-size:.64rem}
-.wrap{max-width:920px;padding-top:14px}
-.hero{border-radius:26px;padding:22px;background:linear-gradient(135deg,#075d49 0%,#0d765d 55%,#139275 100%);box-shadow:var(--shadowStrong)}
-.hero h2{font-size:1.45rem;letter-spacing:-.025em}.hero p{font-size:.9rem;max-width:620px}
-.grid{margin-top:10px}.stat{border-radius:16px;padding:13px 14px;box-shadow:none}.stat small{font-size:.74rem}.stat strong{font-size:1rem}
-.box{border-radius:22px;padding:18px;border-color:var(--line);box-shadow:var(--shadow)}
-.box .head h2{letter-spacing:-.015em}
-.secondsBox{background:#fff;border:1px solid #cfe4dc}
-.sectionKicker{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);font-weight:900;margin-bottom:4px}
-.configGroup{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fbfdfc}
-.configGroupTitle{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
-.configGroupTitle b{font-size:.92rem}.configGroupTitle span{font-size:.75rem;color:var(--muted)}
-.secondsHero{gap:9px;margin:0}
-.secondsField{border-radius:13px;padding:11px;border-color:var(--line);background:#fff}
-.secondsField small{font-size:.72rem}.secondsField input{border:0;background:transparent;padding:4px 0;font-size:1.12rem;color:var(--ink)}
-.secondsField input:focus{outline:none}
-.secondsField:focus-within{border-color:#8bcbb6;box-shadow:0 0 0 3px #0b6b5212}
-.presetRow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.presetRow .btn{flex:0 0 auto;min-width:0;padding:9px 12px;border-radius:999px;font-size:.78rem}
-.secondsStatus{border:1px solid var(--line);background:#f7faf8;border-radius:15px}
-.secondsStatus.on{border-color:#b9ddcf}
-.saveState{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:800;color:var(--muted);margin-top:10px}
-.saveDot{width:8px;height:8px;border-radius:50%;background:#9aa9a3}.saveState.dirty{color:var(--warn)}.saveState.dirty .saveDot{background:#e19a28}.saveState.saved{color:var(--brand)}.saveState.saved .saveDot{background:#31a77f}
-.actionBar{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;margin-top:14px}
-.actionBar .btn{min-width:0}
-.windowCard{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 12px;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fff}
-.windowCard small{display:block;color:var(--muted);font-size:.72rem}.windowCard strong{font-size:.9rem}
-.windowBadge{padding:7px 10px;border-radius:999px;font-size:.75rem;font-weight:900;background:var(--brandSoft);color:var(--brand);white-space:nowrap}
-.windowBadge.out{background:var(--warnSoft);color:var(--warn)}
-.secondsLiveGrid{gap:8px}.secondsMetric{border-radius:13px;padding:11px;box-shadow:none}
-.assistBox{background:#f8faf9;border-color:var(--line);color:var(--muted)}
-.weatherProtect{background:#fff;border-color:var(--line)}
-.protectFlag{border-radius:14px}
-.protectGrid{grid-template-columns:repeat(3,1fr)}
-.protectCard{border-radius:13px;box-shadow:none}
-.weatherAdvanced{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;padding:0 12px}
-.weatherAdvanced summary{cursor:pointer;padding:12px 0;font-weight:850;color:var(--ink)}
-.weatherAdvanced[open] summary{border-bottom:1px solid var(--line)}
-.weatherAdvanced .protectConfig{padding:12px 0;margin:0}
-.advancedBox{opacity:.96}
-#secondsSaveHint{margin-bottom:0}
-@media(max-width:760px){
-  .wrap{padding-left:10px;padding-right:10px}.hero{border-radius:22px;padding:19px}.box{padding:15px;border-radius:19px}
-  .grid{gap:7px}.stat{padding:11px}.stat strong{font-size:.9rem}
-  .secondsHero{grid-template-columns:1fr 1fr}.actionBar{grid-template-columns:1fr}.actionBar .btn{width:100%}
-  .protectGrid{grid-template-columns:1fr 1fr}.protectGrid .protectCard:last-child{grid-column:1/-1}
-  .windowCard{align-items:flex-start}.windowBadge{margin-top:2px}
-}
-
-
-/* Viveiro UX v4 */
-.daySelect{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
-.daySelect label{display:block}.daySelect input{display:none}
-.daySelect span{display:block;text-align:center;padding:9px 3px;border:1px solid var(--line);border-radius:10px;font-size:.74rem;font-weight:850;color:var(--muted);background:#fff;cursor:pointer}
-.daySelect input:checked+span{background:var(--brandSoft);color:var(--brand);border-color:#92d2bf}
-.todayGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.todayCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-.todayCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:4px}
-.todayCard strong{font-size:1rem}.todayCard.wide{grid-column:span 2}
-.cloudState{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:850;color:var(--muted)}
-.cloudState.ok{color:var(--brand)}.cloudState.bad{color:var(--danger)}
-.nextEventBox{margin-top:10px;padding:13px 14px;border:1px solid #cfe4dc;border-radius:15px;background:linear-gradient(180deg,#fbfefd,#f5fbf8)}
-.nextEventBox small{display:block;color:var(--muted);font-size:.72rem}.nextEventBox strong{display:block;font-size:1.03rem;margin-top:3px}
-@media(max-width:760px){.daySelect{grid-template-columns:repeat(4,1fr)}.todayGrid{grid-template-columns:1fr 1fr}.todayCard.wide{grid-column:1/-1}}
-
-/* Viveiro Operations v5 */
-.opsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.opsCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-.opsCard small{display:block;color:var(--muted);font-size:.72rem;margin-bottom:4px}.opsCard strong{font-size:.94rem}
-.healthDot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#a8b4b0}
-.healthDot.ok{background:#2fa77d}.healthDot.bad{background:#cf4f47}.healthDot.warn{background:#dfa036}
-.alertBox{display:none;margin-top:10px;padding:11px 12px;border-radius:13px;background:var(--warnSoft);color:var(--warn);font-weight:800;font-size:.83rem}
-.alertBox.show{display:block}.alertBox.bad{background:var(--dangerSoft);color:var(--danger)}
-.maintenanceBar{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.maintenanceBar .btn{flex:0 0 auto;min-width:0;padding:9px 12px}
-.maintenanceActive{padding:11px 12px;border-radius:13px;background:var(--warnSoft);color:var(--warn);font-size:.82rem;font-weight:850;margin-top:10px}
-.weekGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
-.weekDay{border:1px solid var(--line);border-radius:12px;padding:9px 5px;text-align:center;background:#fff}
-.weekDay small{display:block;color:var(--muted);font-size:.66rem}.weekDay strong{font-size:.85rem}
-.eventList{display:grid;gap:7px;margin-top:10px}.eventRow{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:#fff}
-.eventIcon{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;background:var(--brandSoft)}
-.eventRow b{font-size:.82rem}.eventRow small{color:var(--muted);font-size:.7rem}
-.presetTools{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.presetTools select{flex:1;min-width:160px;border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;color:var(--ink);font:inherit}
-.shortcutRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.shortcutRow .btn{flex:0 0 auto;min-width:0;padding:8px 10px;font-size:.75rem}
-.configMeta{font-size:.72rem;color:var(--muted);margin-top:8px}
-.offlineBanner{display:none;position:sticky;top:74px;z-index:4;margin-bottom:9px;border:1px solid #f0d59d;border-radius:13px;background:#fff8e8;color:#7b5312;box-shadow:0 5px 16px rgba(122,83,18,.05);overflow:hidden}
-.offlineBanner.show{display:block}
-.offlineBanner details{margin:0;border:0;border-radius:0;background:transparent}
-.offlineBanner summary{list-style:none;display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;font-size:.78rem;line-height:1.35}
-.offlineBanner summary::-webkit-details-marker{display:none}
-.offlineBanner .offlineIcon{flex:0 0 auto;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:#ffe8b7;font-weight:950}
-.offlineBanner .offlineMain{min-width:0;flex:1}
-.offlineBanner .offlineMain b{display:block;color:#81520a;font-size:.8rem}
-.offlineBanner .offlineMain span{display:block;color:#98702f;font-weight:650;font-size:.7rem;margin-top:1px}
-.offlineBanner .offlineMore{font-size:.68rem;font-weight:900;color:#875b13;white-space:nowrap}
-.offlineBanner .offlineDetail{padding:0 12px 11px 45px;color:#7f6740;font-size:.7rem;line-height:1.45}
-@media(max-width:760px){.opsGrid{grid-template-columns:1fr 1fr}.weekGrid{grid-template-columns:repeat(4,1fr)}.eventRow{grid-template-columns:auto 1fr}.eventRow>small:last-child{grid-column:2}.offlineBanner{top:70px}}
-
-/* Viveiro Alerts v6 */
-.auditFilters{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.auditFilters .btn{flex:0 0 auto;min-width:0;padding:8px 10px;font-size:.74rem}
-.auditFilters .btn.active{background:var(--brand);color:#fff}
-.notifyBtn{min-width:auto!important;flex:0 0 auto!important}
-.notifyState{font-size:.72rem;color:var(--muted);margin-top:7px}
-.criticalEvent{border-color:#efb9b4!important;background:#fff7f6!important}
-
-/* Viveiro Intelligence v7 */
-.reportGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.reportCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
-.reportCard small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.reportCard strong{font-size:.98rem}
-.scheduleList{display:grid;gap:7px;margin-top:10px}.scheduleRow{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}.scheduleRow.active{border-color:#8dcdb7;background:#f1fbf7}.scheduleRow small{color:var(--muted)}
-.climateAdvice{padding:13px;border-radius:14px;background:var(--brandSoft);color:var(--ink);margin-top:10px}.climateAdvice.attention{background:var(--warnSoft)}
-.climateMetrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.climateMetrics span{padding:7px 9px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:.75rem;font-weight:800}
-.notifyHint{font-size:.72rem;color:var(--muted);margin-top:6px}
-@media(max-width:760px){.reportGrid{grid-template-columns:1fr 1fr}}
-
-/* Climate Auto v8 */
-.climateControl{border:1px solid #b9ddcf;background:linear-gradient(180deg,#fff,#f4fbf8)}
-.climateTop{display:flex;justify-content:space-between;gap:12px;align-items:center}
-.climateSwitch{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:900;padding:8px 11px;border-radius:999px;background:#f1f5f3;border:1px solid var(--line);cursor:pointer}
-.climateSwitch.auto{background:var(--brand);color:#fff;border-color:var(--brand)}
-.climateGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.climateCard{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fff}
-.climateCard small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:3px}.climateCard strong{font-size:.94rem}
-.climateReason{margin-top:10px;padding:12px;border-radius:13px;background:var(--brandSoft);line-height:1.45;font-size:.82rem}
-.climatePending{display:none;margin-top:10px;padding:13px;border-radius:14px;background:var(--warnSoft);border:1px solid #eed3a3}
-.climatePending.show{display:block}.climatePending b{display:block;margin-bottom:5px}
-.climatePending .row{margin-top:10px}
-.pulseBox{background:#fbfdfc}.pulseMiniGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.pulseMini{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fff}.pulseMini small{display:block;color:var(--muted);font-size:.7rem}.pulseMini strong{font-size:1rem}
-@media(max-width:760px){.climateGrid{grid-template-columns:1fr 1fr}.pulseMiniGrid{grid-template-columns:1fr 1fr}.pulseMini:last-child{grid-column:1/-1}}
-</style>
-<link rel="stylesheet" href="/irrigacao/ui-shell.css?v=20260909-4">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7faf8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Viveiro">
+  <title>Fazenda 2E • Viveiro</title>
+  <link rel="manifest" href="/irrigacao/manifest.webmanifest">
+  <link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/irrigacao/icon.svg">
+  <link rel="stylesheet" href="/irrigacao/app.css?v=20260909-1">
 </head>
 <body>
-<header class="top"><div><div class="ey">FAZENDA 2E</div><h1>Irrigação do Viveiro</h1></div><div style="display:flex;gap:8px;align-items:center"><button id="conn" class="pill">● Não conectado</button></div></header>
-<main class="wrap"><div id="offlineBanner" class="offlineBanner"></div>
-<section class="hero"><div class="heroTop"><div><div class="ey" style="color:#bcefe0">VIVEIRO • CONTROLE AUTOMÁTICO</div><h2 id="heroTitle">Ciclo nativo do EKAZA</h2><p id="heroSub">O próprio dispositivo mantém 1 min ligado / 2 min desligado.</p><span id="phase" class="phase off">AGUARDANDO ESTADO</span><div id="heroCountdown" class="heroCountdown"><small>Próxima mudança</small><span>—</span></div><div class="liveRow"><span id="liveDot" class="liveDot"></span><span id="liveText" class="mutedWhite">Aguardando conexão</span><span class="mutedWhite">•</span><span id="lastSync" class="mutedWhite">Nunca atualizado</span></div></div></div></section>
-<section class="grid"><div class="stat"><small>Ciclo configurado</small><strong id="cycleCard">1 min / 2 min</strong></div><div class="stat"><small>Saída EKAZA</small><strong id="relayState">Desconhecida</strong></div><div class="stat"><small>Conexão Smart Life</small><strong id="connectionState">Não conectada</strong></div><div class="stat"><small>Atualização</small><strong id="autoState">Automática • 10 s</strong></div></section>
+  <div id="offlineBar" class="offlineBar" hidden>Sem conexão com o servidor. Os últimos dados continuam visíveis.</div>
 
-<section class="box">
-<div class="head"><h2>Programação da irrigação</h2><button id="editCycle" class="btn primary" style="min-width:auto;flex:0">Ajustar irrigação</button></div>
-<div class="statusLine"><span>Status do ciclo</span><strong id="cycleEnabledState">Aguardando</strong></div>
-<div class="statusLine"><span>Tempo ligado</span><strong id="cycleOnState">—</strong></div>
-<div class="statusLine"><span>Tempo desligado</span><strong id="cycleOffState">—</strong></div>
-<div class="statusLine"><span>Janela diária</span><strong id="cycleWindowState">—</strong></div>
-<div class="statusLine"><span>Dias</span><strong id="cycleDaysState">—</strong></div>
-<div class="row" style="margin-top:12px"><button id="toggleCycle" class="btn soft">Pausar / retomar ciclo</button></div>
-<p class="note" style="margin-top:10px">Os ajustes são gravados no <b>cycle_time</b> do próprio EKAZA. O ciclo continua funcionando mesmo com o celular fechado.</p>
-</section>
+  <header class="appHeader">
+    <div>
+      <small>FAZENDA 2E</small>
+      <h1>Viveiro</h1>
+    </div>
+    <button id="refreshBtn" class="headerState" type="button">
+      <i id="headerDot"></i><span id="headerStateText">Conectando</span>
+    </button>
+  </header>
 
-<section class="box secondsBox">
-<div class="head">
-  <div><span class="sectionKicker">Automação principal</span><h2>Ciclo rápido</h2></div>
-  <span id="secondsBadge" class="phase off" style="margin:0;color:var(--g);background:var(--gs)">DESATIVADO</span>
-</div>
-<p class="note" style="margin-top:0">Defina uma vez o horário e os tempos. O servidor controla o viveiro automaticamente dentro dessa janela.</p>
+  <main class="appMain">
+    <section id="view-summary" class="view active">
+      <article id="operationCard" class="operationCard tone-neutral">
+        <div class="operationIcon"><span id="operationIcon">◷</span></div>
+        <div class="operationBody">
+          <small>ESTADO AGORA</small>
+          <h2 id="operationLabel">CARREGANDO</h2>
+          <p id="operationDetail">Aguardando dados do viveiro.</p>
+        </div>
+        <div class="nextEvent">
+          <small id="nextEventLabel">Próximo evento</small>
+          <strong id="nextEventValue">—</strong>
+        </div>
+        <div class="freshness">
+          <span><i id="deviceDot"></i>EKAZA <b id="deviceAge">—</b></span>
+          <span><i id="weatherDot"></i>CLIMA <b id="weatherAge">—</b></span>
+          <span><i id="liveDot"></i>TEMPO REAL <b id="liveAge">—</b></span>
+        </div>
+      </article>
 
-<div class="configGroup">
-  <div class="configGroupTitle"><b>Tempos do ciclo</b><span>em segundos</span></div>
-  <div class="secondsHero">
-    <label class="secondsField"><small>Ligado</small><input id="secondsOn" type="number" min="1" max="300" step="1" value="30"><small>segundos</small></label>
-    <label class="secondsField"><small>Desligado</small><input id="secondsOff" type="number" min="1" max="900" step="1" value="120"><small>segundos</small></label>
-  </div>
-  <div class="presetRow">
-    <button type="button" class="btn soft secondsPreset" data-on="15" data-off="45">15 / 45</button>
-    <button type="button" class="btn soft secondsPreset" data-on="30" data-off="120">30 / 120</button>
-    <button type="button" class="btn soft secondsPreset" data-on="60" data-off="120">60 / 120</button>
-  </div>
-  <div class="presetTools">
-    <select id="fastPresetSelect"><option value="">Perfis salvos</option></select>
-    <input id="fastPresetName" type="text" maxlength="30" placeholder="Nome do perfil" style="flex:1;min-width:130px;border:1px solid var(--line);border-radius:11px;padding:10px">
-    <button type="button" id="saveFastPreset" class="btn soft" style="flex:0 0 auto;min-width:0">Salvar perfil</button>
-  </div>
-</div>
+      <button id="emergencyBtn" class="emergencyBtn" type="button">■ PARAR IRRIGAÇÃO AGORA</button>
 
-<div class="configGroup">
-  <div class="configGroupTitle"><b>Horário de funcionamento</b><span>todos os dias</span></div>
-  <div class="secondsHero">
-    <label class="secondsField"><small>Início</small><input id="secondsStart" type="time" value="06:00"></label>
-    <label class="secondsField"><small>Final</small><input id="secondsEnd" type="time" value="18:00"></label>
-  </div>
-  <div class="shortcutRow">
-    <button type="button" class="btn soft dayShortcut" data-mask="127">Todos os dias</button>
-    <button type="button" class="btn soft dayShortcut" data-mask="62">Seg–Sex</button>
-    <button type="button" class="btn soft dayShortcut" data-mask="65">Fim de semana</button>
-  </div>
-  <div class="daySelect" id="secondsDays">
-    <label><input type="checkbox" value="1" checked><span>Dom</span></label>
-    <label><input type="checkbox" value="2" checked><span>Seg</span></label>
-    <label><input type="checkbox" value="4" checked><span>Ter</span></label>
-    <label><input type="checkbox" value="8" checked><span>Qua</span></label>
-    <label><input type="checkbox" value="16" checked><span>Qui</span></label>
-    <label><input type="checkbox" value="32" checked><span>Sex</span></label>
-    <label><input type="checkbox" value="64" checked><span>Sáb</span></label>
-  </div>
-  <div class="windowCard">
-    <div><small>Janela salva</small><strong id="windowText">06:00 às 18:00</strong></div>
-    <span id="windowBadge" class="windowBadge">Dentro do horário</span>
-  </div>
-</div>
+      <div class="sectionHead">
+        <div><small>AMBIENTE</small><h2>Condição do viveiro</h2></div>
+        <span id="climateBadge" class="badge">—</span>
+      </div>
+      <div class="metricGrid">
+        <article class="metric"><small>Temperatura</small><strong id="temperature">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>Umidade</small><strong id="humidity">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>VPD</small><strong id="vpd">—</strong><span id="vpdHint">Déficit de pressão</span></article>
+        <article class="metric"><small>Chuva</small><strong id="rain">—</strong><span id="rainHint">Proteção automática</span></article>
+      </div>
 
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px">
-  <div id="secondsSaveState" class="saveState saved" style="margin-top:0"><span class="saveDot"></span><span>Configuração salva</span></div>
-  <span id="secondsCloudState" class="cloudState">☁ sincronizando</span>
-</div>
-<div id="secondsStatus" class="secondsStatus"><span>Configuração salva</span><strong>30 s / 120 s • 06:00–18:00</strong></div>
-<div id="fastValidation" class="alertBox"></div>
-<div id="fastConfigMeta" class="configMeta">Aguardando sincronização da configuração.</div>
+      <article class="automationSummary">
+        <div class="autoTop">
+          <div><small>AUTOMÁTICO 2.0</small><h3 id="autoTitle">Aguardando avaliação</h3></div>
+          <span id="autoBadge" class="badge">—</span>
+        </div>
+        <p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>
+        <div class="cycleRow">
+          <div><small>Ciclo-base</small><strong id="baseCycle">—</strong></div>
+          <span>→</span>
+          <div><small>Ciclo atual</small><strong id="currentCycle">—</strong></div>
+          <div class="intensity"><small>Intensidade</small><strong id="intensity">—</strong></div>
+        </div>
+      </article>
 
-<div class="secondsLiveGrid">
-  <div class="secondsMetric"><small>Fase atual</small><strong id="secondsPhase">Desativado</strong></div>
-  <div class="secondsMetric"><small>Próxima mudança</small><strong id="secondsNext" class="big">—</strong></div>
-  <div class="secondsMetric"><small>Pulsos concluídos</small><strong id="secondsPulses">0</strong></div>
-</div>
+      <div class="sectionHead">
+        <div><small>HOJE</small><h2>Resumo da irrigação</h2></div>
+        <button class="textBtn" data-view="history" type="button">Ver histórico</button>
+      </div>
+      <div class="todayGrid">
+        <article><small>Pulsos</small><strong id="todayPulses">—</strong><span id="todayCompleted">— concluídos</span></article>
+        <article><small>Tempo irrigado</small><strong id="todayIrrigated">—</strong><span>tempo confirmado</span></article>
+        <article><small>Último pulso</small><strong id="todayLast">—</strong><span id="todayLastSub">—</span></article>
+        <article><small>Pausas por chuva</small><strong id="todayRainPauses">—</strong><span id="todayErrors">— falhas</span></article>
+      </div>
 
-<div class="actionBar">
-  <button id="saveSecondsConfig" class="btn soft">Salvar e armar</button>
-  <button id="enableSeconds" class="btn primary">Armar programação</button>
-  <button id="disableSeconds" class="btn danger">Parar ciclo</button>
-</div>
-<p id="secondsSaveHint" class="note" style="margin-top:10px">Ao salvar, a programação já fica armada. O ciclo inicia sozinho no horário configurado. Durante o funcionamento, os campos ficam protegidos contra alterações acidentais.</p>
+      <button id="healthCard" class="healthCard" data-view="system" type="button">
+        <i id="healthIcon">✓</i>
+        <span><small>SAÚDE DO SISTEMA</small><strong id="healthTitle">Verificando</strong><em id="healthDetail">Aguardando diagnóstico</em></span>
+        <b>›</b>
+      </button>
+    </section>
 
-<details class="assistBox">
-  <summary><b>Como funciona</b></summary>
-  <ol>
-    <li>Ao salvar, o ciclo fica armado e inicia sozinho no horário de início.</li><li>O ciclo só funciona entre o horário de início e o horário final.</li>
-    <li>Dentro da janela, alterna automaticamente entre ligado e desligado.</li>
-    <li>Se chover, a proteção climática pausa o viveiro.</li>
-    <li>Ao chegar no horário final, os pulsos param e a programação fica armada para o próximo dia selecionado.</li>
-  </ol>
-</details>
-</section>
+    <section id="view-automation" class="view">
+      <div class="pageTitle"><small>CONTROLE</small><h2>Automação</h2><p>Configuração do ciclo, horário, clima e chuva.</p></div>
 
-<section class="box" id="todayBox">
-  <div class="head"><div><span class="sectionKicker">Resumo</span><h2>Hoje</h2></div><span class="phase off" id="todayStatus">AGUARDANDO</span></div>
-  <div class="todayGrid">
-    <div class="todayCard"><small>Pulsos hoje</small><strong id="todayPulses">0</strong></div>
-    <div class="todayCard"><small>Tempo irrigado hoje</small><strong id="todayWaterTime">0 s</strong></div>
-    <div class="todayCard"><small>Última irrigação</small><strong id="todayLastPulse">—</strong></div>
-    <div class="todayCard"><small>Pausas por chuva</small><strong id="todayRainPauses">0</strong></div>
-  </div>
-  <div class="nextEventBox"><small>Próximo evento</small><strong id="nextEventText">Aguardando configuração</strong></div>
-</section>
+      <article class="panel">
+        <div class="panelHead"><div><small>PROGRAMAÇÃO</small><h3>Ciclo do viveiro</h3></div><span id="scheduleState" class="badge">—</span></div>
+        <div class="fieldGrid two">
+          <label><span>Ligado</span><div class="unitInput"><input id="onSeconds" type="number" min="1" max="300" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Intervalo</span><div class="unitInput"><input id="offSeconds" type="number" min="1" max="900" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Início</span><input id="startTime" type="time"></label>
+          <label><span>Fim</span><input id="endTime" type="time"></label>
+        </div>
+        <div class="fieldLabel">Dias ativos</div>
+        <div id="dayPicker" class="dayPicker"></div>
+        <div class="buttonRow">
+          <button id="saveScheduleBtn" class="primaryBtn" type="button">Salvar e armar</button>
+          <button id="disableScheduleBtn" class="secondaryBtn" type="button">Desarmar</button>
+        </div>
+      </article>
 
-<section class="box pulseBox" id="pulseActivityBox">
-  <div class="head"><div><span class="sectionKicker">Ciclo</span><h2>Atividade dos pulsos</h2></div><span class="phase off">SEM NOTIFICAÇÕES INDIVIDUAIS</span></div>
-  <div class="pulseMiniGrid">
-    <div class="pulseMini"><small>Pulsos hoje</small><strong id="pulseActivityCount">0</strong></div>
-    <div class="pulseMini"><small>Último pulso</small><strong id="pulseActivityLast">—</strong></div>
-    <div class="pulseMini"><small>Próximo pulso</small><strong id="pulseActivityNext">—</strong></div>
-  </div>
-  <p class="note">Os pulsos ficam concentrados aqui. As notificações são reservadas para início, chuva, falhas e alterações importantes.</p>
-</section>
+      <article class="panel">
+        <div class="panelHead"><div><small>INTELIGÊNCIA</small><h3>Automático 2.0</h3></div><span id="autoConfigState" class="badge">—</span></div>
+        <div class="segmented" id="autoMode">
+          <button data-mode="automatic" type="button">Automático</button>
+          <button data-mode="observation" type="button">Observar</button>
+          <button data-mode="off" type="button">Desligado</button>
+        </div>
+        <div class="fieldGrid two compactFields">
+          <label><span>Avaliar a cada</span><div class="unitInput"><input id="evaluationMinutes" type="number" min="5" max="60"><b>min</b></div></label>
+          <label><span>Ajuste máximo</span><div class="unitInput"><input id="maxAdjustPercent" type="number" min="5" max="80"><b>%</b></div></label>
+        </div>
+        <button id="saveAutoBtn" class="primaryBtn full" type="button">Salvar Automático 2.0</button>
+      </article>
 
-<section class="box" id="systemHealthBox">
-  <div class="head"><div><span class="sectionKicker">Confiabilidade</span><h2>Saúde do sistema</h2></div><span id="healthOverall" class="phase off">VERIFICANDO</span></div>
-  <div class="opsGrid">
-    <div class="opsCard"><small>Servidor Railway</small><strong id="healthServer"><span class="healthDot"></span>Aguardando</strong></div>
-    <div class="opsCard"><small>EKAZA / Tuya</small><strong id="healthTuya"><span class="healthDot"></span>Aguardando</strong></div>
-    <div class="opsCard"><small>Firebase</small><strong id="healthFirebase"><span class="healthDot"></span>Aguardando</strong></div>
-    <div class="opsCard"><small>Weather2-2</small><strong id="healthWeather"><span class="healthDot"></span>Aguardando</strong></div>
-  </div>
-  <div id="emergencyLatchBox" class="maintenanceActive" style="display:none;margin-top:10px">
-    <b>PARADA DE EMERGÊNCIA ATIVA</b>
-    <div style="margin-top:5px">A irrigação permanece bloqueada até liberação manual.</div>
-    <button type="button" id="clearEmergency" class="btn danger" style="margin-top:10px;width:100%">Liberar parada de emergência</button>
-  </div>
-  <div id="systemAlert" class="alertBox"></div>
-  <details class="diag" style="margin-top:10px"><summary>Diagnóstico técnico</summary><pre id="systemDiag">Aguardando dados...</pre></details>
-</section>
+      <article class="panel">
+        <div class="panelHead"><div><small>PROTEÇÃO</small><h3>Chuva e retomada</h3></div><span id="rainProtectionState" class="badge">—</span></div>
+        <label class="toggleRow"><span><b>Proteção por chuva</b><small>Impede a irrigação quando a Weather2-2 detecta chuva.</small></span><input id="rainEnabled" type="checkbox"></label>
+        <div class="fieldGrid two compactFields">
+          <label><span>Retomar após</span><div class="unitInput"><input id="resumeDelay" type="number" min="0" max="1440"><b>min</b></div></label>
+          <label><span>Checagem</span><div class="unitInput"><input id="weatherCheck" type="number" min="1" max="60"><b>min</b></div></label>
+        </div>
+        <button id="saveRainBtn" class="primaryBtn full" type="button">Salvar proteção</button>
+      </article>
+    </section>
 
-<section class="box" id="maintenanceBox">
-  <div class="head"><div><span class="sectionKicker">Operação</span><h2>Modo manutenção</h2></div></div>
-  <p class="note" style="margin-top:0">Suspende temporariamente a automação sem apagar a programação.</p>
-  <div id="maintenanceState" class="maintenanceActive" style="display:none"></div>
-  <div class="maintenanceBar">
-    <button type="button" class="btn soft maintenanceBtn" data-minutes="15">15 min</button>
-    <button type="button" class="btn soft maintenanceBtn" data-minutes="30">30 min</button>
-    <button type="button" class="btn soft maintenanceBtn" data-minutes="60">1 hora</button>
-    <button type="button" class="btn danger maintenanceBtn" data-minutes="0">Encerrar manutenção</button>
-  </div>
-</section>
+    <section id="view-history" class="view">
+      <div class="pageTitle"><small>ACOMPANHAMENTO</small><h2>Histórico</h2><p>Irrigação real, decisões automáticas e ocorrências.</p></div>
 
-<section class="box" id="dailyReportBox">
-  <div class="head"><div><span class="sectionKicker">Resumo automático</span><h2>Relatório de hoje</h2></div></div>
-  <div class="reportGrid">
-    <div class="reportCard"><small>Primeiro pulso</small><strong id="reportFirstPulse">—</strong></div>
-    <div class="reportCard"><small>Pulsos</small><strong id="reportPulses">0</strong></div>
-    <div class="reportCard"><small>Tempo irrigado</small><strong id="reportWater">0 s</strong></div>
-    <div class="reportCard"><small>Falhas / atrasos</small><strong id="reportErrors">0</strong></div>
-  </div>
-</section>
+      <div class="weekSummary">
+        <article><small>7 dias • pulsos</small><strong id="weekPulses">—</strong></article>
+        <article><small>7 dias • irrigado</small><strong id="weekIrrigated">—</strong></article>
+        <article><small>Pausas por chuva</small><strong id="weekRain">—</strong></article>
+        <article><small>Falhas</small><strong id="weekErrors">—</strong></article>
+      </div>
 
-<section class="box" id="calendarBox">
-  <div class="head"><div><span class="sectionKicker">Programação</span><h2>Próximas irrigações</h2></div></div>
-  <div id="upcomingSchedule" class="scheduleList"><div class="empty">Aguardando programação...</div></div>
-</section>
+      <article class="panel">
+        <div class="panelHead"><div><small>ÚLTIMOS 7 DIAS</small><h3>Irrigação por dia</h3></div></div>
+        <div id="weekChart" class="weekChart"></div>
+      </article>
 
-<section class="box climateControl" id="climateAdviceBox">
-  <div class="climateTop">
-    <div><span class="sectionKicker">Irrigação inteligente</span><h2 style="margin:3px 0">Automático 2.0</h2></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-      <button type="button" id="climateObserveBtn" class="climateSwitch">Observação</button>
-      <button type="button" id="climateAutoBtn" class="climateSwitch">Automático</button>
+      <article class="panel">
+        <div class="panelHead"><div><small>DECISÕES</small><h3>O que o sistema fez</h3></div></div>
+        <div id="decisionList" class="eventList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>EVENTOS</small><h3>Atividade recente</h3></div></div>
+        <div id="historyList" class="eventList"></div>
+      </article>
+    </section>
+
+    <section id="view-system" class="view">
+      <div class="pageTitle"><small>SEGURANÇA</small><h2>Sistema</h2><p>Conectividade, proteção, manutenção e diagnóstico.</p></div>
+
+      <div class="serviceGrid">
+        <article><i id="svcEkaza"></i><small>EKAZA</small><strong id="svcEkazaText">—</strong></article>
+        <article><i id="svcWeather"></i><small>Weather2-2</small><strong id="svcWeatherText">—</strong></article>
+        <article><i id="svcRealtime"></i><small>Tempo real</small><strong id="svcRealtimeText">—</strong></article>
+        <article><i id="svcServer"></i><small>Servidor</small><strong id="svcServerText">—</strong></article>
+      </div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>SEGURANÇA</small><h3>Estado de proteção</h3></div></div>
+        <div class="statusRows">
+          <div><span>Emergência</span><strong id="emergencyState">—</strong></div>
+          <div><span>Watchdog</span><strong id="watchdogState">—</strong></div>
+          <div><span>Última confirmação</span><strong id="confirmationState">—</strong></div>
+          <div><span>Precisão média</span><strong id="precisionState">—</strong></div>
+        </div>
+        <button id="clearEmergencyBtn" class="secondaryBtn full" type="button" hidden>Liberar parada de emergência</button>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>MANUTENÇÃO</small><h3>Suspender automação</h3></div><span id="maintenanceBadge" class="badge">—</span></div>
+        <p class="panelNote">Use durante serviços no viveiro. A saída fica protegida enquanto a manutenção estiver ativa.</p>
+        <div class="buttonRow three">
+          <button class="secondaryBtn maintenanceBtn" data-minutes="30" type="button">30 min</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="60" type="button">1 hora</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="0" type="button">Encerrar</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>CONEXÃO</small><h3>Este aparelho</h3></div></div>
+        <div class="fieldGrid">
+          <label><span>URL do servidor</span><input id="apiUrl" type="url" autocomplete="off"></label>
+          <label><span>Token de controle</span><input id="controlToken" type="password" autocomplete="off" placeholder="Token privado"></label>
+        </div>
+        <button id="saveConnectionBtn" class="primaryBtn full" type="button">Salvar conexão</button>
+      </article>
+
+      <details class="diagnostic">
+        <summary>Diagnóstico técnico</summary>
+        <pre id="diagnosticText">Aguardando dados.</pre>
+      </details>
+    </section>
+  </main>
+
+  <nav class="bottomNav" aria-label="Navegação principal">
+    <button class="active" data-view="summary" type="button"><span>⌂</span><small>Resumo</small></button>
+    <button data-view="automation" type="button"><span>◷</span><small>Automação</small></button>
+    <button data-view="history" type="button"><span>≡</span><small>Histórico</small></button>
+    <button data-view="system" type="button"><span>⚙</span><small>Sistema</small></button>
+  </nav>
+
+  <div id="setupOverlay" class="setupOverlay" hidden>
+    <div class="setupCard">
+      <small>FAZENDA 2E</small>
+      <h2>Conectar Viveiro</h2>
+      <p>Este aparelho precisa do token de controle para acessar a irrigação.</p>
+      <label><span>Token de controle</span><input id="setupToken" type="password" placeholder="Token privado"></label>
+      <button id="setupSaveBtn" class="primaryBtn full" type="button">Conectar</button>
     </div>
   </div>
-  <div class="climateGrid">
-    <div class="climateCard"><small>Tempo-base</small><strong id="climateBase">—</strong></div>
-    <div class="climateCard"><small>Tempo atual</small><strong id="climateCurrent">—</strong></div>
-    <div class="climateCard"><small>Temperatura</small><strong id="climateTemp">—</strong></div>
-    <div class="climateCard"><small>Umidade média</small><strong id="climateHumidity">—</strong></div>
-    <div class="climateCard"><small>VPD / secagem</small><strong id="climateVpd">—</strong></div>
-    <div class="climateCard"><small>Nível</small><strong id="climateLevel">—</strong></div>
-    <div class="climateCard"><small>Confiança</small><strong id="climateConfidence">—</strong></div>
-    <div class="climateCard"><small>Tendência</small><strong id="climateTrend">30 min</strong></div>
-  </div>
-  <div id="climateReason" class="climateReason">Aguardando leituras da Weather2-2 para calcular VPD e tendência.</div>
-  <div id="climatePending" class="climatePending">
-    <b id="climatePendingTitle">Sugestão de alteração</b>
-    <div id="climatePendingReason"></div>
-    <div class="row">
-      <button type="button" id="climateApply" class="btn primary">Aplicar alteração</button>
-      <button type="button" id="climateReject" class="btn soft">Manter como está</button>
-    </div>
-  </div>
-  <details class="weatherAdvanced" style="margin-top:10px">
-    <summary>Como a inteligência decide</summary>
-    <p class="note">O sistema usa a tendência dos últimos 30 minutos, não uma leitura isolada. No modo Observação ele apenas registra o que faria. No Automático, só aplica sozinho quando a confiança é média ou alta. Com confiança baixa, pede confirmação. Quando o clima normaliza, também pode retornar ao tempo-base. Chuva sempre tem prioridade.</p>
-  </details>
-</section>
 
-<section class="box" id="weeklyBox">
-  <div class="head"><div><span class="sectionKicker">Acompanhamento</span><h2>Últimos 7 dias</h2></div></div>
-  <div id="weekGrid" class="weekGrid"><div class="empty">Aguardando histórico...</div></div>
-</section>
-
-<section class="box" id="eventsBox">
-  <div class="head">
-    <div><span class="sectionKicker">Registro automático</span><h2>Auditoria de hoje</h2></div>
-    <div style="display:flex;gap:6px">
-      <button id="enableNotifications" class="btn soft notifyBtn">Ativar avisos</button>
-      <button id="refreshDashboard" class="btn soft notifyBtn">Atualizar</button>
-    </div>
-  </div>
-  <div id="notifyState" class="notifyState">Notificações desativadas.</div><div class="notifyHint">Quando ativadas, os alertas podem chegar mesmo com o painel fechado.</div>
-  <div class="auditFilters">
-    <button type="button" class="btn soft auditFilter active" data-filter="all">Todos</button>
-    <button type="button" class="btn soft auditFilter" data-filter="irrigation">Irrigação</button>
-    <button type="button" class="btn soft auditFilter" data-filter="rain">Chuva</button>
-    <button type="button" class="btn soft auditFilter" data-filter="error">Erros</button>
-    <button type="button" class="btn soft auditFilter" data-filter="config">Configuração</button>
-  </div>
-  <div id="eventList" class="eventList"><div class="empty">Aguardando eventos...</div></div>
-</section>
-
-<section class="box weatherProtect">
-<div class="head"><h2>Proteção automática por chuva</h2><button id="checkWeatherProtection" class="btn soft" style="min-width:auto;flex:0">Verificar agora</button></div>
-<div id="protectFlag" class="protectFlag">Weather2-2 • aguardando leitura</div>
-<div class="protectGrid">
-  <div class="protectCard"><small>Chuva</small><strong id="viveiroRainState">Aguardando</strong></div>
-  <div class="protectCard"><small>Proteção</small><strong id="viveiroProtectState">Aguardando</strong></div>
-  <div class="protectCard"><small>Retomada</small><strong id="viveiroResumeState">—</strong></div>
-</div>
-<div id="viveiroMonitorState" style="display:none">~5 min</div>
-<details class="weatherAdvanced">
-<summary>Ajustes da proteção por chuva</summary>
-<div class="protectConfig">
-  <label>Limite de chuva acumulada (mm)<input id="viveiroRainThreshold" type="number" min="0" max="500" step="0.1" value="5"></label>
-  <label>Esperar após parar de chover (min)<input id="viveiroResumeDelay" type="number" min="0" max="1440" step="1" value="30"></label>
-  <label class="toggleLine"><input id="viveiroBlockWhileRaining" type="checkbox"> Parar imediatamente ao detectar chuva</label>
-  <label class="toggleLine"><input id="viveiroWeatherEnabled" type="checkbox" checked> Proteção por chuva ativa</label>
-</div>
-<div class="row" style="padding:0 0 12px"><button id="saveWeatherProtection" class="btn primary">Salvar proteção</button></div>
-</details>
-<p class="note" style="margin-top:10px">A Weather2-2 pausa o viveiro quando necessário e permite a retomada automática após a chuva, respeitando o horário do ciclo.</p>
-</section>
-
-<section class="box">
-<div class="head"><h2>Estado em tempo real</h2><button id="refresh" class="btn soft" style="min-width:auto;flex:0">Atualizar agora</button></div>
-<div class="statusLine"><span>Fase atual</span><strong id="phaseState">Desconhecida</strong></div>
-<div class="statusLine"><span>Ciclo detectado</span><strong id="cycleDetected">Aguardando</strong></div>
-<div class="statusLine"><span>Contagem do dispositivo</span><strong id="countdownState">—</strong></div>
-<p class="note" id="cycleInfo">A programação 1/2 já existente no EKAZA será preservada.</p>
-</section>
-
-<section class="box">
-<div class="head"><h2>Controle manual</h2></div>
-<div class="row"><button id="manualOn" class="btn primary">Forçar ligado</button><button id="manualOff" class="btn danger">Forçar desligado</button></div>
-<p class="note">Esses comandos atuam somente na saída <b>switch_1</b>. A programação nativa do ciclo continua preservada.</p>
-</section>
-
-<section class="box">
-<div class="head"><h2>Ciclo já configurado</h2></div>
-<div class="timeline"><div class="step onStep"><b id="timelineOn">💧 1 minuto ligado</b><small id="timelineOnSub">Executado pelo próprio EKAZA.</small></div><div class="step offStep"><b id="timelineOff">⏸ 2 minutos desligado</b><small id="timelineOffSub">Depois ele volta a ligar conforme a programação existente.</small></div></div>
-<p class="note">O app não recria esse ciclo. Assim, a programação continua funcionando mesmo com o celular ou o site fechados.</p>
-</section>
-
-<section class="box"><div class="head"><h2>Diagnóstico do ciclo</h2></div><p class="note">Leitura somente. Aqui mostramos o <b>cycle_time</b> recebido da Tuya sem modificar a programação.</p><details class="diag"><summary>Ver dados recebidos da Tuya</summary><pre id="cycleRaw">Nenhum dado recebido ainda.</pre></details></section>
-
-<section class="box"><div class="head"><h2>Histórico do app</h2><button id="clear" class="btn soft" style="min-width:auto;flex:0">Limpar</button></div><div id="history" class="history"></div></section>
-
-<section class="box"><div class="head"><h2>Conexão segura • Fazenda 2E</h2><button id="settings" class="btn soft" style="min-width:auto;flex:0">Configurar</button></div><p class="note">O viveiro usa o <b>servidor contínuo da Fazenda 2E no Railway</b>. As credenciais da Tuya ficam somente no servidor e não são expostas no aplicativo.</p></section>
-</main>
-
-<dialog id="cycleDlg"><form method="dialog" class="modal"><div class="ey">PROGRAMAÇÃO</div><h2>Ajustar irrigação</h2>
-<div class="scheduleGrid">
-<label>Tempo ligado (min)<input id="cycleOn" type="number" min="1" max="1440" step="1"></label>
-<label>Tempo desligado (min)<input id="cycleOff" type="number" min="1" max="1440" step="1"></label>
-<label>Horário inicial<input id="cycleStart" type="time"></label>
-<label>Horário final<input id="cycleEnd" type="time"></label>
-</div>
-<label class="toggleLine"><input id="cycleEnabled" type="checkbox"> Ciclo ativo</label>
-<div><div class="note" style="margin-bottom:7px">Dias da semana</div><div class="dayGrid" id="cycleDays">
-<label><input type="checkbox" value="1"><span>Dom</span></label>
-<label><input type="checkbox" value="2"><span>Seg</span></label>
-<label><input type="checkbox" value="4"><span>Ter</span></label>
-<label><input type="checkbox" value="8"><span>Qua</span></label>
-<label><input type="checkbox" value="16"><span>Qui</span></label>
-<label><input type="checkbox" value="32"><span>Sex</span></label>
-<label><input type="checkbox" value="64"><span>Sáb</span></label>
-</div></div>
-<p class="note">O EKAZA trabalha com ciclos em minutos. O horário final precisa ser depois do horário inicial no mesmo dia.</p>
-<div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveCycle" value="default" class="btn primary">Salvar programação</button></div></form></dialog>
-
-<dialog id="settingsDlg"><form method="dialog" class="modal"><div class="ey">CONEXÃO</div><h2>Servidor Tuya</h2>
-<label>URL do backend<input id="apiUrl" type="url" value=""></label>
-<label>Token de controle<input id="controlToken" type="password" placeholder="token privado"></label>
-<p class="note">O token é salvo somente neste aparelho. Use um valor longo e aleatório no servidor.</p>
-<div class="row"><button value="cancel" class="btn soft">Cancelar</button><button id="saveSettings" value="default" class="btn primary">Salvar</button></div></form></dialog>
-<button id="emergencyStop" class="emergency">PARAR IRRIGAÇÃO</button><div id="toast" class="toast"></div>
-
-<script>
-const KEY='viveiroEkazaRealV1';
-const DEFAULT_API=window.location.origin;
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{apiUrl:DEFAULT_API,token:''},relay:null,online:null,cycleTime:null,cycleConfig:null,countdown:null,lastSync:null,lastError:null,history:[],weatherProtection:null,secondsMode:null};
-if(!data.settings) data.settings={apiUrl:DEFAULT_API,token:''};
-if(window.location.hostname.endsWith('.up.railway.app')) data.settings.apiUrl=DEFAULT_API;
-if(!data.settings.apiUrl) data.settings.apiUrl=DEFAULT_API;
-if(!('lastSync' in data)) data.lastSync=null;
-if(!('lastError' in data)) data.lastError=null;
-if(!('tuyaUnavailable' in data))data.tuyaUnavailable=false;
-if(!('cycleConfig' in data)) data.cycleConfig=null;
-if(!('weatherProtection' in data)) data.weatherProtection=null;
-if(!('secondsMode' in data)) data.secondsMode=null;
-if(!data.secondsDraft)data.secondsDraft={on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
-if(!('secondsCloud' in data))data.secondsCloud={loaded:false,synced:false,lastSync:0};
-if(!('dashboard' in data))data.dashboard=null;
-if(!data.live)data.live={connected:false,lastEventAt:0,secondsAt:0,weatherAt:0,confirmationAt:0};
-if(!('auditFilter' in data))data.auditFilter='all';
-if(!Array.isArray(data.notifiedEventIds))data.notifiedEventIds=[];
-if(!('notificationsPrimed' in data))data.notificationsPrimed=false;
-let syncing=false;
-let weatherSyncing=false;
-let secondsSyncing=false;
-let dashboardSyncing=false;
-let secondsFreshAt=0;
-let serverClockOffsetMs=0;
-let liveClockFrame=0;
-let liveClockLastPaint=0;
-let liveClockSecond=-1;
-let secondsEditorTouched=false;
-const $=id=>document.getElementById(id);
-const esc=value=>String(value??'')
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-function save(){localStorage.setItem(KEY,JSON.stringify(data))}
-function reorganizeLayout(){
-  const main=document.querySelector('main.wrap');
-  if(!main)return;
-  const sections=Array.from(main.querySelectorAll(':scope > section'));
-  const byTitle=new Map();
-  sections.forEach(s=>{
-    const title=s.querySelector('h2')?.textContent?.trim();
-    if(title)byTitle.set(title,s);
-  });
-  const order=[
-    'Ciclo rápido',
-    'Hoje',
-    'Atividade dos pulsos',
-    'Saúde do sistema',
-    'Modo manutenção',
-    'Proteção automática por chuva',
-    'Últimos 7 dias',
-    'Eventos do viveiro',
-    'Controle manual',
-    'Programação da irrigação',
-    'Estado em tempo real',
-    'Ciclo já configurado',
-    'Diagnóstico do ciclo',
-    'Histórico do app',
-    'Conexão segura • Fazenda 2E'
-  ];
-  order.forEach(title=>{
-    const s=byTitle.get(title);
-    if(s)main.appendChild(s);
-  });
-  ['Programação da irrigação','Controle manual','Ciclo já configurado','Diagnóstico do ciclo'].forEach(title=>{
-    const s=byTitle.get(title);
-    if(s)s.style.display='none';
-  });
-  ['Diagnóstico do ciclo','Histórico do app','Conexão segura • Fazenda 2E'].forEach(title=>{
-    const s=byTitle.get(title);
-    if(s)s.classList.add('advancedBox');
-  });
-}
-function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
-function isTuyaQuotaErrorMessage(value){return /28841004|quota is exhausted|trial quota/i.test(String(value||''))}
-function log(detail){data.history.unshift({at:new Date().toISOString(),detail});data.history=data.history.slice(0,80);save()}
-async function api(path,opt={}){
-  if(!data.settings.apiUrl) throw new Error('Configure a URL do backend');
-  if(!data.settings.token) throw new Error('Configure o token de controle');
-  const method=String(opt.method||'GET').toUpperCase();
-  const mutation=['POST','PUT','PATCH','DELETE'].includes(method);
-  const timeoutMs=mutation?30000:12000;
-  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeoutMs);
-  try{
-    const r=await fetch(data.settings.apiUrl.replace(/\/$/,'')+path,{...opt,headers:{'Content-Type':'application/json','Authorization':'Bearer '+data.settings.token},signal:ctl.signal});
-    const body=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(body.error||('HTTP '+r.status));
-    return body;
-  }finally{clearTimeout(tm)}
-}
-function baseDraftFromSeconds(sec={}){
-  return{
-    on_seconds:Math.max(1,Math.min(300,Math.round(Number(sec.base_on_seconds||sec.on_seconds)||30))),
-    off_seconds:Math.max(1,Math.min(900,Math.round(Number(sec.base_off_seconds||sec.off_seconds)||120))),
-    start_minutes:Math.max(0,Math.min(1439,Math.round(Number(sec.start_minutes??360)))),
-    end_minutes:Math.max(1,Math.min(1440,Math.round(Number(sec.end_minutes??1080)))),
-    days_mask:Math.max(1,Math.min(127,Math.round(Number(sec.days_mask)||127)))
-  };
-}
-function syncSecondsEditorFromState(sec={},force=false){
-  const base=baseDraftFromSeconds(sec);
-  data.secondsDraft=base;
-  if(force||!secondsEditorTouched){
-    if($('secondsOn'))$('secondsOn').value=base.on_seconds;
-    if($('secondsOff'))$('secondsOff').value=base.off_seconds;
-    if($('secondsStart'))$('secondsStart').value=minutesToClock(base.start_minutes);
-    if($('secondsEnd'))$('secondsEnd').value=minutesToClock(base.end_minutes);
-    document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(base.days_mask&Number(cb.value))});
-  }
-}
-function renderSecondsControlsOnly(){
-  const sec=data.secondsMode||{};
-  const active=Boolean(sec.enabled);
-  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=false});
-  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.disabled=false});
-  if($('secondsBadge')){
-    $('secondsBadge').textContent=active?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';
-    $('secondsBadge').className='phase '+(active&&!sec.paused_by_weather?'':'off');
-  }
-  if($('enableSeconds')){
-    $('enableSeconds').textContent=active?'Programação armada':'Armar programação';
-    $('enableSeconds').disabled=active;
-  }
-  if($('disableSeconds'))$('disableSeconds').disabled=!active;
-  if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=active
-    ?'A programação está armada. Você pode alterar os valores; ao salvar, o servidor rearma automaticamente.'
-    :'Ao salvar, a programação fica armada e inicia sozinha no horário configurado.';
-  updateFastCycleDraftUI();
-}
-function renderSecondsRuntimeOnly(){
-  const sec=data.secondsMode||{};
-  const active=Boolean(sec.enabled);
-  const draft=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
-  const cfg=active?sec:draft;
-  if($('secondsStatus')){
-    $('secondsStatus').className='secondsStatus '+(active?'on':'');
-    $('secondsStatus').innerHTML='<span>'+(active?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+
-      Number(cfg.on_seconds||30)+' s / '+Number(cfg.off_seconds||120)+' s • '+minutesToClock(cfg.start_minutes)+'–'+minutesToClock(cfg.end_minutes)+'</strong>';
-  }
-  if($('secondsCloudState')){
-    const cs=data.secondsCloud||{};
-    $('secondsCloudState').textContent=cs.synced?'☁ sincronizado':'☁ não sincronizado';
-    $('secondsCloudState').className='cloudState '+(cs.synced?'ok':'bad');
-  }
-  updateSecondsLive();
-  updateTodaySummary();
-}
-function renderWeatherRuntimeOnly(){
-  const wp=data.weatherProtection;
-  const s=wp?.state||{};
-  const cfg=wp?.config||{};
-  const quota=Boolean(data.tuyaUnavailable)||s.status==='cloud_unavailable'||isTuyaQuotaErrorMessage(s.cloudError||s.lastWeatherError||'');
-  const blocked=isWeatherProtected();
-  const raining=Boolean(wp?.weather?.metrics?.rainDetected);
-  if($('viveiroRainState')){
-    $('viveiroRainState').textContent=quota?'Não confirmado':wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
-    $('viveiroRainState').className=quota?'bad':raining?'bad':'ok';
-  }
-  if($('viveiroProtectState')){
-    $('viveiroProtectState').textContent=quota?'Smart Life indisponível':weatherStatusLabel(s.status);
-    $('viveiroProtectState').className=quota||blocked?'bad':(['clear','resumed_inside_window','restored_outside_window'].includes(s.status)?'ok':'');
-  }
-  if($('viveiroResumeState')){
-    $('viveiroResumeState').textContent=quota?'Não confirmado':s.status==='paused_rain'?'Após parar de chover'
-      :s.status==='waiting_resume_delay'?formatResumeTime(s.resumeEligibleAt)
-      :s.status==='restored_outside_window'?'Próxima janela'
-      :s.status==='resumed_inside_window'?'Retomado'
-      :s.resumeEligibleAt?formatResumeTime(s.resumeEligibleAt):'—';
-  }
-  if($('protectFlag')){
-    $('protectFlag').className='protectFlag '+(quota||blocked?'blocked':'');
-    $('protectFlag').textContent=quota
-      ?'Smart Life indisponível • proteção climática sem leitura ao vivo confirmada'
-      :blocked?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
-      :(cfg.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
-  }
-}
-function renderConnectionRuntimeOnly(){
-  const online=data.online===true;
-  const quota=Boolean(data.tuyaUnavailable);
-  const blocked=isWeatherProtected();
-  const secActive=secondsActive();
-  if($('relayState'))$('relayState').textContent=quota?'Não confirmado':data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
-  if($('connectionState')){
-    $('connectionState').textContent=!data.settings.token?'Token não configurado':quota?'Smart Life indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
-    $('connectionState').className=online?'ok':(quota||data.online===false)?'bad':'';
-  }
-  if($('conn'))$('conn').textContent=syncing?'● Atualizando':quota?'● Smart Life indisponível':online?'● Online':'● Smart Life';
-  if($('liveDot'))$('liveDot').className='liveDot '+(online&&!quota?'on':'');
-  if($('liveText'))$('liveText').textContent=syncing?'Atualizando…':quota?'Smart Life indisponível':online?'Online':data.online===false?'Offline':'Aguardando';
-  if($('lastSync'))$('lastSync').textContent=quota?'Leitura ao vivo não confirmada':data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
-  if($('phase')){
-    $('phase').textContent=quota?'ESTADO NÃO CONFIRMADO':blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA')
-      :data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
-    $('phase').className='phase '+(data.relay===true&&!blocked&&!quota?'':'off');
-  }
-  if($('heroTitle'))$('heroTitle').textContent=quota?'Smart Life temporariamente indisponível':blocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Ciclo rápido':'Viveiro';
-  if($('heroSub'))$('heroSub').textContent=quota
-    ?'A integração Smart Life não conseguiu confirmar o estado do EKAZA neste momento.'
-    :blocked?(data.weatherProtection?.weather?.metrics?.rainDetected?'A chuva interrompeu a irrigação.':'Aguardando o tempo configurado para retomar.')
-    :data.relay===true?'Saída do viveiro ligada neste momento.':data.relay===false?'Saída desligada neste momento.':'Aguardando leitura do equipamento.';
-  if($('refresh'))$('refresh').disabled=syncing;
-}
-function renderLiveFields(){
-  renderConnectionRuntimeOnly();
-  renderWeatherRuntimeOnly();
-  renderSecondsControlsOnly();
-  renderSecondsRuntimeOnly();
-}
-async function syncStatus(showToast=false){
-  if(syncing) return;
-  syncing=true;renderConnectionRuntimeOnly();
-  try{
-    const s=await api('/api/status');
-    data.online=s.online!==false;
-    data.relay=typeof s.relay==='boolean'?s.relay:null;
-    data.cycleTime=s.cycle_time??null;
-    data.cycleConfig=s.cycle_config??null;
-    data.countdown=s.countdown_1??null;
-    data.secondsMode=s.seconds_mode??data.secondsMode;
-    data.lastSync=Date.now();
-    data.lastError=null;
-    data.tuyaUnavailable=false;
-    save();renderLiveFields();if(showToast)toast('Estado atualizado');
-  }catch(e){
-    data.lastError=e.message||String(e);
-    data.tuyaUnavailable=isTuyaQuotaErrorMessage(data.lastError);
-    // Falha da integração não prova que o equipamento físico esteja offline.
-    // Mantém o estado como "não confirmado" até uma leitura válida voltar.
-    data.online=null;
-    data.relay=null;
-    save();renderLiveFields();if(showToast)toast(data.tuyaUnavailable?'Smart Life indisponível':'Estado ao vivo não confirmado');
-  }finally{
-    syncing=false;renderConnectionRuntimeOnly();
-  }
-}
-
-function isWeatherProtected(){
-  const status=data.weatherProtection?.state?.status||'';
-  return ['paused_rain','waiting_resume_delay','paused_waiting_weather'].includes(status)
-    || Boolean(data.weatherProtection?.state?.rainActive);
-}
-function weatherStatusLabel(status){
-  const labels={
-    disabled:'Desativada',
-    clear:'Liberada',
-    paused_rain:'Pausado por chuva',
-    paused_waiting_weather:'Pausado • aguardando clima',
-    weather_unavailable:'Weather2-2 sem dados',
-    cloud_unavailable:'Smart Life indisponível',
-    device_unavailable:'EKAZA indisponível',
-    waiting_resume_delay:'Aguardando retomada',
-    resumed_inside_window:'Retomado nesta janela',
-    restored_outside_window:'Próxima janela',
-    manual_pause_preserved:'Pausa manual preservada'
-  };
-  return labels[status]||'Aguardando';
-}
-function formatResumeTime(ts){
-  const n=Number(ts);
-  if(!Number.isFinite(n)||n<=0)return '—';
-  const left=n-Date.now();
-  if(left>0){
-    const total=Math.max(0,Math.ceil(left/1000));
-    const min=Math.floor(total/60);
-    const sec=String(total%60).padStart(2,'0');
-    return (min?min+' min ':'')+sec+' s';
-  }
-  return 'Liberada';
-}
-function updateWeatherCountdownLive(){
-  const s=data.weatherProtection?.state||{};
-  if($('viveiroResumeState')&&s.status==='waiting_resume_delay'){
-    $('viveiroResumeState').textContent=formatResumeTime(s.resumeEligibleAt);
-  }
-}
-async function syncWeatherProtection(showToast=false){
-  if(weatherSyncing||!data.settings.apiUrl||!data.settings.token)return;
-  weatherSyncing=true;
-  try{
-    const r=await api('/api/viveiro/weather',{method:'POST',body:JSON.stringify({action:'status_only'})});
-    data.weatherProtection=r;
-    save();renderWeatherRuntimeOnly();renderConnectionRuntimeOnly();updateTodaySummary();
-    if(showToast){
-      const action=r.action&&r.action!=='none'?' • '+r.action:'';
-      toast('Proteção climática atualizada'+action);
-    }
-  }catch(e){
-    if(showToast)toast('Clima: '+e.message);
-  }finally{
-    weatherSyncing=false;
-  }
-}
-async function saveWeatherProtectionConfig(){
-  try{
-    $('saveWeatherProtection').disabled=true;
-    const config={
-      enabled:$('viveiroWeatherEnabled').checked,
-      resumeDelayMinutes:Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay').value)||0))),
-      checkMinutes:5,
-      blockWhileRaining:$('viveiroBlockWhileRaining').checked,
-      rainThresholdMm:Math.max(0,Math.min(500,Number($('viveiroRainThreshold').value)||0))
-    };
-    const r=await api('/api/viveiro/weather',{
-      method:'POST',
-      body:JSON.stringify({action:'save_config',config})
-    });
-    data.weatherProtection=r;save();render();
-    toast('Proteção por chuva salva');
-  }catch(e){toast('Falha: '+e.message)}
-  finally{$('saveWeatherProtection').disabled=false}
-}
-
-
-function secondsActive(){return Boolean(data.secondsMode?.enabled)}
-function secondsPhaseLabel(phase){
-  const labels={
-    idle:'Desativado',queued:'Preparando',starting:'Ligando',on:'Irrigando',off:'Intervalo',
-    waiting_window:'Aguardando horário',weather_unavailable:'Clima indisponível',
-    weather_blocked:'Pausado por chuva',waiting_after_rain:'Aguardando após chuva',
-    retry_wait:'Tentando novamente',maintenance:'Em manutenção',window_finished:'Janela encerrada',stopped:'Parado',
-    stopped_external:'Interrompido',stopped_after_restart:'Parado após reinício',error:'Erro'
-  };
-  return labels[String(phase||'')]||String(phase||'Desativado').replaceAll('_',' ');
-}
-function serverNowMs(){return Date.now()+Number(serverClockOffsetMs||0)}
-function secondsRemaining(target){
-  const t=Number(target||0);
-  if(!t)return '—';
-  const s=Math.max(0,Math.ceil((t-serverNowMs())/1000));
-  if(s>=60)return Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
-  return s+'s';
-}
-function updateSecondsLive(){
-  const sec=data.secondsMode||{};
-  if($('secondsPhase'))$('secondsPhase').textContent=secondsActive()?secondsPhaseLabel(sec.phase):'Desativado';
-  let target=0;
-  if(sec.phase==='on')target=sec.expected_off_at;
-  else if(sec.phase==='off')target=sec.expected_next_on_at;
-  else if(sec.phase==='waiting_after_rain'&&sec.rain_last_at)target=Number(sec.rain_last_at)+Number(sec.resume_delay_minutes||0)*60000;
-  const remaining=secondsActive()?secondsRemaining(target):'—';
-  if($('secondsNext'))$('secondsNext').textContent=remaining;
-  if($('secondsPulses'))$('secondsPulses').textContent=String(Number(sec.daily_pulses_completed??sec.pulse_count??0));
-  if($('heroCountdown')){
-    const label=sec.phase==='on'?'Desliga em':sec.phase==='off'?'Liga novamente em':sec.phase==='waiting_after_rain'?'Retoma em':'Próxima mudança';
-    $('heroCountdown').innerHTML='<small>'+label+'</small><span>'+remaining+'</span>';
-  }
-}
-async function syncSecondsMode(showToast=false){
-  if(secondsSyncing||!data.settings.apiUrl||!data.settings.token)return;
-  secondsSyncing=true;
-  const requestStartedAt=Date.now();
-  try{
-    const r=await api('/api/viveiro/seconds');
-    if(r?.state){
-      const wasActive=secondsActive();
-      const receivedAt=Date.now();
-      const serverReadAt=Number(r.state.server_read_at||0);
-      if(serverReadAt){
-        const midpoint=requestStartedAt+(receivedAt-requestStartedAt)/2;
-        const sampleOffset=serverReadAt-midpoint;
-        if(Math.abs(sampleOffset)<5*60*1000)serverClockOffsetMs=sampleOffset;
-      }
-      secondsFreshAt=receivedAt;
-      data.secondsMode={...data.secondsMode,...r.state};
-      syncSecondsEditorFromState(data.secondsMode,false);
-      if(typeof r.state.device_relay==='boolean')data.relay=r.state.device_relay;
-      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();renderConnectionRuntimeOnly();
-      if(wasActive&&!data.secondsMode.enabled){
-        log('Ciclo rápido encerrado');
-        save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-      }
-      if(showToast)toast('Modo rápido: '+secondsPhaseLabel(r.state.phase));
-    }
-  }catch(e){
-    if(showToast)toast('Modo rápido: '+String(e.message||'falha ao consultar'));
-  }finally{
-    secondsSyncing=false;
-  }
-}
-function fastCycleNowMinutes(){
-  const parts=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Porto_Velho',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
-    .formatToParts(new Date());
-  const h=Number(parts.find(p=>p.type==='hour')?.value||0);
-  const m=Number(parts.find(p=>p.type==='minute')?.value||0);
-  return h*60+m;
-}
-function currentDraftFromInputs(){
-  return{
-    on_seconds:Math.round(Number($('secondsOn')?.value)||0),
-    off_seconds:Math.round(Number($('secondsOff')?.value)||0),
-    start_minutes:clockToMinutes($('secondsStart')?.value),
-    end_minutes:clockToMinutes($('secondsEnd')?.value),
-    days_mask:Array.from(document.querySelectorAll('#secondsDays input:checked')).reduce((m,cb)=>m|Number(cb.value),0)
-  };
-}
-function updateFastCycleDraftUI(){
-  const saved=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
-  const cur=currentDraftFromInputs();
-  const dirty=['on_seconds','off_seconds','start_minutes','end_minutes','days_mask'].some(k=>Number(cur[k])!==Number(saved[k]));
-  const state=$('secondsSaveState');
-  if(state){
-    state.className='saveState '+(dirty?'dirty':'saved');
-    state.innerHTML='<span class="saveDot"></span><span>'+(dirty?'Alterações ainda não salvas':'Configuração salva')+'</span>';
-  }
-  if($('saveSecondsConfig')){
-    $('saveSecondsConfig').textContent=dirty?(secondsActive()?'Salvar e rearmar':'Salvar e armar'):'Configuração armada';
-    $('saveSecondsConfig').disabled=!dirty;
-  }
-  const start=Number(saved.start_minutes??360),end=Number(saved.end_minutes??1080);
-  if($('windowText'))$('windowText').textContent=minutesToClock(start)+' às '+minutesToClock(end);
-  const now=fastCycleNowMinutes();
-  const inside=now>=start&&now<end;
-  if($('windowBadge')){
-    $('windowBadge').textContent=inside?'Dentro do horário':'Fora do horário';
-    $('windowBadge').className='windowBadge '+(inside?'':'out');
-  }
-}
-async function loadSecondsCloudConfig(){
-  try{
-    const r=await api('/api/irrigation/config');
-    const cloud=r?.config?.profiles?.viveiroFast;
-    if(cloud&&typeof cloud==='object'){
-      const normalized={
-        on_seconds:Math.max(1,Math.min(300,Math.round(Number(cloud.on_seconds)||30))),
-        off_seconds:Math.max(1,Math.min(900,Math.round(Number(cloud.off_seconds)||120))),
-        start_minutes:Math.max(0,Math.min(1439,Math.round(Number(cloud.start_minutes)??360))),
-        end_minutes:Math.max(1,Math.min(1440,Math.round(Number(cloud.end_minutes)??1080))),
-        days_mask:Math.max(1,Math.min(127,Math.round(Number(cloud.days_mask)||127)))
-      };
-      if(!secondsActive())data.secondsDraft=normalized;
-    }
-    data.secondsCloud={loaded:true,synced:true,lastSync:Date.now()};
-    save();
-    if(!secondsActive()){
-      const d=data.secondsDraft;
-      if($('secondsOn'))$('secondsOn').value=Number(d.on_seconds||30);
-      if($('secondsOff'))$('secondsOff').value=Number(d.off_seconds||120);
-      if($('secondsStart'))$('secondsStart').value=minutesToClock(Number(d.start_minutes??360));
-      if($('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(d.end_minutes??1080));
-      document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(d.days_mask||127)&Number(cb.value))});
-    }
-    renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-  }catch(e){
-    data.secondsCloud={loaded:true,synced:false,lastSync:Date.now(),error:String(e.message||e)};
-    save();renderSecondsRuntimeOnly();
-  }
-}
-async function saveSecondsCloudConfig(draft){
-  const current=await api('/api/irrigation/config').catch(()=>({config:{}}));
-  const profiles={...(current?.config?.profiles||{}),viveiroFast:{...draft,updated_at:new Date().toISOString(),origin:(/iPhone|iPad|iPod/i.test(navigator.userAgent)?'iPhone/iPad':'Web')}};
-  await api('/api/irrigation/config',{method:'PATCH',body:JSON.stringify({profiles})});
-  data.secondsCloud={loaded:true,synced:true,lastSync:Date.now()};
-}
-function readSecondsDraft(){
-  const on=Math.max(1,Math.min(300,Math.round(Number($('secondsOn').value)||30)));
-  const off=Math.max(1,Math.min(900,Math.round(Number($('secondsOff').value)||120)));
-  const start=clockToMinutes($('secondsStart').value);
-  const end=clockToMinutes($('secondsEnd').value);
-  if(on+off>1200)throw new Error('O ciclo total deve ficar em até 1200 segundos.');
-  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)throw new Error('Confira o horário inicial e final.');
-  const daysMask=Array.from(document.querySelectorAll('#secondsDays input:checked')).reduce((m,cb)=>m|Number(cb.value),0);
-  if(!daysMask)throw new Error('Selecione pelo menos um dia da semana.');
-  return{on_seconds:on,off_seconds:off,start_minutes:start,end_minutes:end,days_mask:daysMask};
-}
-async function armSecondsSchedule(draft,showToast=true){
-  if(!draft)return null;
-  if(secondsActive())return data.secondsMode;
-  const resumeDelay=Math.max(0,Math.min(1440,Math.round(Number($('viveiroResumeDelay')?.value)||30)));
-  const r=await api('/api/viveiro/seconds',{
-    method:'POST',
-    body:JSON.stringify({
-      action:'configure',
-      on_seconds:draft.on_seconds,
-      off_seconds:draft.off_seconds,
-      start_minutes:draft.start_minutes,
-      end_minutes:draft.end_minutes,
-      days_mask:draft.days_mask,
-      resume_delay_minutes:resumeDelay
-    })
-  });
-  data.secondsMode=r.state;
-  syncSecondsEditorFromState(data.secondsMode,true);
-  secondsEditorTouched=false;
-  log('Programação do ciclo rápido armada');
-  save();renderLiveFields();
-  if(showToast){
-    const phase=String(r?.state?.phase||'');
-    toast(phase==='waiting_window'
-      ?'Programação armada. Vai iniciar no horário configurado.'
-      :'Programação armada.');
-  }
-  setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
-  return r.state;
-}
-async function saveSecondsDraft(showToast=true,autoArm=true){
-  const wasActive=secondsActive();
-  try{
-    data.secondsDraft=readSecondsDraft();
-    secondsEditorTouched=false;
-    if(wasActive){
-      try{
-        const stopped=await api('/api/viveiro/seconds',{method:'POST',body:JSON.stringify({action:'disable'})});
-        if(stopped?.state)data.secondsMode=stopped.state;
-      }catch(e){
-        if(showToast)toast('Não foi possível rearmar: '+String(e.message||e));
-        return null;
-      }
-    }
-    data.secondsCloud={...(data.secondsCloud||{}),synced:false};
-    save();
-    renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-
-    let cloudOk=true;
-    try{
-      await saveSecondsCloudConfig(data.secondsDraft);
-      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-    }catch(e){
-      cloudOk=false;
-      data.secondsCloud={loaded:true,synced:false,lastSync:Date.now(),error:String(e.message||e)};
-      save();renderSecondsControlsOnly();renderSecondsRuntimeOnly();
-    }
-
-    if(autoArm){
-      try{
-        await armSecondsSchedule(data.secondsDraft,false);
-        if(showToast){
-          const phase=String(data.secondsMode?.phase||'');
-          const msg=phase==='waiting_window'
-            ?(wasActive?'Alterações salvas. Programação rearmada para o horário configurado.':'Salvo e armado. Vai iniciar no horário configurado.')
-            :(wasActive?'Alterações salvas e programação rearmada.':'Salvo e armado.');
-          toast(cloudOk?msg:(msg+' Nuvem sem sincronização.'));
-        }
-      }catch(e){
-        if(showToast)toast('Configuração salva, mas não foi possível armar: '+String(e.message||e));
-      }
-    }else if(showToast){
-      toast(cloudOk?'Configuração salva e sincronizada':'Salvo neste aparelho; falha ao sincronizar');
-    }
-    return data.secondsDraft;
-  }catch(e){
-    if(showToast)toast(e.message||String(e));
-    return null;
-  }
-}
-async function enableSecondsMode(){
-  if(secondsActive())return toast('A programação já está armada');
-  try{
-    const draft=readSecondsDraft();
-    await armSecondsSchedule(draft,true);
-  }catch(e){
-    toast('Não foi possível armar: '+String(e.message||e));
-  }
-}
-async function disableSecondsMode(){
-  if(!secondsActive())return;
-  if(!confirm('Parar o ciclo rápido agora?'))return;
-  try{
-    $('disableSeconds').disabled=true;
-    const r=await api('/api/viveiro/seconds',{
-      method:'POST',
-      body:JSON.stringify({action:'disable'})
-    });
-    data.secondsMode=r.state;
-    log('Ciclo rápido desativado');
-    save();renderLiveFields();toast('Ciclo rápido parado');
-    setTimeout(()=>syncStatus(false),900);
-  }catch(e){
-    toast('Falha: '+e.message);
-  }finally{
-    $('disableSeconds').disabled=!secondsActive();
-  }
-}
-
-async function emergencyStop(){
-  if(!confirm('PARAR A IRRIGAÇÃO AGORA?\n\nA parada ficará TRAVADA no servidor. A bomba só poderá voltar depois que você liberar a emergência e rearmar a programação.'))return;
-  const btn=$('emergencyStop');
-  try{
-    btn.disabled=true;
-    const r=await api('/api/viveiro/seconds',{
-      method:'POST',
-      body:JSON.stringify({action:'emergency_stop',reason:'Parada de emergência pelo aplicativo'})
-    });
-    if(r?.state)data.secondsMode=r.state;
-    data.dashboard={...(data.dashboard||{}),safety:r?.safety||{emergency_latched:true}};
-    data.relay=false;
-    log('PARADA DE EMERGÊNCIA acionada');
-    save();render();renderDashboard();toast('Emergência ativa • irrigação bloqueada');
-    setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
-  }catch(e){
-    toast('Falha ao parar: '+String(e.message||e));
-  }finally{btn.disabled=false}
-}
-async function clearEmergencyStopUi(){
-  if(!confirm('Liberar a parada de emergência?\n\nA irrigação continuará DESLIGADA. Depois será necessário rearmar a programação manualmente.'))return;
-  try{
-    const r=await api('/api/viveiro/seconds',{
-      method:'POST',
-      body:JSON.stringify({action:'clear_emergency'})
-    });
-    if(r?.state)data.secondsMode=r.state;
-    data.dashboard={...(data.dashboard||{}),safety:r?.safety||{emergency_latched:false}};
-    data.relay=false;
-    save();render();renderDashboard();toast('Emergência liberada • sistema continua parado');
-    setTimeout(()=>{syncStatus(false);syncSecondsMode(false);syncDashboard(false)},800);
-  }catch(e){
-    toast('Falha ao liberar: '+String(e.message||e));
-  }
-}
-async function manual(on){
-  if(secondsActive()){
-    toast('Desative o modo em segundos para usar o controle manual');
-    return;
-  }
-  if(on&&isWeatherProtected()){
-    toast('Ligação bloqueada pela proteção por chuva');
-    return;
-  }
-  const action=on?'LIGAR':'DESLIGAR';
-  if(!confirm(action+' a saída do viveiro agora?\n\nO ciclo nativo 1/2 não será alterado.')) return;
-  try{
-    $('manualOn').disabled=true;$('manualOff').disabled=true;
-    await api('/api/switch',{method:'POST',body:JSON.stringify({on})});
-    log(on?'Viveiro ligado manualmente':'Viveiro desligado manualmente');
-    data.relay=on;render();toast('Comando '+action+' enviado');
-    setTimeout(()=>syncStatus(false),1200);
-  }catch(e){toast('Falha: '+e.message)}
-  finally{$('manualOn').disabled=false;$('manualOff').disabled=false}
-}
-
-function minutesToClock(value){
-  const n=Number(value);
-  if(!Number.isFinite(n)) return '--:--';
-  const h=Math.floor(n/60),m=n%60;
-  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-}
-function clockToMinutes(value){
-  const parts=String(value||'').split(':').map(Number);
-  if(parts.length!==2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1])) return NaN;
-  return parts[0]*60+parts[1];
-}
-function daysLabel(mask){
-  const names=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const selected=names.filter((_,i)=>mask&(1<<i));
-  if(selected.length===7) return 'Todos os dias';
-  return selected.length?selected.join(', '):'Nenhum';
-}
-function openCycleEditor(){
-  if(secondsActive()){toast('Desative o modo em segundos para editar o ciclo nativo');return}
-  const cfg=data.cycleConfig||{
-    enabled:true,
-    daysMask:127,
-    startMinutes:0,
-    endMinutes:1439,
-    onMinutes:1,
-    offMinutes:2
-  };
-  $('cycleOn').value=cfg.onMinutes||1;
-  $('cycleOff').value=cfg.offMinutes||2;
-  $('cycleStart').value=minutesToClock(cfg.startMinutes??0);
-  $('cycleEnd').value=minutesToClock(cfg.endMinutes??1439);
-  $('cycleEnabled').checked=cfg.enabled!==false;
-  document.querySelectorAll('#cycleDays input').forEach(cb=>{
-    cb.checked=Boolean((cfg.daysMask??127)&Number(cb.value));
-  });
-  $('cycleDlg').showModal();
-}
-async function saveCycleConfig(config, label){
-  if(isWeatherProtected()){
-    toast('A programação está pausada pela proteção por chuva');
-    return false;
-  }
-  try{
-    $('saveCycle').disabled=true;
-    $('toggleCycle').disabled=true;
-    const result=await api('/api/cycle',{method:'POST',body:JSON.stringify(config)});
-    data.cycleTime=result.cycle_time??data.cycleTime;
-    data.cycleConfig=result.cycle_config??data.cycleConfig;
-    log(label||'Programação da irrigação atualizada');
-    save();
-    render();
-    toast('Programação salva no EKAZA');
-    setTimeout(()=>syncStatus(false),1200);
-    return true;
-  }catch(e){
-    toast('Falha: '+(e.message||String(e)));
-    return false;
-  }finally{
-    $('saveCycle').disabled=false;
-    $('toggleCycle').disabled=false;
-  }
-}
-async function toggleCycleState(){
-  if(secondsActive()){toast('O modo em segundos está ativo');return}
-  if(!data.cycleConfig){
-    toast('Atualize o estado antes de pausar ou retomar o ciclo');
-    return;
-  }
-  const next=!data.cycleConfig.enabled;
-  if(!confirm((next?'RETOMAR':'PAUSAR')+' o ciclo automático do viveiro?')) return;
-  await saveCycleConfig({
-    enabled:next,
-    daysMask:data.cycleConfig.daysMask,
-    startMinutes:data.cycleConfig.startMinutes,
-    endMinutes:data.cycleConfig.endMinutes,
-    onMinutes:data.cycleConfig.onMinutes,
-    offMinutes:data.cycleConfig.offMinutes
-  },next?'Ciclo automático retomado':'Ciclo automático pausado');
-}
-
-function humanDurationSeconds(total){
-  const s=Math.max(0,Math.round(Number(total)||0));
-  if(s<60)return s+' s';
-  const m=Math.floor(s/60),r=s%60;
-  return m+' min'+(r?' '+r+' s':'');
-}
-function nextActiveStart(draft){
-  const mask=Number(draft.days_mask||127);
-  const now=new Date();
-  const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
-  const parts=Object.fromEntries(fmt.formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-  const map={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
-  const day=map[parts.weekday]??0;
-  const nowMin=Number(parts.hour)*60+Number(parts.minute);
-  const start=Number(draft.start_minutes||0);
-  for(let add=0;add<8;add++){
-    const d=(day+add)%7;
-    if(!(mask&(1<<d)))continue;
-    if(add===0&&nowMin<start)return 'Hoje às '+minutesToClock(start);
-    if(add===0&&nowMin>=start&&nowMin<Number(draft.end_minutes||0))return 'Ciclo em janela agora';
-    if(add===0)continue;
-    const names=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
-    return names[d]+' às '+minutesToClock(start);
-  }
-  return 'Nenhum dia ativo';
-}
-function shortTime(ts){
-  const n=Number(ts||0);if(!n)return '—';
-  return new Date(n).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-}
-function eventIcon(type){
-  const t=String(type||'');
-  if(t.includes('pulse_complete'))return '✓';
-  if(t.includes('pulse_start'))return '💧';
-  if(t.includes('weather'))return '🌧';
-  if(t.includes('maintenance'))return '🛠';
-  if(t.includes('error'))return '!';
-  if(t.includes('cycle_start'))return '▶';
-  if(t.includes('cycle_stop'))return '■';
-  return '•';
-}
-function validateFastCycle(){
-  const d=currentDraftFromInputs();
-  const box=$('fastValidation');if(!box)return;
-  let msg='',bad=false;
-  if(!Number.isFinite(d.start_minutes)||!Number.isFinite(d.end_minutes)||d.end_minutes<=d.start_minutes){msg='Confira o horário inicial e final.';bad=true}
-  else if(!d.days_mask){msg='Selecione pelo menos um dia da semana.';bad=true}
-  else{
-    const windowSec=(d.end_minutes-d.start_minutes)*60;
-    const cycle=Math.max(1,d.on_seconds+d.off_seconds);
-    const pulses=Math.floor(windowSec/cycle);
-    const duty=d.on_seconds/cycle;
-    if(duty>=.75)msg='Atenção: o viveiro ficará ligado em cerca de '+Math.round(duty*100)+'% do tempo.';
-    else if(pulses>3000)msg='Configuração muito intensa: aproximadamente '+pulses+' pulsos por dia.';
-  }
-  box.textContent=msg;
-  box.className='alertBox '+(msg?'show ':'')+(bad?'bad':'');
-}
-function auditCategory(type){
-  const t=String(type||'');
-  if(t.includes('weather')||t.includes('rain'))return 'rain';
-  if(t.includes('error')||t.includes('failure')||t.includes('delay'))return 'error';
-  if(t.includes('climate'))return 'config';
-  if(t.includes('cycle_start')||t.includes('waiting_window')||t.includes('window_start')||t.includes('window_end')||t.includes('preset')||t.includes('config'))return 'config';
-  return 'irrigation';
-}
-function notificationTitle(type){
-  const t=String(type||'');
-  if(t==='viveiro_window_start')return 'Irrigação liberada';
-  if(t==='viveiro_weather_pause')return 'Irrigação pausada por chuva';
-  if(t==='viveiro_weather_resume')return 'Irrigação retomada';
-  if(t==='viveiro_start_failure')return 'Falha no início do ciclo';
-  if(t==='viveiro_start_delay')return 'Ciclo iniciou com atraso';
-  if(t.includes('error'))return 'Erro no viveiro';
-  if(t==='viveiro_maintenance_start')return 'Modo manutenção';
-  if(t==='viveiro_maintenance_end')return 'Manutenção encerrada';
-  if(t==='viveiro_climate_auto_change')return 'Ajuste climático automático';
-  if(t==='viveiro_climate_applied')return 'Ajuste climático aplicado';
-  if(t==='viveiro_climate_suggestion')return 'Sugestão de ajuste climático';
-  if(t==='viveiro_climate_observation')return 'Observação climática';
-  if(t==='viveiro_climate_return_base')return 'Retorno ao tempo-base';
-  return 'Fazenda 2E • Viveiro';
-}
-function notificationsSupported(){
-  return typeof Notification!=='undefined';
-}
-function urlB64ToUint8Array(base64String){
-  const padding='='.repeat((4-base64String.length%4)%4);
-  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
-  const raw=atob(base64);
-  return Uint8Array.from([...raw].map(ch=>ch.charCodeAt(0)));
-}
-async function viveiroSwReg(){
-  if(!('serviceWorker' in navigator))throw new Error('Este navegador não suporta notificações em segundo plano.');
-  const regs=await navigator.serviceWorker.getRegistrations().catch(()=>[]);
-  await Promise.all(regs.map(reg=>{
-    const scope=String(reg.scope||'');
-    if(scope.includes('/irrigacao/central/')||scope.includes('/irrigacao/inkbird/')){
-      return reg.unregister().catch(()=>false);
-    }
-    return false;
-  }));
-  return navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'});
-}
-async function updateNotificationState(){
-  if(!$('notifyState')||!$('enableNotifications'))return;
-  if(!notificationsSupported()||!('PushManager' in window)){
-    $('notifyState').textContent='Instale o app na Tela de Início para usar notificações neste aparelho.';
-    $('enableNotifications').disabled=false;
-    return;
-  }
-  try{
-    const reg=await viveiroSwReg();
-    const sub=await reg.pushManager.getSubscription();
-    const active=Boolean(sub&&Notification.permission==='granted');
-    data.pushActive=active;save();
-    $('notifyState').textContent=active?'Notificações em segundo plano ativas.':Notification.permission==='denied'?'Notificações bloqueadas nas configurações do navegador.':'Notificações desativadas.';
-    $('enableNotifications').textContent=active?'Notificações ativas':'Ativar notificações';
-    $('enableNotifications').disabled=active||Notification.permission==='denied';
-  }catch{
-    $('notifyState').textContent='Notificações disponíveis ao instalar o app na Tela de Início.';
-  }
-}
-async function enableBrowserNotifications(){
-  try{
-    if(!notificationsSupported()||!('PushManager' in window))throw new Error('Instale o app na Tela de Início para ativar notificações.');
-    const reg=await viveiroSwReg();
-    const info=await api('/api/irrigation/push');
-    let perm=Notification.permission;
-    if(perm!=='granted')perm=await Notification.requestPermission();
-    if(perm!=='granted')throw new Error('Permissão não concedida.');
-    let sub=await reg.pushManager.getSubscription();
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(info.publicKey)});
-    await api('/api/irrigation/push',{method:'POST',body:JSON.stringify({action:'subscribe',subscription:sub.toJSON(),platform:navigator.platform||''})});
-    data.notificationsPrimed=false;save();
-    await updateNotificationState();
-    toast('Notificações em segundo plano ativadas');
-  }catch(e){toast('Notificações: '+String(e.message||e))}
-}
-function processDashboardNotifications(payload){
-  if(data.pushActive)return;
-  if(!notificationsSupported()||Notification.permission!=='granted')return;
-  const rows=Array.isArray(payload?.audit_today)?payload.audit_today:[];
-  const important=new Set([
-    'viveiro_weather_pause','viveiro_weather_unavailable',
-    'viveiro_start_failure','viveiro_start_delay','viveiro_error',
-    'viveiro_emergency_stop','viveiro_cycle_stop',
-    'viveiro_climate_suggestion'
-  ]);
-  if(!data.notificationsPrimed){
-    data.notifiedEventIds=rows.slice(0,80).map(x=>String(x.id||x.ts||''));
-    data.notificationsPrimed=true;
-    save();
-    return;
-  }
-  const seen=new Set(data.notifiedEventIds||[]);
-  const fresh=rows.filter(x=>important.has(String(x.type||''))&&!seen.has(String(x.id||x.ts||''))).reverse();
-  fresh.forEach(x=>{
-    try{
-      new Notification(notificationTitle(x.type),{
-        body:String(x.detail||'Novo evento no viveiro.'),
-        tag:'viveiro-'+String(x.id||x.ts||Date.now())
-      });
-    }catch{}
-  });
-  data.notifiedEventIds=[...rows.slice(0,80).map(x=>String(x.id||x.ts||'')),...(data.notifiedEventIds||[])].slice(0,120);
-  save();
-}
-function renderDashboard(){
-  const d=data.dashboard||{};
-  const sum=d.summary?.today||{};
-  if($('todayPulses'))$('todayPulses').textContent=String(Number(sum.pulses||0));
-  if($('todayWaterTime'))$('todayWaterTime').textContent=humanDurationSeconds(Number(sum.irrigated_seconds||0));
-  if($('todayLastPulse'))$('todayLastPulse').textContent=shortTime(sum.last_pulse_at);
-  if($('todayRainPauses'))$('todayRainPauses').textContent=String(Number(sum.rain_pauses||0));
-
-  const setHealth=(id,ok,label,warn=false)=>{
-    const el=$(id);if(!el)return;
-    el.innerHTML='<span class="healthDot '+(ok?'ok':warn?'warn':'bad')+'"></span>'+label;
-  };
-  setHealth('healthServer',Boolean(d.server?.online),d.server?.online?'Online':'Offline');
-  setHealth('healthFirebase',Boolean(d.firebase?.online),d.firebase?.online?'Online':'Falha');
-  setHealth('healthTuya',data.online===true,data.online===true?'Online':data.online===false?'Offline':data.lastError?'Sem confirmação':'Aguardando',data.online==null);
-  const liveWeather=data.weatherProtection?.weather||d.current_weather||null;
-  const weatherHasMetrics=Boolean(
-    liveWeather?.metrics&&(
-      liveWeather.metrics.temperature||
-      liveWeather.metrics.humidity||
-      liveWeather.metrics.rainGeneric||
-      liveWeather.metrics.rain24h||
-      liveWeather.metrics.rainRate
-    )
-  );
-  const weatherOk=Boolean(liveWeather?.linked&&liveWeather?.error==null);
-  setHealth('healthWeather',weatherOk,weatherOk?(weatherHasMetrics?'Online':'Online • aguardando leitura'):'Sem dados',!weatherOk);
-  const emergencyActive=Boolean(d.safety?.emergency_latched);
-  if($('emergencyLatchBox'))$('emergencyLatchBox').style.display=emergencyActive?'block':'none';
-  const allOk=Boolean(d.server?.online&&d.firebase?.online&&data.online===true&&weatherOk&&!emergencyActive);
-  if($('healthOverall')){
-    $('healthOverall').textContent=allOk?'TUDO OK':'ATENÇÃO';
-    $('healthOverall').className='phase '+(allOk?'':'off');
-  }
-
-  let alert='';
-  const sec=data.secondsMode||{};
-  if(emergencyActive)alert='PARADA DE EMERGÊNCIA ATIVA. A irrigação está bloqueada até liberação manual.';
-  const now=Date.now();
-  const serverReadAt=Number(sec.server_read_at||0);
-  const secondsStateFresh=Boolean(
-    secondsFreshAt&&
-    now-secondsFreshAt<25000&&
-    (!serverReadAt||Math.abs(now-serverReadAt)<30000)
-  );
-  if(!emergencyActive){
-    if(secondsStateFresh&&sec.enabled&&sec.phase==='on'&&Number(sec.expected_off_at||0)&&now>Number(sec.expected_off_at)+15000)alert='A saída deveria ter desligado há mais de 15 segundos.';
-    else if(secondsStateFresh&&sec.enabled&&sec.phase==='off'&&Number(sec.expected_next_on_at||0)&&now>Number(sec.expected_next_on_at)+15000)alert='O próximo pulso está atrasado há mais de 15 segundos.';
-    else if(data.online===false)alert='EKAZA/Tuya sem comunicação. Verifique a conexão.';
-    else if(!weatherOk)alert='Weather2-2 sem dados. A proteção climática pode ficar indisponível.';
-  }
-  const latestCritical=(Array.isArray(d.audit_today)?d.audit_today:[]).find(x=>
-    ['viveiro_start_failure','viveiro_start_delay','viveiro_error'].includes(String(x.type||'')) &&
-    Date.now()-Number(x.ts||0)<10*60*1000
-  );
-  if(latestCritical)alert=String(latestCritical.detail||'Falha recente no viveiro.');
-  if($('systemAlert')){$('systemAlert').textContent=alert;$('systemAlert').className='alertBox '+(alert?'show bad':'')}
-
-  const maint=d.maintenance||{};
-  if($('maintenanceState')){
-    $('maintenanceState').style.display=maint.active?'block':'none';
-    $('maintenanceState').textContent=maint.active?'Manutenção ativa até '+shortTime(maint.until):'';
-  }
-
-
-  if($('reportFirstPulse'))$('reportFirstPulse').textContent=shortTime(sum.first_pulse_at);
-  if($('reportPulses'))$('reportPulses').textContent=String(Number(sum.pulses||0));
-  if($('reportWater'))$('reportWater').textContent=humanDurationSeconds(Number(sum.irrigated_seconds||0));
-  if($('reportErrors'))$('reportErrors').textContent=String(Number(sum.errors||0)+Number(sum.start_delays||0));
-
-  const upcoming=Array.isArray(d.upcoming)?d.upcoming:[];
-  const visibleUpcoming=upcoming.slice(0,3);
-  if($('upcomingSchedule'))$('upcomingSchedule').innerHTML=upcoming.length
-    ?visibleUpcoming.map(x=>
-      '<div class="scheduleRow '+(x.active_now?'active':'')+'"><div><b>'+esc(x.label)+'</b><small>'+(x.active_now?' • em andamento':'')+'</small></div><strong>'+esc(x.start)+'–'+esc(x.end)+'</strong></div>'
-    ).join('')+(upcoming.length>3?'<div class="scheduleMore">+'+(upcoming.length-3)+' dias já programados</div>':'')
-    :'<div class="empty">Nenhum próximo dia ativo encontrado.</div>';
-
-  const advice=d.suggestion||{};
-  if($('climateAdvice')){
-    const metrics=[];
-    if(advice.temperature!=null)metrics.push('<span>🌡 '+Number(advice.temperature).toFixed(1)+' °C</span>');
-    if(advice.humidity!=null)metrics.push('<span>💧 '+Number(advice.humidity).toFixed(0)+'% UR</span>');
-    $('climateAdvice').className='climateAdvice '+(advice.level==='attention'?'attention':'');
-    $('climateAdvice').innerHTML='<b>'+esc(advice.note||'Sem sugestão disponível.')+'</b>'+(metrics.length?'<div class="climateMetrics">'+metrics.join('')+'</div>':'');
-  }
-
-
-  if($('pulseActivityCount'))$('pulseActivityCount').textContent=String(Number(sum.pulses||0));
-  if($('pulseActivityLast'))$('pulseActivityLast').textContent=shortTime(sum.last_pulse_at);
-  if($('pulseActivityNext')){
-    const nextAt=Number((data.secondsMode||{}).expected_next_on_at||0);
-    $('pulseActivityNext').textContent=nextAt?shortTime(nextAt):((data.secondsMode||{}).phase==='on'?'Após o pulso atual':'—');
-  }
-
-  const climate=d.climate||{};
-  const cc=climate.config||{};
-  const cs=climate.state||{};
-  const pending=cs.pending||null;
-  const secForClimate=data.secondsMode||{};
-  if($('climateAutoBtn')){
-    const outsideSchedule=String(cs.last_decision||'')==='outside_schedule';
-    $('climateAutoBtn').textContent=cc.automatic?(outsideSchedule?'Automático 2.0 armado':'Automático 2.0 ativo'):'Automático 2.0';
-    $('climateAutoBtn').className='climateSwitch '+(cc.automatic?'auto':'');
-  }
-  if($('climateObserveBtn')){
-    $('climateObserveBtn').textContent=cc.observation?'Observação ativa':'Observação';
-    $('climateObserveBtn').className='climateSwitch '+(cc.observation?'auto':'');
-  }
-  const outsideClimateWindow=String(cs.last_decision||'')==='outside_schedule';
-  const climateBaseOn=Number(secForClimate.base_on_seconds||data.secondsDraft?.on_seconds||30);
-  const climateBaseOff=Number(secForClimate.base_off_seconds||data.secondsDraft?.off_seconds||120);
-  if($('climateBase'))$('climateBase').textContent=climateBaseOn+' s / '+climateBaseOff+' s';
-  if($('climateCurrent'))$('climateCurrent').textContent=outsideClimateWindow
-    ?climateBaseOn+' s / '+climateBaseOff+' s'
-    :Number(secForClimate.on_seconds||climateBaseOn)+' s / '+Number(secForClimate.off_seconds||climateBaseOff)+' s';
-  if($('climateTemp'))$('climateTemp').textContent=cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C';
-  if($('climateHumidity'))$('climateHumidity').textContent=cs.trend_humidity==null?(cs.last_humidity==null?'—':Number(cs.last_humidity).toFixed(0)+'%'):Number(cs.trend_humidity).toFixed(0)+'%';
-  if($('climateTemp'))$('climateTemp').textContent=cs.trend_temperature==null?(cs.last_temperature==null?'—':Number(cs.last_temperature).toFixed(1)+' °C'):Number(cs.trend_temperature).toFixed(1)+' °C';
-  if($('climateConfidence')){
-    const label=String(cs.confidence_label||'Baixa');
-    $('climateConfidence').textContent=label;
-    $('climateConfidence').className=(label==='Alta'?'ok':label==='Média'?'':'bad');
-  }
-  if($('climateVpd'))$('climateVpd').textContent=cs.trend_vpd==null?(cs.last_vpd==null?'—':Number(cs.last_vpd).toFixed(2)+' kPa'):Number(cs.trend_vpd).toFixed(2)+' kPa';
-  if($('climateLevel'))$('climateLevel').textContent=String(cs.drying_level_label||'Aguardando');
-  if($('climateTrend')){
-    const delta=Number(cs.trend_vpd_delta||0);
-    $('climateTrend').textContent=Number(cc.trend_minutes||30)+' min • '+Number(cs.trend_samples||0)+' leituras'+
-      (Number.isFinite(delta)&&Math.abs(delta)>=0.01?' • Δ '+(delta>0?'+':'')+delta.toFixed(2):'');
-  }
-  if($('climateReason')){
-    const outsideSchedule=String(cs.last_decision||'')==='outside_schedule';
-    const modeText=cc.observation?'Observação ativa. ':cc.automatic?(outsideSchedule?'Automático 2.0 armado. ':'Automático 2.0 ativo. '):'Modo manual. ';
-    const decisionMap={
-      automatic_applied:'Último ajuste aplicado automaticamente. ',
-      approved_applied:'Último ajuste aprovado e aplicado. ',
-      pending_confirmation:'Aguardando sua confirmação. ',
-      cooldown:'Aguardando o intervalo de segurança antes de um novo ajuste. ',
-      waiting_normal_confirmation:'Confirmando que o clima voltou ao normal antes de retornar ao tempo-base. ',
-      observation:'Somente observando; nenhum tempo é alterado. ',
-      no_change:'Sem necessidade de ajuste agora. ',
-      no_change_pending_cleared:'A condição mudou e a sugestão antiga foi descartada. ',
-      cycle_rearmed:'Nova programação armada; análise reiniciada. ',
-      mode_changed:'Modo alterado; análise reiniciada. '
-    };
-    const decisionText=decisionMap[String(cs.last_decision||'')]||'';
-    $('climateReason').textContent=modeText+decisionText+String(cs.last_reason||'Aguardando a próxima avaliação climática.');
-  }
-  if($('climatePending')){
-    $('climatePending').className='climatePending '+(pending&&!cc.observation?'show':'');
-    if(pending&&!cc.observation){
-      $('climatePendingTitle').textContent=
-        Number(pending.current_on_seconds||0)+'/'+Number(pending.current_off_seconds||0)+' s → '+
-        Number(pending.target_on_seconds||0)+'/'+Number(pending.target_off_seconds||0)+' s';
-      $('climatePendingReason').textContent=
-        'Confiança '+String(pending.confidence_label||'Baixa')+'. '+
-        String(pending.reason||'Ajuste sugerido pelas condições climáticas.');
-    }
-  }
-
-  const week=Array.isArray(d.summary?.week)?d.summary.week:[];
-  if($('weekGrid'))$('weekGrid').innerHTML=week.length?week.map(x=>
-    '<div class="weekDay"><small>'+esc(x.label)+'</small><strong>'+humanDurationSeconds(x.irrigated_seconds)+'</strong><small>'+Number(x.pulses||0)+' pulsos</small></div>'
-  ).join(''):'<div class="empty">Sem histórico ainda.</div>';
-
-  const auditRaw=Array.isArray(d.audit_today)?d.audit_today:(Array.isArray(d.history)?d.history:[]);
-  const audit=auditRaw.filter(x=>!['viveiro_pulse_start','viveiro_pulse_complete'].includes(String(x.type||'')));
-  const filter=String(data.auditFilter||'all');
-  const events=filter==='all'?audit:audit.filter(x=>auditCategory(x.type)===filter);
-  if($('eventList'))$('eventList').innerHTML=events.length?events.slice(0,40).map(x=>{
-    const at=Number(x.ts||Date.parse(x.at||0));
-    const critical=auditCategory(x.type)==='error';
-    return '<div class="eventRow '+(critical?'criticalEvent':'')+'"><span class="eventIcon">'+eventIcon(x.type)+'</span><div><b>'+esc(x.detail||x.type||'Evento')+'</b><small>'+new Date(at).toLocaleDateString('pt-BR')+'</small></div><small>'+shortTime(at)+'</small></div>';
-  }).join(''):'<div class="empty">Nenhum evento nesta categoria hoje.</div>';
-  document.querySelectorAll('.auditFilter').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===filter));
-
-  const diag={phase:sec.phase||null,relay:data.relay,seconds_state:sec,weather:data.weatherProtection?.state||null,maintenance:maint,last_sync:data.lastSync};
-  if($('systemDiag'))$('systemDiag').textContent=JSON.stringify(diag,null,2);
-
-  const presets=d.presets||{};
-  if($('fastPresetSelect')){
-    const select=$('fastPresetSelect');
-    const current=select.value;
-    select.replaceChildren();
-    const empty=document.createElement('option');
-    empty.value='';
-    empty.textContent='Perfis salvos';
-    select.appendChild(empty);
-    Object.keys(presets).forEach(name=>{
-      const option=document.createElement('option');
-      option.value=name;
-      option.textContent=name;
-      select.appendChild(option);
-    });
-    if(presets[current])select.value=current;
-  }
-  const fc=d.fast_config||{};
-  if($('fastConfigMeta')&&fc.updated_at){
-    const origin=fc.origin?' • '+fc.origin:'';
-    $('fastConfigMeta').textContent='Última configuração salva: '+new Date(fc.updated_at).toLocaleString('pt-BR')+origin;
-  }
-  validateFastCycle();
-}
-async function setClimateAutomatic(){
-  const currentCfg={...(data.dashboard?.climate?.config||{})};
-  const current=Boolean(currentCfg.automatic);
-  const next=!current;
-  if(next&&!confirm('Ativar o Automático 2.0?\n\nEle ajusta principalmente o intervalo entre os pulsos, preservando o tempo-base ligado. Com confiança média ou alta, pode ajustar sozinho. Com confiança baixa, pede sua confirmação. Chuva continua tendo prioridade.'))return;
-  try{
-    const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({
-      ...currentCfg,
-      action:'climate_config',
-      automatic:next,
-      observation:false,
-      enabled:true
-    })});
-    data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
-    save();renderDashboard();
-    toast(next?'Automático 2.0 ativado':'Automático 2.0 desativado');
-    setTimeout(()=>syncDashboard(false),1000);
-  }catch(e){toast('Clima: '+String(e.message||e))}
-}
-async function setClimateObservation(){
-  const currentCfg={...(data.dashboard?.climate?.config||{})};
-  const current=Boolean(currentCfg.observation);
-  const next=!current;
-  try{
-    const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({
-      ...currentCfg,
-      action:'climate_config',
-      automatic:false,
-      observation:next,
-      enabled:true
-    })});
-    data.dashboard={...(data.dashboard||{}),climate:{...(data.dashboard?.climate||{}),config:r.climate_config}};
-    save();renderDashboard();
-    toast(next?'Modo observação ativado':'Modo observação desativado');
-    setTimeout(()=>syncDashboard(false),1000);
-  }catch(e){toast('Clima: '+String(e.message||e))}
-}
-async function answerClimateSuggestion(apply){
-  const pending=data.dashboard?.climate?.state?.pending;
-  if(!pending)return;
-  try{
-    const action=apply?'climate_apply':'climate_reject';
-    await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({action,id:pending.id})});
-    data.climatePromptedId=String(pending.id||'');
-    save();
-    toast(apply?'Alteração aprovada':'Tempo atual mantido');
-    setTimeout(()=>syncDashboard(false),1200);
-  }catch(e){toast('Ajuste climático: '+String(e.message||e))}
-}
-function maybePromptClimateSuggestion(payload){
-  const climate=payload?.climate||{};
-  if(climate.config?.observation)return;
-  const p=climate.state?.pending;
-  if(!p||String(data.climatePromptedId||'')===String(p.id||''))return;
-  data.climatePromptedId=String(p.id||'');save();
-  const currentCycle=Number(p.current_on_seconds||0)+' s ligado / '+Number(p.current_off_seconds||0)+' s desligado';
-  const targetCycle=Number(p.target_on_seconds||0)+' s ligado / '+Number(p.target_off_seconds||0)+' s desligado';
-  const confidence=String(p.confidence_label||'Baixa');
-  const msg='Sugestão do Automático 2.0\n\nCiclo atual: '+currentCycle+'\nSugestão: '+targetCycle+'\n\nConfiança: '+confidence+'\nMotivo: '+String(p.reason||'Condição climática diferente do tempo-base.')+'\n\nTemperatura: '+(p.temperature==null?'—':Number(p.temperature).toFixed(1)+' °C')+'\nUmidade: '+(p.humidity==null?'—':Number(p.humidity).toFixed(0)+'%')+'\n\nAplicar esta alteração?';
-  if(confirm(msg))answerClimateSuggestion(true);
-}
-async function syncDashboard(showToast=false){
-  if(dashboardSyncing||!data.settings.apiUrl||!data.settings.token)return;
-  dashboardSyncing=true;
-  try{
-    const r=await api('/api/viveiro/dashboard');
-    processDashboardNotifications(r);
-    data.dashboard=r;
-    if(r?.current_weather){
-      data.weatherProtection={
-        ...(data.weatherProtection||{}),
-        weather:r.current_weather,
-        state:r.weather?.state||data.weatherProtection?.state||{},
-        config:r.weather?.config||data.weatherProtection?.config||{}
-      };
-    }
-    save();renderDashboard();renderWeatherRuntimeOnly();maybePromptClimateSuggestion(r);
-    if(showToast)toast('Painel atualizado');
-  }catch(e){
-    if(showToast)toast('Painel: '+String(e.message||e));
-  }finally{
-    dashboardSyncing=false;
-  }
-}
-async function setMaintenance(minutes){
-  try{
-    const label=Number(minutes)>0?(Number(minutes)+' min'):'encerrar';
-    if(Number(minutes)>0&&!confirm('Ativar modo manutenção por '+label+'?\n\nA irrigação automática ficará suspensa.'))return;
-    const r=await api('/api/viveiro/dashboard',{method:'POST',body:JSON.stringify({action:'maintenance',minutes:Number(minutes)})});
-    data.dashboard={...(data.dashboard||{}),maintenance:r.maintenance};
-    renderDashboard();toast(Number(minutes)>0?'Modo manutenção ativado':'Manutenção encerrada');
-    setTimeout(()=>syncDashboard(false),1200);
-  }catch(e){toast('Manutenção: '+String(e.message||e))}
-}
-async function saveNamedPreset(){
-  if(secondsActive())return toast('Pare o ciclo antes de salvar um perfil');
-  const draft=readSecondsDraft();
-  const existing=data.dashboard?.presets||{};
-  const fallback='Perfil '+(Object.keys(existing).length+1);
-  const name=String($('fastPresetName')?.value||fallback).trim().slice(0,30);
-  if(!name)return;
-  const current=await api('/api/irrigation/config').catch(()=>({config:{}}));
-  const profiles={...(current?.config?.profiles||{})};
-  profiles.viveiroPresets={...(profiles.viveiroPresets||{}),[name]:{...draft,updated_at:new Date().toISOString()}};
-  await api('/api/irrigation/config',{method:'PATCH',body:JSON.stringify({profiles})});
-  if($('fastPresetName'))$('fastPresetName').value='';
-  toast('Perfil salvo');await syncDashboard(false);
-}
-function applyNamedPreset(name){
-  const p=data.dashboard?.presets?.[name];if(!p)return;
-  secondsEditorTouched=true;
-  $('secondsOn').value=Number(p.on_seconds||30);
-  $('secondsOff').value=Number(p.off_seconds||120);
-  $('secondsStart').value=minutesToClock(Number(p.start_minutes??360));
-  $('secondsEnd').value=minutesToClock(Number(p.end_minutes??1080));
-  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(p.days_mask||127)&Number(cb.value))});
-  updateFastCycleDraftUI();validateFastCycle();
-}
-function updateTodaySummary(){
-  const sec=data.secondsMode||{};
-  const draft=sec.enabled?sec:(data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127});
-  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(serverNowMs()));
-  const sameDay=String(sec.daily_day_key||'')===todayKey;
-  const pulses=sameDay?Number(sec.daily_pulses_started||0):0;
-  let irrigated=sameDay?Number(sec.daily_irrigated_seconds||0):0;
-  if(sec.enabled&&sec.phase==='on'&&sec.pulse_started_at){
-    irrigated+=Math.max(0,Math.min(Number(draft.on_seconds||0),(serverNowMs()-Number(sec.pulse_started_at))/1000));
-  }
-  if(!data.dashboard?.summary?.today){
-    if($('todayPulses'))$('todayPulses').textContent=String(pulses);
-    if($('todayWaterTime'))$('todayWaterTime').textContent=humanDurationSeconds(irrigated);
-  }
-  if($('todayStatus')){
-    $('todayStatus').textContent=sec.enabled?secondsPhaseLabel(sec.phase).toUpperCase():'PARADO';
-    $('todayStatus').className='phase '+(sec.enabled&&sec.phase==='on'?'':'off');
-  }
-  let next='Aguardando configuração';
-  if(sec.enabled){
-    if(sec.phase==='on')next='Desliga em '+secondsRemaining(sec.expected_off_at);
-    else if(sec.phase==='off')next='Liga novamente em '+secondsRemaining(sec.expected_next_on_at);
-    else if(sec.phase==='waiting_after_rain'&&sec.rain_last_at)next='Retoma em '+secondsRemaining(Number(sec.rain_last_at)+Number(sec.resume_delay_minutes||0)*60000);
-    else if(sec.phase==='waiting_window')next=nextActiveStart(draft);
-    else next=secondsPhaseLabel(sec.phase);
-  }else next=nextActiveStart(draft);
-  if($('nextEventText'))$('nextEventText').textContent=next;
-}
-function render(){
-  const online=data.online===true;
-  const wp=data.weatherProtection;
-  const wpState=wp?.state||{};
-  const wpConfig=wp?.config||{};
-  const weatherBlocked=isWeatherProtected();
-  const raining=Boolean(wp?.weather?.metrics?.rainDetected);
-  const sec=data.secondsMode||{};
-  const secActive=Boolean(sec.enabled);
-  const draft=data.secondsDraft||{on_seconds:30,off_seconds:120,start_minutes:360,end_minutes:1080,days_mask:127};
-  const secCfg=secActive?sec:draft;
-  const editorCfg=secActive?baseDraftFromSeconds(sec):draft;
-  if(!secondsEditorTouched){
-    if($('secondsOn')&&document.activeElement!==$('secondsOn'))$('secondsOn').value=Number(editorCfg.on_seconds||30);
-    if($('secondsOff')&&document.activeElement!==$('secondsOff'))$('secondsOff').value=Number(editorCfg.off_seconds||120);
-    if($('secondsStart')&&document.activeElement!==$('secondsStart'))$('secondsStart').value=minutesToClock(Number(editorCfg.start_minutes??360));
-    if($('secondsEnd')&&document.activeElement!==$('secondsEnd'))$('secondsEnd').value=minutesToClock(Number(editorCfg.end_minutes??1080));
-    document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.checked=Boolean(Number(editorCfg.days_mask??127)&Number(cb.value))});
-  }
-  ['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{if($(id))$(id).disabled=false});
-  document.querySelectorAll('#secondsDays input').forEach(cb=>{cb.disabled=false});
-  if($('secondsBadge')){$('secondsBadge').textContent=secActive?(sec.paused_by_weather?'PAUSADO PELO CLIMA':'ATIVO'):'DESATIVADO';$('secondsBadge').className='phase '+(secActive&&!sec.paused_by_weather?'':'off')}
-  if($('secondsStatus')){$('secondsStatus').className='secondsStatus '+(secActive?'on':'');$('secondsStatus').innerHTML='<span>'+(secActive?('Em funcionamento • '+secondsPhaseLabel(sec.phase)):'Configuração salva')+'</span><strong>'+Number(secCfg.on_seconds||30)+' s / '+Number(secCfg.off_seconds||120)+' s • '+minutesToClock(secCfg.start_minutes)+'–'+minutesToClock(secCfg.end_minutes)+'</strong>'} updateSecondsLive();
-  if($('saveSecondsConfig'))$('saveSecondsConfig').disabled=false;
-  if($('enableSeconds')){$('enableSeconds').textContent=secActive?'Ciclo rápido em funcionamento':'Iniciar ciclo rápido';$('enableSeconds').disabled=secActive}
-  if($('disableSeconds'))$('disableSeconds').disabled=!secActive;
-  if($('secondsSaveHint'))$('secondsSaveHint').innerHTML=secActive
-    ?'O ciclo está em funcionamento. Para alterar os valores, pare o ciclo primeiro.'
-    :'A configuração fica salva neste aparelho. Depois de salvar, toque em <b>Iniciar ciclo rápido</b>.';
-  updateFastCycleDraftUI();
-  if($('secondsCloudState')){
-    const cs=data.secondsCloud||{};
-    $('secondsCloudState').textContent=cs.synced?'☁ sincronizado':'☁ não sincronizado';
-    $('secondsCloudState').className='cloudState '+(cs.synced?'ok':'bad');
-  }
-  updateTodaySummary();
-
-  if($('viveiroRainState'))$('viveiroRainState').textContent=wp?.weather?.linked?(raining?'Chuva detectada':'Sem chuva'):'Sem dados';
-  if($('viveiroRainState'))$('viveiroRainState').className=raining?'bad':'ok';
-  if($('viveiroProtectState'))$('viveiroProtectState').textContent=weatherStatusLabel(wpState.status);
-  if($('viveiroProtectState'))$('viveiroProtectState').className=weatherBlocked?'bad':wpState.status==='clear'||wpState.status==='resumed_inside_window'||wpState.status==='restored_outside_window'?'ok':'';
-  if($('viveiroResumeState')){
-    $('viveiroResumeState').textContent=wpState.status==='paused_rain'
-      ?'Após parar de chover'
-      :wpState.status==='waiting_resume_delay'
-        ?formatResumeTime(wpState.resumeEligibleAt)
-        :wpState.status==='restored_outside_window'
-          ?'Próxima janela'
-          :wpState.status==='resumed_inside_window'
-            ?'Retomado'
-            :wpState.resumeEligibleAt?formatResumeTime(wpState.resumeEligibleAt):'—';
-  }
-  if($('viveiroMonitorState'))$('viveiroMonitorState').textContent=wpConfig.enabled===false?'Desativado':'Ativo • ~5 min';
-  if($('protectFlag')){
-    $('protectFlag').className='protectFlag '+(weatherBlocked?'blocked':'');
-    $('protectFlag').textContent=weatherBlocked
-      ?(raining?'Weather2-2 detectou chuva • viveiro protegido':'Aguardando tempo para retomar')
-      :(wpConfig.enabled===false?'Proteção por chuva desativada':'Weather2-2 • proteção automática ativa');
-  }
-  if($('viveiroRainThreshold')&&document.activeElement!==$('viveiroRainThreshold'))$('viveiroRainThreshold').value=Number(wpConfig.rainThresholdMm??5);
-  if($('viveiroResumeDelay')&&document.activeElement!==$('viveiroResumeDelay'))$('viveiroResumeDelay').value=Number(wpConfig.resumeDelayMinutes??30);
-  if($('viveiroBlockWhileRaining')&&document.activeElement!==$('viveiroBlockWhileRaining'))$('viveiroBlockWhileRaining').checked=wpConfig.blockWhileRaining===true;
-  if($('viveiroWeatherEnabled')&&document.activeElement!==$('viveiroWeatherEnabled'))$('viveiroWeatherEnabled').checked=wpConfig.enabled!==false;
-  $('relayState').textContent=data.relay===true?'Ligada':data.relay===false?'Desligada':'Desconhecida';
-  $('connectionState').textContent=!data.settings.token?'Token não configurado':online?'Online':data.online===false?'Offline':'Aguardando';
-  $('connectionState').className=online?'ok':data.online===false?'bad':'';
-  $('conn').textContent=syncing?'● Atualizando':online?'● Online':'● Smart Life';
-  $('heroTitle').textContent=weatherBlocked?'Viveiro pausado pela chuva':data.relay===true?'Viveiro irrigando':data.relay===false?'Viveiro em espera':secActive?'Modo rápido em segundos':'Ciclo nativo do EKAZA';
-  $('heroSub').textContent=weatherBlocked
-    ?(raining?'A Weather2-2 detectou chuva e a irrigação foi interrompida.':'Aguardando o tempo configurado para retomar a irrigação.')
-    :data.relay===true?(secActive?'Pulso rápido ligado neste momento.':'Saída EKAZA ligada neste momento.'):data.relay===false?(secActive?'Intervalo do modo rápido.':'Saída EKAZA desligada neste momento.'):(secActive?'Automação em segundos ativa na Tuya Cloud.':'O próprio dispositivo mantém o ciclo nativo em minutos.');
-  $('phase').textContent=weatherBlocked?(raining?'PAUSADO POR CHUVA':'AGUARDANDO RETOMADA'):data.relay===true?'IRRIGANDO':data.relay===false?'EM ESPERA':'AGUARDANDO ESTADO';
-  $('phase').className='phase '+(data.relay===true&&!weatherBlocked?'':'off');
-  $('phaseState').textContent=weatherBlocked?weatherStatusLabel(wpState.status):data.relay===true?'Irrigando':data.relay===false?'Em espera':'Desconhecida';
-  $('cycleDetected').textContent=data.cycleConfig?'Sim':'Não reportado';
-  if(secActive){
-    $('cycleCard').textContent=Number(sec.on_seconds||30)+' s / '+Number(sec.off_seconds||120)+' s';
-    $('cycleEnabledState').textContent=sec.paused_by_weather?'Pausado pelo clima':'Modo rápido ativo';
-    $('cycleEnabledState').className=sec.paused_by_weather?'bad':'ok';
-    $('cycleOnState').textContent=Number(sec.on_seconds||30)+' s';
-    $('cycleOffState').textContent=Number(sec.off_seconds||120)+' s';
-    $('cycleWindowState').textContent=minutesToClock(sec.start_minutes)+' às '+minutesToClock(sec.end_minutes);
-    $('cycleDaysState').textContent=daysLabel(Number(sec.days_mask||0));
-    $('toggleCycle').textContent='Ciclo nativo pausado';
-  }else if(data.cycleConfig){
-    $('cycleCard').textContent=data.cycleConfig.onMinutes+' min / '+data.cycleConfig.offMinutes+' min';
-    $('cycleEnabledState').textContent=data.cycleConfig.enabled?'Ativo':'Pausado';
-    $('cycleEnabledState').className=data.cycleConfig.enabled?'ok':'bad';
-    $('cycleOnState').textContent=data.cycleConfig.onMinutes+' min';
-    $('cycleOffState').textContent=data.cycleConfig.offMinutes+' min';
-    $('cycleWindowState').textContent=minutesToClock(data.cycleConfig.startMinutes)+' às '+minutesToClock(data.cycleConfig.endMinutes);
-    $('cycleDaysState').textContent=daysLabel(data.cycleConfig.daysMask);
-    $('toggleCycle').textContent=data.cycleConfig.enabled?'Pausar ciclo':'Retomar ciclo';
-  }else{
-    $('cycleCard').textContent='Aguardando leitura';
-    $('cycleEnabledState').textContent='Aguardando';
-    $('cycleOnState').textContent='—';
-    $('cycleOffState').textContent='—';
-    $('cycleWindowState').textContent='—';
-    $('cycleDaysState').textContent='—';
-    $('toggleCycle').textContent='Pausar / retomar ciclo';
-  }
-  $('countdownState').textContent=(typeof data.countdown==='number'&&data.countdown>0)?data.countdown+' s':'—';
-  $('liveDot').className='liveDot '+(online?'on':'');
-  $('liveText').textContent=syncing?'Atualizando…':online?'Online':'Offline';
-  $('lastSync').textContent=data.lastSync?'Atualizado '+new Date(data.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'Nunca atualizado';
-  $('autoState').textContent=!data.settings.token?'Aguardando token':data.live?.connected?'Tempo real':'Reconectando…';
-  $('refresh').disabled=syncing;
-  if($('emergencyStop'))$('emergencyStop').disabled=syncing;
-  $('manualOn').disabled=syncing||weatherBlocked||secActive;
-  $('manualOff').disabled=syncing||secActive;
-  $('editCycle').disabled=weatherBlocked||secActive;
-  $('toggleCycle').disabled=weatherBlocked||secActive;
-  if($('timelineOn'))$('timelineOn').textContent=secActive?'💧 '+Number(sec.on_seconds||30)+' segundos ligado':'💧 '+(data.cycleConfig?.onMinutes||1)+' minuto'+((data.cycleConfig?.onMinutes||1)===1?'':'s')+' ligado';
-  if($('timelineOff'))$('timelineOff').textContent=secActive?'⏸ '+Number(sec.off_seconds||120)+' segundos desligado':'⏸ '+(data.cycleConfig?.offMinutes||2)+' minutos desligado';
-  if($('timelineOnSub'))$('timelineOnSub').textContent=secActive?'O servidor Fazenda 2E envia e confirma o comando.':'Executado pelo ciclo nativo do EKAZA.';
-  if($('timelineOffSub'))$('timelineOffSub').textContent=secActive?'O servidor contínuo espera este intervalo antes do próximo pulso.':'Depois ele volta a ligar conforme a programação existente.';
-  $('cycleInfo').textContent=data.lastError?'Último erro: '+data.lastError:(secActive?'Modo rápido em segundos ativo pelo servidor Fazenda 2E; o cycle_time nativo fica pausado para não conflitar com os pulsos.':data.cycleConfig?'Programação lida diretamente do EKAZA. Você pode ajustar pelo botão “Ajustar irrigação”.':'Nenhuma programação compatível foi identificada ainda.');
-  $('cycleRaw').textContent=data.cycleTime==null?'Nenhum cycle_time recebido.':(typeof data.cycleTime==='string'?data.cycleTime:JSON.stringify(data.cycleTime,null,2));
-  $('history').innerHTML=data.history.length?data.history.slice(0,20).map(h=>{const d=new Date(h.at);return '<div class="hist"><b>'+esc(h.detail)+'</b><small>'+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</small></div>'}).join(''):'<div class="empty">Os comandos enviados pelo app aparecerão aqui.</div>';
-}
-$('refresh').onclick=()=>{syncStatus(true);syncWeatherProtection(false)};
-$('checkWeatherProtection').onclick=()=>syncWeatherProtection(true);
-$('saveWeatherProtection').onclick=saveWeatherProtectionConfig;
-['secondsOn','secondsOff','secondsStart','secondsEnd'].forEach(id=>{
-  $(id)?.addEventListener('input',()=>{secondsEditorTouched=true;updateFastCycleDraftUI();validateFastCycle()});
-  $(id)?.addEventListener('change',()=>{secondsEditorTouched=true;updateFastCycleDraftUI();validateFastCycle()});
-});
-document.querySelectorAll('#secondsDays input').forEach(cb=>cb.addEventListener('change',()=>{
-  secondsEditorTouched=true;updateFastCycleDraftUI();validateFastCycle();
-}));
-document.querySelectorAll('.secondsPreset').forEach(btn=>btn.onclick=()=>{
-  secondsEditorTouched=true;
-  $('secondsOn').value=btn.dataset.on;
-  $('secondsOff').value=btn.dataset.off;
-  updateFastCycleDraftUI();validateFastCycle();
-});
-$('saveSecondsConfig').onclick=()=>{saveSecondsDraft(true)};
-$('enableSeconds').onclick=enableSecondsMode;
-$('disableSeconds').onclick=disableSecondsMode;
-$('editCycle').onclick=openCycleEditor;
-$('toggleCycle').onclick=toggleCycleState;
-$('manualOn').onclick=()=>manual(true);
-$('emergencyStop').onclick=emergencyStop;
-if($('clearEmergency'))$('clearEmergency').onclick=clearEmergencyStopUi;
-$('manualOff').onclick=()=>manual(false);
-$('clear').onclick=()=>{data.history=[];save();render()};
-$('settings').onclick=$('conn').onclick=()=>{$('apiUrl').value=data.settings.apiUrl||'';$('controlToken').value=data.settings.token||'';$('settingsDlg').showModal()};
-$('saveCycle').onclick=async e=>{
-  e.preventDefault();
-  const daysMask=Array.from(document.querySelectorAll('#cycleDays input:checked')).reduce((m,cb)=>m|Number(cb.value),0);
-  const config={
-    enabled:$('cycleEnabled').checked,
-    daysMask,
-    startMinutes:clockToMinutes($('cycleStart').value),
-    endMinutes:clockToMinutes($('cycleEnd').value),
-    onMinutes:Number($('cycleOn').value),
-    offMinutes:Number($('cycleOff').value)
-  };
-  if(!Number.isInteger(config.onMinutes)||config.onMinutes<1||config.onMinutes>1440)return toast('Tempo ligado deve ficar entre 1 e 1440 minutos');
-  if(!Number.isInteger(config.offMinutes)||config.offMinutes<1||config.offMinutes>1440)return toast('Tempo desligado deve ficar entre 1 e 1440 minutos');
-  if(!Number.isFinite(config.startMinutes)||!Number.isFinite(config.endMinutes)||config.endMinutes<=config.startMinutes)return toast('Confira o horário inicial e final');
-  if(!daysMask)return toast('Selecione pelo menos um dia da semana');
-  const msg='Salvar esta programação no EKAZA?\n\nLigado: '+config.onMinutes+' min\nDesligado: '+config.offMinutes+' min\nHorário: '+$('cycleStart').value+' às '+$('cycleEnd').value+'\nDias: '+daysLabel(daysMask);
-  if(!confirm(msg))return;
-  const ok=await saveCycleConfig(config,'Programação alterada: '+config.onMinutes+' min ligado / '+config.offMinutes+' min desligado');
-  if(ok)$('cycleDlg').close();
-};
-$('saveSettings').onclick=e=>{e.preventDefault();data.settings.apiUrl=$('apiUrl').value.trim();data.settings.token=$('controlToken').value.trim();data.online=null;save();$('settingsDlg').close();render();if(data.settings.apiUrl&&data.settings.token)syncStatus(true);else toast('Configuração salva')};
-reorganizeLayout();render();renderDashboard();updateNotificationState().catch(()=>null);if(data.settings.apiUrl&&data.settings.token){
-  loadSecondsCloudConfig();
-  syncSecondsMode(false);
-  syncDashboard(false);
-  setTimeout(()=>syncStatus(false),180);
-}
-function liveTransportActive(){return Boolean(data.live?.connected&&serverNowMs()-Number(data.live?.lastEventAt||0)<20000)}
-// O streaming é a via principal. Estas consultas viraram apenas redundância/fallback.
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
-  if(!liveTransportActive()||serverNowMs()-Number(data.live?.secondsAt||0)>15000)syncSecondsMode(false);
-}},1500);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
-  const interval=liveTransportActive()?15000:2500;
-  const last=Number(data.dashboard?.server?.at||0);
-  if(!last||serverNowMs()-last>=interval)syncDashboard(false);
-}},2500);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
-  if(!liveTransportActive()||Date.now()-Number(data.lastSync||0)>30000)syncStatus(false);
-}},4000);
-setInterval(()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
-  if(!liveTransportActive()||serverNowMs()-Number(data.live?.weatherAt||0)>45000)syncWeatherProtection(false);
-}},15000);
-function startPreciseLiveClock(){
-  if(liveClockFrame)return;
-  const tick=ts=>{
-    liveClockFrame=requestAnimationFrame(tick);
-    if(document.visibilityState!=='visible')return;
-    if(ts-liveClockLastPaint<150)return;
-    liveClockLastPaint=ts;
-    updateSecondsLive();
-    updateWeatherCountdownLive();
-    const currentSecond=Math.floor(serverNowMs()/1000);
-    if(currentSecond!==liveClockSecond){
-      liveClockSecond=currentSecond;
-      updateTodaySummary();
-    }
-  };
-  liveClockFrame=requestAnimationFrame(tick);
-}
-startPreciseLiveClock();
-function updateOfflineBanner(){
-  const el=$('offlineBanner');
-  if(!el)return;
-  const noNetwork=!navigator.onLine;
-  const quota=Boolean(data.tuyaUnavailable);
-  const offline=data.online===false;
-  const show=noNetwork||quota||offline;
-  el.className='offlineBanner '+(show?'show':'');
-  if(!show){el.innerHTML='';return}
-  if(noNetwork){
-    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Sem internet</b><span>A tela não consegue atualizar agora</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">Verifique a conexão deste iPhone e tente novamente.</div></details>';
-    return;
-  }
-  if(quota){
-    el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>Smart Life indisponível</b><span>Estado do EKAZA não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">A integração Smart Life não conseguiu confirmar o estado ao vivo do EKAZA. O aplicativo continuará tentando atualizar automaticamente.</div></details>';
-    return;
-  }
-  el.innerHTML='<details><summary><span class="offlineIcon">!</span><span class="offlineMain"><b>EKAZA sem resposta</b><span>Estado ao vivo não confirmado</span></span><span class="offlineMore">Ver detalhes</span></summary><div class="offlineDetail">O servidor não recebeu uma leitura válida do EKAZA/Tuya neste momento.</div></details>';
-}
-window.addEventListener('online',()=>{
-  updateOfflineBanner();
-  syncSecondsMode(false);
-  syncDashboard(false);
-  setTimeout(()=>syncStatus(false),180);
-});
-window.addEventListener('offline',updateOfflineBanner);
-setInterval(updateOfflineBanner,3000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&data.settings.apiUrl&&data.settings.token){
-  syncSecondsMode(false);
-  syncDashboard(false);
-  setTimeout(()=>syncStatus(false),180);
-}});
-window.__viveiroRuntime={
-  getData:()=>data,
-  serverNow:()=>serverNowMs(),
-  save,
-  markSecondsFresh:(serverAt=Date.now())=>{secondsFreshAt=Date.now();if(serverAt)serverClockOffsetMs=Number(serverAt)-Date.now()},
-  syncSecondsEditorFromState,
-  renderSecondsControlsOnly,
-  renderSecondsRuntimeOnly,
-  renderConnectionRuntimeOnly,
-  renderWeatherRuntimeOnly,
-  renderDashboard,
-  syncSecondsMode,
-  syncDashboard,
-  syncStatus,
-  syncWeatherProtection
-};
-</script>
-<script src="/irrigacao/ui-shell.js?v=20260909-4" defer></script>
-</body></html>
+  <div id="toast" class="toast"></div>
+  <script src="/irrigacao/app.js?v=20260909-1" defer></script>
+</body>
+</html>

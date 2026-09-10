@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
@@ -7,6 +8,7 @@ import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import { publishLive } from './live-bus.js';
+import { accountingDayKey, normalizeHistoryRows, pulseAccountingForDay } from './accounting.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -28,6 +30,9 @@ let remoteStoreRetryAt=0;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
+const HISTORY_PATH='IrrigacaoFazenda2E/history';
+const ACCOUNTING_RECONCILE_MS=5*60*1000;
+let accountingTimer=null;
 // Railway auto-deploy marker v2
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
@@ -67,25 +72,71 @@ function addPrecisionSample(kind,targetMs,actualMs,at=Date.now()){
     }
   };
 }
+function historyEventId(type,extra={},ts=Date.now()){
+  const supplied=String(extra?.event_id||'').trim();
+  if(supplied)return supplied;
+  const pulseId=String(extra?.pulse_id||'').trim();
+  if(pulseId)return String(type||'event')+'-'+pulseId;
+  return String(type||'event')+'-'+ts+'-'+randomUUID().slice(0,10);
+}
 async function event(type,detail,extra={}){
+  const ts=Date.now();
   const row={
     type,
     detail,
     source:'viveiro_fast',
     status:String(state.phase||''),
-    ts:Date.now(),
+    ts,
+    event_id:historyEventId(type,extra,ts),
     ...extra
   };
-  await appendHistory(row).catch(()=>null);
+  try{
+    await appendHistory(row);
+    const pending=Array.isArray(state.pending_history_events)?state.pending_history_events:[];
+    state={
+      ...state,
+      history_sync:{
+        status:pending.length?'pending':'ok',
+        pending:pending.length,
+        last_success_at:Date.now(),
+        last_error:null
+      }
+    };
+  }catch(error){
+    console.error('Falha ao gravar evento do Viveiro:',row.event_id,error?.message||error);
+    const previous=Array.isArray(state.pending_history_events)?state.pending_history_events:[];
+    const pending=[
+      ...previous.filter(item=>String(item?.event_id||'')!==String(row.event_id)),
+      row
+    ].slice(-120);
+    state={
+      ...state,
+      pending_history_events:pending,
+      history_sync:{
+        status:'degraded',
+        pending:pending.length,
+        last_failure_at:Date.now(),
+        last_error:error?.message||String(error)
+      }
+    };
+    await persist().catch(()=>null);
+    await pushNotice(
+      'Atenção • histórico do Viveiro',
+      'Um evento não foi confirmado no Firebase e ficou na fila para nova tentativa. A irrigação continua protegida.',
+      'viveiro-history-write-failure',
+      'warning',
+      30,
+      true
+    );
+  }
   publishLive('event',row);
+  return row;
 }
 async function pushNotice(title,body,tag,level='info',cooldownMinutes=0,whatsapp=true){
   await notifyIrrigation({title,body,tag,url:'/irrigacao/',level,cooldownMinutes,whatsapp}).catch(()=>null);
 }
 function localDayKey(ts=Date.now()){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(ts));
+  return accountingDayKey(ts);
 }
 function ensureDailyCounters(ts=Date.now()){
   const key=localDayKey(ts);
@@ -95,9 +146,144 @@ function ensureDailyCounters(ts=Date.now()){
       daily_day_key:key,
       daily_pulses_started:0,
       daily_pulses_completed:0,
+      daily_pulses_interrupted:0,
       daily_irrigated_seconds:0,
       daily_last_pulse_at:0
     };
+  }
+}
+async function flushPendingHistory(){
+  const pending=Array.isArray(state.pending_history_events)?state.pending_history_events:[];
+  if(!pending.length)return{ok:true,pending:0};
+
+  const remaining=[];
+  let sent=0;
+  for(const row of pending){
+    try{
+      await appendHistory(row);
+      sent+=1;
+    }catch(error){
+      remaining.push(row);
+      console.error('Retry do histórico falhou:',row?.event_id,error?.message||error);
+    }
+  }
+  state={
+    ...state,
+    pending_history_events:remaining,
+    history_sync:{
+      status:remaining.length?'degraded':'ok',
+      pending:remaining.length,
+      last_retry_at:Date.now(),
+      last_success_at:remaining.length?state.history_sync?.last_success_at:Date.now(),
+      last_error:remaining.length?'Ainda existem eventos aguardando Firebase.':null
+    }
+  };
+  await persist().catch(()=>null);
+  return{ok:remaining.length===0,pending:remaining.length,sent};
+}
+async function reconcileDailyAccounting({notify=false}={}){
+  ensureDailyCounters();
+  const before={
+    started:Number(state.daily_pulses_started||0),
+    completed:Number(state.daily_pulses_completed||0),
+    interrupted:Number(state.daily_pulses_interrupted||0),
+    irrigated:Number(state.daily_irrigated_seconds||0)
+  };
+
+  await flushPendingHistory().catch(()=>null);
+  const pending=Array.isArray(state.pending_history_events)?state.pending_history_events.length:0;
+  if(pending){
+    state={
+      ...state,
+      accounting_reconciliation:{
+        status:'degraded',
+        checked_at:Date.now(),
+        day_key:localDayKey(),
+        pending_history_events:pending,
+        message:'Reconciliação aguardando eventos pendentes do Firebase.'
+      }
+    };
+    await persist().catch(()=>null);
+    return state.accounting_reconciliation;
+  }
+
+  try{
+    const raw=await storeGet(HISTORY_PATH);
+    const rows=normalizeHistoryRows(raw).filter(row=>
+      String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
+    );
+    const accounting=pulseAccountingForDay(rows,localDayKey());
+    const expected={
+      started:Number(accounting.pulses_started||0),
+      completed:Number(accounting.pulses_completed||0),
+      interrupted:Number(accounting.pulses_interrupted||0),
+      irrigated:Number(accounting.irrigated_seconds||0)
+    };
+    const mismatch=
+      before.started!==expected.started||
+      before.completed!==expected.completed||
+      before.interrupted!==expected.interrupted||
+      Math.abs(before.irrigated-expected.irrigated)>0.25;
+
+    if(mismatch){
+      state={
+        ...state,
+        daily_pulses_started:expected.started,
+        daily_pulses_completed:expected.completed,
+        daily_pulses_interrupted:expected.interrupted,
+        daily_irrigated_seconds:expected.irrigated,
+        accounting_reconciliation:{
+          status:'corrected',
+          checked_at:Date.now(),
+          day_key:accounting.day_key,
+          before,
+          expected,
+          message:'Contadores diários reconciliados com o histórico confirmado.'
+        }
+      };
+      await persist();
+      console.warn('Contabilidade do Viveiro reconciliada',{before,expected});
+      await event('viveiro_accounting_reconciled','Contadores diários reconciliados com o histórico confirmado.',{
+        before,expected,day_key:accounting.day_key
+      });
+      if(notify){
+        await pushNotice(
+          'Contagem do Viveiro corrigida',
+          'O sistema encontrou uma diferença entre os contadores e o histórico e fez a correção automaticamente.',
+          'viveiro-accounting-reconciled-'+accounting.day_key,
+          'warning',
+          60,
+          true
+        );
+      }
+    }else{
+      state={
+        ...state,
+        accounting_reconciliation:{
+          status:'ok',
+          checked_at:Date.now(),
+          day_key:accounting.day_key,
+          expected,
+          message:'Contadores e histórico conferem.'
+        }
+      };
+      await persist();
+    }
+    return state.accounting_reconciliation;
+  }catch(error){
+    state={
+      ...state,
+      accounting_reconciliation:{
+        status:'degraded',
+        checked_at:Date.now(),
+        day_key:localDayKey(),
+        message:'Não foi possível conferir a contabilidade no Firebase.',
+        error:error?.message||String(error)
+      }
+    };
+    await persist().catch(()=>null);
+    console.error('Reconciliação contábil indisponível:',error?.message||error);
+    return state.accounting_reconciliation;
   }
 }
 async function maintenance(){

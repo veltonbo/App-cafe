@@ -1,1 +1,1 @@
-Café Audit v1 — auditoria automática, alertas inteligentes, atividade por setor e detecção de programação perdida — 2026-09-09
+Café Reports v1 — relatório diário, incidentes persistentes, tendências 7/30 dias e acompanhamento por setor — 2026-09-09

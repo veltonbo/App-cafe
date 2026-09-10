@@ -113,3 +113,28 @@ dialog{width:min(94vw,520px);max-height:86vh;padding:0;border:1px solid var(--li
   .fieldGrid.two{grid-template-columns:1fr}
   .sectorActions{grid-template-columns:1.2fr .8fr .8fr}
 }
+
+
+.auditSummaryCard{width:100%;margin-top:8px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#edf5f1;color:var(--ink);text-align:left}
+.auditSummaryCard>i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#dcebe4;color:var(--green);font-style:normal;font-weight:950}
+.auditSummaryCard span small{display:block;color:#74847d;font-size:.44rem;font-weight:900;letter-spacing:.12em}
+.auditSummaryCard span strong{display:block;margin-top:2px;font-size:.62rem}
+.auditSummaryCard span em{display:block;margin-top:1px;color:#778780;font-size:.48rem;font-style:normal;line-height:1.25}
+.auditSummaryCard>b{color:#87958f;font-size:1rem}
+.auditSummaryCard.warning{border-color:#ead3a9;background:#fffaf1}
+.auditSummaryCard.warning>i{background:var(--warnSoft);color:var(--warn)}
+.auditSummaryCard.critical{border-color:#efc7c3;background:#fff7f6}
+.auditSummaryCard.critical>i{background:var(--dangerSoft);color:var(--danger)}
+.sectorActivity{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid #edf2ef}
+.sectorActivity span{color:#6f7f78;font-size:.46rem;line-height:1.25}
+.auditList{display:grid;gap:6px;margin-top:9px}
+.auditItem,.auditOk{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:10px;background:#fafcfb}
+.auditItem>i,.auditOk>i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-weight:950}
+.auditItem.warning>i{background:var(--warnSoft);color:var(--warn)}
+.auditItem.critical{border-color:#efcbc7;background:#fff9f8}
+.auditItem.critical>i{background:var(--dangerSoft);color:var(--danger)}
+.auditOk>i{background:var(--soft);color:var(--green)}
+.auditItem b,.auditOk b{display:block;font-size:.58rem}
+.auditItem small,.auditOk small{display:block;margin-top:2px;color:var(--muted);font-size:.49rem;line-height:1.3}
+.auditFoot{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #edf2ef;color:var(--muted);font-size:.49rem}
+.auditFoot strong{color:#53665d}

@@ -2,8 +2,8 @@ import { applyCors, authorize } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
 import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
-import { getAutomationConfig, storeGet } from '../irrigation/_store.js';
-import { CAFE_ROOT, getCafeActiveSession, getCafeWeatherState, getCafeScheduleCache } from './_state.js';
+import { appendHistory, getAutomationConfig, storeGet } from '../irrigation/_store.js';
+import { CAFE_ROOT, getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, getCafeScheduleCache } from './_state.js';
 
 const TZ='America/Porto_Velho';
 
@@ -156,6 +156,39 @@ function nextSchedule(scheduleByDevice,controllers,now=Date.now()){
   return best;
 }
 
+async function completeFinishedSession(deviceId,controllerIndex,state,session){
+  if(!session||!state)return{session,completed:false};
+  const startedAt=Number(session.started_at||0);
+  const activeMask=Number(state.runtime?.active_mask||0);
+  const pendingMask=Number(state.runtime?.pending_mask||0);
+  if(activeMask||pendingMask||!startedAt||Date.now()-startedAt<5000){
+    return{session,completed:false};
+  }
+
+  const sessionId=String(session.session_id||'').trim();
+  await setCafeActiveSession(deviceId,null).catch(error=>
+    console.error('Café dashboard active complete:',error?.message||error)
+  );
+  await appendHistory({
+    ...(sessionId?{event_id:'complete-'+sessionId,session_id:sessionId}:{}),
+    type:'complete',
+    controller_id:deviceId,
+    controller_index:controllerIndex,
+    zone:Number(session.zone||0),
+    sector:Number(session.sector||0),
+    duration_minutes:Number(session.duration_minutes||0),
+    mode:session.mode||'Manual',
+    source:'smartlife',
+    status:'confirmed',
+    detail:session.kind==='group'?(session.name||'Grupo concluído'):'Irrigação concluída',
+    zones:Array.isArray(session.zones)?session.zones:undefined,
+    started_at:startedAt,
+    expected_end_at:Number(session.expected_end_at||0)||null,
+    completed_at:Date.now()
+  }).catch(error=>console.error('Histórico Café complete dashboard:',error?.message||error));
+  return{session:null,completed:true};
+}
+
 function runtimeFrom(state,activeSession){
   if(!state)return null;
   let activeMask=Number(state.runtime?.active_mask||0);
@@ -211,16 +244,28 @@ export default async function handler(req,res){
 
     let inkbirdState=null;
     let activeSession=null;
+    let sessionCompleted=false;
     if(selected){
       [inkbirdState,activeSession]=await Promise.all([
         readInkbirdState({deviceId:selected.id,force:true,maxAgeMs:0}).catch(()=>null),
         getCafeActiveSession(selected.id).catch(()=>null)
       ]);
+      const completion=await completeFinishedSession(
+        selected.id,
+        Number(selected.controller_index||1),
+        inkbirdState,
+        activeSession
+      );
+      activeSession=completion.session;
+      sessionCompleted=completion.completed;
     }
 
-    const [historyRaw,config,weather,weatherState,scheduleEntries]=await Promise.all([
+    let [historyRaw,config,weather,weatherState,scheduleEntries]=await Promise.all([
       historyRawPromise,configPromise,weatherPromise,weatherStatePromise,Promise.all(schedulePromises)
     ]);
+    if(sessionCompleted){
+      historyRaw=await storeGet(CAFE_ROOT+'/history').catch(()=>historyRaw);
+    }
     const history=rows(historyRaw);
     const scheduleByDevice=Object.fromEntries(scheduleEntries);
     const summary=summarizeCafeHistory(history);

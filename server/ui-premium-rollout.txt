@@ -1,1 +1,1 @@
-Viveiro Reports v1 — relatório diário, incidentes persistentes, tendências 7/30 dias e status do dia — 2026-09-09
+Viveiro Reports v1.1 — relatório 30 dias otimizado em passagem única, incidentes e status do dia — 2026-09-09

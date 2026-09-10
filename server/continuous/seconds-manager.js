@@ -1755,7 +1755,7 @@ export async function initSecondsManager(){
       const type=String(row?.type||'unknown');
       byDay[key].types[type]=(byDay[key].types[type]||0)+1;
     }
-    console.log('Viveiro history diagnostic',{
+    console.log('Viveiro history diagnostic JSON',JSON.stringify({
       daily_state:{
         day_key:String(state.daily_day_key||''),
         started:Number(state.daily_pulses_started||0),
@@ -1768,7 +1768,7 @@ export async function initSecondsManager(){
         issues:(state.operational_audit?.issues||[]).map(x=>({code:x.code,level:x.level,message:x.message}))
       },
       by_day:byDay
-    });
+    }));
   }catch(error){
     console.warn('Diagnóstico do histórico indisponível:',error?.message||error);
   }

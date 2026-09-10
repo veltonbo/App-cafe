@@ -223,14 +223,26 @@ server.listen(PORT,'0.0.0.0',()=>{
           level:String(x?.level||'warning'),
           message:String(x?.message||'')
         })),
-        viveiro_precision:{
-          samples:Number(viveiroRaw?.seconds?.precision?.samples||0),
-          avg_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.avg_abs_error_ms||0),
-          max_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.max_abs_error_ms||0),
-          last_error_ms:Number(viveiroRaw?.seconds?.precision?.last_error_ms||0),
-          last_expected_at:Number(viveiroRaw?.seconds?.precision?.last_expected_at||0)||null,
-          last_actual_at:Number(viveiroRaw?.seconds?.precision?.last_actual_at||0)||null
-        }
+        viveiro_precision:(()=>{
+          const samples=Array.isArray(viveiroRaw?.seconds?.precision_samples)?viveiroRaw.seconds.precision_samples:[];
+          const byKind=kind=>{
+            const rows=samples.filter(x=>String(x?.kind||'')===kind);
+            const abs=rows.map(x=>Number(x?.abs_error_ms||0)).filter(Number.isFinite);
+            return{
+              samples:rows.length,
+              avg_abs_error_ms:abs.length?Math.round(abs.reduce((a,b)=>a+b,0)/abs.length):0,
+              max_abs_error_ms:abs.length?Math.max(...abs):0,
+              latest:rows.at(-1)||null
+            };
+          };
+          return{
+            samples:Number(viveiroRaw?.seconds?.precision?.samples||0),
+            avg_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.avg_abs_error_ms||0),
+            max_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.max_abs_error_ms||0),
+            on:byKind('on'),
+            interval:byKind('interval')
+          };
+        })()
       });
     }catch(error){
       console.warn('Painel startup diagnostic falhou:',error?.message||error);

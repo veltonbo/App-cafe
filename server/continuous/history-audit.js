@@ -15,15 +15,34 @@ function rowTs(row){
   const parsed=Date.parse(row?.at||'');
   return Number.isFinite(parsed)?parsed:0;
 }
+function durationSeconds(row){
+  const actual=Number(row?.actual_duration_seconds);
+  if(Number.isFinite(actual)&&actual>=0)return actual;
+  const fallback=Number(row?.duration_seconds??row?.planned_duration_seconds);
+  return Number.isFinite(fallback)&&fallback>=0?fallback:null;
+}
+function sample(row){
+  return{
+    type:String(row?.type||''),
+    ts:rowTs(row),
+    at:rowTs(row)?new Date(rowTs(row)).toISOString():null,
+    pulse_id:row?.pulse_id||null,
+    actual_duration_seconds:Number.isFinite(Number(row?.actual_duration_seconds))?Number(row.actual_duration_seconds):null,
+    duration_seconds:Number.isFinite(Number(row?.duration_seconds))?Number(row.duration_seconds):null,
+    planned_duration_seconds:Number.isFinite(Number(row?.planned_duration_seconds))?Number(row.planned_duration_seconds):null,
+    detail:String(row?.detail||'').slice(0,120)||null
+  };
+}
 function newDay(){
   return{
     rows:0,starts:0,completes:0,interrupts:0,
     first_ts:null,last_ts:null,
     duplicate_start_events:0,duplicate_final_events:0,
     starts_without_final:0,finals_without_start:0,
-    irrigated_seconds_confirmed:0,
     unique_starts:0,unique_finals:0,
-    _starts:new Map(),_finals:new Map()
+    final_duration_sum_all:0,finals_with_duration:0,finals_without_duration:0,
+    min_final_duration:null,max_final_duration:null,
+    _starts:new Map(),_finals:new Map(),_samples:[]
   };
 }
 function ensure(out,key){return out[key]||(out[key]=newDay())}
@@ -37,6 +56,7 @@ function add(out,row){
   const pulse=String(row?.pulse_id||'').trim();
   if(type==='viveiro_pulse_start'){
     d.starts++;
+    if(d._samples.length<8)d._samples.push(sample(row));
     if(pulse){
       if(d._starts.has(pulse))d.duplicate_start_events++;
       const prev=d._starts.get(pulse);
@@ -44,6 +64,15 @@ function add(out,row){
     }
   }else if(type==='viveiro_pulse_complete'||type==='viveiro_pulse_interrupted'){
     if(type==='viveiro_pulse_complete')d.completes++; else d.interrupts++;
+    if(d._samples.length<8)d._samples.push(sample(row));
+    const duration=durationSeconds(row);
+    if(duration==null)d.finals_without_duration++;
+    else{
+      d.finals_with_duration++;
+      d.final_duration_sum_all+=duration;
+      d.min_final_duration=d.min_final_duration==null?duration:Math.min(d.min_final_duration,duration);
+      d.max_final_duration=d.max_final_duration==null?duration:Math.max(d.max_final_duration,duration);
+    }
     if(pulse){
       if(d._finals.has(pulse))d.duplicate_final_events++;
       const prev=d._finals.get(pulse);
@@ -59,20 +88,24 @@ function finalize(out){
     d.unique_finals=d._finals.size;
     for(const pulse of d._starts.keys())if(!d._finals.has(pulse))d.starts_without_final++;
     for(const pulse of d._finals.keys())if(!d._starts.has(pulse))d.finals_without_start++;
+    let uniquePulseDuration=0;
     for(const {row} of d._finals.values()){
-      const actual=Number(row?.actual_duration_seconds);
-      const fallback=Number(row?.duration_seconds||row?.planned_duration_seconds||0);
-      const value=Number.isFinite(actual)?actual:fallback;
-      if(Number.isFinite(value)&&value>0)d.irrigated_seconds_confirmed+=value;
+      const duration=durationSeconds(row);
+      if(duration!=null)uniquePulseDuration+=duration;
     }
     result[key]={
       rows:d.rows,starts:d.starts,completes:d.completes,interrupts:d.interrupts,
       unique_starts:d.unique_starts,unique_finals:d.unique_finals,
       duplicate_start_events:d.duplicate_start_events,duplicate_final_events:d.duplicate_final_events,
       starts_without_final:d.starts_without_final,finals_without_start:d.finals_without_start,
-      irrigated_seconds_confirmed:Number(d.irrigated_seconds_confirmed.toFixed(3)),
+      finals_with_duration:d.finals_with_duration,finals_without_duration:d.finals_without_duration,
+      final_duration_sum_all:Number(d.final_duration_sum_all.toFixed(3)),
+      unique_pulse_duration_sum:Number(uniquePulseDuration.toFixed(3)),
+      min_final_duration:d.min_final_duration,
+      max_final_duration:d.max_final_duration,
       first_at:d.first_ts?new Date(d.first_ts).toISOString():null,
-      last_at:d.last_ts?new Date(d.last_ts).toISOString():null
+      last_at:d.last_ts?new Date(d.last_ts).toISOString():null,
+      samples:d._samples
     };
   }
   return result;
@@ -84,7 +117,7 @@ async function scan(path){
       orderBy:'$key',...(cursor?{startAt:cursor}:{}),limitToFirst:PAGE+(cursor?1:0)
     });
     let rows=raw&&typeof raw==='object'?Object.entries(raw).map(([id,value])=>({id,...(value||{})})):[];
-    rows.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+    rows.sort((a,b)=>String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0);
     if(cursor)rows=rows.filter(row=>String(row.id)!==String(cursor));
     if(!rows.length)break;
     pages++; scanned+=rows.length;

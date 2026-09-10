@@ -33,6 +33,7 @@ const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 const HISTORY_PATH='IrrigacaoFazenda2E/history';
 const ACCOUNTING_RECONCILE_MS=5*60*1000;
 const OPERATIONAL_AUDIT_MS=5*60*1000;
+const INCIDENT_ROOT='IrrigacaoFazenda2E/viveiro/incidents';
 let accountingTimer=null;
 let operationalAuditTimer=null;
 // Railway auto-deploy marker v2
@@ -189,6 +190,7 @@ function auditSeverity(issues=[]){
 async function runOperationalAudit({notify=false}={}){
   const now=Date.now();
   const issues=[];
+  let auditHistory=[];
   const phase=String(state.phase||'');
   const schedule=localSchedule(state);
   const protectedPhase=['weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window','emergency_stopped','stopped'];
@@ -243,6 +245,7 @@ async function runOperationalAudit({notify=false}={}){
     const history=normalizeHistoryRows(raw).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );
+    auditHistory=history;
     const recent30=history.filter(row=>now-Number(row.ts||0)<30*60000);
     const failures=recent30.filter(row=>
       ['viveiro_error','viveiro_start_failure','viveiro_start_delay'].includes(String(row.type||''))
@@ -280,6 +283,7 @@ async function runOperationalAudit({notify=false}={}){
   const previous=state.operational_audit||{};
   const previousCodes=new Set((previous.issues||[]).map(x=>String(x.code)));
   const notifiedCodes=new Set((previous.notified_codes||[]).map(String));
+  const activeIncidents={...(previous.active_incidents||{})};
   const currentCodes=new Set(issues.map(x=>String(x.code)));
   const newIssues=issues.filter(x=>!notifiedCodes.has(String(x.code)));
   const cleared=[...previousCodes].filter(code=>!currentCodes.has(code));
@@ -290,6 +294,59 @@ async function runOperationalAudit({notify=false}={}){
   for(const issue of toNotify)nextNotified.add(String(issue.code));
   const severity=auditSeverity(issues);
 
+  // Abre, atualiza e encerra incidentes de forma independente dos avisos.
+  for(const issue of issues){
+    const code=String(issue.code||'unknown');
+    let incident=activeIncidents[code];
+    if(!incident){
+      const id=(code+'-'+now).replace(/[^A-Za-z0-9_-]/g,'_');
+      incident={
+        id,code,
+        level:issue.level==='critical'?'critical':'warning',
+        message:String(issue.message||code),
+        opened_at:now,
+        last_seen_at:now,
+        status:'open',
+        source:'viveiro_audit'
+      };
+      activeIncidents[code]=incident;
+      await storeSet(INCIDENT_ROOT+'/'+id,incident).catch(error=>
+        console.warn('Falha ao abrir incidente do Viveiro:',error?.message||error)
+      );
+    }else{
+      incident={...incident,last_seen_at:now,level:issue.level==='critical'?'critical':'warning',message:String(issue.message||incident.message)};
+      activeIncidents[code]=incident;
+      await storeSet(INCIDENT_ROOT+'/'+incident.id,incident).catch(()=>null);
+    }
+  }
+
+  for(const code of cleared){
+    const incident=activeIncidents[code];
+    if(!incident)continue;
+    const openedAt=Number(incident.opened_at||now);
+    const interventionTypes=new Set([
+      'viveiro_cycle_start','viveiro_cycle_stop','viveiro_emergency_clear',
+      'viveiro_maintenance_start','viveiro_maintenance_end','viveiro_climate_applied'
+    ]);
+    const manualIntervention=auditHistory.some(row=>
+      Number(row.ts||0)>=openedAt&&
+      Number(row.ts||0)<=now&&
+      interventionTypes.has(String(row.type||''))
+    );
+    const resolved={
+      ...incident,
+      status:'resolved',
+      resolved_at:now,
+      last_seen_at:Number(incident.last_seen_at||now),
+      duration_ms:Math.max(0,now-openedAt),
+      resolution:manualIntervention?'intervencao':'automatico'
+    };
+    await storeSet(INCIDENT_ROOT+'/'+incident.id,resolved).catch(error=>
+      console.warn('Falha ao encerrar incidente do Viveiro:',error?.message||error)
+    );
+    delete activeIncidents[code];
+  }
+
   state={
     ...state,
     operational_audit:{
@@ -299,6 +356,7 @@ async function runOperationalAudit({notify=false}={}){
       new_codes:newIssues.map(x=>x.code),
       notified_codes:[...nextNotified],
       cleared_codes:cleared,
+      active_incidents:activeIncidents,
       message:severity==='ok'?'Auditoria operacional sem anomalias.':issues[0]?.message||'Auditoria encontrou uma anomalia.'
     }
   };

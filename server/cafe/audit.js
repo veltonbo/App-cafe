@@ -44,7 +44,7 @@ function previousLocalDay(key,days){
 }
 
 function startsFromHistory(history){
-  return history.filter(row=>['start','group_start'].includes(String(row.type||'')));
+  return history.filter(row=>['start','group_start','auto_start'].includes(String(row.type||'')));
 }
 
 function sectorsFromRow(row){
@@ -203,7 +203,7 @@ export function evaluateCafeAudit({
     issues.push({level:'critical',code:'repeated_failures',message:'Foram registradas falhas repetidas no Café nos últimos 30 minutos.'});
   }
 
-  const starts30=recent30.filter(row=>['start','group_start'].includes(String(row.type||'')));
+  const starts30=recent30.filter(row=>['start','group_start','auto_start'].includes(String(row.type||'')));
   if(starts30.length>=8){
     issues.push({level:'warning',code:'many_starts',message:'O IIC-800 iniciou muitas irrigações nos últimos 30 minutos.'});
   }
@@ -226,12 +226,17 @@ export function evaluateCafeAudit({
       const due=latestScheduledOccurrence(schedule,now);
       if(!due||now-due<30*60000)continue;
       const last=Number(activity[String(controller.id)]?.[zone]?.last_start_at||0);
-      if(!last||last<due-5*60000){
+      const weatherBlocks=history.some(row=>{
+        const ts=Number(row.ts||Date.parse(row.at||0)||0);
+        return ts>=due-10*60000&&ts<=due+30*60000&&
+          ['weather_stop','blocked','group_blocked'].includes(String(row.type||''));
+      });
+      if((!last||last<due-5*60000)&&!weatherBlocks){
         const sector=Number(controller.sector_start||1)+zone-1;
         issues.push({
           level:'warning',
           code:'schedule_missed_'+String(controller.id)+'_'+zone,
-          message:'Setor '+String(sector).padStart(2,'0')+' não tem início registrado após a última programação prevista.'
+          message:'Setor '+String(sector).padStart(2,'0')+' não tem início observado após a última programação prevista.'
         });
       }
     }

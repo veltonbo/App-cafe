@@ -1,4 +1,5 @@
 import dashboardHandler from './dashboard.js';
+import { authorize } from '../_tuya.js';
 
 const FRESH_MS=Math.max(1000,Number(process.env.VIVEIRO_DASHBOARD_CACHE_MS||5000));
 const STALE_MS=Math.max(FRESH_MS,Number(process.env.VIVEIRO_DASHBOARD_STALE_MS||120000));
@@ -59,6 +60,9 @@ export function invalidateDashboardCache(){
 }
 
 export default async function cachedDashboard(req,res){
+  // Nunca entregue uma resposta em cache antes de validar a sessão.
+  if(!authorize(req,res))return;
+
   if(req.method!=='GET'){
     invalidateDashboardCache();
     return dashboardHandler(req,res);

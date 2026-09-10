@@ -135,6 +135,7 @@ export function evaluateCafeAudit({
   weather=null,
   history=[],
   schedules={},
+  monitorStates={},
   bootTimes=[],
   bootEvents=[],
   currentDeploymentId='',
@@ -164,6 +165,21 @@ export function evaluateCafeAudit({
         message:'Não foi possível confirmar o estado do '+(controller.name||'IIC-800')+'.'
       });
       continue;
+    }
+
+    const monitor=monitorStates[id]||null;
+    const currentBootAt=Math.max(0,...(bootEvents||[])
+      .filter(item=>String(item?.deployment_id||'')===String(currentDeploymentId||''))
+      .map(item=>Number(item?.at||0)));
+    if(currentBootAt&&now-currentBootAt>60000){
+      const checkedAt=Number(monitor?.checked_at||0);
+      if(!checkedAt||now-checkedAt>45000){
+        issues.push({
+          level:'warning',
+          code:'runtime_monitor_stale_'+id,
+          message:'O monitor contínuo do '+(controller.name||'IIC-800')+' está sem atualização recente.'
+        });
+      }
     }
 
     const session=activeSessions[id];
@@ -304,6 +320,10 @@ export async function runCafeAudit({notify=true}={}){
     controller.id,
     await getCafeScheduleCache(controller.id).catch(()=>({}))
   ]));
+  const monitorEntries=await Promise.all(controllers.map(async controller=>[
+    controller.id,
+    await storeGet(CAFE_ROOT+'/runtimeMonitor/'+controller.id).catch(()=>null)
+  ]));
 
   const history=historyRows(historyRaw);
   const audit=evaluateCafeAudit({
@@ -313,6 +333,7 @@ export async function runCafeAudit({notify=true}={}){
     weather,
     history,
     schedules:Object.fromEntries(scheduleEntries),
+    monitorStates:Object.fromEntries(monitorEntries),
     bootTimes:Array.isArray(previous?.boot_times)?previous.boot_times:[],
     bootEvents:Array.isArray(previous?.boot_events)?previous.boot_events:[],
     currentDeploymentId:String(process.env.RAILWAY_DEPLOYMENT_ID||'local'),

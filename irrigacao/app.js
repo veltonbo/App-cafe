@@ -13,7 +13,7 @@ if(!store.settings.apiUrl)store.settings.apiUrl=DEFAULT_API;
 
 const app={
   dashboard:null,status:null,seconds:null,liveConnected:false,lastLiveAt:0,lastDashboardAt:0,lastStatusAt:0,
-  activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null,dashboardPollTimer:null,statusPollTimer:null
+  activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null,dashboardPollTimer:null,statusPollTimer:null,sessionReady:false,authChecked:false
 };
 
 function saveStore(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch{}}
@@ -24,16 +24,65 @@ function toast(msg){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function num(v,d=0){const n=Number(v);return Number.isFinite(n)?n:d}
 function apiBase(){return String(store.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')}
+function sameOriginApi(){
+  try{return new URL(apiBase(),location.href).origin===location.origin}catch{return false}
+}
+function hasAuth(){return Boolean(app.sessionReady||store.settings.token)}
+function authHeaders(extra={}){
+  return{
+    'Content-Type':'application/json',
+    ...(store.settings.token?{'Authorization':'Bearer '+store.settings.token}:{}),
+    ...extra
+  };
+}
+async function ensureSecureSession(){
+  if(!sameOriginApi()){
+    app.sessionReady=false;
+    app.authChecked=true;
+    return Boolean(store.settings.token);
+  }
+  try{
+    if(store.settings.token){
+      const r=await fetch(apiBase()+'/api/session',{
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+store.settings.token}
+      });
+      if(r.ok){
+        app.sessionReady=true;
+        app.authChecked=true;
+        store.settings.token='';
+        saveStore();
+        return true;
+      }
+      app.sessionReady=false;
+      app.authChecked=true;
+      return false;
+    }
+    const r=await fetch(apiBase()+'/api/session',{credentials:'same-origin'});
+    app.sessionReady=r.ok;
+    app.authChecked=true;
+    return r.ok;
+  }catch{
+    app.sessionReady=false;
+    app.authChecked=true;
+    return Boolean(store.settings.token);
+  }
+}
 async function api(path,opt={}){
-  if(!store.settings.token)throw new Error('Token de controle não configurado.');
+  if(!hasAuth())throw new Error('Sessão de controle não configurada.');
   const ctl=new AbortController();
   const t=setTimeout(()=>ctl.abort(),12000);
   try{
     const r=await fetch(apiBase()+path,{
-      ...opt,signal:ctl.signal,
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+store.settings.token,...(opt.headers||{})}
+      ...opt,signal:ctl.signal,credentials:'same-origin',
+      headers:authHeaders(opt.headers||{})
     });
     const body=await r.json().catch(()=>({}));
+    if(r.status===401&&app.sessionReady&&!hasAuth()){
+      app.sessionReady=false;
+      $('setupOverlay').hidden=false;
+    }
     if(!r.ok)throw new Error(body?.error||body?.detail||('HTTP '+r.status));
     return body;
   }finally{clearTimeout(t)}
@@ -156,8 +205,8 @@ function renderHealth(){
   $('healthDetail').textContent=h.level==='ok'?'Todos os serviços essenciais respondendo.':(h.issues?.[0]?.message||'Toque para abrir o Sistema.');
   $('healthIcon').textContent=h.level==='critical'?'!':h.level==='warning'?'•':'✓';
   const connected=Boolean(store.settings.token&&app.dashboard);
-  $('headerStateText').textContent=!store.settings.token?'Configurar':!connected?'Reconectando':h.level==='critical'?'Atenção':'Online';
-  setDot('headerDot',!store.settings.token?null:h.level==='critical'?false:connected?true:null);
+  $('headerStateText').textContent=!hasAuth()?'Configurar':!connected?'Reconectando':h.level==='critical'?'Atenção':'Online';
+  setDot('headerDot',!hasAuth()?null:h.level==='critical'?false:connected?true:null);
 }
 function renderAutomation(){
   if(app.automationDirty)return;
@@ -350,7 +399,7 @@ function showView(name){
 qsa('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 
 async function loadDashboard(showToast=false){
-  if(app.loading||!store.settings.token)return;
+  if(app.loading||!hasAuth())return;
   app.loading=true;
   try{
     const d=await api('/api/viveiro/dashboard');
@@ -363,18 +412,18 @@ async function loadDashboard(showToast=false){
   }finally{app.loading=false}
 }
 async function loadStatus(){
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   try{app.status=await api('/api/status');app.lastStatusAt=Date.now();renderOperation();renderHealth();renderSystem()}catch(e){app.status={online:false,error:String(e.message||e)};renderAll()}
 }
 
 async function connectLive(){
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   if(app.sseAbort)app.sseAbort.abort();
   const ctl=new AbortController();app.sseAbort=ctl;
   let wait=1000;
   while(!ctl.signal.aborted){
     try{
-      const r=await fetch(apiBase()+'/api/viveiro/live',{headers:{'Authorization':'Bearer '+store.settings.token},signal:ctl.signal});
+      const r=await fetch(apiBase()+'/api/viveiro/live',{headers:store.settings.token?{'Authorization':'Bearer '+store.settings.token}:{},credentials:'same-origin',signal:ctl.signal});
       if(!r.ok||!r.body)throw new Error('Tempo real HTTP '+r.status);
       app.liveConnected=true;app.lastLiveAt=Date.now();renderAll();wait=1000;scheduleDashboardPoll();scheduleStatusPoll();
       const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
@@ -405,7 +454,7 @@ async function connectLive(){
 
 function scheduleDashboardPoll(){
   clearTimeout(app.dashboardPollTimer);
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   const delay=app.liveConnected?60000:8000;
   app.dashboardPollTimer=setTimeout(async()=>{
     if(document.visibilityState==='visible')await loadDashboard(false);
@@ -414,7 +463,7 @@ function scheduleDashboardPoll(){
 }
 function scheduleStatusPoll(){
   clearTimeout(app.statusPollTimer);
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   const delay=app.liveConnected?60000:15000;
   app.statusPollTimer=setTimeout(async()=>{
     if(document.visibilityState==='visible')await loadStatus();
@@ -517,30 +566,46 @@ $('clearEmergencyBtn').addEventListener('click',clearEmergency);
 qsa('.maintenanceBtn').forEach(b=>b.addEventListener('click',()=>setMaintenance(num(b.dataset.minutes))));
 $('refreshBtn').addEventListener('click',()=>Promise.all([loadDashboard(true),loadStatus()]));
 
-function saveConnection(tokenOverride){
+async function saveConnection(tokenOverride){
   const token=String(tokenOverride??$('controlToken').value).trim();
   store.settings.apiUrl=String($('apiUrl')?.value||DEFAULT_API).trim()||DEFAULT_API;
-  store.settings.token=token;saveStore();
-  $('setupOverlay').hidden=Boolean(token);
-  if(token){if(app.sseAbort)app.sseAbort.abort();Promise.all([loadDashboard(true),loadStatus()]);connectLive();scheduleDashboardPoll();scheduleStatusPoll()}
+  app.sessionReady=false;
+  if(token)store.settings.token=token;
+  saveStore();
+  const ok=await ensureSecureSession();
+  $('setupOverlay').hidden=ok;
+  $('controlToken').value='';
+  $('setupToken').value='';
+  if(ok){
+    if(app.sseAbort)app.sseAbort.abort();
+    Promise.all([loadDashboard(true),loadStatus()]);
+    connectLive();scheduleDashboardPoll();scheduleStatusPoll();
+    toast(sameOriginApi()?'Sessão segura ativada.':'Conexão salva.');
+  }else toast('Não foi possível validar o token.');
 }
 $('saveConnectionBtn').addEventListener('click',()=>saveConnection());
-$('setupSaveBtn').addEventListener('click',()=>{const t=$('setupToken').value.trim();if(!t)return toast('Informe o token.');$('controlToken').value=t;saveConnection(t)});
+$('setupSaveBtn').addEventListener('click',()=>{const t=$('setupToken').value.trim();if(!t)return toast('Informe o token.');saveConnection(t)});
 
-window.addEventListener('online',()=>{$('offlineBar').hidden=true;if(store.settings.token){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
+window.addEventListener('online',()=>{$('offlineBar').hidden=true;if(hasAuth()){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
 window.addEventListener('offline',()=>{$('offlineBar').hidden=false});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&store.settings.token){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&hasAuth()){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
 
-initDays();
-$('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
-$('controlToken').value=store.settings.token||'';
-$('setupOverlay').hidden=Boolean(store.settings.token);
-renderAll();startClock();
-if(store.settings.token){
-  Promise.all([loadDashboard(),loadStatus()]);
-  connectLive();
-  scheduleDashboardPoll();
-  scheduleStatusPoll();
+async function bootstrap(){
+  initDays();
+  $('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
+  $('controlToken').value=store.settings.token||'';
+  $('setupOverlay').hidden=true;
+  renderAll();startClock();
+  const ok=await ensureSecureSession();
+  $('setupOverlay').hidden=ok;
+  $('controlToken').value=store.settings.token||'';
+  if(ok){
+    Promise.all([loadDashboard(),loadStatus()]);
+    connectLive();
+    scheduleDashboardPoll();
+    scheduleStatusPoll();
+  }
 }
+bootstrap();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'}).catch(()=>null);
 })();

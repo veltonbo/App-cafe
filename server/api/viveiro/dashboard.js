@@ -445,7 +445,7 @@ function summarize(history,seconds={},now=Date.now()){
     });
   }
 
-  const firstPulseAt=(todayAccounting.starts.find(x=>x.first_of_window)||todayAccounting.starts[0])?.ts||null;
+  const firstPulseAt=(todayAccounting.starts.find(x=>x.first_of_window)||todayAccounting.starts.at(-1))?.ts||null;
   const startDelays=today.filter(x=>x.type==='viveiro_start_delay').length;
   const baseline=baseExpectedToday(seconds,now);
   const baselineSeconds=Number(baseline.expected_irrigated_seconds||0);

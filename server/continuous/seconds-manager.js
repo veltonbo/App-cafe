@@ -1404,6 +1404,18 @@ function ensureLoop(){
 export async function initSecondsManager(){
   await load();
 
+  await reconcileDailyAccounting({notify:false}).catch(error=>
+    console.warn('Reconciliação inicial indisponível:',error?.message||error)
+  );
+  if(!accountingTimer){
+    accountingTimer=setInterval(()=>{
+      reconcileDailyAccounting({notify:true}).catch(error=>
+        console.warn('Reconciliação periódica indisponível:',error?.message||error)
+      );
+    },ACCOUNTING_RECONCILE_MS);
+    accountingTimer.unref?.();
+  }
+
   const [startupClimateConfig,startupClimateState]=await Promise.all([
     getClimateConfig().catch(()=>null),
     getClimateState().catch(()=>null)

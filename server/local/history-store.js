@@ -54,7 +54,26 @@ export async function localHistoryStatus(){
   await ensureReady();
   let bytes=0;
   try{bytes=(await fsp.stat(HISTORY_FILE)).size}catch{}
-  return{ok:true,file:HISTORY_FILE,rows:rows.length,bytes,last_ts:rows.length?tsOf(rows.at(-1)):null};
+  let firstTs=null;
+  let lastTs=null;
+  for(const row of rows){
+    const ts=tsOf(row);
+    if(!Number.isFinite(ts)||ts<=0)continue;
+    if(firstTs===null||ts<firstTs)firstTs=ts;
+    if(lastTs===null||ts>lastTs)lastTs=ts;
+  }
+  return{ok:true,file:HISTORY_FILE,rows:rows.length,bytes,first_ts:firstTs,last_ts:lastTs};
+}
+
+export async function localHistoryCanServe({sinceMs=0,limit=60000,maxLagMs=120000}={}){
+  const status=await localHistoryStatus();
+  if(!status.rows||!status.last_ts)return false;
+  const now=Date.now();
+  if(now-Number(status.last_ts)>Math.max(30000,Number(maxLagMs)||120000))return false;
+  const safeLimit=Math.max(1,Math.min(MAX_ROWS,Number(limit)||60000));
+  if(Number(sinceMs||0)<=0)return status.rows>=Math.min(safeLimit,status.rows);
+  const toleranceMs=10*60*1000;
+  return Number(status.first_ts||Infinity)<=Number(sinceMs)+toleranceMs;
 }
 
 export function localHistoryPath(){return HISTORY_FILE;}

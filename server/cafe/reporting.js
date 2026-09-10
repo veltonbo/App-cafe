@@ -85,8 +85,8 @@ export function buildCafeReports(history=[],incidentsRaw={},controllers=[],audit
   for(let offset=29;offset>=0;offset--){
     const key=cafeDayKey(now-offset*86400000);
     const rows=history.filter(row=>cafeDayKey(rowTs(row))===key);
-    const starts=uniqueSessions(rows,['start','group_start']);
-    const completes=uniqueSessions(rows,['complete']);
+    const starts=uniqueSessions(rows,['start','group_start','auto_start']);
+    const completes=uniqueSessions(rows,['complete','auto_complete']);
     const sectors=[...new Set(starts.flatMap(sectorsFromStart).map(x=>x.sector))];
     const dayIncidents=incidentsForDay(incidents,key);
 
@@ -100,7 +100,7 @@ export function buildCafeReports(history=[],incidentsRaw={},controllers=[],audit
       planned_minutes:starts.reduce((sum,row)=>
         sum+sectorsFromStart(row).reduce((s,x)=>s+x.duration_minutes,0),0
       ),
-      completed_minutes:completes.reduce((sum,row)=>sum+Math.max(0,Number(row.duration_minutes||0)),0),
+      completed_minutes:completes.reduce((sum,row)=>sum+Math.max(0,Number(row.actual_duration_minutes??row.duration_minutes||0)),0),
       blocked:rows.filter(row=>String(row.type||'').includes('blocked')).length,
       errors:rows.filter(row=>String(row.status||'').includes('error')||String(row.type||'').includes('error')).length,
       incidents:dayIncidents.length,

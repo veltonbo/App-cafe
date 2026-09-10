@@ -1,5 +1,5 @@
 import { applyCors, authorize } from '../_tuya.js';
-import { storeGetQuery, storePush } from './_store.js';
+import { appendHistory, readRecentHistory } from './_store.js';
 
 function normalizeHistory(raw) {
   if (!raw || typeof raw !== 'object') return [];
@@ -15,11 +15,8 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const limit = Math.max(1, Math.min(200, Number(req.query?.limit || 80)));
-      const raw = await storeGetQuery('IrrigacaoFazenda2E/history', {
-        orderBy:'ts',
-        limitToLast:limit
-      });
-      return res.status(200).json({ ok:true, history:normalizeHistory(raw).slice(0,limit) });
+      const rows = await readRecentHistory({sinceMs:0,limit});
+      return res.status(200).json({ ok:true, history:rows.slice(0,limit) });
     }
 
     if (req.method === 'POST') {
@@ -39,8 +36,8 @@ export default async function handler(req, res) {
         at:new Date().toISOString(),
         ts:Date.now()
       };
-      const result = await storePush('IrrigacaoFazenda2E/history', entry);
-      return res.status(200).json({ ok:true, id:result?.name || null, entry });
+      const result = await appendHistory(entry);
+      return res.status(200).json({ ok:true, id:result?.id || null, entry:result?.entry || entry });
     }
 
     return res.status(405).json({ ok:false, error:'Método não permitido.' });

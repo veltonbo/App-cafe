@@ -1,5 +1,5 @@
 import { applyCors, authorize } from '../_tuya.js';
-import { storeGet, storePush } from './_store.js';
+import { storeGetQuery, storePush } from './_store.js';
 
 function normalizeHistory(raw) {
   if (!raw || typeof raw !== 'object') return [];
@@ -14,8 +14,11 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const raw = await storeGet('IrrigacaoFazenda2E/history');
       const limit = Math.max(1, Math.min(200, Number(req.query?.limit || 80)));
+      const raw = await storeGetQuery('IrrigacaoFazenda2E/history', {
+        orderBy:'ts',
+        limitToLast:limit
+      });
       return res.status(200).json({ ok:true, history:normalizeHistory(raw).slice(0,limit) });
     }
 

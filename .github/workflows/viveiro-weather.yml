@@ -1,8 +1,6 @@
-name: Viveiro • proteção por chuva
+name: Viveiro • diagnóstico manual
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -14,31 +12,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  monitor:
+  diagnostic:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verificar Weather2-2 e proteger viveiro
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          OIDC_RESPONSE="$(curl --fail --silent --show-error             -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}"             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=fazenda2e-irrigation")"
-
-          OIDC_TOKEN="$(printf '%s' "$OIDC_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
-
-          curl --fail --silent --show-error             --retry 2 --retry-delay 3             -H "Authorization: Bearer ${OIDC_TOKEN}"             "https://app-cafe.vercel.app/api/viveiro/weather"
-
-          echo
-
-          curl --fail --silent --show-error             --retry 2 --retry-delay 3             -H "Authorization: Bearer ${OIDC_TOKEN}"             "https://app-cafe.vercel.app/api/irrigation/monitor"
-
-
-  kick-viveiro-pulse:
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Reativar worker do modo rápido quando necessário
+      - name: Verificar clima e monitor do Viveiro
         shell: bash
         run: |
           set -euo pipefail
@@ -48,11 +26,16 @@ jobs:
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=fazenda2e-irrigation")"
 
           OIDC_TOKEN="$(printf '%s' "$OIDC_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
+          BASE_URL="https://fazenda-2e-irrigacao-production.up.railway.app"
 
           curl --fail --silent --show-error \
             --retry 2 --retry-delay 3 \
-            -X POST \
             -H "Authorization: Bearer ${OIDC_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
-            "https://app-cafe.vercel.app/api/viveiro/pulse"
+            "$BASE_URL/api/viveiro/weather"
+          echo
+
+          curl --fail --silent --show-error \
+            --retry 2 --retry-delay 3 \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            "$BASE_URL/api/irrigation/monitor"
+          echo

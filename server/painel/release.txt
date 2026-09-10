@@ -1,1 +1,1 @@
-Painel Fazenda 2E v1 — somente leitura, agrega Viveiro, Café, Clima e Alertas — 2026-09-09
+Painel Fazenda 2E v1.1 — somente leitura, diagnóstico integrado, Viveiro, Café, Clima e Alertas — 2026-09-09

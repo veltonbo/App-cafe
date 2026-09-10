@@ -1,1 +1,1 @@
-Café Clean v1 — dashboard consolidado, Firebase isolado, frontend único e migração segura — 2026-09-09
+Café Clean v1.1 — frontend único, dashboard/state em server/cafe, Firebase isolado, histórico e agenda migrados — 2026-09-09

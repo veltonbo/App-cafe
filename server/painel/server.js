@@ -222,7 +222,15 @@ server.listen(PORT,'0.0.0.0',()=>{
           code:String(x?.code||'unknown'),
           level:String(x?.level||'warning'),
           message:String(x?.message||'')
-        }))
+        })),
+        viveiro_precision:{
+          samples:Number(viveiroRaw?.seconds?.precision?.samples||0),
+          avg_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.avg_abs_error_ms||0),
+          max_abs_error_ms:Number(viveiroRaw?.seconds?.precision?.max_abs_error_ms||0),
+          last_error_ms:Number(viveiroRaw?.seconds?.precision?.last_error_ms||0),
+          last_expected_at:Number(viveiroRaw?.seconds?.precision?.last_expected_at||0)||null,
+          last_actual_at:Number(viveiroRaw?.seconds?.precision?.last_actual_at||0)||null
+        }
       });
     }catch(error){
       console.warn('Painel startup diagnostic falhou:',error?.message||error);

@@ -231,8 +231,8 @@ async function runReadOnlyBootDiagnostics(){
       console.warn('Smart Life não configurado; automação remota indisponível.');
       return;
     }
-    const devices=await smartLifeListDevices({force:true,maxAgeMs:0});
-    const weather=await fetchWeatherSnapshot({force:true}).catch(error=>({
+    const devices=await smartLifeListDevices({maxAgeMs:4000});
+    const weather=await fetchWeatherSnapshot().catch(error=>({
       error:error?.message||String(error)
     }));
     const rows=devices

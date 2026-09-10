@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
-import { appendHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
+import { appendHistory, storeGet, storeGetQuery, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
@@ -31,6 +31,8 @@ const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 const HISTORY_PATH='IrrigacaoFazenda2E/history';
+const HISTORY_RECENT_WINDOW_MS=36*60*60*1000;
+const HISTORY_RECENT_LIMIT=3000;
 const ACCOUNTING_RECONCILE_MS=5*60*1000;
 const OPERATIONAL_AUDIT_MS=5*60*1000;
 const INCIDENT_ROOT='IrrigacaoFazenda2E/viveiro/incidents';
@@ -312,7 +314,11 @@ async function runOperationalAudit({notify=false}={}){
   }
 
   try{
-    const raw=await storeGet(HISTORY_PATH);
+    const raw=await storeGetQuery(HISTORY_PATH,{
+      orderBy:'ts',
+      startAt:now-HISTORY_RECENT_WINDOW_MS,
+      limitToLast:HISTORY_RECENT_LIMIT
+    });
     const history=normalizeHistoryRows(raw).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );
@@ -479,7 +485,11 @@ async function reconcileDailyAccounting({notify=false}={}){
   }
 
   try{
-    const raw=await storeGet(HISTORY_PATH);
+    const raw=await storeGetQuery(HISTORY_PATH,{
+      orderBy:'ts',
+      startAt:Date.now()-HISTORY_RECENT_WINDOW_MS,
+      limitToLast:HISTORY_RECENT_LIMIT
+    });
     const rows=normalizeHistoryRows(raw).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );

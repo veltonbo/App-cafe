@@ -1,8 +1,8 @@
-const CACHE='fazenda2e-cafe-clean-v3';
+const CACHE='fazenda2e-cafe-clean-v4';
 const SHELL=[
   '/',
   '/app.css?v=20260909-3',
-  '/app.js?v=20260909-3',
+  '/app.js?v=20260909-4',
   '/manifest.webmanifest',
   '/icon.svg'
 ];

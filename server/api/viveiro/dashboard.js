@@ -392,15 +392,36 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
     });
   }
 
-  const critical=issues.some(x=>x.level==='critical');
+  for(const auditIssue of (seconds?.operational_audit?.issues||[])){
+    if(!auditIssue?.code)continue;
+    if(!issues.some(issue=>String(issue.code)===String(auditIssue.code))){
+      issues.push({
+        level:auditIssue.level==='critical'?'critical':'warning',
+        code:String(auditIssue.code),
+        message:String(auditIssue.message||'Auditoria operacional encontrou uma anomalia.')
+      });
+    }
+  }
+
+  const uniqueIssues=[];
+  const seenCodes=new Set();
+  for(const issue of issues){
+    const code=String(issue?.code||issue?.message||'issue');
+    if(seenCodes.has(code))continue;
+    seenCodes.add(code);
+    uniqueIssues.push(issue);
+  }
+
+  const critical=uniqueIssues.some(x=>x.level==='critical');
   return{
-    level:critical?'critical':issues.length?'warning':'ok',
+    level:critical?'critical':uniqueIssues.length?'warning':'ok',
     message:critical
-      ?issues.find(x=>x.level==='critical')?.message
-      :issues.length
-        ?issues[0].message
+      ?uniqueIssues.find(x=>x.level==='critical')?.message
+      :uniqueIssues.length
+        ?uniqueIssues[0].message
         :'Tudo funcionando normalmente.',
-    issues,
+    issues:uniqueIssues,
+    audit:seconds?.operational_audit||null,
     services:{
       railway:'online',
       firebase:'online',

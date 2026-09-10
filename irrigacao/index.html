@@ -11,7 +11,7 @@
   <link rel="manifest" href="/irrigacao/manifest.webmanifest">
   <link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/irrigacao/icon.svg">
-  <link rel="stylesheet" href="/irrigacao/app.css?v=20260909-2">
+  <link rel="stylesheet" href="/irrigacao/app.css?v=20260909-3">
 </head>
 <body>
   <div id="offlineBar" class="offlineBar" hidden>Sem conexão com o servidor. Os últimos dados continuam visíveis.</div>
@@ -138,6 +138,18 @@
     <section id="view-history" class="view">
       <div class="pageTitle"><small>ACOMPANHAMENTO</small><h2>Histórico</h2><p>Irrigação real, decisões automáticas e ocorrências.</p></div>
 
+      <article id="dayStatusCard" class="dayStatusCard normal">
+        <div><small>STATUS DO DIA</small><h3 id="dayStatusTitle">Verificando</h3><p id="dayStatusDetail">Aguardando relatório diário.</p></div>
+        <span id="dayStatusBadge" class="badge">—</span>
+      </article>
+
+      <div class="reportGrid">
+        <article><small>Ajustes Auto 2.0</small><strong id="reportAutoAdjust">—</strong><span>hoje</span></article>
+        <article><small>Interrupções</small><strong id="reportInterruptions">—</strong><span>hoje</span></article>
+        <article><small>Temperatura</small><strong id="reportTemperature">—</strong><span>mín / máx</span></article>
+        <article><small>Incidentes</small><strong id="reportIncidents">—</strong><span>abertos agora</span></article>
+      </div>
+
       <div class="weekSummary">
         <article><small>7 dias • pulsos</small><strong id="weekPulses">—</strong></article>
         <article><small>7 dias • irrigado</small><strong id="weekIrrigated">—</strong></article>
@@ -148,6 +160,17 @@
       <article class="panel">
         <div class="panelHead"><div><small>ÚLTIMOS 7 DIAS</small><h3>Irrigação por dia</h3></div></div>
         <div id="weekChart" class="weekChart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>TENDÊNCIA • 30 DIAS</small><h3>Tempo irrigado por dia</h3></div><span id="trend30Badge" class="badge">—</span></div>
+        <div id="trend30Chart" class="trend30Chart"></div>
+        <p id="trend30Note" class="panelNote">Aguardando histórico suficiente.</p>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>INCIDENTES</small><h3>Problemas e recuperações</h3></div><span id="incidentOpenBadge" class="badge">—</span></div>
+        <div id="incidentList" class="incidentList"></div>
       </article>
 
       <article class="panel">
@@ -233,6 +256,6 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="/irrigacao/app.js?v=20260909-3" defer></script>
+  <script src="/irrigacao/app.js?v=20260909-4" defer></script>
 </body>
 </html>

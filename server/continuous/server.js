@@ -46,6 +46,10 @@ const MIME={
 };
 
 function decorateResponse(res){
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Referrer-Policy','no-referrer');
+  res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
   res.status=function(code){res.statusCode=code;return res};
   res.json=function(value){
     if(!res.headersSent)res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -125,6 +129,7 @@ async function serveStatic(req,res,url){
 }
 
 async function handleApi(req,res,url){
+  res.setHeader('Cache-Control','no-store');
   const route=url.pathname.replace(/^\/api\/?/,'').replace(/^\/+|\/+$/g,'');
 
   req.query=Object.fromEntries(url.searchParams.entries());

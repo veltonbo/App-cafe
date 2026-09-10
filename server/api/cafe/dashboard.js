@@ -3,7 +3,7 @@ import { listInkbirdDevices } from '../inkbird/_device.js';
 import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getAutomationConfig, storeGet } from '../irrigation/_store.js';
-import { CAFE_ROOT, CAFE_SCHEDULE_ROOT, getCafeActiveSession, getCafeWeatherState } from './_state.js';
+import { CAFE_ROOT, getCafeActiveSession, getCafeWeatherState, getCafeScheduleCache } from './_state.js';
 
 const TZ='America/Porto_Velho';
 
@@ -206,7 +206,7 @@ export default async function handler(req,res){
     const weatherStatePromise=getCafeWeatherState().catch(()=>({}));
     const schedulePromises=controllers.map(async controller=>[
       controller.id,
-      (await storeGet(CAFE_SCHEDULE_ROOT+'/'+controller.id).catch(()=>null))||{}
+      await getCafeScheduleCache(controller.id)
     ]);
 
     let inkbirdState=null;

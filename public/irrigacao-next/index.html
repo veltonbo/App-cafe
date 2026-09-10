@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7faf8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Viveiro">
+  <title>Fazenda 2E • Viveiro</title>
+  <link rel="stylesheet" href="/irrigacao-next/app.css?v=1">
+</head>
+<body>
+  <div id="offlineBar" class="offlineBar" hidden>Sem conexão com o servidor. Os últimos dados continuam visíveis.</div>
+
+  <header class="appHeader">
+    <div>
+      <small>FAZENDA 2E</small>
+      <h1>Viveiro</h1>
+    </div>
+    <button id="refreshBtn" class="headerState" type="button">
+      <i id="headerDot"></i><span id="headerStateText">Conectando</span>
+    </button>
+  </header>
+
+  <main class="appMain">
+    <section id="view-summary" class="view active">
+      <article id="operationCard" class="operationCard tone-neutral">
+        <div class="operationIcon"><span id="operationIcon">◷</span></div>
+        <div class="operationBody">
+          <small>ESTADO AGORA</small>
+          <h2 id="operationLabel">CARREGANDO</h2>
+          <p id="operationDetail">Aguardando dados do viveiro.</p>
+        </div>
+        <div class="nextEvent">
+          <small id="nextEventLabel">Próximo evento</small>
+          <strong id="nextEventValue">—</strong>
+        </div>
+        <div class="freshness">
+          <span><i id="deviceDot"></i>EKAZA <b id="deviceAge">—</b></span>
+          <span><i id="weatherDot"></i>CLIMA <b id="weatherAge">—</b></span>
+          <span><i id="liveDot"></i>TEMPO REAL <b id="liveAge">—</b></span>
+        </div>
+      </article>
+
+      <button id="emergencyBtn" class="emergencyBtn" type="button">■ PARAR IRRIGAÇÃO AGORA</button>
+
+      <div class="sectionHead">
+        <div><small>AMBIENTE</small><h2>Condição do viveiro</h2></div>
+        <span id="climateBadge" class="badge">—</span>
+      </div>
+      <div class="metricGrid">
+        <article class="metric"><small>Temperatura</small><strong id="temperature">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>Umidade</small><strong id="humidity">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>VPD</small><strong id="vpd">—</strong><span id="vpdHint">Déficit de pressão</span></article>
+        <article class="metric"><small>Chuva</small><strong id="rain">—</strong><span id="rainHint">Proteção automática</span></article>
+      </div>
+
+      <article class="automationSummary">
+        <div class="autoTop">
+          <div><small>AUTOMÁTICO 2.0</small><h3 id="autoTitle">Aguardando avaliação</h3></div>
+          <span id="autoBadge" class="badge">—</span>
+        </div>
+        <p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>
+        <div class="cycleRow">
+          <div><small>Ciclo-base</small><strong id="baseCycle">—</strong></div>
+          <span>→</span>
+          <div><small>Ciclo atual</small><strong id="currentCycle">—</strong></div>
+          <div class="intensity"><small>Intensidade</small><strong id="intensity">—</strong></div>
+        </div>
+      </article>
+
+      <div class="sectionHead">
+        <div><small>HOJE</small><h2>Resumo da irrigação</h2></div>
+        <button class="textBtn" data-view="history" type="button">Ver histórico</button>
+      </div>
+      <div class="todayGrid">
+        <article><small>Pulsos</small><strong id="todayPulses">—</strong><span id="todayCompleted">— concluídos</span></article>
+        <article><small>Tempo irrigado</small><strong id="todayIrrigated">—</strong><span>tempo confirmado</span></article>
+        <article><small>Último pulso</small><strong id="todayLast">—</strong><span id="todayLastSub">—</span></article>
+        <article><small>Pausas por chuva</small><strong id="todayRainPauses">—</strong><span id="todayErrors">— falhas</span></article>
+      </div>
+
+      <button id="healthCard" class="healthCard" data-view="system" type="button">
+        <i id="healthIcon">✓</i>
+        <span><small>SAÚDE DO SISTEMA</small><strong id="healthTitle">Verificando</strong><em id="healthDetail">Aguardando diagnóstico</em></span>
+        <b>›</b>
+      </button>
+    </section>
+
+    <section id="view-automation" class="view">
+      <div class="pageTitle"><small>CONTROLE</small><h2>Automação</h2><p>Configuração do ciclo, horário, clima e chuva.</p></div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>PROGRAMAÇÃO</small><h3>Ciclo do viveiro</h3></div><span id="scheduleState" class="badge">—</span></div>
+        <div class="fieldGrid two">
+          <label><span>Ligado</span><div class="unitInput"><input id="onSeconds" type="number" min="1" max="300" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Intervalo</span><div class="unitInput"><input id="offSeconds" type="number" min="1" max="900" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Início</span><input id="startTime" type="time"></label>
+          <label><span>Fim</span><input id="endTime" type="time"></label>
+        </div>
+        <div class="fieldLabel">Dias ativos</div>
+        <div id="dayPicker" class="dayPicker"></div>
+        <div class="buttonRow">
+          <button id="saveScheduleBtn" class="primaryBtn" type="button">Salvar e armar</button>
+          <button id="disableScheduleBtn" class="secondaryBtn" type="button">Desarmar</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>INTELIGÊNCIA</small><h3>Automático 2.0</h3></div><span id="autoConfigState" class="badge">—</span></div>
+        <div class="segmented" id="autoMode">
+          <button data-mode="automatic" type="button">Automático</button>
+          <button data-mode="observation" type="button">Observar</button>
+          <button data-mode="off" type="button">Desligado</button>
+        </div>
+        <div class="fieldGrid two compactFields">
+          <label><span>Avaliar a cada</span><div class="unitInput"><input id="evaluationMinutes" type="number" min="5" max="60"><b>min</b></div></label>
+          <label><span>Ajuste máximo</span><div class="unitInput"><input id="maxAdjustPercent" type="number" min="5" max="80"><b>%</b></div></label>
+        </div>
+        <button id="saveAutoBtn" class="primaryBtn full" type="button">Salvar Automático 2.0</button>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>PROTEÇÃO</small><h3>Chuva e retomada</h3></div><span id="rainProtectionState" class="badge">—</span></div>
+        <label class="toggleRow"><span><b>Proteção por chuva</b><small>Impede a irrigação quando a Weather2-2 detecta chuva.</small></span><input id="rainEnabled" type="checkbox"></label>
+        <div class="fieldGrid two compactFields">
+          <label><span>Retomar após</span><div class="unitInput"><input id="resumeDelay" type="number" min="0" max="1440"><b>min</b></div></label>
+          <label><span>Checagem</span><div class="unitInput"><input id="weatherCheck" type="number" min="1" max="60"><b>min</b></div></label>
+        </div>
+        <button id="saveRainBtn" class="primaryBtn full" type="button">Salvar proteção</button>
+      </article>
+    </section>
+
+    <section id="view-history" class="view">
+      <div class="pageTitle"><small>ACOMPANHAMENTO</small><h2>Histórico</h2><p>Irrigação real, decisões automáticas e ocorrências.</p></div>
+
+      <div class="weekSummary">
+        <article><small>7 dias • pulsos</small><strong id="weekPulses">—</strong></article>
+        <article><small>7 dias • irrigado</small><strong id="weekIrrigated">—</strong></article>
+        <article><small>Pausas por chuva</small><strong id="weekRain">—</strong></article>
+        <article><small>Falhas</small><strong id="weekErrors">—</strong></article>
+      </div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>ÚLTIMOS 7 DIAS</small><h3>Irrigação por dia</h3></div></div>
+        <div id="weekChart" class="weekChart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>DECISÕES</small><h3>O que o sistema fez</h3></div></div>
+        <div id="decisionList" class="eventList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>EVENTOS</small><h3>Atividade recente</h3></div></div>
+        <div id="historyList" class="eventList"></div>
+      </article>
+    </section>
+
+    <section id="view-system" class="view">
+      <div class="pageTitle"><small>SEGURANÇA</small><h2>Sistema</h2><p>Conectividade, proteção, manutenção e diagnóstico.</p></div>
+
+      <div class="serviceGrid">
+        <article><i id="svcEkaza"></i><small>EKAZA</small><strong id="svcEkazaText">—</strong></article>
+        <article><i id="svcWeather"></i><small>Weather2-2</small><strong id="svcWeatherText">—</strong></article>
+        <article><i id="svcRealtime"></i><small>Tempo real</small><strong id="svcRealtimeText">—</strong></article>
+        <article><i id="svcServer"></i><small>Servidor</small><strong id="svcServerText">—</strong></article>
+      </div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>SEGURANÇA</small><h3>Estado de proteção</h3></div></div>
+        <div class="statusRows">
+          <div><span>Emergência</span><strong id="emergencyState">—</strong></div>
+          <div><span>Watchdog</span><strong id="watchdogState">—</strong></div>
+          <div><span>Última confirmação</span><strong id="confirmationState">—</strong></div>
+          <div><span>Precisão média</span><strong id="precisionState">—</strong></div>
+        </div>
+        <button id="clearEmergencyBtn" class="secondaryBtn full" type="button" hidden>Liberar parada de emergência</button>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>MANUTENÇÃO</small><h3>Suspender automação</h3></div><span id="maintenanceBadge" class="badge">—</span></div>
+        <p class="panelNote">Use durante serviços no viveiro. A saída fica protegida enquanto a manutenção estiver ativa.</p>
+        <div class="buttonRow three">
+          <button class="secondaryBtn maintenanceBtn" data-minutes="30" type="button">30 min</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="60" type="button">1 hora</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="0" type="button">Encerrar</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>CONEXÃO</small><h3>Este aparelho</h3></div></div>
+        <div class="fieldGrid">
+          <label><span>URL do servidor</span><input id="apiUrl" type="url" autocomplete="off"></label>
+          <label><span>Token de controle</span><input id="controlToken" type="password" autocomplete="off" placeholder="Token privado"></label>
+        </div>
+        <button id="saveConnectionBtn" class="primaryBtn full" type="button">Salvar conexão</button>
+      </article>
+
+      <details class="diagnostic">
+        <summary>Diagnóstico técnico</summary>
+        <pre id="diagnosticText">Aguardando dados.</pre>
+      </details>
+    </section>
+  </main>
+
+  <nav class="bottomNav" aria-label="Navegação principal">
+    <button class="active" data-view="summary" type="button"><span>⌂</span><small>Resumo</small></button>
+    <button data-view="automation" type="button"><span>◷</span><small>Automação</small></button>
+    <button data-view="history" type="button"><span>≡</span><small>Histórico</small></button>
+    <button data-view="system" type="button"><span>⚙</span><small>Sistema</small></button>
+  </nav>
+
+  <div id="setupOverlay" class="setupOverlay" hidden>
+    <div class="setupCard">
+      <small>FAZENDA 2E</small>
+      <h2>Conectar Viveiro</h2>
+      <p>Este aparelho precisa do token de controle para acessar a irrigação.</p>
+      <label><span>Token de controle</span><input id="setupToken" type="password" placeholder="Token privado"></label>
+      <button id="setupSaveBtn" class="primaryBtn full" type="button">Conectar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/irrigacao-next/app.js?v=1" defer></script>
+</body>
+</html>

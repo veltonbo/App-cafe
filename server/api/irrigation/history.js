@@ -1,9 +1,10 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { listInkbirdDevices } from '../inkbird/_device.js';
-import { storeGet, storePush } from './_store.js';
+import { appendHistory, storeGet, storeSet } from './_store.js';
 
 const CAFE_HISTORY_PATH='IrrigacaoFazenda2E/cafe/history';
 const LEGACY_HISTORY_PATH='IrrigacaoFazenda2E/history';
+const MIGRATION_MARKER='IrrigacaoFazenda2E/cafe/historyMigrationV1';
 
 function normalizeHistory(raw) {
   if (!raw || typeof raw !== 'object') return [];
@@ -49,6 +50,32 @@ function legacyCafeRows(raw,controllerIds){
   });
 }
 
+async function migrateLegacyCafeHistory(){
+  const marker=await storeGet(MIGRATION_MARKER).catch(()=>null);
+  if(marker?.done)return 0;
+
+  const [legacyRaw,controllerIds]=await Promise.all([
+    storeGet(LEGACY_HISTORY_PATH).catch(()=>null),
+    cafeControllerIds()
+  ]);
+  const rows=legacyCafeRows(legacyRaw,controllerIds);
+  let migrated=0;
+  for(const row of rows){
+    const legacyId=String(row.id||'').replace(/[^A-Za-z0-9_-]/g,'_');
+    const eventId='legacy-'+legacyId;
+    const payload={
+      ...row,
+      id:undefined,
+      event_id:eventId,
+      app:'cafe',
+      migrated_from_legacy:true
+    };
+    await storeSet(CAFE_HISTORY_PATH+'/'+eventId,payload).then(()=>{migrated+=1}).catch(()=>null);
+  }
+  await storeSet(MIGRATION_MARKER,{done:true,migrated,at:Date.now()}).catch(()=>null);
+  return migrated;
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -56,19 +83,17 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const [cafeRaw,legacyRaw,controllerIds]=await Promise.all([
-        storeGet(CAFE_HISTORY_PATH).catch(()=>null),
-        storeGet(LEGACY_HISTORY_PATH).catch(()=>null),
-        cafeControllerIds()
-      ]);
-      const current=normalizeHistory(cafeRaw).filter(entry=>!isViveiroEvent(entry));
-      const legacy=legacyCafeRows(legacyRaw,controllerIds);
-      const history=uniqueHistory([...current,...legacy])
-        .sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
-      const limit = Math.max(1, Math.min(200, Number(req.query?.limit || 80)));
+      const migrated=await migrateLegacyCafeHistory().catch(()=>0);
+      const cafeRaw=await storeGet(CAFE_HISTORY_PATH).catch(()=>null);
+      const history=uniqueHistory(
+        normalizeHistory(cafeRaw).filter(entry=>!isViveiroEvent(entry))
+      ).sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
+      const limit = Math.max(1, Math.min(300, Number(req.query?.limit || 100)));
       return res.status(200).json({
         ok:true,
         scope:'cafe',
+        isolated:true,
+        migrated_legacy:migrated,
         history:history.slice(0,limit)
       });
     }
@@ -94,8 +119,8 @@ export default async function handler(req, res) {
       if(isViveiroEvent(entry)){
         return res.status(400).json({ok:false,error:'Evento do Viveiro não pertence ao histórico do Café.'});
       }
-      const result = await storePush(CAFE_HISTORY_PATH, entry);
-      return res.status(200).json({ ok:true, id:result?.name || null, entry });
+      const result = await appendHistory(entry);
+      return res.status(200).json({ ok:true, id:result?.id || null, entry:result?.entry || entry });
     }
 
     return res.status(405).json({ok:false,error:'Método não permitido.'});

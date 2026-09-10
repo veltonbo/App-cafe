@@ -87,9 +87,9 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
     finals,
     completed,
     interrupted,
-    // Para o histórico visível, "pulso" significa irrigação com desfecho
-    // confirmado. Um start órfão (por reinício/queda) não deve virar uma
-    // irrigação completa no relatório.
+    // O evento de início só é gravado depois que o relé ON foi confirmado.
+    // Portanto ele representa um pulso que realmente começou. O desfecho
+    // separado informa se houve conclusão, interrupção ou fechamento ausente.
     pulses_confirmed:finals.length,
     pulses_started:starts.length,
     pulses_completed:completed.length,

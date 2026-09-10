@@ -111,10 +111,16 @@ function incidentsForDay(incidents,key){
 }
 
 function statusForDay(bucket,incidents,audit,isToday){
-  if(isToday&&String(audit?.status||'')==='critical')return'critical';
-  if(incidents.some(x=>x.status==='open'&&x.level==='critical'))return'critical';
-  if(Number(bucket?.errors||0)>0)return'critical';
-  if(isToday&&String(audit?.status||'')==='warning')return'warning';
+  const open=incidents.filter(x=>x.status==='open');
+  if(isToday){
+    if(String(audit?.status||'')==='critical')return'critical';
+    if(open.some(x=>x.level==='critical'))return'critical';
+    if(Number(bucket?.errors||0)>0)return'critical';
+    if(String(audit?.status||'')==='warning')return'warning';
+    if(open.length||Number(bucket?.interrupted_events||0)>0)return'warning';
+    return'normal';
+  }
+  if(incidents.some(x=>x.level==='critical')||Number(bucket?.errors||0)>0)return'critical';
   if(incidents.length||Number(bucket?.interrupted_events||0)>0)return'warning';
   return'normal';
 }
@@ -143,7 +149,9 @@ export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=
       key,
       label:dayLabel(key),
       status:statusForDay(b,dayIncidents,audit,key===todayKey),
-      pulses:b.starts.size,
+      pulses:finals.length,
+      start_attempts:b.starts.size,
+      orphaned_starts:Math.max(0,b.starts.size-finals.length),
       completed:completed.length,
       interrupted:interrupted.length,
       irrigated_seconds:irrigatedSeconds,

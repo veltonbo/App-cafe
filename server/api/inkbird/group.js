@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { applyCors, authorize } from '../_tuya.js';
 import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
 import { encodeDp45Manual, dp45HasWatering } from './_iic800.js';
 import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
-import { appendHistory, getAutomationConfig, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
+import { appendHistory, getAutomationConfig } from '../irrigation/_store.js';
+import { getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, setCafeWeatherState } from '../cafe/_state.js';
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
@@ -26,12 +28,11 @@ async function serverWeather(){
   const cfg=await getAutomationConfig().catch(()=>({}));
   const policy=cfg?.weather||{enabled:true,rainThreshold:5,rainHoldHours:12,blockWhileRaining:true};
   const snapshot=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
-  const ws=(await storeGet('IrrigacaoFazenda2E/weatherState').catch(()=>null))||{};
+  const ws=await getCafeWeatherState();
   if(snapshot?.metrics?.rainDetected)ws.lastRainAt=Date.now();
   const decision=decideWeather(snapshot,policy,ws);
-  await storePatch('IrrigacaoFazenda2E/weatherState',{
-    lastRainAt:ws.lastRainAt||null,checkedAt:Date.now(),decision
-  }).catch(()=>null);
+  await setCafeWeatherState({...ws,lastRainAt:ws.lastRainAt||null,checkedAt:Date.now(),decision})
+    .catch(error=>console.error('Café weatherState grupo:',error?.message||error));
   return{snapshot,decision};
 }
 
@@ -75,7 +76,7 @@ export default async function handler(req,res){
     const deviceId=before.deviceId;
     const devices=before.resolved.devices||[];
     const controllerIndex=Math.max(1,devices.findIndex(d=>d.id===deviceId)+1);
-    const session=await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(()=>null);
+    const session=await getCafeActiveSession(deviceId);
     if(dp45HasWatering(before.statusMap.irrigation_time_all)||(
       session&&Number(session.expected_end_at||0)>Date.now()-120000
     )){
@@ -126,21 +127,23 @@ export default async function handler(req,res){
     const startedAt=Date.now();
     const totalMinutes=zones.reduce((sum,x)=>sum+x.duration_minutes,0);
     const expectedEndAt=startedAt+totalMinutes*60000;
+    const sessionId='cafe-group-'+startedAt+'-'+randomUUID().slice(0,8);
     const activeSession={
-      kind:'group',name,zones,mode:'order',controller_index:controllerIndex,
+      session_id:sessionId,kind:'group',name,zones,mode:'order',controller_index:controllerIndex,
       duration_minutes:totalMinutes,started_at:startedAt,expected_end_at:expectedEndAt,
       source:'smartlife'
     };
-    await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,activeSession).catch(()=>null);
+    await setCafeActiveSession(deviceId,activeSession);
     await appendHistory({
+      event_id:'group-start-'+sessionId,session_id:sessionId,
       type:'group_start',controller_id:deviceId,controller_index:controllerIndex,
       duration_minutes:totalMinutes,mode:'order',source:'smartlife',status:'confirmed',
       detail:name,weather:weather.decision,zones
-    }).catch(()=>null);
+    }).catch(error=>console.error('Histórico Café group_start:',error?.message||error));
 
     return res.status(200).json({
       ok:true,verified:true,provider:'smartlife',device_id:deviceId,
-      controller_index:controllerIndex,name,mode:'order',zones,
+      controller_index:controllerIndex,name,mode:'order',zones,session_id:sessionId,
       started_at:startedAt,expected_end_at:expectedEndAt,
       state:verification.state?.runtime||null
     });

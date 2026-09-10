@@ -3,7 +3,7 @@ import { listInkbirdDevices } from '../inkbird/_device.js';
 import { readInkbirdState } from '../inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { getAutomationConfig, storeGet } from '../irrigation/_store.js';
-import { CAFE_ROOT, CAFE_SCHEDULE_ROOT, getCafeActiveSession } from './_state.js';
+import { CAFE_ROOT, CAFE_SCHEDULE_ROOT, getCafeActiveSession, getCafeWeatherState } from './_state.js';
 
 const TZ='America/Porto_Velho';
 
@@ -203,6 +203,7 @@ export default async function handler(req,res){
     const historyRawPromise=storeGet(CAFE_ROOT+'/history').catch(()=>null);
     const configPromise=getAutomationConfig().catch(()=>({}));
     const weatherPromise=fetchWeatherSnapshot({maxAgeMs:4000}).catch(error=>({linked:false,error:error?.message||String(error)}));
+    const weatherStatePromise=getCafeWeatherState().catch(()=>({}));
     const schedulePromises=controllers.map(async controller=>[
       controller.id,
       (await storeGet(CAFE_SCHEDULE_ROOT+'/'+controller.id).catch(()=>null))||{}
@@ -217,8 +218,8 @@ export default async function handler(req,res){
       ]);
     }
 
-    const [historyRaw,config,weather,scheduleEntries]=await Promise.all([
-      historyRawPromise,configPromise,weatherPromise,Promise.all(schedulePromises)
+    const [historyRaw,config,weather,weatherState,scheduleEntries]=await Promise.all([
+      historyRawPromise,configPromise,weatherPromise,weatherStatePromise,Promise.all(schedulePromises)
     ]);
     const history=rows(historyRaw);
     const scheduleByDevice=Object.fromEntries(scheduleEntries);
@@ -234,6 +235,7 @@ export default async function handler(req,res){
       runtime:runtimeFrom(inkbirdState,activeSession),
       active_session:activeSession||null,
       weather,
+      weather_state:weatherState||{},
       config:config||{},
       summary,
       next_schedule:nextSchedule(scheduleByDevice,controllers),

@@ -84,8 +84,17 @@ async function firebaseAccessToken() {
   return cachedAccessToken;
 }
 
-async function request(path, options = {}) {
-  const url = DB_URL + '/' + cleanPath(path) + '.json';
+async function request(path, options = {}, query = null) {
+  let url = DB_URL + '/' + cleanPath(path) + '.json';
+  if(query&&typeof query==='object'){
+    const params=new URLSearchParams();
+    for(const [key,value] of Object.entries(query)){
+      if(value===undefined||value===null)continue;
+      params.set(key,JSON.stringify(value));
+    }
+    const qs=params.toString();
+    if(qs)url+='?'+qs;
+  }
   const token=await firebaseAccessToken();
   const r = await fetch(url, {
     ...options,
@@ -113,6 +122,24 @@ async function request(path, options = {}) {
 
 export async function storeGet(path) {
   return request(path);
+}
+
+export async function storeGetQuery(path, {
+  orderBy=null,
+  startAt=null,
+  endAt=null,
+  equalTo=null,
+  limitToFirst=null,
+  limitToLast=null
+} = {}) {
+  const query={};
+  if(orderBy!==null)query.orderBy=String(orderBy);
+  if(startAt!==null)query.startAt=startAt;
+  if(endAt!==null)query.endAt=endAt;
+  if(equalTo!==null)query.equalTo=equalTo;
+  if(limitToFirst!==null)query.limitToFirst=Math.max(1,Math.floor(Number(limitToFirst)||1));
+  if(limitToLast!==null)query.limitToLast=Math.max(1,Math.floor(Number(limitToLast)||1));
+  return request(path,{},query);
 }
 
 export async function storeSet(path, value) {

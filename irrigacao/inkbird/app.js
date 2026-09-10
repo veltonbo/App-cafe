@@ -460,7 +460,7 @@ function renderSystem(){
     history_count:app.history.length
   },null,2);
 }
-function renderAll(){renderHeader();renderHero();renderSummary();renderSectors();renderWeather();renderSystem()}
+function renderAll(){renderHeader();renderHero();renderSummary();if(!(app.activeView==='sectors'&&$('sectorGrid')?.contains(document.activeElement)))renderSectors();renderWeather();renderSystem()}
 
 async function loadDashboard(showToast=false){
   if(app.loading||!store.settings.token)return;
@@ -501,11 +501,6 @@ function schedulePolling(){
     if(document.visibilityState==='visible')await loadDashboard(false);
     schedulePolling();
   },12000);
-  clearTimeout(app.historyTimer);
-  app.historyTimer=setTimeout(async()=>{
-    if(document.visibilityState==='visible')await loadHistory(false);
-    schedulePollingHistory();
-  },60000);
 }
 function schedulePollingHistory(){
   clearTimeout(app.historyTimer);

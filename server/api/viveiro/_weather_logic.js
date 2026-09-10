@@ -104,13 +104,19 @@ export async function getViveiroWeatherState(){
 }
 
 async function record(type,detail,extra={}){
-  await appendHistory({
-    type,
-    source:'viveiro_weather',
-    status:'confirmed',
-    detail,
-    ...extra
-  }).catch(()=>null);
+  try{
+    await appendHistory({
+      type,
+      source:'viveiro_weather',
+      status:'confirmed',
+      detail,
+      ...extra
+    });
+  }catch(error){
+    // A proteção climática não pode parar por uma falha de histórico,
+    // mas a falha deixa de ser silenciosa e aparece nos logs do servidor.
+    console.error('Falha ao gravar histórico climático do Viveiro:',error?.message||error);
+  }
 }
 
 export async function runViveiroWeatherCheck(){

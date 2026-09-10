@@ -57,7 +57,7 @@ test('eventos legados sem pulse_id continuam contabilizados',()=>{
   assert.equal(a.irrigated_seconds,30);
 });
 
-test('start órfão não vira pulso confirmado no histórico',()=>{
+test('start órfão continua como pulso iniciado mas não como desfecho confirmado',()=>{
   const rows=[
     {id:'a',type:'viveiro_pulse_start',pulse_id:'p-orphan',ts:Date.parse('2026-09-09T15:00:00Z')},
     {id:'b',type:'viveiro_pulse_start',pulse_id:'p-ok',ts:Date.parse('2026-09-09T15:05:00Z')},

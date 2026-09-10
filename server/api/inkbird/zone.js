@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { applyCors, authorize } from '../_tuya.js';
 import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
 import { encodeDp45Manual, encodeDp45Stop, dp45HasWatering } from './_iic800.js';
 import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
-import { appendHistory, getAutomationConfig, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
+import { appendHistory, getAutomationConfig } from '../irrigation/_store.js';
+import { getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, setCafeWeatherState } from '../cafe/_state.js';
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
@@ -12,10 +14,11 @@ async function evaluateServerWeather(){
     enabled:true,rainThreshold:5,rainHoldHours:12,blockWhileRaining:true
   };
   const snapshot=await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
-  const weatherState=(await storeGet('IrrigacaoFazenda2E/weatherState').catch(()=>null))||{};
+  const weatherState=await getCafeWeatherState();
   if(snapshot?.metrics?.rainDetected)weatherState.lastRainAt=Date.now();
   const decision=decideWeather(snapshot,policy,weatherState);
-  await storePatch('IrrigacaoFazenda2E/weatherState',{
+  await setCafeWeatherState({
+    ...weatherState,
     lastRainAt:weatherState.lastRainAt||null,
     checkedAt:Date.now(),
     decision,
@@ -24,7 +27,7 @@ async function evaluateServerWeather(){
       online:snapshot?.device?.online??null,
       metrics:snapshot?.metrics||null
     }
-  }).catch(()=>null);
+  }).catch(error=>console.error('Café weatherState:',error?.message||error));
   return{snapshot,decision};
 }
 
@@ -89,7 +92,7 @@ export default async function handler(req,res){
     const meta=controllerMeta(before,zone);
 
     if(action==='start'){
-      const session=await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(()=>null);
+      const session=await getCafeActiveSession(deviceId);
       const alreadyWatering=dp45HasWatering(before.statusMap.irrigation_time_all);
       const sessionStillActive=Boolean(session&&Number(session.expected_end_at||0)>Date.now()-120000);
       if(alreadyWatering||sessionStillActive){
@@ -139,21 +142,23 @@ export default async function handler(req,res){
 
       const startedAt=Date.now();
       const expectedEndAt=startedAt+duration*60000;
-      await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,{
-        kind:'zone',zone,sector:meta.sector,controller_index:meta.controller_index,
+      const sessionId='cafe-'+startedAt+'-'+randomUUID().slice(0,8);
+      await setCafeActiveSession(deviceId,{
+        session_id:sessionId,kind:'zone',zone,sector:meta.sector,controller_index:meta.controller_index,
         duration_minutes:duration,started_at:startedAt,expected_end_at:expectedEndAt,
         mode:'Manual',source:'smartlife'
-      }).catch(()=>null);
+      });
       await appendHistory({
+        event_id:'start-'+sessionId,session_id:sessionId,
         type:'start',controller_id:deviceId,controller_index:meta.controller_index,
         zone,sector:meta.sector,duration_minutes:duration,mode:'Manual',
         source:'smartlife',status:'confirmed',detail:'Irrigação manual iniciada',
         weather:weather.decision
-      }).catch(()=>null);
+      }).catch(error=>console.error('Histórico Café start:',error?.message||error));
 
       return res.status(200).json({
         ok:true,verified:true,provider:'smartlife',device_id:deviceId,
-        action:'start',zone,duration_minutes:duration,started_at:startedAt,
+        action:'start',zone,duration_minutes:duration,session_id:sessionId,started_at:startedAt,
         expected_end_at:expectedEndAt,state:runtimeResponse(verification.state),
         weather:weather.decision,profile:'IIC-800-DP45-SMARTLIFE'
       });
@@ -179,16 +184,20 @@ export default async function handler(req,res){
       });
     }
 
-    await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,null).catch(()=>null);
+    const activeSession=await getCafeActiveSession(deviceId).catch(()=>null);
+    const sessionId=String(activeSession?.session_id||'').trim();
+    await setCafeActiveSession(deviceId,null).catch(error=>console.error('Café active clear:',error?.message||error));
     await appendHistory({
+      ...(sessionId?{event_id:(action==='auto'?'mode-':'stop-')+sessionId,session_id:sessionId}:{}),
       type:action==='auto'?'mode':'stop',
       controller_id:deviceId,controller_index:meta.controller_index,
-      zone:Number.isInteger(zone)?zone:0,sector:meta.sector||0,
+      zone:Number.isInteger(zone)?zone:Number(activeSession?.zone||0),
+      sector:meta.sector||Number(activeSession?.sector||0),
       mode:'Auto',source:'smartlife',status:'confirmed',
       detail:action==='auto'
         ?'Irrigação manual encerrada; programação automática mantida'
         :'Irrigação manual parada'
-    }).catch(()=>null);
+    }).catch(error=>console.error('Histórico Café stop:',error?.message||error));
 
     return res.status(200).json({
       ok:true,verified:true,provider:'smartlife',device_id:deviceId,

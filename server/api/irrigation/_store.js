@@ -75,7 +75,7 @@ async function firebaseAccessToken() {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:new URLSearchParams({
-      grant_type:'urn:ietf:params:oauth-grant-type:jwt-bearer',
+      grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion
     })
   });
@@ -219,7 +219,7 @@ function markRecentHistoryStale(){
 
 export async function readRecentHistory({sinceMs=0,limit=60000}={}){
   const start=Math.max(0,Math.round(Number(sinceMs)||0));
-  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000));
+  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000)));
   const key=start+':'+safeLimit;
   const now=Date.now();
   const cached=recentHistoryCache.get(key);

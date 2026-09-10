@@ -5,6 +5,7 @@ import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
 import { getViveiroSafety, getViveiroMaintenance, setMaintenanceInterlock } from './_interlock.js';
 import { pulseAccountingForDay } from '../../continuous/accounting.js';
+import { buildViveiroReports } from '../../continuous/reporting.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -519,7 +520,7 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState,safety]=await Promise.all([
+      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState,safety,incidentsRaw]=await Promise.all([
         storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
@@ -528,7 +529,8 @@ export default async function handler(req,res){
         storeGet(ROOT+'/config').catch(()=>null),
         getClimateConfig().catch(()=>null),
         getClimateState().catch(()=>null),
-        getViveiroSafety().catch(()=>null)
+        getViveiroSafety().catch(()=>null),
+        storeGet(ROOT+'/viveiro/incidents').catch(()=>null)
       ]);
       const weatherError=String(weatherState?.lastWeatherError||'');
       const stateTemp=Number(weatherState?.lastTemperature);
@@ -603,6 +605,13 @@ export default async function handler(req,res){
         safety:safety||{},
         now
       });
+      const reports=buildViveiroReports(
+        historyFull,
+        incidentsRaw||{},
+        activeSeconds,
+        activeSeconds?.operational_audit||health?.audit||null,
+        now
+      );
       return res.status(200).json({
         ok:true,
         server:{online:true,at:now},
@@ -612,6 +621,7 @@ export default async function handler(req,res){
         maintenance:{...(maintenance||{}),active:maintenanceActive},
         safety:safety||{},
         summary,
+        reports,
         history:history.slice(0,60),
         audit_today:auditToday,
         presets:config?.profiles?.viveiroPresets||{},

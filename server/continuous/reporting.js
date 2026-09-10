@@ -1,5 +1,3 @@
-import { pulseAccountingForDay } from './accounting.js';
-
 const TZ='America/Porto_Velho';
 
 export function viveiroDayKey(ts=Date.now()){
@@ -22,95 +20,156 @@ export function normalizeIncidents(raw){
     .sort((a,b)=>Number(b.opened_at||0)-Number(a.opened_at||0));
 }
 
-function numericValues(rows,key){
-  return rows.map(row=>Number(row?.[key])).filter(Number.isFinite);
+function rowTs(row){return Number(row?.ts||Date.parse(row?.at||0)||0)}
+function eventIdentity(row,prefix='row'){
+  const pulse=String(row?.pulse_id||'').trim();
+  if(pulse)return'pulse:'+pulse;
+  const event=String(row?.event_id||row?.id||'').trim();
+  if(event)return'event:'+event;
+  return prefix+':'+rowTs(row)+':'+String(row?.type||'');
 }
 function minOrNull(values){return values.length?Math.min(...values):null}
 function maxOrNull(values){return values.length?Math.max(...values):null}
 function avgOrNull(values){return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
 
-function dayRows(history,key){
-  return history.filter(row=>viveiroDayKey(row.ts||Date.parse(row.at||0))===key);
-}
-
-function dailyClimate(rows){
-  const temperature=numericValues(rows,'temperature');
-  const humidity=numericValues(rows,'humidity');
-  const vpd=numericValues(rows,'vpd');
+function emptyBucket(){
   return{
-    temperature_min:minOrNull(temperature),
-    temperature_max:maxOrNull(temperature),
-    temperature_avg:avgOrNull(temperature),
-    humidity_min:minOrNull(humidity),
-    humidity_max:maxOrNull(humidity),
-    humidity_avg:avgOrNull(humidity),
-    vpd_min:minOrNull(vpd),
-    vpd_max:maxOrNull(vpd),
-    vpd_avg:avgOrNull(vpd),
-    samples:Math.max(temperature.length,humidity.length,vpd.length)
+    starts:new Map(),
+    finals:new Map(),
+    rain_pauses:0,
+    errors:0,
+    auto_adjustments:0,
+    target_off:[],
+    temperatures:[],
+    humidities:[],
+    vpds:[],
+    interrupted_events:0
   };
 }
 
-function dailyIncidents(incidents,key){
+function bucketFor(map,key){
+  let bucket=map.get(key);
+  if(!bucket){bucket=emptyBucket();map.set(key,bucket)}
+  return bucket;
+}
+
+function groupThirtyDays(history,now){
+  const cutoff=now-32*86400000;
+  const recent=(Array.isArray(history)?history:[]).filter(row=>rowTs(row)>=cutoff);
+  const pulseStartDays=new Map();
+
+  for(const row of recent){
+    if(String(row?.type||'')!=='viveiro_pulse_start')continue;
+    const pulse=String(row?.pulse_id||'').trim();
+    if(pulse&&!pulseStartDays.has(pulse))pulseStartDays.set(pulse,viveiroDayKey(rowTs(row)));
+  }
+
+  const buckets=new Map();
+  for(const row of recent){
+    const type=String(row?.type||'');
+    const ts=rowTs(row);
+    const pulse=String(row?.pulse_id||'').trim();
+    const key=(pulse&&pulseStartDays.get(pulse))||viveiroDayKey(ts);
+    const bucket=bucketFor(buckets,key);
+
+    if(type==='viveiro_pulse_start'){
+      const id=eventIdentity(row,'start');
+      const prev=bucket.starts.get(id);
+      if(!prev||ts<rowTs(prev))bucket.starts.set(id,row);
+    }
+
+    if(type==='viveiro_pulse_complete'||type==='viveiro_pulse_interrupted'){
+      const id=eventIdentity(row,'final');
+      const prev=bucket.finals.get(id);
+      if(!prev||ts>=rowTs(prev))bucket.finals.set(id,row);
+    }
+
+    if(type==='viveiro_weather_pause'||type==='viveiro_rain_pause')bucket.rain_pauses+=1;
+    if(type.includes('error'))bucket.errors+=1;
+    if(type==='viveiro_pulse_interrupted')bucket.interrupted_events+=1;
+
+    if(['viveiro_climate_auto_change','viveiro_climate_return_base','viveiro_climate_applied'].includes(type)){
+      bucket.auto_adjustments+=1;
+      const off=Number(row?.to_off_seconds);
+      if(Number.isFinite(off))bucket.target_off.push(off);
+    }
+
+    const t=Number(row?.temperature),h=Number(row?.humidity),v=Number(row?.vpd);
+    if(Number.isFinite(t))bucket.temperatures.push(t);
+    if(Number.isFinite(h))bucket.humidities.push(h);
+    if(Number.isFinite(v))bucket.vpds.push(v);
+  }
+  return buckets;
+}
+
+function incidentsForDay(incidents,key){
   return incidents.filter(incident=>{
     const opened=Number(incident.opened_at||0);
     const resolved=Number(incident.resolved_at||0);
-    if(opened&&viveiroDayKey(opened)===key)return true;
-    if(resolved&&viveiroDayKey(resolved)===key)return true;
-    return false;
+    return(opened&&viveiroDayKey(opened)===key)||(resolved&&viveiroDayKey(resolved)===key);
   });
 }
 
-function statusForDay({rows=[],incidents=[],audit=null,isToday=false}={}){
+function statusForDay(bucket,incidents,audit,isToday){
   if(isToday&&String(audit?.status||'')==='critical')return'critical';
   if(incidents.some(x=>x.status==='open'&&x.level==='critical'))return'critical';
-  if(rows.some(x=>String(x.type||'').includes('error')))return'critical';
+  if(Number(bucket?.errors||0)>0)return'critical';
   if(isToday&&String(audit?.status||'')==='warning')return'warning';
-  if(incidents.length)return'warning';
-  if(rows.some(x=>String(x.type||'')==='viveiro_pulse_interrupted'))return'warning';
+  if(incidents.length||Number(bucket?.interrupted_events||0)>0)return'warning';
   return'normal';
 }
 
 export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=null,now=Date.now()){
   const incidents=normalizeIncidents(incidentsRaw);
   const todayKey=viveiroDayKey(now);
+  const buckets=groupThirtyDays(history,now);
   const trend30=[];
 
   for(let offset=29;offset>=0;offset--){
     const key=viveiroDayKey(now-offset*86400000);
-    const rows=dayRows(history,key);
-    const accounting=pulseAccountingForDay(history,key);
-    const climate=dailyClimate(rows);
-    const dayIncidents=dailyIncidents(incidents,key);
-    const autoChanges=rows.filter(row=>
-      ['viveiro_climate_auto_change','viveiro_climate_return_base','viveiro_climate_applied']
-        .includes(String(row.type||''))
-    );
-    const targetOff=autoChanges.map(row=>Number(row.to_off_seconds)).filter(Number.isFinite);
+    const b=buckets.get(key)||emptyBucket();
+    const finals=[...b.finals.values()];
+    const completed=finals.filter(row=>String(row.type)==='viveiro_pulse_complete');
+    const interrupted=finals.filter(row=>String(row.type)==='viveiro_pulse_interrupted');
+    const irrigatedSeconds=finals.reduce((sum,row)=>{
+      const actual=Number(row?.actual_duration_seconds);
+      const fallback=Number(row?.duration_seconds||row?.planned_duration_seconds||0);
+      const value=Number.isFinite(actual)?actual:fallback;
+      return sum+Math.max(0,Number.isFinite(value)?value:0);
+    },0);
+    const dayIncidents=incidentsForDay(incidents,key);
 
     trend30.push({
       key,
       label:dayLabel(key),
-      status:statusForDay({rows,incidents:dayIncidents,audit,isToday:key===todayKey}),
-      pulses:Number(accounting.pulses_started||0),
-      completed:Number(accounting.pulses_completed||0),
-      interrupted:Number(accounting.pulses_interrupted||0),
-      irrigated_seconds:Number(accounting.irrigated_seconds||0),
-      rain_pauses:rows.filter(row=>
-        ['viveiro_weather_pause','viveiro_rain_pause'].includes(String(row.type||''))
-      ).length,
-      errors:rows.filter(row=>String(row.type||'').includes('error')).length,
-      auto_adjustments:autoChanges.length,
-      avg_adjusted_off_seconds:avgOrNull(targetOff),
+      status:statusForDay(b,dayIncidents,audit,key===todayKey),
+      pulses:b.starts.size,
+      completed:completed.length,
+      interrupted:interrupted.length,
+      irrigated_seconds:irrigatedSeconds,
+      rain_pauses:b.rain_pauses,
+      errors:b.errors,
+      auto_adjustments:b.auto_adjustments,
+      avg_adjusted_off_seconds:avgOrNull(b.target_off),
       incidents:dayIncidents.length,
       critical_incidents:dayIncidents.filter(x=>x.level==='critical').length,
-      climate
+      climate:{
+        temperature_min:minOrNull(b.temperatures),
+        temperature_max:maxOrNull(b.temperatures),
+        temperature_avg:avgOrNull(b.temperatures),
+        humidity_min:minOrNull(b.humidities),
+        humidity_max:maxOrNull(b.humidities),
+        humidity_avg:avgOrNull(b.humidities),
+        vpd_min:minOrNull(b.vpds),
+        vpd_max:maxOrNull(b.vpds),
+        vpd_avg:avgOrNull(b.vpds),
+        samples:Math.max(b.temperatures.length,b.humidities.length,b.vpds.length)
+      }
     });
   }
 
   const today=trend30.at(-1)||{};
-  const currentIncidents=incidents.filter(x=>x.status==='open');
-  const recentIncidents=incidents.slice(0,30);
+  const open=incidents.filter(x=>x.status==='open');
 
   return{
     generated_at:now,
@@ -129,11 +188,11 @@ export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=
     trend7:trend30.slice(-7),
     trend30,
     incidents:{
-      open:currentIncidents,
-      recent:recentIncidents,
+      open,
+      recent:incidents.slice(0,30),
       totals:{
-        open:currentIncidents.length,
-        open_critical:currentIncidents.filter(x=>x.level==='critical').length,
+        open:open.length,
+        open_critical:open.filter(x=>x.level==='critical').length,
         last_30_days:incidents.filter(x=>now-Number(x.opened_at||0)<=30*86400000).length,
         resolved_automatic:incidents.filter(x=>x.status==='resolved'&&x.resolution==='automatico'&&now-Number(x.resolved_at||0)<=30*86400000).length,
         resolved_intervention:incidents.filter(x=>x.status==='resolved'&&x.resolution==='intervencao'&&now-Number(x.resolved_at||0)<=30*86400000).length

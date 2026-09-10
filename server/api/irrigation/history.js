@@ -1,12 +1,6 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { appendHistory, readRecentHistory } from './_store.js';
 
-function normalizeHistory(raw) {
-  if (!raw || typeof raw !== 'object') return [];
-  return Object.entries(raw).map(([id, value]) => ({ id, ...(value || {}) }))
-    .sort((a,b) => Number(b.ts || 0) - Number(a.ts || 0));
-}
-
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();

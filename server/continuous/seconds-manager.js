@@ -32,7 +32,9 @@ const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 const HISTORY_PATH='IrrigacaoFazenda2E/history';
 const ACCOUNTING_RECONCILE_MS=5*60*1000;
+const OPERATIONAL_AUDIT_MS=5*60*1000;
 let accountingTimer=null;
+let operationalAuditTimer=null;
 // Railway auto-deploy marker v2
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
@@ -181,6 +183,139 @@ async function flushPendingHistory(){
   await persist().catch(()=>null);
   return{ok:remaining.length===0,pending:remaining.length,sent};
 }
+function auditSeverity(issues=[]){
+  return issues.some(x=>x.level==='critical')?'critical':issues.length?'warning':'ok';
+}
+async function runOperationalAudit({notify=false}={}){
+  const now=Date.now();
+  const issues=[];
+  const phase=String(state.phase||'');
+  const schedule=localSchedule(state);
+  const protectedPhase=['weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window','emergency_stopped','stopped'];
+
+  if(state.enabled&&phase==='on'){
+    const due=Number(state.expected_off_at||0);
+    if(due&&now>due+20000){
+      issues.push({level:'critical',code:'pulse_overdue',message:'Pulso ligado além do tempo esperado.'});
+    }
+  }
+
+  if(state.enabled&&phase==='off'){
+    const due=Number(state.expected_next_on_at||0);
+    if(due&&now>due+20000){
+      issues.push({level:'critical',code:'next_pulse_overdue',message:'Próximo pulso não iniciou no tempo esperado.'});
+    }
+  }
+
+  if(state.enabled&&schedule.inside&&!protectedPhase.includes(phase)){
+    const cycleSeconds=Math.max(2,Number(state.on_seconds||30)+Number(state.off_seconds||120));
+    const lastPulseAt=Number(state.daily_last_pulse_at||state.last_pulse_at||state.last_on_confirmed_at||0);
+    if(lastPulseAt&&now-lastPulseAt>(cycleSeconds*2+45)*1000){
+      issues.push({level:'warning',code:'long_pulse_gap',message:'Tempo sem novo pulso maior que o esperado para o ciclo atual.'});
+    }
+  }
+
+  const confirmationAt=Number(state.last_confirmation_at||0);
+  if(state.enabled&&schedule.inside&&confirmationAt&&now-confirmationAt>10*60000&&!protectedPhase.includes(phase)){
+    issues.push({level:'warning',code:'confirmation_stale',message:'Smart Life está há mais de 10 min sem nova confirmação do Viveiro.'});
+  }
+
+  const precision=state.precision||{};
+  if(Number(precision.samples||0)>=5&&Number(precision.avg_abs_error_ms||0)>2500){
+    issues.push({level:'warning',code:'timing_unstable',message:'A precisão média dos pulsos está acima de 2,5 s de desvio.'});
+  }
+
+  if(String(state.history_sync?.status||'')==='degraded'){
+    issues.push({
+      level:'warning',code:'history_sync_degraded',
+      message:Number(state.history_sync?.pending||0)>1
+        ?Number(state.history_sync.pending)+' eventos aguardam confirmação no Firebase.'
+        :'Um evento aguarda confirmação no Firebase.'
+    });
+  }
+
+  if(String(state.accounting_reconciliation?.status||'')==='degraded'){
+    issues.push({level:'warning',code:'accounting_degraded',message:'A conferência automática dos pulsos está temporariamente indisponível.'});
+  }
+
+  try{
+    const raw=await storeGet(HISTORY_PATH);
+    const history=normalizeHistoryRows(raw).filter(row=>
+      String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
+    );
+    const recent30=history.filter(row=>now-Number(row.ts||0)<30*60000);
+    const failures=recent30.filter(row=>
+      ['viveiro_error','viveiro_start_failure','viveiro_start_delay'].includes(String(row.type||''))
+    );
+    if(failures.length>=2){
+      issues.push({level:'critical',code:'repeated_failures',message:'Falhas repetidas de irrigação nos últimos 30 minutos.'});
+    }
+    const interrupted=recent30.filter(row=>String(row.type||'')==='viveiro_pulse_interrupted');
+    if(interrupted.length>=3){
+      issues.push({level:'warning',code:'many_interruptions',message:'Três ou mais pulsos foram interrompidos nos últimos 30 minutos.'});
+    }
+    const restarts=history.filter(row=>
+      now-Number(row.ts||0)<60*60000&&
+      ['viveiro_server_restart','viveiro_server_resumed','viveiro_cycle_recovered'].includes(String(row.type||''))
+    );
+    if(restarts.length>=3){
+      issues.push({level:'warning',code:'restarts_excessive',message:'O controle do Viveiro reiniciou várias vezes na última hora.'});
+    }
+  }catch(error){
+    issues.push({level:'warning',code:'audit_history_unavailable',message:'Auditoria não conseguiu consultar o histórico agora.'});
+  }
+
+  try{
+    const snapshot=await fetchWeatherSnapshot({maxAgeMs:5000});
+    const checked=Number(snapshot?.checked_at||0);
+    if(!snapshot?.linked||snapshot?.device?.online===false||snapshot?.error){
+      issues.push({level:'critical',code:'weather_offline',message:'Weather2-2 sem comunicação.'});
+    }else if(checked&&now-checked>15*60000){
+      issues.push({level:'warning',code:'weather_stale',message:'Weather2-2 está há mais de 15 min sem atualização.'});
+    }
+  }catch{
+    issues.push({level:'critical',code:'weather_offline',message:'Weather2-2 sem comunicação.'});
+  }
+
+  const previous=state.operational_audit||{};
+  const previousCodes=new Set((previous.issues||[]).map(x=>String(x.code)));
+  const currentCodes=new Set(issues.map(x=>String(x.code)));
+  const newIssues=issues.filter(x=>!previousCodes.has(String(x.code)));
+  const cleared=[...previousCodes].filter(code=>!currentCodes.has(code));
+  const severity=auditSeverity(issues);
+
+  state={
+    ...state,
+    operational_audit:{
+      status:severity,
+      checked_at:now,
+      issues,
+      new_codes:newIssues.map(x=>x.code),
+      cleared_codes:cleared,
+      message:severity==='ok'?'Auditoria operacional sem anomalias.':issues[0]?.message||'Auditoria encontrou uma anomalia.'
+    }
+  };
+  await persist().catch(()=>null);
+
+  if(notify){
+    for(const issue of newIssues.slice(0,3)){
+      await pushNotice(
+        issue.level==='critical'?'Alerta crítico • Viveiro':'Atenção • Viveiro',
+        issue.message,
+        'viveiro-audit-'+issue.code,
+        issue.level,
+        issue.level==='critical'?30:60,
+        true
+      );
+      await event('viveiro_audit_alert',issue.message,{audit_code:issue.code,level:issue.level});
+    }
+    if(cleared.length&&issues.length===0){
+      await event('viveiro_audit_recovered','Auditoria operacional voltou ao estado normal.',{cleared_codes:cleared});
+    }
+  }
+  return state.operational_audit;
+}
+
 async function reconcileDailyAccounting({notify=false}={}){
   ensureDailyCounters();
   const before={
@@ -1414,6 +1549,17 @@ export async function initSecondsManager(){
       );
     },ACCOUNTING_RECONCILE_MS);
     accountingTimer.unref?.();
+  }
+  await runOperationalAudit({notify:false}).catch(error=>
+    console.warn('Auditoria operacional inicial indisponível:',error?.message||error)
+  );
+  if(!operationalAuditTimer){
+    operationalAuditTimer=setInterval(()=>{
+      runOperationalAudit({notify:true}).catch(error=>
+        console.warn('Auditoria operacional indisponível:',error?.message||error)
+      );
+    },OPERATIONAL_AUDIT_MS);
+    operationalAuditTimer.unref?.();
   }
 
   const [startupClimateConfig,startupClimateState]=await Promise.all([

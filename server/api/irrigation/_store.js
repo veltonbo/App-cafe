@@ -1,9 +1,14 @@
 import { createSign, randomUUID } from 'node:crypto';
 
 const DB_URL = (process.env.FIREBASE_DATABASE_URL || 'https://manej-cafe-default-rtdb.firebaseio.com').replace(/\/$/,'');
+const HISTORY_PATH='IrrigacaoFazenda2E/history';
+const HISTORY_TIME_PATH='IrrigacaoFazenda2E/historyByTime';
+const HISTORY_INDEX_META_PATH='IrrigacaoFazenda2E/historyByTimeMeta';
+const HISTORY_BACKFILL_PAGE_SIZE=250;
 
 let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
+let historyBackfillPromise=null;
 
 function cleanPath(path) {
   return String(path || '').replace(/^\/+|\/+$/g,'').replace(/[.#$\[\]]/g,'_');
@@ -154,6 +159,87 @@ export async function storePush(path, value) {
   return request(path, { method:'POST', body:JSON.stringify(value) });
 }
 
+function historyTimestamp(entry={}){
+  const direct=Number(entry?.ts||0);
+  if(Number.isFinite(direct)&&direct>0)return Math.round(direct);
+  const parsed=Date.parse(entry?.at||'');
+  return Number.isFinite(parsed)&&parsed>0?parsed:Date.now();
+}
+
+function historyTimeKey(eventId,entry={}){
+  const ts=String(historyTimestamp(entry)).padStart(13,'0');
+  const safeId=String(eventId||'event').replace(/[^A-Za-z0-9_-]/g,'_').slice(0,180);
+  return ts+'-'+safeId;
+}
+
+function historyRows(raw){
+  if(!raw||typeof raw!=='object')return[];
+  return Object.entries(raw).map(([id,value])=>({id,...(value||{})}));
+}
+
+export async function readRecentHistory({sinceMs=0,limit=60000}={}){
+  const start=Math.max(0,Math.round(Number(sinceMs)||0));
+  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000)));
+  const raw=await storeGetQuery(HISTORY_TIME_PATH,{
+    orderBy:'$key',
+    startAt:String(start).padStart(13,'0')+'-',
+    limitToLast:safeLimit
+  });
+  return historyRows(raw)
+    .filter(row=>historyTimestamp(row)>=start)
+    .sort((a,b)=>historyTimestamp(b)-historyTimestamp(a));
+}
+
+export async function historyIndexStatus(){
+  return(await storeGet(HISTORY_INDEX_META_PATH).catch(()=>null))||{};
+}
+
+export async function backfillHistoryTimeIndex({force=false}={}){
+  if(historyBackfillPromise)return historyBackfillPromise;
+  historyBackfillPromise=(async()=>{
+    const meta=await historyIndexStatus();
+    if(!force&&meta?.legacy_backfill_complete)return meta;
+
+    let cursor=null;
+    let scanned=0;
+    let indexed=0;
+    while(true){
+      const raw=await storeGetQuery(HISTORY_PATH,{
+        orderBy:'$key',
+        ...(cursor?{startAt:cursor}:{}),
+        limitToFirst:HISTORY_BACKFILL_PAGE_SIZE+(cursor?1:0)
+      });
+      let rows=historyRows(raw).sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+      if(cursor)rows=rows.filter(row=>String(row.id)!==String(cursor));
+      if(!rows.length)break;
+
+      const updates={};
+      for(const row of rows){
+        const {id,...entry}=row;
+        updates[historyTimeKey(id,entry)]={...entry,event_id:entry.event_id||id};
+      }
+      if(Object.keys(updates).length){
+        await storePatch(HISTORY_TIME_PATH,updates);
+        indexed+=Object.keys(updates).length;
+      }
+      scanned+=rows.length;
+      cursor=String(rows.at(-1)?.id||'');
+      if(rows.length<HISTORY_BACKFILL_PAGE_SIZE||!cursor)break;
+    }
+
+    const result={
+      legacy_backfill_complete:true,
+      completed_at:Date.now(),
+      scanned,
+      indexed
+    };
+    await storeSet(HISTORY_INDEX_META_PATH,result);
+    return result;
+  })();
+  try{return await historyBackfillPromise}
+  finally{historyBackfillPromise=null}
+}
+
 function historyEventId(entry={}){
   const supplied=String(entry?.event_id||'').trim();
   if(supplied)return supplied.replace(/[^A-Za-z0-9_-]/g,'_');
@@ -169,13 +255,15 @@ export async function appendHistory(entry) {
     at: entry?.at || new Date().toISOString(),
     ts: entry?.ts || Date.now()
   };
+  const timeKey=historyTimeKey(eventId,payload);
 
   let lastError=null;
   for(let attempt=1;attempt<=3;attempt++){
     try{
-      // PUT com chave determinística torna a gravação idempotente:
-      // um retry nunca cria o mesmo evento duas vezes.
-      await storeSet('IrrigacaoFazenda2E/history/'+eventId,payload);
+      // Mantém o histórico original e um índice temporal independente das regras
+      // de .indexOn do Firebase. Ambos usam chaves determinísticas e são idempotentes.
+      await storeSet(HISTORY_PATH+'/'+eventId,payload);
+      await storeSet(HISTORY_TIME_PATH+'/'+timeKey,payload);
       return{ok:true,id:eventId,event_id:eventId,entry:payload,attempt};
     }catch(error){
       lastError=error;

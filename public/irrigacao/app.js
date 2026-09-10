@@ -235,6 +235,28 @@ function renderSystem(){
   const avg=s.precision?.avg_abs_error_ms;
   $('precisionState').textContent=Number.isFinite(Number(avg))?Math.round(Number(avg))+' ms':'—';
 
+  const audit=s.operational_audit||health.audit||{};
+  const auditIssues=Array.isArray(audit.issues)?audit.issues:[];
+  const auditLevel=String(audit.status||health.level||'ok');
+  setBadge($('auditBadge'),
+    auditLevel==='critical'?'CRÍTICO':auditLevel==='warning'?'ATENÇÃO':'NORMAL',
+    auditLevel==='critical'?'bad':auditLevel==='warning'?'warn':''
+  );
+  $('auditSummary').textContent=audit.message||(
+    auditIssues.length
+      ?auditIssues[0]?.message||'A auditoria encontrou uma anomalia.'
+      :'Nenhuma anomalia encontrada.'
+  );
+  $('auditCheckedAt').textContent=audit.checked_at?localDateTime(audit.checked_at):'—';
+  $('auditList').innerHTML=auditIssues.length
+    ?auditIssues.slice(0,8).map(issue=>
+        '<div class="auditItem '+(issue.level==='critical'?'critical':'warning')+'">'+
+          '<i>'+(issue.level==='critical'?'!':'•')+'</i>'+
+          '<span><b>'+esc(issue.level==='critical'?'Crítico':'Atenção')+'</b><small>'+esc(issue.message||issue.code||'Anomalia')+'</small></span>'+
+        '</div>'
+      ).join('')
+    :'<div class="auditOk"><i>✓</i><span><b>Sistema coerente</b><small>Horário, clima, ciclo, confirmações e histórico sem divergência detectada.</small></span></div>';
+
   const maint=d.maintenance||{};
   setBadge($('maintenanceBadge'),maint.active?'ATIVA':'INATIVA',maint.active?'warn':'');
   if(document.activeElement!==$('apiUrl'))$('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
@@ -245,7 +267,8 @@ function renderSystem(){
     health,
     seconds:{phase:s.phase,enabled:s.enabled,on:s.on_seconds,off:s.off_seconds,server_read_at:s.server_read_at,watchdog:s.watchdog||null,precision:s.precision||null},
     weather:{linked:w.linked,checked_at:w.checked_at,error:w.error||null},
-    live:{connected:app.liveConnected,last_event_at:app.lastLiveAt}
+    live:{connected:app.liveConnected,last_event_at:app.lastLiveAt},
+    audit
   },null,2);
 }
 function renderAll(){

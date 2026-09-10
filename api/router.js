@@ -13,8 +13,10 @@ import irrigationMonitor from '../server/api/irrigation/monitor.js';
 import irrigationBackups from '../server/api/irrigation/backups.js';
 import smartLifeImport from '../server/api/smartlife/import.js';
 import smartLifeReauth from '../server/api/smartlife/reauth.js';
+import sessionApi from '../server/api/session.js';
 
 const ROUTES={
+  'session':sessionApi,
   'cycle':cycle,
   'status':rootStatus,
   'switch':rootSwitch,

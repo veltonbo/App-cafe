@@ -59,11 +59,16 @@ function overallStatus(parts){
 }
 function viveiroSummary(d){
   if(!d?.ok)return{status:'critical',title:'Viveiro indisponível',detail:d?.error||'Sem resposta do serviço.',online:false};
-  const reportStatus=normalizeStatus(d?.reports?.status_today||d?.intelligence?.health?.level);
+  const currentStatus=normalizeStatus(
+    d?.seconds?.operational_audit?.status||
+    d?.intelligence?.health?.level||
+    'normal'
+  );
   const op=d?.intelligence?.operation||{};
   const open=Number(d?.reports?.incidents?.totals?.open||0);
   return{
-    status:reportStatus,
+    status:open?overallStatus([currentStatus,'warning']):currentStatus,
+    day_status:normalizeStatus(d?.reports?.status_today||'normal'),
     title:op.label||'Viveiro',
     detail:op.detail||d?.intelligence?.health?.message||'Sem detalhe.',
     online:true,
@@ -76,11 +81,15 @@ function viveiroSummary(d){
 }
 function cafeSummary(d){
   if(!d?.ok)return{status:'critical',title:'Café indisponível',detail:d?.error||'Sem resposta do serviço.',online:false};
-  const reportStatus=normalizeStatus(d?.reports?.status_today||d?.audit?.status);
   const controller=d?.selected_controller||d?.controllers?.[0]||null;
+  const open=Number(d?.reports?.incidents?.totals?.open||0);
+  const currentStatus=controller?.online===false
+    ?'critical'
+    :normalizeStatus(d?.audit?.status||'normal');
   const mask=Number(d?.runtime?.active_mask||0)||Number(d?.runtime?.pending_mask||0);
   return{
-    status:reportStatus,
+    status:open?overallStatus([currentStatus,'warning']):currentStatus,
+    day_status:normalizeStatus(d?.reports?.status_today||'normal'),
     title:mask?'IRRIGANDO':'PRONTO',
     detail:controller?.online===false?'IIC-800 offline.':mask?'IIC-800 com irrigação em andamento.':'IIC-800 disponível.',
     online:controller?.online!==false,

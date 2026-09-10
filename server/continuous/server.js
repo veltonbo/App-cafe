@@ -12,6 +12,7 @@ import { runViveiroWeatherCheck, getViveiroWeatherConfig, getViveiroWeatherState
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 import { authorize } from '../api/_tuya.js';
 import { liveClientCount, publishLive, subscribeLive } from './live-bus.js';
+import { backfillHistoryTimeIndex } from '../api/irrigation/_store.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 // Viveiro UI v11 final cleanup
@@ -353,6 +354,11 @@ await startViveiroInterlockWatch();
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);
   publishLive('server',{online:true,at:Date.now()});
+  setTimeout(()=>{
+    backfillHistoryTimeIndex()
+      .then(result=>console.log('Índice temporal do histórico pronto',result))
+      .catch(error=>console.warn('Backfill do histórico indisponível:',error?.message||error));
+  },1500).unref();
 });
 
 let shuttingDown=false;

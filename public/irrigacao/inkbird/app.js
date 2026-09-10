@@ -241,6 +241,9 @@ function eventLabel(h){
   if(h.type==='complete')return sector?'Setor '+pad(sector)+' concluído':(h.detail||'Irrigação concluída');
   if(h.type==='stop')return sector?'Setor '+pad(sector)+' parado':'Irrigação parada';
   if(h.type==='group_start')return h.detail||'Grupo iniciado';
+  if(h.type==='auto_start')return sector?'Setor '+pad(sector)+' automático':'Irrigação automática observada';
+  if(h.type==='auto_complete')return sector?'Setor '+pad(sector)+' automático concluído':'Irrigação automática concluída';
+  if(h.type==='weather_stop')return'Irrigação interrompida pelo clima';
   if(h.type==='group_blocked')return'Grupo bloqueado';
   if(h.type==='blocked')return sector?'Setor '+pad(sector)+' bloqueado':'Irrigação bloqueada';
   if(h.type==='schedule')return sector?'Programação do Setor '+pad(sector):'Programação atualizada';
@@ -248,8 +251,8 @@ function eventLabel(h){
   return h.detail||'Evento do Café';
 }
 function eventIcon(h){
-  if(h.type==='start'||h.type==='group_start')return'▶';
-  if(h.type==='complete')return'✓';
+  if(['start','group_start','auto_start'].includes(h.type))return'▶';
+  if(['complete','auto_complete'].includes(h.type))return'✓';
   if(h.type==='stop'||h.type==='mode')return'■';
   if(String(h.type||'').includes('blocked'))return'!';
   if(h.type==='schedule')return'P';

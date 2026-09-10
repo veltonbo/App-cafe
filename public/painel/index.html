@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7f5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Fazenda 2E">
+  <title>Fazenda 2E • Painel</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app.css?v=1">
+</head>
+<body>
+  <div id="offlineBar" class="offline" hidden>Sem conexão com o Painel Fazenda 2E.</div>
+  <header>
+    <div><small>FAZENDA 2E</small><h1>Painel Geral</h1></div>
+    <button id="refreshBtn" type="button"><i id="headDot"></i><span id="headText">Conectando</span></button>
+  </header>
+
+  <main>
+    <article id="overallCard" class="overall neutral">
+      <div class="overallIcon" id="overallIcon">…</div>
+      <div><small>STATUS GERAL</small><h2 id="overallTitle">Verificando</h2><p id="overallDetail">Consultando Viveiro, Café e clima.</p></div>
+      <span id="updatedAt">—</span>
+    </article>
+
+    <div class="grid">
+      <article id="viveiroCard" class="systemCard">
+        <div class="cardHead"><span class="dot" id="viveiroDot"></span><small>VIVEIRO</small><b id="viveiroStatus">—</b></div>
+        <h3 id="viveiroTitle">Verificando</h3>
+        <p id="viveiroDetail">—</p>
+        <div class="metrics">
+          <div><small>Pulsos hoje</small><strong id="viveiroPulses">—</strong></div>
+          <div><small>Tempo irrigado</small><strong id="viveiroTime">—</strong></div>
+        </div>
+      </article>
+
+      <article id="cafeCard" class="systemCard">
+        <div class="cardHead"><span class="dot" id="cafeDot"></span><small>CAFÉ</small><b id="cafeStatus">—</b></div>
+        <h3 id="cafeTitle">Verificando</h3>
+        <p id="cafeDetail">—</p>
+        <div class="metrics">
+          <div><small>Irrigações hoje</small><strong id="cafeSessions">—</strong></div>
+          <div><small>Setores hoje</small><strong id="cafeSectors">—</strong></div>
+        </div>
+      </article>
+
+      <article id="climateCard" class="systemCard">
+        <div class="cardHead"><span class="dot" id="climateDot"></span><small>CLIMA</small><b id="climateStatus">—</b></div>
+        <h3 id="climateTitle">Weather2-2</h3>
+        <p id="climateDetail">—</p>
+        <div class="metrics three">
+          <div><small>Temp.</small><strong id="temperature">—</strong></div>
+          <div><small>Umidade</small><strong id="humidity">—</strong></div>
+          <div><small>Chuva</small><strong id="rain">—</strong></div>
+        </div>
+      </article>
+
+      <article id="alertsCard" class="systemCard">
+        <div class="cardHead"><span class="dot" id="alertsDot"></span><small>ALERTAS</small><b id="alertsStatus">—</b></div>
+        <h3 id="alertsTitle">Verificando</h3>
+        <p id="alertsDetail">Incidentes abertos nos dois sistemas.</p>
+        <div class="metrics">
+          <div><small>Abertos</small><strong id="alertsTotal">—</strong></div>
+          <div><small>Críticos</small><strong id="alertsCritical">—</strong></div>
+        </div>
+      </article>
+    </div>
+
+    <article class="nextCard">
+      <small>PRÓXIMA PROGRAMAÇÃO DO CAFÉ</small>
+      <strong id="nextCafe">—</strong>
+      <span id="nextCafeSub">—</span>
+    </article>
+
+    <p class="note">Este painel é somente leitura. Nenhum comando de irrigação pode ser enviado por aqui.</p>
+  </main>
+
+  <div id="setup" class="setup" hidden>
+    <div class="setupCard">
+      <small>FAZENDA 2E</small><h2>Conectar painel</h2>
+      <p>Use o mesmo token privado dos aplicativos de irrigação.</p>
+      <label><span>Token de controle</span><input id="tokenInput" type="password" autocomplete="off"></label>
+      <button id="connectBtn" type="button">Conectar</button>
+    </div>
+  </div>
+  <script src="/app.js?v=1" defer></script>
+</body>
+</html>

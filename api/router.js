@@ -9,6 +9,7 @@ import viveiroDashboard from '../server/api/viveiro/dashboard-cached.js';
 import irrigationPush from '../server/api/irrigation/push.js';
 import irrigationConfig from '../server/api/irrigation/config.js';
 import irrigationHistory from '../server/api/irrigation/history.js';
+import irrigationLocalHistory from '../server/api/irrigation/local-history.js';
 import irrigationMonitor from '../server/api/irrigation/monitor.js';
 import irrigationBackups from '../server/api/irrigation/backups.js';
 import smartLifeImport from '../server/api/smartlife/import.js';
@@ -28,6 +29,7 @@ const ROUTES={
   'irrigation/push':irrigationPush,
   'irrigation/config':irrigationConfig,
   'irrigation/history':irrigationHistory,
+  'irrigation/local-history':irrigationLocalHistory,
   'irrigation/monitor':irrigationMonitor,
   'irrigation/backups':irrigationBackups,
   'smartlife/import':smartLifeImport,

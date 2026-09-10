@@ -1,1 +1,1 @@
-Café Clean v1.1 — frontend único, dashboard/state em server/cafe, Firebase isolado, histórico e agenda migrados — 2026-09-09
+Café Audit v1 — auditoria automática, alertas inteligentes, atividade por setor e detecção de programação perdida — 2026-09-09

@@ -79,7 +79,7 @@ async function api(path,opt={}){
       headers:authHeaders(opt.headers||{})
     });
     const body=await r.json().catch(()=>({}));
-    if(r.status===401&&app.sessionReady&&!hasAuth()){
+    if(r.status===401&&app.sessionReady&&!store.settings.token){
       app.sessionReady=false;
       $('setupOverlay').hidden=false;
     }
@@ -204,7 +204,7 @@ function renderHealth(){
   $('healthTitle').textContent=h.message||'Aguardando diagnóstico';
   $('healthDetail').textContent=h.level==='ok'?'Todos os serviços essenciais respondendo.':(h.issues?.[0]?.message||'Toque para abrir o Sistema.');
   $('healthIcon').textContent=h.level==='critical'?'!':h.level==='warning'?'•':'✓';
-  const connected=Boolean(store.settings.token&&app.dashboard);
+  const connected=Boolean(hasAuth()&&app.dashboard);
   $('headerStateText').textContent=!hasAuth()?'Configurar':!connected?'Reconectando':h.level==='critical'?'Atenção':'Online';
   setDot('headerDot',!hasAuth()?null:h.level==='critical'?false:connected?true:null);
 }

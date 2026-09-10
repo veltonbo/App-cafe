@@ -5,10 +5,13 @@ const HISTORY_PATH='IrrigacaoFazenda2E/history';
 const HISTORY_TIME_PATH='IrrigacaoFazenda2E/historyByTime';
 const HISTORY_INDEX_META_PATH='IrrigacaoFazenda2E/historyByTimeMeta';
 const HISTORY_BACKFILL_PAGE_SIZE=250;
+const HISTORY_CACHE_FRESH_MS=10000;
+const HISTORY_CACHE_STALE_MS=5*60*1000;
 
 let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
 let historyBackfillPromise=null;
+const recentHistoryCache=new Map();
 
 function cleanPath(path) {
   return String(path || '').replace(/^\/+|\/+$/g,'').replace(/[.#$\[\]]/g,'_');
@@ -72,7 +75,7 @@ async function firebaseAccessToken() {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:new URLSearchParams({
-      grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      grant_type:'urn:ietf:params:oauth-grant-type:jwt-bearer',
       assertion
     })
   });
@@ -177,9 +180,7 @@ function historyRows(raw){
   return Object.entries(raw).map(([id,value])=>({id,...(value||{})}));
 }
 
-export async function readRecentHistory({sinceMs=0,limit=60000}={}){
-  const start=Math.max(0,Math.round(Number(sinceMs)||0));
-  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000)));
+async function fetchRecentHistory(start,safeLimit){
   const raw=await storeGetQuery(HISTORY_TIME_PATH,{
     orderBy:'$key',
     startAt:String(start).padStart(13,'0')+'-',
@@ -188,6 +189,49 @@ export async function readRecentHistory({sinceMs=0,limit=60000}={}){
   return historyRows(raw)
     .filter(row=>historyTimestamp(row)>=start)
     .sort((a,b)=>historyTimestamp(b)-historyTimestamp(a));
+}
+
+function refreshRecentHistory(key,start,safeLimit,entry={}){
+  if(entry.promise)return entry.promise;
+  const promise=fetchRecentHistory(start,safeLimit)
+    .then(rows=>{
+      const now=Date.now();
+      recentHistoryCache.set(key,{
+        rows,
+        freshUntil:now+HISTORY_CACHE_FRESH_MS,
+        staleUntil:now+HISTORY_CACHE_STALE_MS,
+        promise:null
+      });
+      return rows;
+    })
+    .catch(error=>{
+      const current=recentHistoryCache.get(key);
+      if(current)current.promise=null;
+      throw error;
+    });
+  recentHistoryCache.set(key,{...entry,promise});
+  return promise;
+}
+
+function markRecentHistoryStale(){
+  for(const entry of recentHistoryCache.values())entry.freshUntil=0;
+}
+
+export async function readRecentHistory({sinceMs=0,limit=60000}={}){
+  const start=Math.max(0,Math.round(Number(sinceMs)||0));
+  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000));
+  const key=start+':'+safeLimit;
+  const now=Date.now();
+  const cached=recentHistoryCache.get(key);
+
+  if(cached?.rows&&now<Number(cached.freshUntil||0))return cached.rows;
+
+  if(cached?.rows&&now<Number(cached.staleUntil||0)){
+    refreshRecentHistory(key,start,safeLimit,cached).catch(()=>null);
+    return cached.rows;
+  }
+
+  return refreshRecentHistory(key,start,safeLimit,cached||{});
 }
 
 export async function historyIndexStatus(){
@@ -264,6 +308,7 @@ export async function appendHistory(entry) {
       // de .indexOn do Firebase. Ambos usam chaves determinísticas e são idempotentes.
       await storeSet(HISTORY_PATH+'/'+eventId,payload);
       await storeSet(HISTORY_TIME_PATH+'/'+timeKey,payload);
+      markRecentHistoryStale();
       return{ok:true,id:eventId,event_id:eventId,entry:payload,attempt};
     }catch(error){
       lastError=error;

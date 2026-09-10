@@ -5,6 +5,7 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, getAutomationConfig, storeGet } from '../api/irrigation/_store.js';
 import { CAFE_ROOT, getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, getCafeScheduleCache } from './state.js';
 import { buildSectorActivity, getCafeAuditState } from './audit.js';
+import { buildCafeReports } from './reporting.js';
 
 const TZ='America/Porto_Velho';
 
@@ -239,6 +240,7 @@ export default async function handler(req,res){
     const weatherPromise=fetchWeatherSnapshot({maxAgeMs:4000}).catch(error=>({linked:false,error:error?.message||String(error)}));
     const weatherStatePromise=getCafeWeatherState().catch(()=>({}));
     const auditPromise=getCafeAuditState().catch(()=>null);
+    const incidentsPromise=storeGet(CAFE_ROOT+'/incidents').catch(()=>null);
     const schedulePromises=controllers.map(async controller=>[
       controller.id,
       await getCafeScheduleCache(controller.id)
@@ -262,8 +264,8 @@ export default async function handler(req,res){
       sessionCompleted=completion.completed;
     }
 
-    let [historyRaw,config,weather,weatherState,audit,scheduleEntries]=await Promise.all([
-      historyRawPromise,configPromise,weatherPromise,weatherStatePromise,auditPromise,Promise.all(schedulePromises)
+    let [historyRaw,config,weather,weatherState,audit,incidentsRaw,scheduleEntries]=await Promise.all([
+      historyRawPromise,configPromise,weatherPromise,weatherStatePromise,auditPromise,incidentsPromise,Promise.all(schedulePromises)
     ]);
     if(sessionCompleted){
       historyRaw=await storeGet(CAFE_ROOT+'/history').catch(()=>historyRaw);
@@ -272,6 +274,7 @@ export default async function handler(req,res){
     const scheduleByDevice=Object.fromEntries(scheduleEntries);
     const summary=summarizeCafeHistory(history);
     const sectorActivity=buildSectorActivity(history,controllers);
+    const reports=buildCafeReports(history,incidentsRaw||{},controllers,audit||null);
 
     return res.status(200).json({
       ok:true,
@@ -286,6 +289,7 @@ export default async function handler(req,res){
       weather_state:weatherState||{},
       config:config||{},
       summary,
+      reports,
       audit:audit||{status:'checking',checked_at:null,issues:[],message:'Auditoria aguardando a primeira verificação.'},
       sector_activity:sectorActivity,
       next_schedule:nextSchedule(scheduleByDevice,controllers),

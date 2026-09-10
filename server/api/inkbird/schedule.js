@@ -2,8 +2,9 @@ import { applyCors, authorize } from '../_tuya.js';
 import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
 import { decodeNormalTimer, encodeNormalTimerZone } from './_iic800.js';
 import { appendHistory, storeGet, storeSet } from '../irrigation/_store.js';
+import { CAFE_SCHEDULE_ROOT } from '../cafe/_state.js';
 
-const CACHE_ROOT='IrrigacaoFazenda2E/inkbirdSchedules';
+const CACHE_ROOT=CAFE_SCHEDULE_ROOT;
 
 function uiMaskToDevice(mask){
   const m=Math.max(0,Math.min(127,Number(mask)||0));

@@ -11,7 +11,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icon.svg">
-  <link rel="stylesheet" href="/app.css?v=20260909-1">
+  <link rel="stylesheet" href="/app.css?v=20260909-2">
 </head>
 <body>
   <div id="offlineBar" class="offlineBar" hidden>Sem conexão. Os últimos dados continuam visíveis.</div>
@@ -63,6 +63,12 @@
         <div><small>CHUVA</small><strong id="sumRain">—</strong></div>
         <div><small>PROTEÇÃO</small><strong id="sumProtection">—</strong></div>
       </article>
+
+      <button id="auditSummaryCard" class="auditSummaryCard" data-view="system" type="button">
+        <i id="auditSummaryIcon">✓</i>
+        <span><small>AUDITORIA AUTOMÁTICA</small><strong id="auditSummaryTitle">Verificando</strong><em id="auditSummaryDetail">Aguardando a primeira conferência.</em></span>
+        <b>›</b>
+      </button>
 
       <div class="sectionHead">
         <div><small>CONTROLADOR</small><h2>Setores do Café</h2></div>
@@ -148,6 +154,13 @@
       </div>
 
       <article class="panel">
+        <div class="panelHead"><div><small>AUDITORIA AUTOMÁTICA</small><h3>Saúde operacional</h3></div><span id="auditBadge" class="badge">—</span></div>
+        <p id="auditMessage" class="panelNote">Aguardando a primeira verificação.</p>
+        <div id="auditList" class="auditList"></div>
+        <div class="auditFoot"><span>Última conferência</span><strong id="auditCheckedAt">—</strong></div>
+      </article>
+
+      <article class="panel">
         <div class="panelHead"><div><small>7 DIAS</small><h3>Resumo do Café</h3></div></div>
         <div class="weekStats">
           <div><small>Irrigações</small><strong id="weekSessions">—</strong></div>
@@ -226,6 +239,6 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="/app.js?v=20260909-1" defer></script>
+  <script src="/app.js?v=20260909-2" defer></script>
 </body>
 </html>

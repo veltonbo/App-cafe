@@ -149,7 +149,7 @@ export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=
       key,
       label:dayLabel(key),
       status:statusForDay(b,dayIncidents,audit,key===todayKey),
-      pulses:finals.length,
+      pulses:b.starts.size,
       start_attempts:b.starts.size,
       orphaned_starts:Math.max(0,b.starts.size-finals.length),
       completed:completed.length,

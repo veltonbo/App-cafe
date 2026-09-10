@@ -56,3 +56,16 @@ test('eventos legados sem pulse_id continuam contabilizados',()=>{
   assert.equal(a.pulses_completed,1);
   assert.equal(a.irrigated_seconds,30);
 });
+
+test('start órfão não vira pulso confirmado no histórico',()=>{
+  const rows=[
+    {id:'a',type:'viveiro_pulse_start',pulse_id:'p-orphan',ts:Date.parse('2026-09-09T15:00:00Z')},
+    {id:'b',type:'viveiro_pulse_start',pulse_id:'p-ok',ts:Date.parse('2026-09-09T15:05:00Z')},
+    {id:'c',type:'viveiro_pulse_complete',pulse_id:'p-ok',ts:Date.parse('2026-09-09T15:05:30Z'),actual_duration_seconds:30}
+  ];
+  const a=pulseAccountingForDay(rows,'2026-09-09');
+  assert.equal(a.pulses_started,2);
+  assert.equal(a.pulses_confirmed,1);
+  assert.equal(a.orphaned_starts,1);
+  assert.equal(a.irrigated_seconds,30);
+});

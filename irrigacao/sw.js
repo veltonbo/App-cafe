@@ -1,8 +1,8 @@
-const CACHE='fazenda2e-viveiro-clean-v2';
+const CACHE='fazenda2e-viveiro-clean-v3';
 const SHELL=[
   '/irrigacao/',
-  '/irrigacao/app.css?v=20260909-1',
-  '/irrigacao/app.js?v=20260909-2',
+  '/irrigacao/app.css?v=20260909-2',
+  '/irrigacao/app.js?v=20260909-3',
   '/irrigacao/manifest.webmanifest',
   '/irrigacao/icon.svg'
 ];

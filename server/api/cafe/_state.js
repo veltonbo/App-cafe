@@ -43,3 +43,18 @@ export async function getCafeWeatherState(){
 export async function setCafeWeatherState(value){
   return storeSet(CAFE_WEATHER_STATE,value||{});
 }
+
+
+export async function getCafeScheduleCache(deviceId){
+  const id=String(deviceId||'').trim();
+  if(!id)return{};
+  const current=await storeGet(CAFE_SCHEDULE_ROOT+'/'+id).catch(()=>null);
+  if(current&&typeof current==='object'&&Object.keys(current).length)return current;
+
+  const legacy=await storeGet('IrrigacaoFazenda2E/inkbirdSchedules/'+id).catch(()=>null);
+  if(legacy&&typeof legacy==='object'&&Object.keys(legacy).length){
+    await storeSet(CAFE_SCHEDULE_ROOT+'/'+id,legacy).catch(()=>null);
+    return legacy;
+  }
+  return current&&typeof current==='object'?current:{};
+}

@@ -225,6 +225,10 @@ export function evaluateCafeAudit({
       if(zone<1||zone>8||schedule?.enabled!==true)continue;
       const due=latestScheduledOccurrence(schedule,now);
       if(!due||now-due<30*60000)continue;
+      const configuredAt=Number(schedule?.updated_at||0);
+      // Não cobra uma execução anterior à criação/alteração da própria programação.
+      if(configuredAt&&configuredAt>due)continue;
+      if(schedule?.pending_confirmation===true)continue;
       const last=Number(activity[String(controller.id)]?.[zone]?.last_start_at||0);
       const weatherBlocks=history.some(row=>{
         const ts=Number(row.ts||Date.parse(row.at||0)||0);

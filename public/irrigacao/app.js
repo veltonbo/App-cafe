@@ -13,7 +13,7 @@ if(!store.settings.apiUrl)store.settings.apiUrl=DEFAULT_API;
 
 const app={
   dashboard:null,status:null,seconds:null,liveConnected:false,lastLiveAt:0,lastDashboardAt:0,lastStatusAt:0,
-  activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null
+  activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null,dashboardPollTimer:null,statusPollTimer:null
 };
 
 function saveStore(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch{}}
@@ -292,7 +292,7 @@ async function connectLive(){
     try{
       const r=await fetch(apiBase()+'/api/viveiro/live',{headers:{'Authorization':'Bearer '+store.settings.token},signal:ctl.signal});
       if(!r.ok||!r.body)throw new Error('Tempo real HTTP '+r.status);
-      app.liveConnected=true;app.lastLiveAt=Date.now();renderAll();wait=1000;
+      app.liveConnected=true;app.lastLiveAt=Date.now();renderAll();wait=1000;scheduleDashboardPoll();scheduleStatusPoll();
       const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
       while(true){
         const {done,value}=await reader.read();if(done)break;
@@ -313,10 +313,29 @@ async function connectLive(){
       throw new Error('Stream encerrado');
     }catch(e){
       if(ctl.signal.aborted)break;
-      app.liveConnected=false;renderOperation();renderHealth();renderSystem();
+      app.liveConnected=false;renderOperation();renderHealth();renderSystem();scheduleDashboardPoll();scheduleStatusPoll();
       await new Promise(r=>setTimeout(r,wait));wait=Math.min(10000,wait*1.7);
     }
   }
+}
+
+function scheduleDashboardPoll(){
+  clearTimeout(app.dashboardPollTimer);
+  if(!store.settings.token)return;
+  const delay=app.liveConnected?60000:8000;
+  app.dashboardPollTimer=setTimeout(async()=>{
+    if(document.visibilityState==='visible')await loadDashboard(false);
+    scheduleDashboardPoll();
+  },delay);
+}
+function scheduleStatusPoll(){
+  clearTimeout(app.statusPollTimer);
+  if(!store.settings.token)return;
+  const delay=app.liveConnected?60000:15000;
+  app.statusPollTimer=setTimeout(async()=>{
+    if(document.visibilityState==='visible')await loadStatus();
+    scheduleStatusPoll();
+  },delay);
 }
 
 function startClock(){
@@ -419,14 +438,14 @@ function saveConnection(tokenOverride){
   store.settings.apiUrl=String($('apiUrl')?.value||DEFAULT_API).trim()||DEFAULT_API;
   store.settings.token=token;saveStore();
   $('setupOverlay').hidden=Boolean(token);
-  if(token){if(app.sseAbort)app.sseAbort.abort();Promise.all([loadDashboard(true),loadStatus()]);connectLive()}
+  if(token){if(app.sseAbort)app.sseAbort.abort();Promise.all([loadDashboard(true),loadStatus()]);connectLive();scheduleDashboardPoll();scheduleStatusPoll()}
 }
 $('saveConnectionBtn').addEventListener('click',()=>saveConnection());
 $('setupSaveBtn').addEventListener('click',()=>{const t=$('setupToken').value.trim();if(!t)return toast('Informe o token.');$('controlToken').value=t;saveConnection(t)});
 
-window.addEventListener('online',()=>{$('offlineBar').hidden=true;if(store.settings.token){loadDashboard();loadStatus()}});
+window.addEventListener('online',()=>{$('offlineBar').hidden=true;if(store.settings.token){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
 window.addEventListener('offline',()=>{$('offlineBar').hidden=false});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&store.settings.token){loadDashboard();loadStatus()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&store.settings.token){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
 
 initDays();
 $('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
@@ -436,8 +455,8 @@ renderAll();startClock();
 if(store.settings.token){
   Promise.all([loadDashboard(),loadStatus()]);
   connectLive();
+  scheduleDashboardPoll();
+  scheduleStatusPoll();
 }
-setInterval(()=>{if(document.visibilityState==='visible'&&store.settings.token)loadDashboard(false)},15000);
-setInterval(()=>{if(document.visibilityState==='visible'&&store.settings.token)loadStatus()},30000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'}).catch(()=>null);
 })();

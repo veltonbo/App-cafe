@@ -15,7 +15,8 @@ RUN python3 -m venv /opt/smartlife \
 
 COPY . .
 
-RUN (npm audit --json > /tmp/npm-audit.json || true) \
+RUN node scripts/patch-dashboard-performance.mjs \
+    && (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/audit-summary.mjs /tmp/npm-audit.json \
     && npm test \
     && npm run build \

@@ -1,1 +1,1 @@
-Viveiro Reliability v16 — pulse_id, histórico idempotente, fila de retry, reconciliação diária e polling adaptativo — 2026-09-09
+Viveiro Audit v1 — auditoria operacional automática, alertas inteligentes, detecção de anomalias e painel de saúde — 2026-09-09

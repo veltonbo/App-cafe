@@ -4,6 +4,7 @@ set -Eeuo pipefail
 APP_NAME="fazenda2e-irrigacao"
 REPO_DIR="${REPO_DIR:-$HOME/fazenda2e}"
 ENV_FILE="${ENV_FILE:-$HOME/fazenda2e-irrigacao.env}"
+DATA_DIR="${DATA_DIR:-$HOME/fazenda2e-data}"
 DOCKERFILE="${DOCKERFILE:-smartlife/Dockerfile}"
 HEALTH_PATH="${HEALTH_PATH:-/health}"
 PUBLIC_PORT="${PUBLIC_PORT:-8080}"
@@ -21,6 +22,7 @@ command -v docker >/dev/null || fail "docker não encontrado"
 command -v curl >/dev/null || fail "curl não encontrado"
 [ -d "$REPO_DIR/.git" ] || fail "repositório não encontrado em $REPO_DIR"
 [ -f "$ENV_FILE" ] || fail "arquivo de ambiente não encontrado em $ENV_FILE"
+mkdir -p "$DATA_DIR"
 
 cd "$REPO_DIR"
 say "Atualizando código..."
@@ -29,30 +31,20 @@ git checkout main
 git pull --ff-only origin main
 
 say "Construindo e testando nova imagem..."
-# O Dockerfile já executa npm install, npm test e npm run build dentro do container.
-# Assim a VM Oracle não precisa ter Node.js/npm instalados no sistema hospedeiro.
 docker build -t "$IMAGE" -f "$DOCKERFILE" .
 
-cleanup_candidate(){
-  docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
-}
+cleanup_candidate(){ docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true; }
 trap cleanup_candidate EXIT
 
 say "Subindo versão candidata na porta local $TEST_PORT..."
-docker run -d \
-  --name "$CANDIDATE" \
-  --restart no \
-  --env-file "$ENV_FILE" \
-  -p "127.0.0.1:${TEST_PORT}:8080" \
-  "$IMAGE" >/dev/null
+docker run -d --name "$CANDIDATE" --restart no --env-file "$ENV_FILE" \
+  -e FAZENDA2E_DATA_DIR=/data -v "$DATA_DIR:/data" \
+  -p "127.0.0.1:${TEST_PORT}:8080" "$IMAGE" >/dev/null
 
 say "Validando saúde da nova versão..."
 ok=0
 for _ in $(seq 1 40); do
-  if curl -fsS --max-time 3 "http://127.0.0.1:${TEST_PORT}${HEALTH_PATH}" >/dev/null; then
-    ok=1
-    break
-  fi
+  if curl -fsS --max-time 3 "http://127.0.0.1:${TEST_PORT}${HEALTH_PATH}" >/dev/null 2>&1; then ok=1; break; fi
   sleep 1
 done
 [ "$ok" -eq 1 ] || { docker logs --tail 120 "$CANDIDATE" || true; fail "nova versão não passou no health check; versão atual foi preservada"; }
@@ -66,43 +58,29 @@ fi
 docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
 trap - EXIT
 
-if ! docker run -d \
-  --name "$APP_NAME" \
-  --restart unless-stopped \
-  --env-file "$ENV_FILE" \
-  -p "${PUBLIC_PORT}:8080" \
-  "$IMAGE" >/dev/null; then
+if ! docker run -d --name "$APP_NAME" --restart unless-stopped --env-file "$ENV_FILE" \
+  -e FAZENDA2E_DATA_DIR=/data -v "$DATA_DIR:/data" \
+  -p "${PUBLIC_PORT}:8080" "$IMAGE" >/dev/null; then
   say "Falha ao iniciar nova versão. Restaurando anterior..."
   docker rm -f "$APP_NAME" >/dev/null 2>&1 || true
-  if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then
-    docker rename "$BACKUP" "$APP_NAME"
-    docker start "$APP_NAME" >/dev/null
-  fi
+  if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then docker rename "$BACKUP" "$APP_NAME"; docker start "$APP_NAME" >/dev/null; fi
   fail "rollback executado"
 fi
 
 ok=0
 for _ in $(seq 1 30); do
-  if curl -fsS --max-time 3 "http://127.0.0.1:${PUBLIC_PORT}${HEALTH_PATH}" >/dev/null; then
-    ok=1
-    break
-  fi
+  if curl -fsS --max-time 3 "http://127.0.0.1:${PUBLIC_PORT}${HEALTH_PATH}" >/dev/null 2>&1; then ok=1; break; fi
   sleep 1
 done
-
 if [ "$ok" -ne 1 ]; then
   say "Health check final falhou. Restaurando versão anterior..."
   docker logs --tail 120 "$APP_NAME" || true
   docker rm -f "$APP_NAME" >/dev/null 2>&1 || true
-  if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then
-    docker rename "$BACKUP" "$APP_NAME"
-    docker start "$APP_NAME" >/dev/null
-  fi
+  if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then docker rename "$BACKUP" "$APP_NAME"; docker start "$APP_NAME" >/dev/null; fi
   fail "rollback executado"
 fi
 
 say "Deploy concluído com sucesso."
 docker ps --filter "name=^/${APP_NAME}$"
-if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then
-  say "Backup mantido para rollback: $BACKUP"
-fi
+if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then say "Backup mantido para rollback: $BACKUP"; fi
+say "Dados locais persistentes: $DATA_DIR"

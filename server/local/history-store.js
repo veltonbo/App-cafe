@@ -71,7 +71,7 @@ export async function localHistoryCanServe({sinceMs=0,limit=60000,maxLagMs=12000
   const now=Date.now();
   if(now-Number(status.last_ts)>Math.max(30000,Number(maxLagMs)||120000))return false;
   const safeLimit=Math.max(1,Math.min(MAX_ROWS,Number(limit)||60000));
-  if(Number(sinceMs||0)<=0)return status.rows>=Math.min(safeLimit,status.rows);
+  if(Number(sinceMs||0)<=0)return status.rows>=safeLimit;
   const toleranceMs=10*60*1000;
   return Number(status.first_ts||Infinity)<=Number(sinceMs)+toleranceMs;
 }

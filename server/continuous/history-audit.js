@@ -3,6 +3,7 @@ import { storeGet, storeGetQuery } from '../api/irrigation/_store.js';
 const TZ='America/Porto_Velho';
 const DAYS=new Set(['2026-09-06','2026-09-07','2026-09-08','2026-09-09','2026-09-10']);
 const PAGE=250;
+const LEGACY_PAIR_MAX_SECONDS=300;
 
 function dayKey(ts){
   return new Intl.DateTimeFormat('en-CA',{
@@ -42,7 +43,7 @@ function newDay(){
     unique_starts:0,unique_finals:0,
     final_duration_sum_all:0,finals_with_duration:0,finals_without_duration:0,
     min_final_duration:null,max_final_duration:null,
-    _starts:new Map(),_finals:new Map(),_samples:[]
+    _starts:new Map(),_finals:new Map(),_samples:[],_legacy_events:[]
   };
 }
 function ensure(out,key){return out[key]||(out[key]=newDay())}
@@ -61,7 +62,7 @@ function add(out,row){
       if(d._starts.has(pulse))d.duplicate_start_events++;
       const prev=d._starts.get(pulse);
       if(!prev||ts<prev.ts)d._starts.set(pulse,{ts,row});
-    }
+    }else d._legacy_events.push({type:'start',ts,row});
   }else if(type==='viveiro_pulse_complete'||type==='viveiro_pulse_interrupted'){
     if(type==='viveiro_pulse_complete')d.completes++; else d.interrupts++;
     if(d._samples.length<8)d._samples.push(sample(row));
@@ -77,8 +78,35 @@ function add(out,row){
       if(d._finals.has(pulse))d.duplicate_final_events++;
       const prev=d._finals.get(pulse);
       if(!prev||ts>=prev.ts)d._finals.set(pulse,{ts,row});
+    }else d._legacy_events.push({type:'final',ts,row});
+  }
+}
+function pairLegacy(events=[]){
+  const rows=[...events].sort((a,b)=>a.ts-b.ts);
+  let active=null,matched=0,unmatchedStarts=0,unmatchedFinals=0,sum=0,min=null,max=null;
+  for(const ev of rows){
+    if(ev.type==='start'){
+      if(active)unmatchedStarts++;
+      active=ev;
+      continue;
+    }
+    if(!active){unmatchedFinals++;continue}
+    const seconds=(ev.ts-active.ts)/1000;
+    if(seconds>=0&&seconds<=LEGACY_PAIR_MAX_SECONDS){
+      matched++;sum+=seconds;min=min==null?seconds:Math.min(min,seconds);max=max==null?seconds:Math.max(max,seconds);active=null;
+    }else{
+      unmatchedStarts++;unmatchedFinals++;active=null;
     }
   }
+  if(active)unmatchedStarts++;
+  return{
+    matched,
+    unmatched_starts:unmatchedStarts,
+    unmatched_finals:unmatchedFinals,
+    elapsed_seconds:Number(sum.toFixed(3)),
+    min_elapsed_seconds:min==null?null:Number(min.toFixed(3)),
+    max_elapsed_seconds:max==null?null:Number(max.toFixed(3))
+  };
 }
 function finalize(out){
   const result={};
@@ -93,6 +121,7 @@ function finalize(out){
       const duration=durationSeconds(row);
       if(duration!=null)uniquePulseDuration+=duration;
     }
+    const legacyPairing=pairLegacy(d._legacy_events);
     result[key]={
       rows:d.rows,starts:d.starts,completes:d.completes,interrupts:d.interrupts,
       unique_starts:d.unique_starts,unique_finals:d.unique_finals,
@@ -101,6 +130,7 @@ function finalize(out){
       finals_with_duration:d.finals_with_duration,finals_without_duration:d.finals_without_duration,
       final_duration_sum_all:Number(d.final_duration_sum_all.toFixed(3)),
       unique_pulse_duration_sum:Number(uniquePulseDuration.toFixed(3)),
+      legacy_pairing:legacyPairing,
       min_final_duration:d.min_final_duration,
       max_final_duration:d.max_final_duration,
       first_at:d.first_ts?new Date(d.first_ts).toISOString():null,

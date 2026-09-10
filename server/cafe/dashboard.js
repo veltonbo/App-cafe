@@ -248,11 +248,13 @@ export default async function handler(req,res){
 
     let inkbirdState=null;
     let activeSession=null;
+    let runtimeMonitor=null;
     let sessionCompleted=false;
     if(selected){
-      [inkbirdState,activeSession]=await Promise.all([
+      [inkbirdState,activeSession,runtimeMonitor]=await Promise.all([
         readInkbirdState({deviceId:selected.id,force:true,maxAgeMs:0}).catch(()=>null),
-        getCafeActiveSession(selected.id).catch(()=>null)
+        getCafeActiveSession(selected.id).catch(()=>null),
+        storeGet(CAFE_ROOT+'/runtimeMonitor/'+selected.id).catch(()=>null)
       ]);
       const completion=await completeFinishedSession(
         selected.id,
@@ -285,6 +287,7 @@ export default async function handler(req,res){
       selected_controller:selected,
       runtime:runtimeFrom(inkbirdState,activeSession),
       active_session:activeSession||null,
+      runtime_monitor:runtimeMonitor||null,
       weather,
       weather_state:weatherState||{},
       config:config||{},

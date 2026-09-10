@@ -6,12 +6,15 @@ import cafeRouter from './router.js';
 import { listInkbirdDevices } from '../api/inkbird/_device.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { markCafeServerBoot, runCafeAudit } from './audit.js';
+import { monitorCafeRuntime } from './runtime-monitor.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||8080));
 const ROOT=process.cwd();
 const CAFE_DIST=path.join(ROOT,'dist','irrigacao','inkbird');
 const CAFE_AUDIT_INTERVAL_MS=5*60*1000;
+const CAFE_RUNTIME_MONITOR_MS=10000;
 let cafeAuditRunning=false;
+let cafeRuntimeRunning=false;
 
 async function scheduledCafeAudit({notify=true}={}){
   if(cafeAuditRunning)return;
@@ -19,6 +22,13 @@ async function scheduledCafeAudit({notify=true}={}){
   try{await runCafeAudit({notify})}
   catch(error){console.warn('Café audit falhou:',error?.message||error)}
   finally{cafeAuditRunning=false}
+}
+async function scheduledCafeRuntime(){
+  if(cafeRuntimeRunning)return;
+  cafeRuntimeRunning=true;
+  try{await monitorCafeRuntime()}
+  catch(error){console.warn('Café runtime monitor falhou:',error?.message||error)}
+  finally{cafeRuntimeRunning=false}
 }
 
 const MIME={
@@ -172,6 +182,9 @@ server.listen(PORT,'0.0.0.0',()=>{
   setTimeout(()=>scheduledCafeAudit({notify:false}),4000).unref?.();
   const auditTimer=setInterval(()=>scheduledCafeAudit({notify:true}),CAFE_AUDIT_INTERVAL_MS);
   auditTimer.unref?.();
+  setTimeout(()=>scheduledCafeRuntime(),6500).unref?.();
+  const runtimeTimer=setInterval(()=>scheduledCafeRuntime(),CAFE_RUNTIME_MONITOR_MS);
+  runtimeTimer.unref?.();
 
   Promise.all([
     fsp.access(path.join(CAFE_DIST,'index.html')).then(()=>true).catch(()=>false),

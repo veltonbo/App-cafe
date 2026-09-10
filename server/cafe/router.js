@@ -8,8 +8,10 @@ import inkbirdZone from '../api/inkbird/zone.js';
 import inkbirdStatus from '../api/inkbird/status.js';
 import smartLifeReauth from '../api/smartlife/reauth.js';
 import cafeDashboard from './dashboard.js';
+import sessionApi from '../api/session.js';
 
 const ROUTES={
+  'session':sessionApi,
   'cafe/dashboard':cafeDashboard,
   'weather/status':weatherStatus,
   'irrigation/history':irrigationHistory,

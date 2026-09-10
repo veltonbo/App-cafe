@@ -87,9 +87,14 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
     finals,
     completed,
     interrupted,
+    // Para o histórico visível, "pulso" significa irrigação com desfecho
+    // confirmado. Um start órfão (por reinício/queda) não deve virar uma
+    // irrigação completa no relatório.
+    pulses_confirmed:finals.length,
     pulses_started:starts.length,
     pulses_completed:completed.length,
     pulses_interrupted:interrupted.length,
+    orphaned_starts:Math.max(0,starts.length-finals.length),
     irrigated_seconds:irrigatedSeconds
   };
 }

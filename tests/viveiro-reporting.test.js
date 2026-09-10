@@ -41,7 +41,7 @@ test('relatório do Viveiro conta resolução automática e intervenção',()=>{
   assert.equal(reports.trend30.length,30);
 });
 
-test('relatório conta somente pulsos com desfecho confirmado',()=>{
+test('relatório conta pulso iniciado após confirmação ON e separa fechamentos ausentes',()=>{
   const now=ts('2026-09-09T16:00:00Z');
   const history=[
     {type:'viveiro_pulse_start',pulse_id:'orphan',source:'viveiro_fast',ts:ts('2026-09-09T14:00:00Z')},
@@ -50,7 +50,8 @@ test('relatório conta somente pulsos com desfecho confirmado',()=>{
   ];
   const reports=buildViveiroReports(history,{}, {}, null, now);
   assert.equal(reports.today.start_attempts,2);
-  assert.equal(reports.today.pulses,1);
+  assert.equal(reports.today.pulses,2);
+  assert.equal(reports.today.completed,1);
   assert.equal(reports.today.orphaned_starts,1);
   assert.equal(reports.today.irrigated_seconds,30);
 });

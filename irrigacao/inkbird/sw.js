@@ -1,9 +1,10 @@
-const CACHE='fazenda2e-cafe-v3';
+const CACHE='fazenda2e-cafe-clean-v1';
 const SHELL=[
   '/',
+  '/app.css?v=20260909-1',
+  '/app.js?v=20260909-1',
   '/manifest.webmanifest',
-  '/icon.svg',
-  '/cafe-ui-v2.css'
+  '/icon.svg'
 ];
 
 self.addEventListener('install',event=>{
@@ -37,7 +38,11 @@ self.addEventListener('fetch',event=>{
 
   if(url.origin===self.location.origin){
     event.respondWith(
-      caches.match(event.request).then(cached=>cached||fetch(event.request))
+      fetch(event.request).then(response=>{
+        const copy=response.clone();
+        caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>null);
+        return response;
+      }).catch(()=>caches.match(event.request))
     );
   }
 });

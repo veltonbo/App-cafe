@@ -461,7 +461,7 @@ function summarize(history,seconds={},now=Date.now()){
     const accounting=pulseAccountingForDay(history,key);
     days.push({
       key,label:dayLabel(key),
-      pulses:Number(accounting.pulses_confirmed||0),
+      pulses:Number(accounting.pulses_started||0),
       completed_pulses:Number(accounting.pulses_completed||0),
       interrupted_pulses:Number(accounting.pulses_interrupted||0),
       irrigated_seconds:Number(accounting.irrigated_seconds||0),
@@ -489,7 +489,7 @@ function summarize(history,seconds={},now=Date.now()){
 
   return{
     today:{
-      pulses:Number(todayAccounting.pulses_confirmed||0),
+      pulses:Number(todayAccounting.pulses_started||0),
       completed_pulses:Number(todayAccounting.pulses_completed||0),
       interrupted_pulses:Number(todayAccounting.pulses_interrupted||0),
       irrigated_seconds:irrigatedSeconds,
@@ -528,7 +528,7 @@ function overlayCurrentDayFromLive(summary,reports,seconds={},now=Date.now()){
   const lastPulseToday=lastPulse&&localDateKey(lastPulse)===todayKey?lastPulse:null;
 
   if(summary?.today){
-    summary.today.pulses=confirmed;
+    summary.today.pulses=started;
     summary.today.completed_pulses=completed;
     summary.today.interrupted_pulses=interrupted;
     summary.today.irrigated_seconds=irrigated;
@@ -537,7 +537,7 @@ function overlayCurrentDayFromLive(summary,reports,seconds={},now=Date.now()){
   }
   const weekDay=summary?.week?.find(row=>row.key===todayKey);
   if(weekDay){
-    weekDay.pulses=confirmed;
+    weekDay.pulses=started;
     weekDay.completed_pulses=completed;
     weekDay.interrupted_pulses=interrupted;
     weekDay.irrigated_seconds=irrigated;
@@ -552,7 +552,7 @@ function overlayCurrentDayFromLive(summary,reports,seconds={},now=Date.now()){
 
   const trendDay=reports?.trend30?.find(row=>row.key===todayKey);
   if(trendDay){
-    trendDay.pulses=confirmed;
+    trendDay.pulses=started;
     trendDay.completed=completed;
     trendDay.interrupted=interrupted;
     trendDay.irrigated_seconds=irrigated;
@@ -562,7 +562,7 @@ function overlayCurrentDayFromLive(summary,reports,seconds={},now=Date.now()){
   if(reports?.today){
     reports.today={
       ...reports.today,
-      pulses:confirmed,
+      pulses:started,
       completed,
       interrupted,
       irrigated_seconds:irrigated,

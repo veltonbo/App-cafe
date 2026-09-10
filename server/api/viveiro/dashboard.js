@@ -4,6 +4,7 @@ import { approveClimateSuggestion, getClimateConfig, getClimateState, patchClima
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
 import { getViveiroSafety, getViveiroMaintenance, setMaintenanceInterlock } from './_interlock.js';
+import { pulseAccountingForDay } from '../../continuous/accounting.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
@@ -330,6 +331,23 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
   if(emergency)issues.push({level:'critical',code:'emergency',message:'Parada de emergência ativa.'});
   if(maintenance?.active)issues.push({level:'warning',code:'maintenance',message:'Modo manutenção ativo.'});
 
+  if(String(seconds?.history_sync?.status||'')==='degraded'){
+    issues.push({
+      level:'warning',
+      code:'history_sync_degraded',
+      message:Number(seconds?.history_sync?.pending||0)>1
+        ?Number(seconds.history_sync.pending)+' eventos aguardam confirmação no Firebase.'
+        :'Um evento aguarda confirmação no Firebase.'
+    });
+  }
+  if(String(seconds?.accounting_reconciliation?.status||'')==='degraded'){
+    issues.push({
+      level:'warning',
+      code:'accounting_reconciliation_degraded',
+      message:'A conferência automática dos pulsos está temporariamente indisponível.'
+    });
+  }
+
   const weatherAt=Number(weatherSnapshot?.checked_at||climateState?.last_evaluated_at||0);
   if(!weatherSnapshot?.linked||weatherSnapshot?.error){
     issues.push({level:'critical',code:'weather_offline',message:'Weather2-2 sem comunicação.'});
@@ -394,51 +412,40 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
 function summarize(history,seconds={},now=Date.now()){
   const todayKey=localDateKey(now);
   const today=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey);
-  const pulseStartRows=today.filter(x=>x.type==='viveiro_pulse_start');
-  const pulseRows=today.filter(x=>x.type==='viveiro_pulse_complete');
-  const interruptedRows=today.filter(x=>x.type==='viveiro_pulse_interrupted');
-  const physicalRows=[...pulseRows,...interruptedRows];
-  const completedIrrigatedSeconds=physicalRows.reduce((s,x)=>{
-    const actual=Number(x.actual_duration_seconds);
-    const planned=Number(x.duration_seconds||x.planned_duration_seconds||0);
-    return s+Math.max(0,Number.isFinite(actual)?actual:planned);
-  },0);
+  const todayAccounting=pulseAccountingForDay(history,todayKey);
+  const completedIrrigatedSeconds=Number(todayAccounting.irrigated_seconds||0);
   const ongoingSeconds=
-    String(seconds?.phase||'')==='on'&&Number(seconds?.pulse_started_at||0)>0
+    String(seconds?.phase||'')==='on'&&
+    Number(seconds?.pulse_started_at||0)>0&&
+    localDateKey(Number(seconds.pulse_started_at))===todayKey
       ?Math.max(0,Math.min(
           Number(seconds.on_seconds||seconds.base_on_seconds||30),
           (now-Number(seconds.pulse_started_at||now))/1000
         ))
       :0;
   const irrigatedSeconds=completedIrrigatedSeconds+ongoingSeconds;
-  const pauses=today.filter(x=>x.type==='viveiro_weather_pause').length;
+  const pauses=today.filter(x=>['viveiro_weather_pause','viveiro_rain_pause'].includes(String(x.type||''))).length;
   const errors=today.filter(x=>String(x.type||'').includes('error')).length;
-  const lastPulse=history.find(x=>x.type==='viveiro_pulse_complete')||null;
+  const lastPulse=todayAccounting.finals[0]||null;
 
   const days=[];
   for(let i=6;i>=0;i--){
     const dt=new Date(now-i*86400000);
     const key=localDateKey(dt.getTime());
     const rows=history.filter(x=>localDateKey(x.ts||Date.parse(x.at||0))===key);
-    const starts=rows.filter(x=>x.type==='viveiro_pulse_start');
-    const pulses=rows.filter(x=>x.type==='viveiro_pulse_complete');
-    const interrupted=rows.filter(x=>x.type==='viveiro_pulse_interrupted');
-    const physical=[...pulses,...interrupted];
+    const accounting=pulseAccountingForDay(history,key);
     days.push({
       key,label:dayLabel(key),
-      pulses:starts.length,
-      completed_pulses:pulses.length,
-      interrupted_pulses:interrupted.length,
-      irrigated_seconds:physical.reduce((s,x)=>{
-        const actual=Number(x.actual_duration_seconds);
-        const planned=Number(x.duration_seconds||x.planned_duration_seconds||0);
-        return s+Math.max(0,Number.isFinite(actual)?actual:planned);
-      },0),
-      rain_pauses:rows.filter(x=>x.type==='viveiro_weather_pause').length,
+      pulses:Number(accounting.pulses_started||0),
+      completed_pulses:Number(accounting.pulses_completed||0),
+      interrupted_pulses:Number(accounting.pulses_interrupted||0),
+      irrigated_seconds:Number(accounting.irrigated_seconds||0),
+      rain_pauses:rows.filter(x=>['viveiro_weather_pause','viveiro_rain_pause'].includes(String(x.type||''))).length,
       errors:rows.filter(x=>String(x.type||'').includes('error')).length
     });
   }
-  const firstPulseAt=(today.find(x=>x.type==='viveiro_pulse_start'&&x.first_of_window)||today.find(x=>x.type==='viveiro_pulse_start'))?.ts||null;
+
+  const firstPulseAt=(todayAccounting.starts.find(x=>x.first_of_window)||todayAccounting.starts[0])?.ts||null;
   const startDelays=today.filter(x=>x.type==='viveiro_start_delay').length;
   const baseline=baseExpectedToday(seconds,now);
   const baselineSeconds=Number(baseline.expected_irrigated_seconds||0);
@@ -454,11 +461,12 @@ function summarize(history,seconds={},now=Date.now()){
   const versusBasePct=comparisonComplete&&baselineSeconds>0
     ?((irrigatedSeconds/baselineSeconds)-1)*100
     :null;
+
   return{
     today:{
-      pulses:pulseStartRows.length,
-      completed_pulses:pulseRows.length,
-      interrupted_pulses:interruptedRows.length,
+      pulses:Number(todayAccounting.pulses_started||0),
+      completed_pulses:Number(todayAccounting.pulses_completed||0),
+      interrupted_pulses:Number(todayAccounting.pulses_interrupted||0),
       irrigated_seconds:irrigatedSeconds,
       rain_pauses:pauses,
       errors,

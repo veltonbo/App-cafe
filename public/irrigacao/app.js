@@ -285,8 +285,12 @@ function renderSystem(){
   $('clearEmergencyBtn').hidden=!emergency;
   $('watchdogState').textContent=s.watchdog?.status||s.watchdog_status||'—';
   $('confirmationState').textContent=s.last_confirmation_at?fmtAge(s.last_confirmation_at)+' atrás':'—';
-  const avg=s.precision?.avg_abs_error_ms;
-  $('precisionState').textContent=Number.isFinite(Number(avg))?Math.round(Number(avg))+' ms':'—';
+  const latency=Number(s.last_confirmation_latency_ms);
+  $('confirmationLatencyState').textContent=Number.isFinite(latency)&&latency>=0?Math.round(latency)+' ms':'—';
+  const schedulerAvg=s.scheduler_precision?.avg_abs_error_ms;
+  $('precisionState').textContent=Number.isFinite(Number(schedulerAvg))
+    ?Math.round(Number(schedulerAvg))+' ms'
+    :'Coletando';
 
   const audit=s.operational_audit||health.audit||{};
   const auditIssues=Array.isArray(audit.issues)?audit.issues:[];
@@ -318,7 +322,7 @@ function renderSystem(){
   $('diagnosticText').textContent=JSON.stringify({
     operacao:d.intelligence?.operation||null,
     health,
-    seconds:{phase:s.phase,enabled:s.enabled,on:s.on_seconds,off:s.off_seconds,server_read_at:s.server_read_at,watchdog:s.watchdog||null,precision:s.precision||null},
+    seconds:{phase:s.phase,enabled:s.enabled,on:s.on_seconds,off:s.off_seconds,server_read_at:s.server_read_at,watchdog:s.watchdog||null,precision:s.precision||null,scheduler_precision:s.scheduler_precision||null},
     weather:{linked:w.linked,checked_at:w.checked_at,error:w.error||null},
     live:{connected:app.liveConnected,last_event_at:app.lastLiveAt},
     audit,

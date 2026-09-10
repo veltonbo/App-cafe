@@ -45,13 +45,13 @@ function uniqueBy(rowsInput,keyFn){
 }
 function sessionStarts(history){
   return uniqueBy(
-    history.filter(row=>['start','group_start'].includes(String(row.type||''))),
+    history.filter(row=>['start','group_start','auto_start'].includes(String(row.type||''))),
     eventIdentity
   );
 }
 function sessionCompletes(history){
   return uniqueBy(
-    history.filter(row=>String(row.type||'')==='complete'),
+    history.filter(row=>['complete','auto_complete'].includes(String(row.type||''))),
     eventIdentity
   );
 }
@@ -76,7 +76,7 @@ export function summarizeCafeHistory(history,now=Date.now()){
     const starts=sessionStarts(dayRows);
     const completes=sessionCompletes(dayRows);
     const sectors=[...new Set(starts.flatMap(sectorsFromStart))];
-    const completedMinutes=completes.reduce((sum,row)=>sum+Math.max(0,Number(row.duration_minutes||0)),0);
+    const completedMinutes=completes.reduce((sum,row)=>sum+Math.max(0,Number(row.actual_duration_minutes??row.duration_minutes||0)),0);
     days.push({
       key,label:dayLabel(key),
       sessions:starts.length,
@@ -96,7 +96,7 @@ export function summarizeCafeHistory(history,now=Date.now()){
       sessions:starts.length,
       completed:completes.length,
       sectors:sectors.length,
-      completed_minutes:completes.reduce((sum,row)=>sum+Math.max(0,Number(row.duration_minutes||0)),0),
+      completed_minutes:completes.reduce((sum,row)=>sum+Math.max(0,Number(row.actual_duration_minutes??row.duration_minutes||0)),0),
       blocked:todayRows.filter(row=>String(row.type||'').includes('blocked')).length,
       errors:todayRows.filter(row=>String(row.status||'').includes('error')||String(row.type||'').includes('error')).length,
       last_event_at:Number(todayRows[0]?.ts||0)||null

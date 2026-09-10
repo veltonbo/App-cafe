@@ -184,10 +184,10 @@ server.headersTimeout=66000;
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Irrigação Café online na porta ${PORT}`);
   markCafeServerBoot().catch(error=>console.warn('Registro de boot do Café falhou:',error?.message||error));
-  setTimeout(()=>scheduledCafeAudit({notify:false}),4000).unref?.();
+  setTimeout(()=>scheduledCafeAudit({notify:false}),8000).unref?.();
   const auditTimer=setInterval(()=>scheduledCafeAudit({notify:true}),CAFE_AUDIT_INTERVAL_MS);
   auditTimer.unref?.();
-  setTimeout(()=>scheduledCafeRuntime(),6500).unref?.();
+  setTimeout(()=>scheduledCafeRuntime(),2500).unref?.();
   const runtimeTimer=setInterval(()=>scheduledCafeRuntime(),CAFE_RUNTIME_MONITOR_MS);
   runtimeTimer.unref?.();
 

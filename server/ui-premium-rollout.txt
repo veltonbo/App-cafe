@@ -1,1 +1,1 @@
-Viveiro Timing v2 — precisão do relógio separada da latência Smart Life, alerta corrigido — 2026-09-09
+Viveiro Review v2 — precisão local x latência Smart Life, sessão HttpOnly, segurança, PWA e revisão completa — 2026-09-09

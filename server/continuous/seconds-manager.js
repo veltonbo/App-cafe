@@ -75,6 +75,34 @@ function addPrecisionSample(kind,targetMs,actualMs,at=Date.now()){
     }
   };
 }
+function addSchedulerPrecisionSample(kind,targetAt,actualAt,at=Date.now()){
+  const target=Math.max(0,Number(targetAt)||0);
+  const actual=Math.max(0,Number(actualAt)||0);
+  if(!target||!actual)return;
+  const sample={
+    kind:String(kind||'command'),
+    target_at:Math.round(target),
+    actual_at:Math.round(actual),
+    error_ms:Math.round(actual-target),
+    abs_error_ms:Math.round(Math.abs(actual-target)),
+    at:Number(at)||Date.now()
+  };
+  const previous=Array.isArray(state.scheduler_precision_samples)?state.scheduler_precision_samples:[];
+  const samples=[...previous,sample].slice(-24);
+  const avg=samples.reduce((sum,row)=>sum+Number(row.abs_error_ms||0),0)/Math.max(1,samples.length);
+  const max=Math.max(...samples.map(row=>Number(row.abs_error_ms||0)),0);
+  state={
+    ...state,
+    scheduler_precision_samples:samples,
+    scheduler_precision:{
+      last:sample,
+      avg_abs_error_ms:Math.round(avg),
+      max_abs_error_ms:Math.round(max),
+      samples:samples.length,
+      status:avg<=500?'excellent':avg<=1500?'good':'attention'
+    }
+  };
+}
 function historyEventId(type,extra={},ts=Date.now()){
   const supplied=String(extra?.event_id||'').trim();
   if(supplied)return supplied;
@@ -222,9 +250,16 @@ async function runOperationalAudit({notify=false}={}){
     issues.push({level:'warning',code:'confirmation_stale',message:'Smart Life está há mais de 10 min sem nova confirmação do Viveiro.'});
   }
 
-  const precision=state.precision||{};
-  if(Number(precision.samples||0)>=5&&Number(precision.avg_abs_error_ms||0)>2500){
-    issues.push({level:'warning',code:'timing_unstable',message:'A precisão média dos pulsos está acima de 2,5 s de desvio.'});
+  const precision=state.scheduler_precision||{};
+  if(Number(precision.samples||0)>=6&&Number(precision.avg_abs_error_ms||0)>1500){
+    issues.push({level:'warning',code:'timing_unstable',message:'O relógio do ciclo está enviando comandos com mais de 1,5 s de atraso médio.'});
+  }
+  const confirmationLatency=Number(state.last_confirmation_latency_ms||0);
+  if(
+    state.enabled&&schedule.inside&&confirmationLatency>15000&&
+    !protectedPhase.includes(phase)
+  ){
+    issues.push({level:'warning',code:'cloud_latency_high',message:'A confirmação Smart Life levou mais de 15 s na última mudança do relé.'});
   }
 
   if(String(state.history_sync?.status||'')==='degraded'){
@@ -1311,6 +1346,15 @@ async function run(){
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
       const onResult=await setViveiroRelay(true,{attempts:5});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
+      const scheduledOnAt=Number(state.expected_next_on_at||0);
+      if(scheduledOnAt>0){
+        addSchedulerPrecisionSample(
+          'on_command',
+          scheduledOnAt,
+          Number(onResult?.command_sent_at||onResult?.command_started_at||relayOnAt),
+          relayOnAt
+        );
+      }
       pulseId='pulse-'+localDayKey(relayOnAt).replaceAll('-','')+'-'+relayOnAt+'-'+randomUUID().slice(0,8);
       if(previousOffConfirmedAt>0&&relayOnAt>previousOffConfirmedAt){
         addPrecisionSample('interval',Number(state.off_seconds||120)*1000,relayOnAt-previousOffConfirmedAt,relayOnAt);
@@ -1452,6 +1496,14 @@ async function run(){
     }
 
     await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
+    if(!interrupted&&onDeadline>0){
+      addSchedulerPrecisionSample(
+        'off_command',
+        onDeadline,
+        Number(state.last_command_at||Date.now()),
+        Number(state.last_off_confirmed_at||Date.now())
+      );
+    }
     const physicalOffAt=Number(state.last_off_confirmed_at||Date.now());
     const physicalOnAt=Number(state.last_on_confirmed_at||relayOnAt||state.pulse_started_at||0);
     let actualPulseSeconds=0;

@@ -65,7 +65,7 @@ function sectorsFromStart(row){
   }
   return [...new Set(out)];
 }
-function summarize(history,now=Date.now()){
+export function summarizeCafeHistory(history,now=Date.now()){
   const today=dayKey(now);
   const days=[];
   for(let offset=6;offset>=0;offset--){
@@ -223,7 +223,7 @@ export default async function handler(req,res){
     ]);
     const history=rows(historyRaw);
     const scheduleByDevice=Object.fromEntries(scheduleEntries);
-    const summary=summarize(history);
+    const summary=summarizeCafeHistory(history);
 
     return res.status(200).json({
       ok:true,

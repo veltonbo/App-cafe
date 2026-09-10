@@ -1,7 +1,8 @@
 import { applyCors, authorize } from '../_tuya.js';
 import { readInkbirdState } from './_transport.js';
 import { decodeNormalTimer } from './_iic800.js';
-import { appendHistory, storeGet, storeSet } from '../irrigation/_store.js';
+import { appendHistory } from '../irrigation/_store.js';
+import { getCafeActiveSession, setCafeActiveSession } from '../cafe/_state.js';
 
 function activeMaskFromSession(session){
   if(!session)return 0;
@@ -69,8 +70,10 @@ async function maybeCompleteSession(deviceId,controllerIndex,session,mapping){
   const hasRuntime=Number(mapping.active_mask||0)!==0||Number(mapping.pending_mask||0)!==0;
   if(hasRuntime||!startedAt||Date.now()-startedAt<5000)return session;
 
-  await storeSet(`IrrigacaoFazenda2E/active/${deviceId}`,null).catch(()=>null);
+  await setCafeActiveSession(deviceId,null).catch(error=>console.error('Café active complete:',error?.message||error));
+  const sessionId=String(session.session_id||'').trim();
   await appendHistory({
+    ...(sessionId?{event_id:'complete-'+sessionId,session_id:sessionId}:{}),
     type:'complete',
     controller_id:deviceId,
     controller_index:controllerIndex,
@@ -80,8 +83,12 @@ async function maybeCompleteSession(deviceId,controllerIndex,session,mapping){
     mode:session.mode||'Manual',
     source:'smartlife',
     status:'confirmed',
-    detail:session.kind==='group'?(session.name||'Grupo concluído'):'Irrigação concluída'
-  }).catch(()=>null);
+    detail:session.kind==='group'?(session.name||'Grupo concluído'):'Irrigação concluída',
+    zones:Array.isArray(session.zones)?session.zones:undefined,
+    started_at:Number(session.started_at||0)||null,
+    expected_end_at:Number(session.expected_end_at||0)||null,
+    completed_at:Date.now()
+  }).catch(error=>console.error('Histórico Café complete:',error?.message||error));
   return null;
 }
 
@@ -98,7 +105,7 @@ export default async function handler(req,res){
     const devices=state.resolved.devices||[];
     const controllerIndex=Math.max(1,devices.findIndex(d=>d.id===deviceId)+1);
     const sectorStart=(controllerIndex-1)*8+1;
-    let activeSession=await storeGet(`IrrigacaoFazenda2E/active/${deviceId}`).catch(()=>null);
+    let activeSession=await getCafeActiveSession(deviceId);
     const mapping=mappingFrom(state,activeSession);
     activeSession=await maybeCompleteSession(deviceId,controllerIndex,activeSession,mapping);
 

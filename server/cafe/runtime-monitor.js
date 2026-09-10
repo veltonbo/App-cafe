@@ -90,9 +90,11 @@ export async function monitorCafeRuntime(){
     let monitor={
       last_active_mask:0,
       auto_sessions:{},
+      auto_candidates:{},
       ...(monitorRaw&&typeof monitorRaw==='object'?monitorRaw:{})
     };
     monitor.auto_sessions=monitor.auto_sessions&&typeof monitor.auto_sessions==='object'?monitor.auto_sessions:{};
+    monitor.auto_candidates=monitor.auto_candidates&&typeof monitor.auto_candidates==='object'?monitor.auto_candidates:{};
     let mask=Number(state.runtime?.active_mask||0);
     const zones=activeZones(mask);
 
@@ -151,7 +153,14 @@ export async function monitorCafeRuntime(){
       for(const zone of currentZones){
         const key=String(zone);
         if(monitor.auto_sessions[key])continue;
-        const startedAt=now;
+        const candidate=monitor.auto_candidates[key];
+        if(!candidate){
+          monitor.auto_candidates[key]={first_seen_at:now};
+          continue;
+        }
+        if(now-Number(candidate.first_seen_at||now)<12000)continue;
+
+        const startedAt=Number(candidate.first_seen_at||now);
         const sessionId='cafe-auto-'+startedAt+'-'+zone+'-'+randomUUID().slice(0,6);
         const duration=scheduleDuration(scheduleCache,zone);
         const session={
@@ -164,6 +173,7 @@ export async function monitorCafeRuntime(){
           source:'iic800_observed'
         };
         monitor.auto_sessions[key]=session;
+        delete monitor.auto_candidates[key];
         await appendHistory({
           event_id:'auto-start-'+sessionId,
           session_id:sessionId,
@@ -178,6 +188,10 @@ export async function monitorCafeRuntime(){
           status:'confirmed',
           detail:'Irrigação automática observada no IIC-800.'
         }).catch(error=>console.error('Histórico Café auto_start:',error?.message||error));
+      }
+
+      for(const key of Object.keys(monitor.auto_candidates)){
+        if(!currentZones.has(Number(key)))delete monitor.auto_candidates[key];
       }
 
       for(const [key,session] of Object.entries(monitor.auto_sessions)){
@@ -204,9 +218,10 @@ export async function monitorCafeRuntime(){
         }).catch(error=>console.error('Histórico Café auto_complete:',error?.message||error));
         delete monitor.auto_sessions[key];
       }
-    }else if(Object.keys(monitor.auto_sessions).length){
-      // Evita carregar uma sessão automática antiga quando houve intervenção manual.
+    }else if(Object.keys(monitor.auto_sessions).length||Object.keys(monitor.auto_candidates).length){
+      // Evita classificar como automático um acionamento iniciado pelo próprio app.
       monitor.auto_sessions={};
+      monitor.auto_candidates={};
     }
 
     monitor={

@@ -103,6 +103,32 @@ function addSchedulerPrecisionSample(kind,targetAt,actualAt,at=Date.now()){
     }
   };
 }
+function addConfirmationLatencySample(command,latencyMs,source='unknown',at=Date.now()){
+  const latency=Math.max(0,Number(latencyMs)||0);
+  const sample={
+    command:String(command||'unknown'),
+    latency_ms:Math.round(latency),
+    source:String(source||'unknown'),
+    at:Number(at)||Date.now()
+  };
+  const previous=Array.isArray(state.confirmation_latency_samples)?state.confirmation_latency_samples:[];
+  const samples=[...previous,sample].slice(-24);
+  const values=samples.map(row=>Number(row.latency_ms||0)).filter(Number.isFinite);
+  const avg=values.length?values.reduce((a,b)=>a+b,0)/values.length:0;
+  const max=values.length?Math.max(...values):0;
+  state={
+    ...state,
+    confirmation_latency_samples:samples,
+    confirmation_latency:{
+      last:sample,
+      avg_ms:Math.round(avg),
+      max_ms:Math.round(max),
+      samples:samples.length,
+      status:avg<=3000?'good':avg<=8000?'attention':'high'
+    }
+  };
+}
+
 function historyEventId(type,extra={},ts=Date.now()){
   const supplied=String(extra?.event_id||'').trim();
   if(supplied)return supplied;
@@ -250,16 +276,26 @@ async function runOperationalAudit({notify=false}={}){
     issues.push({level:'warning',code:'confirmation_stale',message:'Smart Life está há mais de 10 min sem nova confirmação do Viveiro.'});
   }
 
-  const precision=state.scheduler_precision||{};
-  if(Number(precision.samples||0)>=6&&Number(precision.avg_abs_error_ms||0)>1500){
-    issues.push({level:'warning',code:'timing_unstable',message:'O relógio do ciclo está enviando comandos com mais de 1,5 s de atraso médio.'});
+  const schedulerPrecision=state.scheduler_precision||{};
+  if(Number(schedulerPrecision.samples||0)>=6&&Number(schedulerPrecision.avg_abs_error_ms||0)>1500){
+    issues.push({
+      level:'warning',
+      code:'scheduler_delay_high',
+      message:'O relógio local do ciclo está enviando comandos com mais de 1,5 s de atraso médio.'
+    });
   }
-  const confirmationLatency=Number(state.last_confirmation_latency_ms||0);
+
+  const cloudLatency=state.confirmation_latency||{};
   if(
-    state.enabled&&schedule.inside&&confirmationLatency>15000&&
+    state.enabled&&schedule.inside&&
+    Number(cloudLatency.samples||0)>=4&&Number(cloudLatency.avg_ms||0)>12000&&
     !protectedPhase.includes(phase)
   ){
-    issues.push({level:'warning',code:'cloud_latency_high',message:'A confirmação Smart Life levou mais de 15 s na última mudança do relé.'});
+    issues.push({
+      level:'warning',
+      code:'cloud_latency_high',
+      message:'A confirmação da Smart Life está levando mais de 12 s em média.'
+    });
   }
 
   if(String(state.history_sync?.status||'')==='degraded'){
@@ -1053,6 +1089,12 @@ async function safeOff(reason='safety'){
       result=await setViveiroRelay(false,{attempts:10});
     }
     const confirmedAt=Number(result?.confirmed_at||Date.now());
+    addConfirmationLatencySample(
+      'off',
+      Number(result?.confirmation_latency_ms||0),
+      String(result?.confirmed_by||'unknown'),
+      confirmedAt
+    );
     state={
       ...state,
       device_relay:false,
@@ -1068,7 +1110,7 @@ async function safeOff(reason='safety'){
         status:'ok',
         checked_at:confirmedAt,
         reason:String(reason||'safety'),
-        message:'Saída OFF confirmada fisicamente.'
+        message:'Saída OFF confirmada pela Smart Life.'
       }
     };
     publishLive('confirmation',{
@@ -1091,7 +1133,7 @@ async function safeOff(reason='safety'){
         status:'critical',
         checked_at:failedAt,
         reason:String(reason||'safety'),
-        message:'OFF não confirmado fisicamente.',
+        message:'OFF não confirmado pela Smart Life.',
         error:error?.message||String(error)
       }
     };
@@ -1099,7 +1141,7 @@ async function safeOff(reason='safety'){
     console.error('safeOff',error?.message||error);
     await pushNotice(
       'ALERTA • desligamento não confirmado',
-      'O servidor mandou desligar o viveiro, mas não recebeu confirmação física do EKAZA. Verifique o equipamento.',
+      'O servidor mandou desligar o viveiro, mas não recebeu confirmação do estado OFF pela Smart Life. Verifique o equipamento.',
       'viveiro-watchdog-off',
       'critical',
       5,
@@ -1346,6 +1388,12 @@ async function run(){
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
       const onResult=await setViveiroRelay(true,{attempts:5});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
+      addConfirmationLatencySample(
+        'on',
+        Number(onResult?.confirmation_latency_ms||0),
+        String(onResult?.confirmed_by||'unknown'),
+        relayOnAt
+      );
       const scheduledOnAt=Number(state.expected_next_on_at||0);
       if(scheduledOnAt>0){
         addSchedulerPrecisionSample(
@@ -1372,7 +1420,7 @@ async function run(){
         current_pulse_id:pulseId,
         daily_pulses_started:Number(state.daily_pulses_started||0)+1,
         daily_last_pulse_at:relayOnAt,
-        watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada fisicamente.'}
+        watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada pela Smart Life.'}
       };
       publishLive('confirmation',{
         command:'on',

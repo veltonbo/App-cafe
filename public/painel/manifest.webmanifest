@@ -1,0 +1,9 @@
+{
+  "name": "Fazenda 2E • Painel Geral",
+  "short_name": "Fazenda 2E",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f5f3",
+  "theme_color": "#f4f7f5",
+  "icons": []
+}

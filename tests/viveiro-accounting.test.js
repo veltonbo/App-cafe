@@ -69,3 +69,19 @@ test('start órfão continua como pulso iniciado mas não como desfecho confirma
   assert.equal(a.orphaned_starts,1);
   assert.equal(a.irrigated_seconds,30);
 });
+
+test('resumo diário consolidado prevalece sobre eventos legados incompletos',()=>{
+  const rows=[
+    {id:'s1',type:'viveiro_pulse_start',ts:Date.parse('2026-09-08T14:00:00Z')},
+    {id:'s2',type:'viveiro_pulse_start',ts:Date.parse('2026-09-08T14:01:00Z')},
+    {id:'f1',type:'viveiro_pulse_complete',ts:Date.parse('2026-09-08T14:01:30Z'),duration_seconds:30},
+    {id:'summary',type:'viveiro_daily_summary',day_key:'2026-09-08',ts:Date.parse('2026-09-08T16:00:00Z'),pulses:1,raw_starts:2,completed:1,interrupted:0,unclosed_starts:1,irrigated_seconds:30,history_quality:'legacy_reconstructed',history_confidence:'medium'}
+  ];
+  const a=pulseAccountingForDay(rows,'2026-09-08');
+  assert.equal(a.pulses_started,1);
+  assert.equal(a.pulses_confirmed,1);
+  assert.equal(a.raw_pulses_started,2);
+  assert.equal(a.orphaned_starts,1);
+  assert.equal(a.irrigated_seconds,30);
+  assert.equal(a.history_quality,'legacy_reconstructed');
+});

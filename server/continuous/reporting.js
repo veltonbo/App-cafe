@@ -1,3 +1,5 @@
+import { pulseAccountingForDay } from './accounting.js';
+
 const TZ='America/Porto_Velho';
 
 export function viveiroDayKey(ts=Date.now()){
@@ -134,27 +136,23 @@ export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=
   for(let offset=29;offset>=0;offset--){
     const key=viveiroDayKey(now-offset*86400000);
     const b=buckets.get(key)||emptyBucket();
-    const finals=[...b.finals.values()];
-    const completed=finals.filter(row=>String(row.type)==='viveiro_pulse_complete');
-    const interrupted=finals.filter(row=>String(row.type)==='viveiro_pulse_interrupted');
-    const irrigatedSeconds=finals.reduce((sum,row)=>{
-      const actual=Number(row?.actual_duration_seconds);
-      const fallback=Number(row?.duration_seconds||row?.planned_duration_seconds||0);
-      const value=Number.isFinite(actual)?actual:fallback;
-      return sum+Math.max(0,Number.isFinite(value)?value:0);
-    },0);
+    const accounting=pulseAccountingForDay(history,key);
     const dayIncidents=incidentsForDay(incidents,key);
 
     trend30.push({
       key,
       label:dayLabel(key),
       status:statusForDay(b,dayIncidents,audit,key===todayKey),
-      pulses:b.starts.size,
-      start_attempts:b.starts.size,
-      orphaned_starts:Math.max(0,b.starts.size-finals.length),
-      completed:completed.length,
-      interrupted:interrupted.length,
-      irrigated_seconds:irrigatedSeconds,
+      // Para relatório histórico, pulso contabilizado é o que possui desfecho
+      // confirmado. Starts sem fechamento ficam separados como inconsistência.
+      pulses:Number(accounting.pulses_confirmed||0),
+      start_attempts:Number(accounting.raw_pulses_started??b.starts.size),
+      orphaned_starts:Number(accounting.orphaned_starts||0),
+      completed:Number(accounting.pulses_completed||0),
+      interrupted:Number(accounting.pulses_interrupted||0),
+      irrigated_seconds:Number(accounting.irrigated_seconds||0),
+      history_quality:String(accounting.history_quality||'event_level'),
+      history_confidence:String(accounting.history_confidence||'high'),
       rain_pauses:b.rain_pauses,
       errors:b.errors,
       auto_adjustments:b.auto_adjustments,

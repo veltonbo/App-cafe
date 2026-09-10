@@ -41,7 +41,7 @@ test('relatório do Viveiro conta resolução automática e intervenção',()=>{
   assert.equal(reports.trend30.length,30);
 });
 
-test('relatório conta pulso iniciado após confirmação ON e separa fechamentos ausentes',()=>{
+test('relatório contabiliza somente pulsos com desfecho e separa starts órfãos',()=>{
   const now=ts('2026-09-09T16:00:00Z');
   const history=[
     {type:'viveiro_pulse_start',pulse_id:'orphan',source:'viveiro_fast',ts:ts('2026-09-09T14:00:00Z')},
@@ -50,10 +50,26 @@ test('relatório conta pulso iniciado após confirmação ON e separa fechamento
   ];
   const reports=buildViveiroReports(history,{}, {}, null, now);
   assert.equal(reports.today.start_attempts,2);
-  assert.equal(reports.today.pulses,2);
+  assert.equal(reports.today.pulses,1);
   assert.equal(reports.today.completed,1);
   assert.equal(reports.today.orphaned_starts,1);
   assert.equal(reports.today.irrigated_seconds,30);
+});
+
+test('resumo diário reparado prevalece no relatório histórico',()=>{
+  const now=ts('2026-09-10T16:00:00Z');
+  const history=[
+    {type:'viveiro_pulse_start',source:'viveiro_fast',ts:ts('2026-09-09T14:00:00Z')},
+    {type:'viveiro_daily_summary',day_key:'2026-09-09',source:'viveiro_history_repair_20260910',ts:ts('2026-09-09T16:00:00Z'),pulses:240,raw_starts:257,completed:239,interrupted:1,unclosed_starts:17,irrigated_seconds:7994.822,history_quality:'aggregate_recovered',history_confidence:'high'}
+  ];
+  const reports=buildViveiroReports(history,{}, {}, null, now);
+  const day=reports.trend30.find(x=>x.key==='2026-09-09');
+  assert.equal(day.pulses,240);
+  assert.equal(day.completed,239);
+  assert.equal(day.interrupted,1);
+  assert.equal(day.orphaned_starts,17);
+  assert.equal(day.irrigated_seconds,7994.822);
+  assert.equal(day.history_quality,'aggregate_recovered');
 });
 
 test('incidente resolvido hoje não mantém status ATENÇÃO ativo',()=>{

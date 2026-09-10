@@ -53,6 +53,12 @@ function effectiveDay(row,startDays){
   return accountingDayKey(rowTs(row));
 }
 
+function canonicalSummaryForDay(rows,dayKey){
+  return rows
+    .filter(row=>String(row?.type||'')==='viveiro_daily_summary'&&String(row?.day_key||'')===String(dayKey))
+    .sort((a,b)=>rowTs(b)-rowTs(a))[0]||null;
+}
+
 export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
   const all=Array.isArray(rows)?rows:[];
   const startDays=startDayByPulse(all);
@@ -81,6 +87,36 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
     return sum+Math.max(0,Number.isFinite(value)?value:0);
   },0);
 
+  const canonical=canonicalSummaryForDay(all,dayKey);
+  if(canonical){
+    const pulses=Math.max(0,Number(canonical?.pulses||0));
+    const completedCount=Math.max(0,Number(canonical?.completed||0));
+    const interruptedCount=Math.max(0,Number(canonical?.interrupted||0));
+    const irrigated=Math.max(0,Number(canonical?.irrigated_seconds||0));
+    const unclosed=Math.max(0,Number(canonical?.unclosed_starts||0));
+    return{
+      day_key:dayKey,
+      starts,
+      finals,
+      completed,
+      interrupted,
+      pulses_confirmed:pulses,
+      // Para dias fechados e reparados, o número exibido de pulsos é o total
+      // com desfecho confirmado. Starts legados extras ficam apenas no diagnóstico.
+      pulses_started:pulses,
+      pulses_completed:completedCount,
+      pulses_interrupted:interruptedCount,
+      orphaned_starts:unclosed,
+      irrigated_seconds:irrigated,
+      raw_pulses_started:starts.length,
+      raw_pulses_completed:completed.length,
+      raw_pulses_interrupted:interrupted.length,
+      history_summary:canonical,
+      history_quality:String(canonical?.history_quality||'canonical'),
+      history_confidence:String(canonical?.history_confidence||'high')
+    };
+  }
+
   return{
     day_key:dayKey,
     starts,
@@ -95,6 +131,12 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
     pulses_completed:completed.length,
     pulses_interrupted:interrupted.length,
     orphaned_starts:Math.max(0,starts.length-finals.length),
-    irrigated_seconds:irrigatedSeconds
+    irrigated_seconds:irrigatedSeconds,
+    raw_pulses_started:starts.length,
+    raw_pulses_completed:completed.length,
+    raw_pulses_interrupted:interrupted.length,
+    history_summary:null,
+    history_quality:'event_level',
+    history_confidence:'high'
   };
 }

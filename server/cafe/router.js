@@ -9,8 +9,10 @@ import inkbirdSchedule from '../api/inkbird/schedule.js';
 import inkbirdZone from '../api/inkbird/zone.js';
 import inkbirdStatus from '../api/inkbird/status.js';
 import smartLifeReauth from '../api/smartlife/reauth.js';
+import cafeDashboard from '../api/cafe/dashboard.js';
 
 const ROUTES={
+  'cafe/dashboard':cafeDashboard,
   'weather/status':weatherStatus,
   'irrigation/history':irrigationHistory,
   'irrigation/config':irrigationConfig,

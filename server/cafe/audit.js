@@ -7,6 +7,7 @@ import { CAFE_ROOT, getCafeActiveSession, getCafeScheduleCache } from './state.j
 
 const TZ='America/Porto_Velho';
 const AUDIT_PATH=CAFE_ROOT+'/audit/state';
+const INCIDENT_ROOT=CAFE_ROOT+'/incidents';
 
 function historyRows(raw){
   if(!raw||typeof raw!=='object')return[];
@@ -295,6 +296,7 @@ export async function runCafeAudit({notify=true}={}){
 
   const previousCodes=new Set((previous?.issues||[]).map(issue=>String(issue.code)));
   const notifiedCodes=new Set((previous?.notified_codes||[]).map(String));
+  const activeIncidents={...(previous?.active_incidents||{})};
   const currentCodes=new Set(audit.issues.map(issue=>String(issue.code)));
   const newIssues=audit.issues.filter(issue=>!notifiedCodes.has(String(issue.code)));
   const cleared=[...previousCodes].filter(code=>!currentCodes.has(code));
@@ -302,13 +304,64 @@ export async function runCafeAudit({notify=true}={}){
   const nextNotified=new Set([...notifiedCodes].filter(code=>currentCodes.has(code)));
   for(const issue of toNotify)nextNotified.add(String(issue.code));
 
+  for(const issue of audit.issues){
+    const code=String(issue.code||'unknown');
+    let incident=activeIncidents[code];
+    if(!incident){
+      const id=(code+'-'+now).replace(/[^A-Za-z0-9_-]/g,'_');
+      incident={
+        id,code,
+        level:issue.level==='critical'?'critical':'warning',
+        message:String(issue.message||code),
+        opened_at:now,
+        last_seen_at:now,
+        status:'open',
+        source:'cafe_audit'
+      };
+      activeIncidents[code]=incident;
+      await storeSet(INCIDENT_ROOT+'/'+id,incident).catch(error=>
+        console.warn('Falha ao abrir incidente do Café:',error?.message||error)
+      );
+    }else{
+      incident={...incident,last_seen_at:now,level:issue.level==='critical'?'critical':'warning',message:String(issue.message||incident.message)};
+      activeIncidents[code]=incident;
+      await storeSet(INCIDENT_ROOT+'/'+incident.id,incident).catch(()=>null);
+    }
+  }
+
+  for(const code of cleared){
+    const incident=activeIncidents[code];
+    if(!incident)continue;
+    const openedAt=Number(incident.opened_at||now);
+    const interventionTypes=new Set(['start','stop','mode','schedule','group_start']);
+    const manualIntervention=history.some(row=>
+      Number(row.ts||Date.parse(row.at||0)||0)>=openedAt&&
+      Number(row.ts||Date.parse(row.at||0)||0)<=now&&
+      interventionTypes.has(String(row.type||''))&&
+      String(row.source||'')!=='cafe_audit'
+    );
+    const resolved={
+      ...incident,
+      status:'resolved',
+      resolved_at:now,
+      last_seen_at:Number(incident.last_seen_at||now),
+      duration_ms:Math.max(0,now-openedAt),
+      resolution:manualIntervention?'intervencao':'automatico'
+    };
+    await storeSet(INCIDENT_ROOT+'/'+incident.id,resolved).catch(error=>
+      console.warn('Falha ao encerrar incidente do Café:',error?.message||error)
+    );
+    delete activeIncidents[code];
+  }
+
   const stored={
     ...audit,
     boot_times:Array.isArray(previous?.boot_times)?previous.boot_times:[],
     last_boot_at:Number(previous?.last_boot_at||0)||null,
     new_codes:newIssues.map(issue=>issue.code),
     notified_codes:[...nextNotified],
-    cleared_codes:cleared
+    cleared_codes:cleared,
+    active_incidents:activeIncidents
   };
   await storeSet(AUDIT_PATH,stored);
 

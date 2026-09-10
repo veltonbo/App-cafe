@@ -294,21 +294,26 @@ export async function runCafeAudit({notify=true}={}){
   });
 
   const previousCodes=new Set((previous?.issues||[]).map(issue=>String(issue.code)));
+  const notifiedCodes=new Set((previous?.notified_codes||[]).map(String));
   const currentCodes=new Set(audit.issues.map(issue=>String(issue.code)));
-  const newIssues=audit.issues.filter(issue=>!previousCodes.has(String(issue.code)));
+  const newIssues=audit.issues.filter(issue=>!notifiedCodes.has(String(issue.code)));
   const cleared=[...previousCodes].filter(code=>!currentCodes.has(code));
+  const toNotify=notify?newIssues.slice(0,3):[];
+  const nextNotified=new Set([...notifiedCodes].filter(code=>currentCodes.has(code)));
+  for(const issue of toNotify)nextNotified.add(String(issue.code));
 
   const stored={
     ...audit,
     boot_times:Array.isArray(previous?.boot_times)?previous.boot_times:[],
     last_boot_at:Number(previous?.last_boot_at||0)||null,
     new_codes:newIssues.map(issue=>issue.code),
+    notified_codes:[...nextNotified],
     cleared_codes:cleared
   };
   await storeSet(AUDIT_PATH,stored);
 
   if(notify){
-    for(const issue of newIssues.slice(0,3)){
+    for(const issue of toNotify){
       await notifyIrrigation({
         title:issue.level==='critical'?'Alerta crítico • Café':'Atenção • Café',
         body:issue.message,

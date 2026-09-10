@@ -14,6 +14,7 @@ let sessionLoaded=false;
 let savedSessionFingerprint='';
 let bridgeQueue=Promise.resolve();
 let listCache={at:0,devices:null};
+let listFetchPromise=null;
 
 function encryptionKey(){
   const secret=String(process.env.SMARTLIFE_SESSION_KEY||'').trim();
@@ -278,9 +279,20 @@ export async function smartLifeListDevices({maxAgeMs=LIST_CACHE_MS,force=false}=
   if(!force&&Array.isArray(listCache.devices)&&age>=0&&age<=Math.max(0,Number(maxAgeMs)||0)){
     return listCache.devices;
   }
-  const result=await callWithStoredSession({action:'list'});
-  listCache={at:Date.now(),devices:result.devices||[]};
-  return listCache.devices;
+  if(!force&&listFetchPromise)return listFetchPromise;
+
+  const task=(async()=>{
+    const result=await callWithStoredSession({action:'list'});
+    listCache={at:Date.now(),devices:result.devices||[]};
+    return listCache.devices;
+  })();
+
+  if(!force)listFetchPromise=task;
+  try{
+    return await task;
+  }finally{
+    if(listFetchPromise===task)listFetchPromise=null;
+  }
 }
 
 export async function smartLifeReadDevice({deviceId=null,deviceName=null,maxAgeMs=READ_CACHE_MS,force=false}={}){

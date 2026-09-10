@@ -1,4 +1,4 @@
-import { createSign } from 'node:crypto';
+import { createSign, randomUUID } from 'node:crypto';
 
 const DB_URL = (process.env.FIREBASE_DATABASE_URL || 'https://manej-cafe-default-rtdb.firebaseio.com').replace(/\/$/,'');
 
@@ -127,17 +127,39 @@ export async function storePush(path, value) {
   return request(path, { method:'POST', body:JSON.stringify(value) });
 }
 
+function historyEventId(entry={}){
+  const supplied=String(entry?.event_id||'').trim();
+  if(supplied)return supplied.replace(/[^A-Za-z0-9_-]/g,'_');
+  const type=String(entry?.type||'event').replace(/[^A-Za-z0-9_-]/g,'_').slice(0,48);
+  return type+'-'+Date.now()+'-'+randomUUID().slice(0,12);
+}
+
 export async function appendHistory(entry) {
+  const eventId=historyEventId(entry||{});
   const payload = {
     ...entry,
+    event_id:eventId,
     at: entry?.at || new Date().toISOString(),
     ts: entry?.ts || Date.now()
   };
-  try {
-    return await storePush('IrrigacaoFazenda2E/history', payload);
-  } catch (error) {
-    return { error:error.message || String(error) };
+
+  let lastError=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      // PUT com chave determinística torna a gravação idempotente:
+      // um retry nunca cria o mesmo evento duas vezes.
+      await storeSet('IrrigacaoFazenda2E/history/'+eventId,payload);
+      return{ok:true,id:eventId,event_id:eventId,entry:payload,attempt};
+    }catch(error){
+      lastError=error;
+      if(attempt<3)await new Promise(resolve=>setTimeout(resolve,attempt===1?150:500));
+    }
   }
+
+  const error=new Error('Falha ao gravar histórico após 3 tentativas: '+String(lastError?.message||lastError||'erro desconhecido'));
+  error.cause=lastError;
+  error.event_id=eventId;
+  throw error;
 }
 
 export async function getAutomationConfig() {

@@ -1,4 +1,4 @@
-import { storeGet, storeSet } from './_store.js';
+import { storeGet, storeGetQuery, storeSet } from './_store.js';
 
 const ROOT='IrrigacaoFazenda2E';
 const BACKUPS_PATH=ROOT+'/configBackups';
@@ -46,8 +46,12 @@ export async function createConfigBackup(reason='manual'){
 }
 
 export async function listConfigBackups(limit=12){
-  const raw=await storeGet(BACKUPS_PATH).catch(()=>null);
-  return rows(raw).slice(0,Math.max(1,Math.min(30,Number(limit)||12)));
+  const safeLimit=Math.max(1,Math.min(30,Number(limit)||12));
+  const raw=await storeGetQuery(BACKUPS_PATH,{
+    orderBy:'$key',
+    limitToLast:safeLimit
+  }).catch(()=>null);
+  return rows(raw).slice(0,safeLimit);
 }
 
 export async function getConfigBackup(id){

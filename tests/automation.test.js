@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import { encodeCycle, decodeCycle } from '../server/api/_cycle.js';
 import { localSchedule, secondsUntilNextWindow } from '../server/api/viveiro/_seconds.js';
@@ -314,4 +315,10 @@ test('janela de irrigacao continua sendo a referencia do Automatico 2.0',()=>{
   assert.equal(before.inside,false);
   assert.equal(inside.inside,true);
   assert.equal(after.inside,false);
+});
+
+test('estado climático usa PATCH para não sobrescrever atualizações concorrentes',()=>{
+  const source=fs.readFileSync('server/api/viveiro/_climate.js','utf8');
+  assert.match(source,/storePatch\(STATE_PATH,delta\)/);
+  assert.doesNotMatch(source,/const current=await getClimateState\(\);\s*const next=\{\.\.\.current,\.\.\.patch/);
 });

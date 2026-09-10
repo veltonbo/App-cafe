@@ -1,4 +1,4 @@
-import { storeGet, storeSet } from '../irrigation/_store.js';
+import { storeGet, storePatch, storeSet } from '../irrigation/_store.js';
 
 const CONFIG_PATH='IrrigacaoFazenda2E/viveiroClimate/config';
 const STATE_PATH='IrrigacaoFazenda2E/viveiroClimate/state';
@@ -36,10 +36,9 @@ export async function getClimateState(){
 }
 
 export async function patchClimateState(patch={}){
-  const current=await getClimateState();
-  const next={...current,...patch,updated_at:Date.now()};
-  await storeSet(STATE_PATH,next);
-  return next;
+  const delta={...patch,updated_at:Date.now()};
+  await storePatch(STATE_PATH,delta);
+  return getClimateState();
 }
 
 export async function approveClimateSuggestion(id){

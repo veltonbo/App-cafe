@@ -34,3 +34,13 @@ test('service worker nao fica preso em cache antigo por uma hora',()=>{
   assert.match(server,/base==='sw\.js'/);
   assert.match(server,/\?'no-cache'/);
 });
+
+test('limites visiveis do Automatico 2.0 coincidem com o backend',()=>{
+  assert.match(html,/id="evaluationMinutes"[^>]+min="5"[^>]+max="30"/);
+  assert.match(html,/id="maxAdjustPercent"[^>]+min="10"[^>]+max="30"/);
+});
+
+test('diagnostico nao declara Firebase online sem confirmar leitura',()=>{
+  assert.match(dashboard,/firebaseOnline/);
+  assert.match(dashboard,/firebase:firebaseOnline\?'online':'offline'/);
+});

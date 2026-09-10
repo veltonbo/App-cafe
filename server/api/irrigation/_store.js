@@ -1,4 +1,4 @@
-import { createSign } from 'node:crypto';
+import { createSign, randomUUID } from 'node:crypto';
 
 const DB_URL = (process.env.FIREBASE_DATABASE_URL || 'https://manej-cafe-default-rtdb.firebaseio.com').replace(/\/$/,'');
 
@@ -127,24 +127,64 @@ export async function storePush(path, value) {
   return request(path, { method:'POST', body:JSON.stringify(value) });
 }
 
+const CAFE_ROOT='IrrigacaoFazenda2E/cafe';
+
+function historyEventId(entry={}){
+  const supplied=String(entry?.event_id||'').trim();
+  if(supplied)return supplied.replace(/[^A-Za-z0-9_-]/g,'_');
+  const session=String(entry?.session_id||entry?.irrigation_id||'').trim();
+  const type=String(entry?.type||'event').replace(/[^A-Za-z0-9_-]/g,'_').slice(0,40);
+  if(session)return(type+'-'+session).replace(/[^A-Za-z0-9_-]/g,'_');
+  return type+'-'+Date.now()+'-'+randomUUID().slice(0,12);
+}
+
 export async function appendHistory(entry) {
+  const eventId=historyEventId(entry||{});
   const payload = {
     ...entry,
-    app:entry?.app || 'cafe',
+    event_id:eventId,
+    app:'cafe',
     at: entry?.at || new Date().toISOString(),
     ts: entry?.ts || Date.now()
   };
-  try {
-    return await storePush('IrrigacaoFazenda2E/cafe/history', payload);
-  } catch (error) {
-    return { error:error.message || String(error) };
+
+  let lastError=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      await storeSet(CAFE_ROOT+'/history/'+eventId,payload);
+      return{ok:true,id:eventId,event_id:eventId,entry:payload,attempt};
+    }catch(error){
+      lastError=error;
+      if(attempt<3)await new Promise(resolve=>setTimeout(resolve,attempt===1?150:500));
+    }
   }
+  throw new Error('Falha ao gravar histórico do Café após 3 tentativas: '+String(lastError?.message||lastError||'erro desconhecido'));
+}
+
+function cafeConfigFromLegacy(legacy={}){
+  if(!legacy||typeof legacy!=='object')return{};
+  const out={};
+  for(const key of ['weather','groups','controllerPrefs','waterFlow','alerts']){
+    if(legacy[key]&&typeof legacy[key]==='object')out[key]=legacy[key];
+  }
+  return out;
 }
 
 export async function getAutomationConfig() {
-  return (await storeGet('IrrigacaoFazenda2E/config')) || {};
+  const current=await storeGet(CAFE_ROOT+'/config').catch(()=>null);
+  if(current&&typeof current==='object')return current;
+
+  const legacy=await storeGet('IrrigacaoFazenda2E/config').catch(()=>null);
+  const migrated=cafeConfigFromLegacy(legacy||{});
+  if(Object.keys(migrated).length){
+    await storeSet(CAFE_ROOT+'/config',{
+      ...migrated,
+      migrated_from_legacy_at:new Date().toISOString()
+    }).catch(()=>null);
+  }
+  return migrated;
 }
 
 export async function patchAutomationConfig(value) {
-  return storePatch('IrrigacaoFazenda2E/config', value || {});
+  return storePatch(CAFE_ROOT+'/config', value || {});
 }

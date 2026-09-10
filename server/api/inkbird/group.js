@@ -4,7 +4,7 @@ import { readInkbirdState, sendInkbirdCommands } from './_transport.js';
 import { encodeDp45Manual, dp45HasWatering } from './_iic800.js';
 import { fetchWeatherSnapshot, decideWeather } from '../weather/_weather.js';
 import { appendHistory, getAutomationConfig } from '../irrigation/_store.js';
-import { getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, setCafeWeatherState } from '../cafe/_state.js';
+import { getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, setCafeWeatherState } from '../../cafe/state.js';
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 

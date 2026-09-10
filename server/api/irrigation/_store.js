@@ -209,7 +209,7 @@ export async function backfillHistoryTimeIndex({force=false}={}){
         ...(cursor?{startAt:cursor}:{}),
         limitToFirst:HISTORY_BACKFILL_PAGE_SIZE+(cursor?1:0)
       });
-      let rows=historyRows(raw).sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+      let rows=historyRows(raw).sort((a,b)=>String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0);
       if(cursor)rows=rows.filter(row=>String(row.id)!==String(cursor));
       if(!rows.length)break;
 

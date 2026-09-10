@@ -191,12 +191,38 @@ server.listen(PORT,'0.0.0.0',()=>{
   setTimeout(async()=>{
     try{
       const data=await overview();
+      const [viveiroRaw,cafeRaw]=await Promise.all([
+        remote(VIVEIRO_URL,'/api/viveiro/dashboard'),
+        remote(CAFE_URL,'/api/cafe/dashboard')
+      ]);
+      const safeIncident=x=>({
+        code:String(x?.code||'unknown'),
+        level:String(x?.level||'warning'),
+        status:String(x?.status||'open'),
+        message:String(x?.message||''),
+        opened_at:Number(x?.opened_at||0)||null,
+        resolved_at:Number(x?.resolved_at||0)||null,
+        duration_ms:Number(x?.duration_ms||0)||null,
+        resolution:x?.resolution||null
+      });
       console.log('Painel startup diagnostic',{
         status:data.status,
         viveiro_ok:data.sources?.viveiro_ok===true,
         cafe_ok:data.sources?.cafe_ok===true,
         climate_linked:data.climate?.linked===true,
-        alerts:Number(data.alerts?.total||0)
+        alerts:Number(data.alerts?.total||0),
+        viveiro_incidents:(viveiroRaw?.reports?.incidents?.open||[]).map(safeIncident),
+        cafe_incidents:(cafeRaw?.reports?.incidents?.open||[]).map(safeIncident),
+        viveiro_audit:(viveiroRaw?.seconds?.operational_audit?.issues||[]).map(x=>({
+          code:String(x?.code||'unknown'),
+          level:String(x?.level||'warning'),
+          message:String(x?.message||'')
+        })),
+        cafe_audit:(cafeRaw?.audit?.issues||[]).map(x=>({
+          code:String(x?.code||'unknown'),
+          level:String(x?.level||'warning'),
+          message:String(x?.message||'')
+        }))
       });
     }catch(error){
       console.warn('Painel startup diagnostic falhou:',error?.message||error);

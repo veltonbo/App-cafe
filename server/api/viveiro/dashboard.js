@@ -461,7 +461,7 @@ function summarize(history,seconds={},now=Date.now()){
     const accounting=pulseAccountingForDay(history,key);
     days.push({
       key,label:dayLabel(key),
-      pulses:Number(accounting.pulses_started||0),
+      pulses:Number(accounting.pulses_confirmed||0),
       completed_pulses:Number(accounting.pulses_completed||0),
       interrupted_pulses:Number(accounting.pulses_interrupted||0),
       irrigated_seconds:Number(accounting.irrigated_seconds||0),
@@ -489,7 +489,7 @@ function summarize(history,seconds={},now=Date.now()){
 
   return{
     today:{
-      pulses:Number(todayAccounting.pulses_started||0),
+      pulses:Number(todayAccounting.pulses_confirmed||0),
       completed_pulses:Number(todayAccounting.pulses_completed||0),
       interrupted_pulses:Number(todayAccounting.pulses_interrupted||0),
       irrigated_seconds:irrigatedSeconds,
@@ -568,7 +568,12 @@ export default async function handler(req,res){
       const historyFull=(Array.isArray(historyRecent)?historyRecent:[]).filter(
         x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')
       );
-      const history=historyFull.slice(0,160);
+      const userHistory=historyFull.filter(row=>![
+        'viveiro_accounting_reconciled',
+        'viveiro_audit_alert',
+        'viveiro_audit_recovered'
+      ].includes(String(row?.type||'')));
+      const history=userHistory.slice(0,160);
       const todayKey=localDateKey(now);
       const auditToday=historyFull.filter(
         x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey
@@ -581,7 +586,10 @@ export default async function handler(req,res){
       // Durante o primeiro backfill, preserva os contadores confirmados do dia
       // para a tela não parecer zerada enquanto o índice temporal é preenchido.
       if(!historyIndex?.legacy_backfill_complete&&String(activeSeconds?.daily_day_key||'')===todayKey){
-        summary.today.pulses=Math.max(Number(summary.today.pulses||0),Number(activeSeconds?.daily_pulses_started||0));
+        summary.today.pulses=Math.max(
+          Number(summary.today.pulses||0),
+          Number(activeSeconds?.daily_pulses_completed||0)+Number(activeSeconds?.daily_pulses_interrupted||0)
+        );
         summary.today.completed_pulses=Math.max(Number(summary.today.completed_pulses||0),Number(activeSeconds?.daily_pulses_completed||0));
         summary.today.interrupted_pulses=Math.max(Number(summary.today.interrupted_pulses||0),Number(activeSeconds?.daily_pulses_interrupted||0));
         summary.today.irrigated_seconds=Math.max(Number(summary.today.irrigated_seconds||0),Number(activeSeconds?.daily_irrigated_seconds||0));

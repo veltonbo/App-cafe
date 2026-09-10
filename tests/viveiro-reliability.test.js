@@ -57,3 +57,10 @@ test('SSE de protecao nao dispara refresh completo do dashboard',()=>{
   const protectionBranch=ui.slice(protectionStart,confirmationStart);
   assert.doesNotMatch(protectionBranch,/loadDashboard/);
 });
+
+test('rearmar ciclo preserva contadores do dia e reinício fecha pulso ativo',()=>{
+  assert.match(manager,/const dailySnapshot=\{/);
+  assert.match(manager,/\.\.\.dailySnapshot/);
+  assert.match(manager,/Pulso interrompido por reinício do servidor/);
+  assert.match(manager,/reason:'server_restart'/);
+});

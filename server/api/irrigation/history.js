@@ -1,5 +1,6 @@
 import { applyCors, authorize } from '../_tuya.js';
-import { appendHistory, readRecentHistory } from './_store.js';
+import { appendHistory } from './_store.js';
+import { readRecentHistory } from './history-reader.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);

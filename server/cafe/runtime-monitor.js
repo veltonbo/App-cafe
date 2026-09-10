@@ -60,16 +60,22 @@ export async function monitorCafeRuntime(){
     enabled:true,rainThreshold:5,rainHoldHours:12,blockWhileRaining:true,backgroundProtection:true
   };
   const decision=decideWeather(weatherSnapshot,policy,weatherState);
-  await setCafeWeatherState({
-    ...weatherState,
-    checkedAt:now,
-    decision,
-    snapshot:{
-      linked:Boolean(weatherSnapshot?.linked),
-      online:weatherSnapshot?.device?.online??null,
-      metrics:weatherSnapshot?.metrics||null
-    }
-  }).catch(()=>null);
+  const previousDecision=weatherState?.decision||{};
+  const weatherChanged=
+    Boolean(previousDecision?.blocked)!==Boolean(decision?.blocked)||
+    Boolean(weatherState?.snapshot?.metrics?.rainDetected)!==Boolean(weatherSnapshot?.metrics?.rainDetected);
+  if(weatherChanged||now-Number(weatherState?.checkedAt||0)>=60000){
+    await setCafeWeatherState({
+      ...weatherState,
+      checkedAt:now,
+      decision,
+      snapshot:{
+        linked:Boolean(weatherSnapshot?.linked),
+        online:weatherSnapshot?.device?.online??null,
+        metrics:weatherSnapshot?.metrics||null
+      }
+    }).catch(()=>null);
+  }
 
   const results=[];
   for(const controller of controllers){
@@ -224,6 +230,16 @@ export async function monitorCafeRuntime(){
       monitor.auto_candidates={};
     }
 
+    const previousCheckedAt=Number(monitor.checked_at||0);
+    const previousMask=Number(monitor.last_active_mask||0);
+    const hasTransientState=
+      mask!==0||
+      Object.keys(monitor.auto_sessions).length>0||
+      Object.keys(monitor.auto_candidates).length>0;
+    const monitorChanged=
+      previousMask!==mask||
+      Boolean(monitor.weather_blocked)!==Boolean(decision?.blocked);
+
     monitor={
       ...monitor,
       last_active_mask:mask,
@@ -231,9 +247,11 @@ export async function monitorCafeRuntime(){
       controller_online:state.online!==false,
       weather_blocked:Boolean(decision?.blocked)
     };
-    await storeSet(MONITOR_ROOT+'/'+id,monitor).catch(error=>
-      console.warn('Café runtime monitor state:',error?.message||error)
-    );
+    if(hasTransientState||monitorChanged||now-previousCheckedAt>=60000){
+      await storeSet(MONITOR_ROOT+'/'+id,monitor).catch(error=>
+        console.warn('Café runtime monitor state:',error?.message||error)
+      );
+    }
     results.push({device_id:id,ok:true,active_mask:mask,auto_sessions:Object.keys(monitor.auto_sessions).length});
   }
 

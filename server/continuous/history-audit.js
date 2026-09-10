@@ -84,28 +84,32 @@ function add(out,row){
 function pairLegacy(events=[]){
   const rows=[...events].sort((a,b)=>a.ts-b.ts);
   let active=null,matched=0,unmatchedStarts=0,unmatchedFinals=0,sum=0,min=null,max=null;
+  const anomalies=[];
   for(const ev of rows){
     if(ev.type==='start'){
-      if(active)unmatchedStarts++;
+      if(active){unmatchedStarts++;anomalies.push({kind:'start_without_final',at:new Date(active.ts).toISOString()});}
       active=ev;
       continue;
     }
-    if(!active){unmatchedFinals++;continue}
+    if(!active){unmatchedFinals++;anomalies.push({kind:'final_without_start',at:new Date(ev.ts).toISOString()});continue}
     const seconds=(ev.ts-active.ts)/1000;
     if(seconds>=0&&seconds<=LEGACY_PAIR_MAX_SECONDS){
       matched++;sum+=seconds;min=min==null?seconds:Math.min(min,seconds);max=max==null?seconds:Math.max(max,seconds);active=null;
     }else{
-      unmatchedStarts++;unmatchedFinals++;active=null;
+      unmatchedStarts++;unmatchedFinals++;
+      anomalies.push({kind:'invalid_pair',start_at:new Date(active.ts).toISOString(),final_at:new Date(ev.ts).toISOString(),elapsed_seconds:Number(seconds.toFixed(3))});
+      active=null;
     }
   }
-  if(active)unmatchedStarts++;
+  if(active){unmatchedStarts++;anomalies.push({kind:'start_without_final',at:new Date(active.ts).toISOString()});}
   return{
     matched,
     unmatched_starts:unmatchedStarts,
     unmatched_finals:unmatchedFinals,
     elapsed_seconds:Number(sum.toFixed(3)),
     min_elapsed_seconds:min==null?null:Number(min.toFixed(3)),
-    max_elapsed_seconds:max==null?null:Number(max.toFixed(3))
+    max_elapsed_seconds:max==null?null:Number(max.toFixed(3)),
+    anomalies:anomalies.slice(0,30)
   };
 }
 function finalize(out){
@@ -135,7 +139,8 @@ function finalize(out){
       max_final_duration:d.max_final_duration,
       first_at:d.first_ts?new Date(d.first_ts).toISOString():null,
       last_at:d.last_ts?new Date(d.last_ts).toISOString():null,
-      samples:d._samples
+      samples:d._samples,
+      ...(key==='2026-09-08'?{pulse_timeline:[...d._legacy_events].sort((a,b)=>a.ts-b.ts).map(ev=>({type:ev.type,at:new Date(ev.ts).toISOString(),duration:durationSeconds(ev.row)}))}:{})
     };
   }
   return result;

@@ -214,6 +214,16 @@ function renderSummary(){
     auditStatus==='critical'?' critical':auditStatus==='warning'?' warning':''
   );
 
+  const reportStatus=String(app.dashboard?.reports?.status_today||'normal');
+  $('cafeDayStatusTitle').textContent=reportStatus==='critical'?'CRÍTICO':reportStatus==='warning'?'ATENÇÃO':'NORMAL';
+  $('cafeDayStatusDetail').textContent=reportStatus==='critical'
+    ?'Existe uma falha ou incidente crítico registrado hoje.'
+    :reportStatus==='warning'
+      ?'Há uma ocorrência ou bloqueio que merece acompanhamento.'
+      :'Irrigações, programações e clima sem ocorrência crítica hoje.';
+  $('cafeDayStatusCard').className='dayStatusCard '+reportStatus;
+  setBadge('cafeDayStatusBadge',reportStatus==='critical'?'CRÍTICO':reportStatus==='warning'?'ATENÇÃO':'NORMAL',reportStatus==='critical'?'bad':reportStatus==='warning'?'warn':'');
+
   const c=selectedController(),prefs=ensurePrefs(c),mask=activeMask();
   $('controllerLabel').textContent=c?'CONTROLADOR '+num(c.controller_index,1):'IIC-800';
   $('controllerName').textContent=c?.name||'Nenhum controlador';
@@ -501,6 +511,57 @@ function renderSystem(){
     return '<div class="dayBar"><div class="barArea"><i style="height:'+pct+'%"></i></div><small>'+esc(day.label||'')+'</small></div>';
   }).join('');
 
+  const reports=d.reports||{},trend=reports.trend30||[];
+  const trendMax=Math.max(1,...trend.map(x=>num(x.sessions)));
+  $('cafeTrend30Chart').innerHTML=trend.map(day=>{
+    const pct=Math.max(day.sessions?4:1,Math.round(num(day.sessions)/trendMax*100));
+    const tone=day.status==='critical'?' critical':day.status==='warning'?' warning':'';
+    return '<div class="trendDay'+tone+'" title="'+esc(day.label+' • '+num(day.sessions)+' irrigações')+'"><i style="height:'+pct+'%"></i><small>'+esc(String(day.key||'').slice(-2))+'</small></div>';
+  }).join('')||'<div class="panelNote">Sem histórico suficiente.</div>';
+  setBadge('cafeTrendBadge',trend.length+' DIAS','');
+
+  const activeDays=trend.filter(x=>num(x.sessions)>0);
+  let trendNote='Sem histórico suficiente para tendência.';
+  if(activeDays.length>=2){
+    const first=activeDays[0],last=activeDays.at(-1);
+    const delta=num(last.sessions)-num(first.sessions);
+    trendNote=delta===0
+      ?'A frequência diária permaneceu estável entre os dias com irrigação.'
+      :delta>0
+        ?'A frequência de irrigação aumentou nos dias mais recentes.'
+        :'A frequência de irrigação reduziu nos dias mais recentes.';
+  }
+  $('cafeTrendNote').textContent=trendNote;
+
+  const incidents=reports.incidents||{},open=incidents.open||[],recent=incidents.recent||[];
+  setBadge('cafeIncidentBadge',open.length?open.length+' ABERTO'+(open.length>1?'S':''):'SEM ABERTOS',open.some(x=>x.level==='critical')?'bad':open.length?'warn':'');
+  $('cafeIncidentList').innerHTML=recent.length?recent.slice(0,12).map(item=>{
+    const isOpen=item.status==='open';
+    const durationMs=isOpen?Date.now()-num(item.opened_at):num(item.duration_ms);
+    const resolution=item.resolution==='intervencao'?'com intervenção':item.resolution==='automatico'?'automática':'em andamento';
+    return '<div class="incidentItem '+(item.level==='critical'?'critical':'warning')+'">'+
+      '<i>'+(isOpen?'!':'✓')+'</i>'+
+      '<span><b>'+esc(item.message||item.code||'Incidente')+'</b><small>'+esc((isOpen?'Aberto':'Resolvido')+' • '+resolution+' • '+fmtMinutes(durationMs/60000))+'</small></span>'+
+      '<em>'+esc(fmtDateTime(item.opened_at))+'</em>'+
+    '</div>';
+  }).join(''):'<div class="auditOk"><i>✓</i><span><b>Nenhum incidente registrado</b><small>Problemas detectados pela auditoria aparecerão aqui.</small></span></div>';
+
+  const sectors=(reports.sectors||[]).slice().sort((a,b)=>{
+    const ah=a.hours_since_last==null?-1:num(a.hours_since_last);
+    const bh=b.hours_since_last==null?-1:num(b.hours_since_last);
+    return bh-ah;
+  });
+  $('sectorTrendList').innerHTML=sectors.length?sectors.map(item=>{
+    const last=item.last_start_at?fmtDateTime(item.last_start_at):'Sem registro';
+    const stale=item.hours_since_last!=null&&num(item.hours_since_last)>72;
+    return '<div class="sectorTrendItem'+(stale?' warning':'')+'">'+
+      '<div><b>Setor '+pad(item.sector)+'</b><small>Última: '+esc(last)+'</small></div>'+
+      '<span><strong>'+num(item.starts_7d)+'</strong><small>7 dias</small></span>'+
+      '<span><strong>'+num(item.starts_30d)+'</strong><small>30 dias</small></span>'+
+      '<span><strong>'+esc(fmtMinutes(item.planned_minutes_30d))+'</strong><small>30 dias</small></span>'+
+    '</div>';
+  }).join(''):'<div class="panelNote">Sem dados por setor.</div>';
+
   if(document.activeElement!==$('apiUrl'))$('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
   if(document.activeElement!==$('controlToken'))$('controlToken').value=store.settings.token||'';
   $('diagnosticText').textContent=JSON.stringify({
@@ -514,7 +575,8 @@ function renderSystem(){
     config_weather:d.config?.weather||{},
     history_count:app.history.length,
     audit:d.audit||null,
-    sector_activity:d.sector_activity?.[c?.id]||null
+    sector_activity:d.sector_activity?.[c?.id]||null,
+    reports:d.reports||null
   },null,2);
 }
 function renderAll(){renderHeader();renderHero();renderSummary();if(!(app.activeView==='sectors'&&$('sectorGrid')?.contains(document.activeElement)))renderSectors();renderWeather();renderSystem()}

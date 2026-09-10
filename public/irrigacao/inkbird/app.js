@@ -125,8 +125,21 @@ function renderHeader(){
   const ok=Boolean(app.dashboard?.ok);
   const ctrl=selectedController();
   const ctrlOk=ctrl?.online===true;
-  $('headerText').textContent=!store.settings.token?'Configurar':ok&&ctrlOk?'Online':ok?'Atenção':'Reconectando';
-  setDot('headerDot',!store.settings.token?null:ok&&ctrlOk?true:ok?null:false);
+  const audit=app.dashboard?.audit||{};
+  const auditStatus=String(audit.status||'checking');
+  $('headerText').textContent=!store.settings.token
+    ?'Configurar'
+    :!ok?'Reconectando'
+    :auditStatus==='critical'?'Atenção'
+    :auditStatus==='warning'?'Alerta'
+    :ctrlOk?'Online':'Atenção';
+  setDot('headerDot',
+    !store.settings.token?null
+    :!ok?false
+    :auditStatus==='critical'?false
+    :auditStatus==='warning'?null
+    :ctrlOk?true:null
+  );
   $('offlineBar').hidden=navigator.onLine&&ok;
 }
 function renderHero(){
@@ -185,6 +198,21 @@ function renderSummary(){
   $('sumRain').textContent=m.rainDetected?'Detectada':Number.isFinite(Number(rain))?Number(rain).toFixed(1)+' mm':'0.0 mm';
   const policy=app.dashboard?.config?.weather||{};
   $('sumProtection').textContent=policy.enabled===false?'Desligada':m.rainDetected?'Bloqueando':'Ativa';
+
+  const audit=app.dashboard?.audit||{};
+  const auditIssues=Array.isArray(audit.issues)?audit.issues:[];
+  const auditStatus=String(audit.status||'checking');
+  $('auditSummaryIcon').textContent=auditStatus==='critical'?'!':auditStatus==='warning'?'•':'✓';
+  $('auditSummaryTitle').textContent=
+    auditStatus==='critical'?'Atenção necessária':
+    auditStatus==='warning'?'Há um alerta':
+    auditStatus==='checking'?'Verificando':'Tudo coerente';
+  $('auditSummaryDetail').textContent=audit.message||(
+    auditIssues.length?auditIssues[0]?.message:'Nenhuma anomalia detectada.'
+  );
+  $('auditSummaryCard').className='auditSummaryCard'+(
+    auditStatus==='critical'?' critical':auditStatus==='warning'?' warning':''
+  );
 
   const c=selectedController(),prefs=ensurePrefs(c),mask=activeMask();
   $('controllerLabel').textContent=c?'CONTROLADOR '+num(c.controller_index,1):'IIC-800';
@@ -245,11 +273,17 @@ function renderSectors(){
     const schedText=schedule?.enabled&&schedule.start_times?.length
       ?schedule.start_times.map(x=>typeof x==='string'?x:x?.value).filter(Boolean).join(', ')
       :'Sem programação';
+    const activity=app.dashboard?.sector_activity?.[c.id]?.[zone]||{};
+    const lastText=activity.last_start_at
+      ?'Última: '+fmtDateTime(activity.last_start_at)
+      :'Última: sem registro';
+    const sevenText='7 dias: '+num(activity.starts_7d)+' irrigações • '+fmtMinutes(activity.planned_minutes_7d);
     return '<article class="sectorCard'+(on?' on':'')+'" data-zone="'+zone+'">'+
       '<div class="sectorTop"><div><div class="sectorName">'+esc(p.name||('Setor '+pad(sector)))+'</div><div class="sectorMeta">Setor '+pad(sector)+' • Zona '+zone+'</div></div><span class="sectorState'+(on?' on':'')+'">'+(on?'IRRIGANDO':'PRONTO')+'</span></div>'+
       '<div class="durationRow"><button data-step="-1" type="button">−</button><input data-duration type="number" min="1" max="1440" value="'+mins+'" inputmode="numeric"><button data-step="1" type="button">+</button></div>'+
       '<div class="quickTimes">'+[5,10,15,20,30].map(v=>'<button data-quick="'+v+'" type="button">'+v+'m</button>').join('')+'</div>'+
       '<div class="sectorMeta" style="margin-top:7px">'+esc(schedText)+'</div>'+
+      '<div class="sectorActivity"><span>'+esc(lastText)+'</span><span>'+esc(sevenText)+'</span></div>'+
       '<div class="sectorActions">'+
         '<button class="'+(on?'dangerBtn':'primaryBtn')+'" data-action="'+(on?'stop':'start')+'" type="button">'+(on?'Parar':'Irrigar')+'</button>'+
         '<button class="secondaryBtn" data-action="schedule" type="button">Programar</button>'+
@@ -438,6 +472,27 @@ function renderSystem(){
   const wOk=Boolean(w.linked&&w.device?.online!==false&&!w.error);setDot('svcWeather',wOk);$('svcWeatherText').textContent=wOk?'Online':'Atenção';
   setDot('svcFirebase',d.isolated===true);$('svcFirebaseText').textContent=d.isolated===true?'Isolado':'Verificando';
   setDot('svcServer',d.server?.online===true);$('svcServerText').textContent=d.server?.online?'Online':'Atenção';
+
+  const audit=d.audit||{};
+  const auditIssues=Array.isArray(audit.issues)?audit.issues:[];
+  const auditStatus=String(audit.status||'checking');
+  setBadge('auditBadge',
+    auditStatus==='critical'?'CRÍTICO':auditStatus==='warning'?'ATENÇÃO':auditStatus==='checking'?'VERIFICANDO':'NORMAL',
+    auditStatus==='critical'?'bad':auditStatus==='warning'?'warn':''
+  );
+  $('auditMessage').textContent=audit.message||(
+    auditIssues.length?auditIssues[0]?.message:'Nenhuma anomalia detectada.'
+  );
+  $('auditCheckedAt').textContent=audit.checked_at?fmtDateTime(audit.checked_at):'—';
+  $('auditList').innerHTML=auditIssues.length
+    ?auditIssues.slice(0,10).map(issue=>
+      '<div class="auditItem '+(issue.level==='critical'?'critical':'warning')+'">'+
+        '<i>'+(issue.level==='critical'?'!':'•')+'</i>'+
+        '<span><b>'+(issue.level==='critical'?'Crítico':'Atenção')+'</b><small>'+esc(issue.message||issue.code||'Anomalia')+'</small></span>'+
+      '</div>'
+    ).join('')
+    :'<div class="auditOk"><i>✓</i><span><b>Sistema coerente</b><small>IIC-800, clima, horários e histórico sem anomalia detectada.</small></span></div>';
+
   $('weekSessions').textContent=String(num(sum.sessions));$('weekCompleted').textContent=String(num(sum.completed));
   $('weekMinutes').textContent=fmtMinutes(sum.completed_minutes);$('weekBlocked').textContent=String(num(sum.blocked));
   const days=d.summary?.week||[],max=Math.max(1,...days.map(x=>num(x.sessions)));
@@ -457,7 +512,9 @@ function renderSystem(){
     weather:{linked:w.linked,online:w.device?.online,error:w.error||null,checked_at:w.checked_at},
     next_schedule:d.next_schedule,
     config_weather:d.config?.weather||{},
-    history_count:app.history.length
+    history_count:app.history.length,
+    audit:d.audit||null,
+    sector_activity:d.sector_activity?.[c?.id]||null
   },null,2);
 }
 function renderAll(){renderHeader();renderHero();renderSummary();if(!(app.activeView==='sectors'&&$('sectorGrid')?.contains(document.activeElement)))renderSectors();renderWeather();renderSystem()}

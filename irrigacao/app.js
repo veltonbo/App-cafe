@@ -229,7 +229,7 @@ function renderAutomation(){
 
   $('rainEnabled').checked=wc.enabled!==false;
   $('resumeDelay').value=Math.round(num(wc.resumeDelayMinutes,30));
-  $('weatherCheck').value=Math.round(num(wc.checkMinutes,5));
+  $('weatherCheck').value='≈ 4';
   setBadge($('rainProtectionState'),wc.enabled===false?'DESLIGADA':'ATIVA',wc.enabled===false?'warn':'');
 }
 function renderHistory(){
@@ -567,7 +567,7 @@ async function saveRain(){
     await api('/api/viveiro/weather',{method:'POST',body:JSON.stringify({action:'save_config',config:{
       enabled:$('rainEnabled').checked,
       resumeDelayMinutes:num($('resumeDelay').value,30),
-      checkMinutes:num($('weatherCheck').value,5),
+      checkMinutes:num(wc.checkMinutes,5),
       blockWhileRaining:wc.blockWhileRaining!==false,
       rainThresholdMm:num(wc.rainThresholdMm,5)
     }})});

@@ -11,7 +11,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icon.svg">
-  <link rel="stylesheet" href="/app.css?v=20260909-2">
+  <link rel="stylesheet" href="/app.css?v=20260909-3">
 </head>
 <body>
   <div id="offlineBar" class="offlineBar" hidden>Sem conexão. Os últimos dados continuam visíveis.</div>
@@ -69,6 +69,11 @@
         <span><small>AUDITORIA AUTOMÁTICA</small><strong id="auditSummaryTitle">Verificando</strong><em id="auditSummaryDetail">Aguardando a primeira conferência.</em></span>
         <b>›</b>
       </button>
+
+      <article id="cafeDayStatusCard" class="dayStatusCard normal">
+        <div><small>STATUS DO DIA</small><h3 id="cafeDayStatusTitle">Verificando</h3><p id="cafeDayStatusDetail">Aguardando relatório diário.</p></div>
+        <span id="cafeDayStatusBadge" class="badge">—</span>
+      </article>
 
       <div class="sectionHead">
         <div><small>CONTROLADOR</small><h2>Setores do Café</h2></div>
@@ -172,6 +177,22 @@
       </article>
 
       <article class="panel">
+        <div class="panelHead"><div><small>TENDÊNCIA • 30 DIAS</small><h3>Irrigações por dia</h3></div><span id="cafeTrendBadge" class="badge">—</span></div>
+        <div id="cafeTrend30Chart" class="trend30Chart"></div>
+        <p id="cafeTrendNote" class="panelNote">Aguardando histórico suficiente.</p>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>INCIDENTES</small><h3>Problemas e recuperações</h3></div><span id="cafeIncidentBadge" class="badge">—</span></div>
+        <div id="cafeIncidentList" class="incidentList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>SETORES</small><h3>Acompanhamento por setor</h3></div></div>
+        <div id="sectorTrendList" class="sectorTrendList"></div>
+      </article>
+
+      <article class="panel">
         <div class="panelHead"><div><small>CONEXÃO</small><h3>Este aparelho</h3></div></div>
         <div class="fieldGrid">
           <label><span>URL do servidor</span><input id="apiUrl" type="url" autocomplete="off"></label>
@@ -239,6 +260,6 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="/app.js?v=20260909-2" defer></script>
+  <script src="/app.js?v=20260909-3" defer></script>
 </body>
 </html>

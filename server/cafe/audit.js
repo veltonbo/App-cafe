@@ -136,6 +136,8 @@ export function evaluateCafeAudit({
   history=[],
   schedules={},
   bootTimes=[],
+  bootEvents=[],
+  currentDeploymentId='',
   now=Date.now()
 }={}){
   const issues=[];
@@ -206,8 +208,13 @@ export function evaluateCafeAudit({
     issues.push({level:'warning',code:'many_starts',message:'O IIC-800 iniciou muitas irrigações nos últimos 30 minutos.'});
   }
 
-  if((bootTimes||[]).filter(ts=>now-Number(ts)<60*60000).length>=3){
-    issues.push({level:'warning',code:'restarts_excessive',message:'O serviço do Café reiniciou várias vezes na última hora.'});
+  const sameDeploymentBoots=(bootEvents||[]).filter(item=>{
+    const at=Number(item?.at||0);
+    const deployment=String(item?.deployment_id||'');
+    return at&&now-at<60*60000&&currentDeploymentId&&deployment===currentDeploymentId;
+  });
+  if(sameDeploymentBoots.length>=3){
+    issues.push({level:'warning',code:'restarts_excessive',message:'O mesmo deployment do Café reiniciou várias vezes na última hora.'});
   }
 
   const activity=buildSectorActivity(history,controllers,now);
@@ -244,11 +251,18 @@ export function evaluateCafeAudit({
 
 export async function markCafeServerBoot(now=Date.now()){
   const previous=await storeGet(AUDIT_PATH).catch(()=>null)||{};
-  const boots=[...(Array.isArray(previous.boot_times)?previous.boot_times:[]),now]
-    .filter(ts=>now-Number(ts)<6*60*60000)
-    .slice(-20);
-  await storeSet(AUDIT_PATH,{...previous,boot_times:boots,last_boot_at:now}).catch(()=>null);
-  return boots;
+  const deploymentId=String(process.env.RAILWAY_DEPLOYMENT_ID||'local');
+  const events=[
+    ...(Array.isArray(previous.boot_events)?previous.boot_events:[]),
+    {at:now,deployment_id:deploymentId}
+  ].filter(item=>now-Number(item?.at||0)<6*60*60000).slice(-30);
+  await storeSet(AUDIT_PATH,{
+    ...previous,
+    boot_events:events,
+    last_boot_at:now,
+    last_deployment_id:deploymentId
+  }).catch(()=>null);
+  return events;
 }
 
 export async function runCafeAudit({notify=true}={}){
@@ -291,6 +305,8 @@ export async function runCafeAudit({notify=true}={}){
     history,
     schedules:Object.fromEntries(scheduleEntries),
     bootTimes:Array.isArray(previous?.boot_times)?previous.boot_times:[],
+    bootEvents:Array.isArray(previous?.boot_events)?previous.boot_events:[],
+    currentDeploymentId:String(process.env.RAILWAY_DEPLOYMENT_ID||'local'),
     now
   });
 
@@ -357,7 +373,9 @@ export async function runCafeAudit({notify=true}={}){
   const stored={
     ...audit,
     boot_times:Array.isArray(previous?.boot_times)?previous.boot_times:[],
+    boot_events:Array.isArray(previous?.boot_events)?previous.boot_events:[],
     last_boot_at:Number(previous?.last_boot_at||0)||null,
+    last_deployment_id:String(previous?.last_deployment_id||process.env.RAILWAY_DEPLOYMENT_ID||''),
     new_codes:newIssues.map(issue=>issue.code),
     notified_codes:[...nextNotified],
     cleared_codes:cleared,

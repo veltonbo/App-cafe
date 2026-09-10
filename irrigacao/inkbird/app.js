@@ -25,7 +25,9 @@ const app={
   pollTimer:null,
   historyTimer:null,
   lastDashboardAt:0,
-  selectedZoneForSchedule:0
+  selectedZoneForSchedule:0,
+  sessionReady:false,
+  authChecked:false
 };
 
 function saveStore(){try{localStorage.setItem(APP_KEY,JSON.stringify(store))}catch{}}
@@ -37,15 +39,65 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function num(v,d=0){const n=Number(v);return Number.isFinite(n)?n:d}
 function pad(v){return String(Math.max(0,Math.round(num(v)))).padStart(2,'0')}
 function apiBase(){return String(store.settings.apiUrl||DEFAULT_API).replace(/\/$/,'')}
+function sameOriginApi(){
+  try{return new URL(apiBase(),location.href).origin===location.origin}catch{return false}
+}
+function hasAuth(){return Boolean(app.sessionReady||store.settings.token)}
+function authHeaders(extra={}){
+  return{
+    'Content-Type':'application/json',
+    ...(store.settings.token?{'Authorization':'Bearer '+store.settings.token}:{}),
+    ...extra
+  };
+}
+async function ensureSecureSession(){
+  if(!sameOriginApi()){
+    app.sessionReady=false;
+    app.authChecked=true;
+    return Boolean(store.settings.token);
+  }
+  try{
+    if(store.settings.token){
+      const r=await fetch(apiBase()+'/api/session',{
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+store.settings.token}
+      });
+      if(r.ok){
+        app.sessionReady=true;
+        app.authChecked=true;
+        store.settings.token='';
+        saveStore();
+        try{localStorage.removeItem(LEGACY_KEY)}catch{}
+        return true;
+      }
+      app.sessionReady=false;
+      app.authChecked=true;
+      return false;
+    }
+    const r=await fetch(apiBase()+'/api/session',{credentials:'same-origin'});
+    app.sessionReady=r.ok;
+    app.authChecked=true;
+    return r.ok;
+  }catch{
+    app.sessionReady=false;
+    app.authChecked=true;
+    return Boolean(store.settings.token);
+  }
+}
 async function api(path,opt={}){
-  if(!store.settings.token)throw new Error('Token de controle não configurado.');
+  if(!hasAuth())throw new Error('Sessão de controle não configurada.');
   const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),14000);
   try{
     const r=await fetch(apiBase()+path,{
-      ...opt,signal:ctl.signal,
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+store.settings.token,...(opt.headers||{})}
+      ...opt,signal:ctl.signal,credentials:'same-origin',
+      headers:authHeaders(opt.headers||{})
     });
     const body=await r.json().catch(()=>({}));
+    if(r.status===401&&app.sessionReady&&!store.settings.token){
+      app.sessionReady=false;
+      $('setupOverlay').hidden=false;
+    }
     if(!r.ok)throw new Error(body?.error||body?.detail||('HTTP '+r.status));
     return body;
   }finally{clearTimeout(timer)}
@@ -127,14 +179,14 @@ function renderHeader(){
   const ctrlOk=ctrl?.online===true;
   const audit=app.dashboard?.audit||{};
   const auditStatus=String(audit.status||'checking');
-  $('headerText').textContent=!store.settings.token
+  $('headerText').textContent=!hasAuth()
     ?'Configurar'
     :!ok?'Reconectando'
     :auditStatus==='critical'?'Atenção'
     :auditStatus==='warning'?'Alerta'
     :ctrlOk?'Online':'Atenção';
   setDot('headerDot',
-    !store.settings.token?null
+    !hasAuth()?null
     :!ok?false
     :auditStatus==='critical'?false
     :auditStatus==='warning'?null
@@ -405,7 +457,7 @@ async function saveSchedule(enabledOverride=null){
   }catch(e){toast(e.message)}
 }
 async function loadSchedule(force=false){
-  const c=selectedController();if(!c||!store.settings.token)return;
+  const c=selectedController();if(!c||!hasAuth())return;
   if(app.schedules[c.id]&&!force){renderSectors();return}
   try{
     const r=await api('/api/inkbird/schedule?device_id='+encodeURIComponent(c.id));
@@ -585,7 +637,7 @@ function renderSystem(){
 function renderAll(){renderHeader();renderHero();renderSummary();if(!(app.activeView==='sectors'&&$('sectorGrid')?.contains(document.activeElement)))renderSectors();renderWeather();renderSystem()}
 
 async function loadDashboard(showToast=false){
-  if(app.loading||!store.settings.token)return;
+  if(app.loading||!hasAuth())return;
   app.loading=true;
   try{
     const id=store.selectedControllerId||'';
@@ -605,7 +657,7 @@ async function loadDashboard(showToast=false){
   }finally{app.loading=false}
 }
 async function loadHistory(showToast=false){
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   try{
     const r=await api('/api/irrigation/history?limit=300');
     app.history=r.history||[];renderRecent();renderSystem();
@@ -618,7 +670,7 @@ async function refreshAll(showToast=false){
 }
 function schedulePolling(){
   clearTimeout(app.pollTimer);
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   app.pollTimer=setTimeout(async()=>{
     if(document.visibilityState==='visible')await loadDashboard(false);
     schedulePolling();
@@ -626,7 +678,7 @@ function schedulePolling(){
 }
 function schedulePollingHistory(){
   clearTimeout(app.historyTimer);
-  if(!store.settings.token)return;
+  if(!hasAuth())return;
   app.historyTimer=setTimeout(async()=>{
     if(document.visibilityState==='visible')await loadHistory(false);
     schedulePollingHistory();
@@ -646,31 +698,45 @@ $('saveScheduleBtn').addEventListener('click',()=>saveSchedule(null));
 $('disableScheduleBtn').addEventListener('click',()=>saveSchedule(false));
 qsa('.closeBtn').forEach(b=>b.addEventListener('click',()=>b.closest('dialog')?.close()));
 
-function saveConnection(tokenOverride){
+async function saveConnection(tokenOverride){
   const token=String(tokenOverride??$('controlToken').value).trim();
   store.settings.apiUrl=String($('apiUrl')?.value||DEFAULT_API).trim()||DEFAULT_API;
-  store.settings.token=token;saveStore();
-  $('setupOverlay').hidden=Boolean(token);
-  if(token){refreshAll(true);schedulePolling();schedulePollingHistory()}
+  app.sessionReady=false;
+  if(token)store.settings.token=token;
+  saveStore();
+  const ok=await ensureSecureSession();
+  $('setupOverlay').hidden=ok;
+  $('controlToken').value='';
+  $('setupToken').value='';
+  if(ok){
+    refreshAll(true);schedulePolling();schedulePollingHistory();
+    toast(sameOriginApi()?'Sessão segura ativada.':'Conexão salva.');
+  }else toast('Não foi possível validar o token.');
 }
 $('saveConnectionBtn').addEventListener('click',()=>saveConnection());
 $('setupSaveBtn').addEventListener('click',()=>{
   const token=$('setupToken').value.trim();if(!token)return toast('Informe o token.');
-  $('controlToken').value=token;saveConnection(token);
+  saveConnection(token);
 });
-window.addEventListener('online',()=>{if(store.settings.token){refreshAll(false);schedulePolling();schedulePollingHistory()}});
+window.addEventListener('online',()=>{if(hasAuth()){refreshAll(false);schedulePolling();schedulePollingHistory()}});
 window.addEventListener('offline',()=>{$('offlineBar').hidden=false});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&store.settings.token)refreshAll(false)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&hasAuth())refreshAll(false)});
 
-initDays('scheduleDays');
-$('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
-$('controlToken').value=store.settings.token||'';
-$('setupOverlay').hidden=Boolean(store.settings.token);
-renderAll();
-if(store.settings.token){
-  refreshAll(false);
-  schedulePolling();
-  schedulePollingHistory();
+async function bootstrap(){
+  initDays('scheduleDays');
+  $('apiUrl').value=store.settings.apiUrl||DEFAULT_API;
+  $('controlToken').value=store.settings.token||'';
+  $('setupOverlay').hidden=true;
+  renderAll();
+  const ok=await ensureSecureSession();
+  $('setupOverlay').hidden=ok;
+  $('controlToken').value=store.settings.token||'';
+  if(ok){
+    refreshAll(false);
+    schedulePolling();
+    schedulePollingHistory();
+  }
 }
+bootstrap();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>null);
 })();

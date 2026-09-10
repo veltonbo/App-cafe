@@ -9,11 +9,6 @@ import { buildViveiroReports } from '../../continuous/reporting.js';
 
 const ROOT='IrrigacaoFazenda2E';
 
-function historyRows(raw){
-  if(!raw||typeof raw!=='object')return[];
-  return Object.entries(raw).map(([id,v])=>({id,...(v||{})}))
-    .sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
-}
 function localDateKey(ts){
   return new Intl.DateTimeFormat('en-CA',{
     timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
@@ -47,7 +42,7 @@ function upcomingSchedule(cfg={},now=Date.now()){
     if(!(mask&(1<<dow)))continue;
     const startSec=start*60;
     if(add===0&&nowSec>=end*60)continue;
-    const label=add===0?'Hoje':add===1?'Amanhã':new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(new Date(now+add*86400000));
+    const label=add===0?'Hoje':add===1?'Amanhã':new Intl.DateTimeFormat('pt-BR',{weekday:'short',timeZone:'America/Porto_Velho'}).format(new Date(now+add*86400000));
     out.push({
       day_offset:add,
       weekday:dow,
@@ -227,7 +222,7 @@ function scheduleRuntime(seconds={},now=Date.now()){
     now_seconds:local.seconds
   };
 }
-function operationalState({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},now=Date.now()}={}){
+function operationalState({seconds={},weatherSnapshot={},weatherConfig={},climateState={},maintenance={},safety={},now=Date.now()}={}){
   const schedule=scheduleRuntime(seconds,now);
   const phase=String(seconds.phase||'');
   const emergency=Boolean(safety?.emergency_latched||safety?.latched||phase.includes('emergency'));
@@ -249,7 +244,7 @@ function operationalState({seconds={},weatherSnapshot={},climateState={},mainten
     code='rain';label='PAUSADO PELA CHUVA';detail='A proteção climática está impedindo a irrigação.';tone='weather';
   }else if(phase==='waiting_after_rain'){
     code='post_rain';label='AGUARDANDO APÓS CHUVA';detail='O sistema espera o tempo de segurança antes de retomar.';tone='weather';
-    const last=Number(seconds.rain_last_at||0),delay=Number(seconds.resume_delay_minutes||0)*60000;
+    const last=Number(seconds.rain_last_at||0),delay=Number(weatherConfig?.resumeDelayMinutes??seconds.resume_delay_minutes??0)*60000;
     nextAt=last&&delay?last+delay:null;nextLabel=nextAt?'Pode retomar':'';
   }else if(!schedule.inside||phase==='waiting_window'){
     code='waiting_schedule';label='AGUARDANDO HORÁRIO';detail='Automático 2.0 não altera o ciclo fora da janela.';tone='neutral';
@@ -324,7 +319,7 @@ function detectAnomalies({seconds={},climateState={},weatherSnapshot={},maintena
   }
   return issues;
 }
-function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},history=[],now=Date.now()}={}){
+function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance={},safety={},history=[],firebaseOnline=true,now=Date.now()}={}){
   const issues=[
     ...detectAnomalies({seconds,climateState,weatherSnapshot,maintenance,safety,history,now})
   ];
@@ -346,6 +341,14 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
       level:'warning',
       code:'accounting_reconciliation_degraded',
       message:'A conferência automática dos pulsos está temporariamente indisponível.'
+    });
+  }
+
+  if(!firebaseOnline){
+    issues.push({
+      level:'warning',
+      code:'firebase_unavailable',
+      message:'Firebase temporariamente indisponível; o controlador mantém a proteção local e tentará sincronizar novamente.'
     });
   }
 
@@ -425,7 +428,7 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
     audit:seconds?.operational_audit||null,
     services:{
       railway:'online',
-      firebase:'online',
+      firebase:firebaseOnline?'online':'offline',
       weather:weatherSnapshot?.linked&&!weatherSnapshot?.error?'online':'offline',
       cycle:seconds?.enabled?'active':'stopped'
     }
@@ -522,8 +525,10 @@ export default async function handler(req,res){
     if(req.method==='GET'){
       const now=Date.now();
       const historySince=now-32*86400000;
-      const [seconds,weatherState,weatherConfig,maintenance,historyRecent,config,climateConfig,climateState,safety,incidentsRaw,historyIndex]=await Promise.all([
-        storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
+      const [secondsRead,weatherState,weatherConfig,maintenance,historyRecent,config,climateConfig,climateState,safety,incidentsRaw,historyIndex]=await Promise.all([
+        storeGet(ROOT+'/viveiroSecondsState')
+          .then(value=>({ok:true,value}))
+          .catch(error=>({ok:false,value:null,error:error?.message||String(error)})),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
         getViveiroMaintenance().catch(()=>null),
@@ -535,6 +540,8 @@ export default async function handler(req,res){
         storeGet(ROOT+'/viveiro/incidents').catch(()=>null),
         historyIndexStatus().catch(()=>({}))
       ]);
+      const seconds=secondsRead?.value||null;
+      const firebaseOnline=secondsRead?.ok===true;
       const weatherError=String(weatherState?.lastWeatherError||'');
       const stateTemp=Number(weatherState?.lastTemperature);
       const stateHum=Number(weatherState?.lastHumidity);
@@ -612,11 +619,13 @@ export default async function handler(req,res){
         maintenance:activeMaintenance,
         safety:safety||{},
         history:historyFull,
+        firebaseOnline,
         now
       });
       const operation=operationalState({
         seconds:activeSeconds,
         weatherSnapshot,
+        weatherConfig:weatherConfig||{},
         climateState:climateState||{},
         maintenance:activeMaintenance,
         safety:safety||{},

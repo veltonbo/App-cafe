@@ -12,6 +12,7 @@ import { runViveiroWeatherCheck, getViveiroWeatherConfig, getViveiroWeatherState
 import { enforceViveiroInterlocks } from '../api/viveiro/_interlock.js';
 import { authorize } from '../api/_tuya.js';
 import { liveClientCount, publishLive, subscribeLive } from './live-bus.js';
+import { backfillHistoryTimeIndex } from '../api/irrigation/_store.js';
 
 const PORT=Math.max(1,Number(process.env.PORT||3000));
 // Viveiro UI v11 final cleanup
@@ -119,9 +120,14 @@ async function serveStatic(req,res,url){
   }
 
   const ext=path.extname(file).toLowerCase();
+  const base=path.basename(file).toLowerCase();
   res.statusCode=200;
   res.setHeader('Content-Type',MIME[ext]||'application/octet-stream');
-  res.setHeader('Cache-Control',ext==='.html'?'no-cache':'public, max-age=3600');
+  res.setHeader('Cache-Control',
+    ext==='.html'||ext==='.webmanifest'||base==='sw.js'
+      ?'no-cache'
+      :'public, max-age=3600'
+  );
   fs.createReadStream(file)
     .on('error',()=>{if(!res.headersSent)res.statusCode=500;res.end('Erro ao ler arquivo.')})
     .pipe(res);
@@ -316,13 +322,10 @@ async function startViveiroWeatherWatch(){
       weatherWatchBusy=false;
     }
   };
-  const cfg=await getViveiroWeatherConfig().catch(()=>({checkMinutes:5}));
-  // Com Smart Life, uma atualização traz os dispositivos em conjunto. Mantemos
-  // a proteção nativa responsiva sem depender do antigo polling de vários minutos.
-  const configuredMs=Math.max(4000,Number(cfg.checkMinutes||5)*60000);
-  // A estação é atualizada no servidor a cada ~4 s. O app lê esse estado
-  // já consolidado e evita criar várias chamadas concorrentes ao Smart Life.
-  const intervalMs=Math.min(4000,configuredMs);
+  // A Weather2-2 é consolidada em tempo quase real. A antiga opção de
+  // "checagem em minutos" não controla mais este relógio: manter 4 s evita
+  // atraso na proteção e torna o comportamento da interface previsível.
+  const intervalMs=4000;
   weatherWatchTimer=setInterval(tick,intervalMs);
   weatherWatchTimer.unref();
   setTimeout(tick,5000).unref();
@@ -353,6 +356,11 @@ await startViveiroInterlockWatch();
 server.listen(PORT,'0.0.0.0',()=>{
   console.log(`Fazenda 2E online na porta ${PORT}`);
   publishLive('server',{online:true,at:Date.now()});
+  setTimeout(()=>{
+    backfillHistoryTimeIndex()
+      .then(result=>console.log('Índice temporal do histórico pronto',result))
+      .catch(error=>console.warn('Backfill do histórico indisponível:',error?.message||error));
+  },1500).unref();
 });
 
 let shuttingDown=false;

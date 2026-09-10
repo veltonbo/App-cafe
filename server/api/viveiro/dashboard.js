@@ -1,5 +1,5 @@
 import { applyCors, authorize } from '../_tuya.js';
-import { storeGet, storeSet } from '../irrigation/_store.js';
+import { historyIndexStatus, readRecentHistory, storeGet, storeSet } from '../irrigation/_store.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, patchClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
 import { whatsappNotificationStatus } from '../irrigation/_notify.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
@@ -520,17 +520,20 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
-      const [seconds,weatherState,weatherConfig,maintenance,historyRaw,config,climateConfig,climateState,safety,incidentsRaw]=await Promise.all([
+      const now=Date.now();
+      const historySince=now-32*86400000;
+      const [seconds,weatherState,weatherConfig,maintenance,historyRecent,config,climateConfig,climateState,safety,incidentsRaw,historyIndex]=await Promise.all([
         storeGet(ROOT+'/viveiroSecondsState').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/state').catch(()=>null),
         storeGet(ROOT+'/viveiroWeather/config').catch(()=>null),
         getViveiroMaintenance().catch(()=>null),
-        storeGet(ROOT+'/history').catch(()=>null),
+        readRecentHistory({sinceMs:historySince,limit:60000}).catch(()=>[]),
         storeGet(ROOT+'/config').catch(()=>null),
         getClimateConfig().catch(()=>null),
         getClimateState().catch(()=>null),
         getViveiroSafety().catch(()=>null),
-        storeGet(ROOT+'/viveiro/incidents').catch(()=>null)
+        storeGet(ROOT+'/viveiro/incidents').catch(()=>null),
+        historyIndexStatus().catch(()=>({}))
       ]);
       const weatherError=String(weatherState?.lastWeatherError||'');
       const stateTemp=Number(weatherState?.lastTemperature);
@@ -553,13 +556,12 @@ export default async function handler(req,res){
           humidity:Number.isFinite(lastHum)?{value:lastHum,unit:'%'}:null
         }
       };
-      // O cálculo diário/semanal precisa considerar TODOS os eventos do período.
-      // O limite fica somente na lista devolvida para a interface.
-      const historyFull=historyRows(historyRaw).filter(
+      // O histórico operacional agora vem de um índice temporal limitado aos
+      // últimos 32 dias. Isso evita carregar o nó inteiro do Firebase em cada refresh.
+      const historyFull=(Array.isArray(historyRecent)?historyRecent:[]).filter(
         x=>String(x.source||'').includes('viveiro')||String(x.type||'').startsWith('viveiro_')
       );
       const history=historyFull.slice(0,160);
-      const now=Date.now();
       const todayKey=localDateKey(now);
       const auditToday=historyFull.filter(
         x=>localDateKey(x.ts||Date.parse(x.at||0))===todayKey
@@ -569,6 +571,21 @@ export default async function handler(req,res){
       ));
       const activeSeconds=seconds?.enabled?seconds:(config?.profiles?.viveiroFast||{});
       const summary=summarize(historyFull,activeSeconds,now);
+      // Durante o primeiro backfill, preserva os contadores confirmados do dia
+      // para a tela não parecer zerada enquanto o índice temporal é preenchido.
+      if(!historyIndex?.legacy_backfill_complete&&String(activeSeconds?.daily_day_key||'')===todayKey){
+        summary.today.pulses=Math.max(Number(summary.today.pulses||0),Number(activeSeconds?.daily_pulses_started||0));
+        summary.today.completed_pulses=Math.max(Number(summary.today.completed_pulses||0),Number(activeSeconds?.daily_pulses_completed||0));
+        summary.today.interrupted_pulses=Math.max(Number(summary.today.interrupted_pulses||0),Number(activeSeconds?.daily_pulses_interrupted||0));
+        summary.today.irrigated_seconds=Math.max(Number(summary.today.irrigated_seconds||0),Number(activeSeconds?.daily_irrigated_seconds||0));
+        const todayRow=summary.week?.find(row=>row.key===todayKey);
+        if(todayRow){
+          todayRow.pulses=summary.today.pulses;
+          todayRow.completed_pulses=summary.today.completed_pulses;
+          todayRow.interrupted_pulses=summary.today.interrupted_pulses;
+          todayRow.irrigated_seconds=summary.today.irrigated_seconds;
+        }
+      }
       const decisions=decisionTimeline(historyFull);
       const rawIntensity=irrigationIntensity(activeSeconds);
       const outsideAutomatic=String(climateState?.last_decision||'')==='outside_schedule';
@@ -643,6 +660,10 @@ export default async function handler(req,res){
         },
         notifications:{
           whatsapp:whatsappNotificationStatus()
+        },
+        history_index:{
+          ready:Boolean(historyIndex?.legacy_backfill_complete),
+          completed_at:Number(historyIndex?.completed_at||0)||null
         }
       });
     }

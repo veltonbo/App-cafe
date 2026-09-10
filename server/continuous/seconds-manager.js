@@ -2,13 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
-import { appendHistory, storeGet, storeGetQuery, storeSet } from '../api/irrigation/_store.js';
+import { appendHistory, historyIndexStatus, readRecentHistory, storeGet, storeSet } from '../api/irrigation/_store.js';
 import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import { publishLive } from './live-bus.js';
-import { accountingDayKey, normalizeHistoryRows, pulseAccountingForDay } from './accounting.js';
+import { accountingDayKey, pulseAccountingForDay } from './accounting.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -30,7 +30,6 @@ let remoteStoreRetryAt=0;
 const REMOTE_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
 const WEATHER_CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
-const HISTORY_PATH='IrrigacaoFazenda2E/history';
 const HISTORY_RECENT_WINDOW_MS=36*60*60*1000;
 const HISTORY_RECENT_LIMIT=3000;
 const ACCOUNTING_RECONCILE_MS=5*60*1000;
@@ -314,12 +313,10 @@ async function runOperationalAudit({notify=false}={}){
   }
 
   try{
-    const raw=await storeGetQuery(HISTORY_PATH,{
-      orderBy:'ts',
-      startAt:now-HISTORY_RECENT_WINDOW_MS,
-      limitToLast:HISTORY_RECENT_LIMIT
-    });
-    const history=normalizeHistoryRows(raw).filter(row=>
+    const history=(await readRecentHistory({
+      sinceMs:now-HISTORY_RECENT_WINDOW_MS,
+      limit:HISTORY_RECENT_LIMIT
+    })).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );
     auditHistory=history;
@@ -485,12 +482,25 @@ async function reconcileDailyAccounting({notify=false}={}){
   }
 
   try{
-    const raw=await storeGetQuery(HISTORY_PATH,{
-      orderBy:'ts',
-      startAt:Date.now()-HISTORY_RECENT_WINDOW_MS,
-      limitToLast:HISTORY_RECENT_LIMIT
-    });
-    const rows=normalizeHistoryRows(raw).filter(row=>
+    const indexMeta=await historyIndexStatus();
+    if(!indexMeta?.legacy_backfill_complete){
+      state={
+        ...state,
+        accounting_reconciliation:{
+          status:'warming',
+          checked_at:Date.now(),
+          day_key:localDayKey(),
+          message:'Histórico temporal sendo preparado; contadores preservados sem correção.'
+        }
+      };
+      await persist().catch(()=>null);
+      return state.accounting_reconciliation;
+    }
+
+    const rows=(await readRecentHistory({
+      sinceMs:Date.now()-HISTORY_RECENT_WINDOW_MS,
+      limit:HISTORY_RECENT_LIMIT
+    })).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );
     const accounting=pulseAccountingForDay(rows,localDayKey());
@@ -1063,6 +1073,7 @@ async function weather(){
       rainMm:null,
       thresholdReached:false,
       protectionEnabled:false,
+      resumeDelayMinutes:Math.max(0,Number(cfg?.resumeDelayMinutes??state.resume_delay_minutes??0)),
       snapshot:null
     };
   }
@@ -1080,6 +1091,7 @@ async function weather(){
       rainMm,
       thresholdReached,
       protectionEnabled:true,
+      resumeDelayMinutes:Math.max(0,Number(cfg?.resumeDelayMinutes??state.resume_delay_minutes??0)),
       snapshot:w
     };
   }catch(error){
@@ -1345,7 +1357,9 @@ async function run(){
       continue;
     }
 
-    const holdMs=Math.max(0,Number(state.resume_delay_minutes||0))*60000;
+    // Usa a configuração de chuva atual, sem exigir rearmar o ciclo quando
+    // o usuário altera o tempo de retomada no aplicativo.
+    const holdMs=Math.max(0,Number(w.resumeDelayMinutes??state.resume_delay_minutes??0))*60000;
     const rainLast=Number(state.rain_last_at||0);
     if(rainLast&&Date.now()<rainLast+holdMs){
       await safeOff();

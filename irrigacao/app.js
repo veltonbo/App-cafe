@@ -173,7 +173,7 @@ function renderMetrics(){
   $('rain').textContent=Number.isFinite(Number(r))?Number(r).toFixed(1)+' mm':(m.rainDetected?'Detectada':'0.0 mm');
   $('rainHint').textContent=m.rainDetected?'Chuva detectada':'Sem chuva detectada';
 
-  const level=String(cs.last_level||cs.level||'').replaceAll('_',' ');
+  const level=String(cs.drying_level_label||cs.drying_level||cs.last_level||cs.level||'').replaceAll('_',' ');
   setBadge($('climateBadge'),level?level.toUpperCase():'AGUARDANDO',m.rainDetected?'warn':'');
 
   const s=seconds(),baseOn=num(s.base_on_seconds||s.on_seconds),baseOff=num(s.base_off_seconds||s.off_seconds);
@@ -229,7 +229,7 @@ function renderAutomation(){
 
   $('rainEnabled').checked=wc.enabled!==false;
   $('resumeDelay').value=Math.round(num(wc.resumeDelayMinutes,30));
-  $('weatherCheck').value=Math.round(num(wc.checkMinutes,5));
+  $('weatherCheck').value='≈ 4';
   setBadge($('rainProtectionState'),wc.enabled===false?'DESLIGADA':'ATIVA',wc.enabled===false?'warn':'');
 }
 function renderHistory(){
@@ -438,9 +438,40 @@ async function connectLive(){
           let event=null;try{event=JSON.parse(line.slice(6))}catch{}
           if(!event)continue;
           app.lastLiveAt=Date.now();
-          if(event.type==='seconds'&&event.payload?.state){app.seconds=event.payload.state;if(app.dashboard)app.dashboard.seconds=event.payload.state;renderOperation();renderMetrics();renderAutomation();renderSystem()}
-          else if(event.type==='weather'&&event.payload?.weather){if(app.dashboard)app.dashboard.current_weather=event.payload.weather;renderMetrics();renderOperation();renderSystem()}
-          else if(event.type!=='heartbeat'&&event.type!=='connection'){clearTimeout(connectLive.refresh);connectLive.refresh=setTimeout(()=>loadDashboard(false),350)}
+          if(event.type==='seconds'&&event.payload?.state){
+            app.seconds=event.payload.state;
+            if(app.dashboard)app.dashboard.seconds=event.payload.state;
+            renderOperation();renderMetrics();renderAutomation();renderSystem();
+          }else if(event.type==='weather'&&event.payload?.weather){
+            if(app.dashboard)app.dashboard.current_weather=event.payload.weather;
+            renderMetrics();renderOperation();renderSystem();
+          }else if(event.type==='protection'){
+            if(app.dashboard){
+              if(event.payload?.state)app.dashboard.weather={...(app.dashboard.weather||{}),state:event.payload.state};
+              if(event.payload?.config)app.dashboard.weather={...(app.dashboard.weather||{}),config:event.payload.config};
+            }
+            renderOperation();renderHealth();renderSystem();
+          }else if(event.type==='confirmation'){
+            const p=event.payload||{};
+            app.seconds={...seconds(),
+              last_confirmation_at:num(p.confirmed_at)||seconds().last_confirmation_at,
+              last_confirmation_latency_ms:num(p.latency_ms),
+              last_confirmation_source:p.source||seconds().last_confirmation_source,
+              device_relay:p.command==='on'?true:p.command==='off'?false:seconds().device_relay
+            };
+            if(app.dashboard)app.dashboard.seconds=app.seconds;
+            renderOperation();renderSystem();
+          }else if(event.type==='watchdog'){
+            app.seconds={...seconds(),watchdog:{status:event.payload?.status||'warning',checked_at:event.payload?.at||Date.now(),reason:event.payload?.reason||'',error:event.payload?.error||null}};
+            if(app.dashboard)app.dashboard.seconds=app.seconds;
+            renderHealth();renderSystem();
+          }else if(event.type==='server'){
+            if(app.dashboard)app.dashboard.server={online:true,at:event.at||Date.now()};
+            renderHealth();renderSystem();
+          }else if(event.type==='event'){
+            clearTimeout(connectLive.refresh);
+            connectLive.refresh=setTimeout(()=>loadDashboard(false),900);
+          }
         }
       }
       throw new Error('Stream encerrado');
@@ -536,7 +567,7 @@ async function saveRain(){
     await api('/api/viveiro/weather',{method:'POST',body:JSON.stringify({action:'save_config',config:{
       enabled:$('rainEnabled').checked,
       resumeDelayMinutes:num($('resumeDelay').value,30),
-      checkMinutes:num($('weatherCheck').value,5),
+      checkMinutes:num(wc.checkMinutes,5),
       blockWhileRaining:wc.blockWhileRaining!==false,
       rainThresholdMm:num(wc.rainThresholdMm,5)
     }})});

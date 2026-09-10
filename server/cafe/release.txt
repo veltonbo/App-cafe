@@ -1,1 +1,1 @@
-Irrigação Café standalone v1 — 2026-09-09
+Café Clean v1 — dashboard consolidado, Firebase isolado, frontend único e migração segura — 2026-09-09

@@ -4,6 +4,7 @@ import { readInkbirdState } from '../api/inkbird/_transport.js';
 import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 import { appendHistory, getAutomationConfig, storeGet } from '../api/irrigation/_store.js';
 import { CAFE_ROOT, getCafeActiveSession, setCafeActiveSession, getCafeWeatherState, getCafeScheduleCache } from './state.js';
+import { buildSectorActivity, getCafeAuditState } from './audit.js';
 
 const TZ='America/Porto_Velho';
 
@@ -237,6 +238,7 @@ export default async function handler(req,res){
     const configPromise=getAutomationConfig().catch(()=>({}));
     const weatherPromise=fetchWeatherSnapshot({maxAgeMs:4000}).catch(error=>({linked:false,error:error?.message||String(error)}));
     const weatherStatePromise=getCafeWeatherState().catch(()=>({}));
+    const auditPromise=getCafeAuditState().catch(()=>null);
     const schedulePromises=controllers.map(async controller=>[
       controller.id,
       await getCafeScheduleCache(controller.id)
@@ -260,8 +262,8 @@ export default async function handler(req,res){
       sessionCompleted=completion.completed;
     }
 
-    let [historyRaw,config,weather,weatherState,scheduleEntries]=await Promise.all([
-      historyRawPromise,configPromise,weatherPromise,weatherStatePromise,Promise.all(schedulePromises)
+    let [historyRaw,config,weather,weatherState,audit,scheduleEntries]=await Promise.all([
+      historyRawPromise,configPromise,weatherPromise,weatherStatePromise,auditPromise,Promise.all(schedulePromises)
     ]);
     if(sessionCompleted){
       historyRaw=await storeGet(CAFE_ROOT+'/history').catch(()=>historyRaw);
@@ -269,6 +271,7 @@ export default async function handler(req,res){
     const history=rows(historyRaw);
     const scheduleByDevice=Object.fromEntries(scheduleEntries);
     const summary=summarizeCafeHistory(history);
+    const sectorActivity=buildSectorActivity(history,controllers);
 
     return res.status(200).json({
       ok:true,
@@ -283,6 +286,8 @@ export default async function handler(req,res){
       weather_state:weatherState||{},
       config:config||{},
       summary,
+      audit:audit||{status:'checking',checked_at:null,issues:[],message:'Auditoria aguardando a primeira verificação.'},
+      sector_activity:sectorActivity,
       next_schedule:nextSchedule(scheduleByDevice,controllers),
       recent_history:history.slice(0,80)
     });

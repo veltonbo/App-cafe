@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeCafeHistory } from '../server/api/cafe/dashboard.js';
+import { summarizeCafeHistory } from '../server/cafe/dashboard.js';
 
 const ts=s=>Date.parse(s);
 

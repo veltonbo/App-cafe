@@ -1853,6 +1853,17 @@ export async function configureSeconds(input={}){
 
   await createConfigBackup('antes_de_alterar_programacao_do_viveiro').catch(()=>null);
 
+  // Rearmar a programação não pode apagar a contabilidade já confirmada do dia.
+  ensureDailyCounters();
+  const dailySnapshot={
+    daily_day_key:String(state.daily_day_key||localDayKey()),
+    daily_pulses_started:Number(state.daily_pulses_started||0),
+    daily_pulses_completed:Number(state.daily_pulses_completed||0),
+    daily_pulses_interrupted:Number(state.daily_pulses_interrupted||0),
+    daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0),
+    daily_last_pulse_at:Number(state.daily_last_pulse_at||0)
+  };
+
   // A programação pode ser armada com chuva; o laço contínuo mantém a saída
   // desligada até o clima ficar seguro e o atraso pós-chuva terminar.
   const prepared=await prepareServerPulse({
@@ -1868,6 +1879,7 @@ export async function configureSeconds(input={}){
   ownershipActive=true;
   state={
     ...prepared,
+    ...dailySnapshot,
     base_on_seconds:prepared.on_seconds,
     base_off_seconds:prepared.off_seconds,
     phase:'queued',
@@ -1935,12 +1947,37 @@ export async function clearEmergencyStop(){
 
 export async function suspendSecondsForRestart(){
   if(!state.enabled)return state;
-  await safeOff();
+  const wasOn=String(state.phase||'')==='on'&&Boolean(state.current_pulse_id);
+  const pulseId=String(state.current_pulse_id||'');
+  const pulseStartedAt=Number(state.last_on_confirmed_at||state.pulse_started_at||0);
+  const plannedSeconds=Math.max(0,Number(state.on_seconds||state.base_on_seconds||0));
+
+  await safeOff('server_restart');
+  const stoppedAt=Number(state.last_off_confirmed_at||Date.now());
+
+  if(wasOn&&pulseId&&pulseStartedAt>0){
+    const actualSeconds=Math.max(0,(stoppedAt-pulseStartedAt)/1000);
+    // Registra o desfecho real antes de encerrar o processo. O event_id é
+    // determinístico pelo pulse_id, portanto uma eventual repetição é idempotente.
+    await event('viveiro_pulse_interrupted','Pulso interrompido por reinício do servidor.',{
+      pulse_id:pulseId,
+      pulse_started_at:pulseStartedAt,
+      pulse_finished_at:stoppedAt,
+      planned_duration_seconds:plannedSeconds,
+      actual_duration_seconds:Number(actualSeconds.toFixed(3)),
+      timing_error_ms:Math.round((actualSeconds-plannedSeconds)*1000),
+      reason:'server_restart'
+    }).catch(error=>console.warn('Falha ao registrar pulso interrompido no reinício:',error?.message||error));
+  }
+
   state={
     ...state,
     phase:'server_restarting',
     relay_expected:false,
     device_relay:false,
+    current_pulse_id:null,
+    pulse_started_at:0,
+    expected_off_at:0,
     restart_suspended_at:Date.now()
   };
   await persist();

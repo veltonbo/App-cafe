@@ -11,6 +11,8 @@ test('Viveiro possui auditoria operacional a cada cinco minutos',()=>{
   assert.match(manager,/OPERATIONAL_AUDIT_MS=5\*60\*1000/);
   assert.match(manager,/runOperationalAudit/);
   assert.match(manager,/operational_audit/);
+  assert.match(manager,/scheduler_precision/);
+  assert.match(manager,/confirmation_latency/);
 });
 
 test('Auditoria do Viveiro cobre falhas operacionais relevantes',()=>{
@@ -19,7 +21,8 @@ test('Auditoria do Viveiro cobre falhas operacionais relevantes',()=>{
     'next_pulse_overdue',
     'long_pulse_gap',
     'confirmation_stale',
-    'timing_unstable',
+    'scheduler_delay_high',
+    'cloud_latency_high',
     'many_interruptions',
     'restarts_excessive',
     'weather_offline',

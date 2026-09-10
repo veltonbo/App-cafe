@@ -64,8 +64,19 @@ async function sendWhatsAppTemplate({title,body,level='info'}={}){
   }
 }
 
+function pruneRecent(now=Date.now()){
+  if(recent.size<512)return;
+  for(const [key,at] of recent){
+    if(now-Number(at||0)>24*60*60*1000)recent.delete(key);
+  }
+  if(recent.size<=512)return;
+  const oldest=[...recent.entries()].sort((a,b)=>Number(a[1]||0)-Number(b[1]||0));
+  for(const [key] of oldest.slice(0,recent.size-512))recent.delete(key);
+}
+
 function cooldownAllowed(key,cooldownMinutes){
   const now=Date.now();
+  pruneRecent(now);
   const last=Number(recent.get(key)||0);
   const cooldown=Math.max(0,Number(cooldownMinutes||0))*60000;
   if(cooldown&&last&&now-last<cooldown)return false;

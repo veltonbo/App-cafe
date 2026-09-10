@@ -335,8 +335,8 @@ async function runOperationalAudit({notify=false}={}){
       now-Number(row.ts||0)<60*60000&&
       ['viveiro_server_restart','viveiro_server_resumed','viveiro_cycle_recovered'].includes(String(row.type||''))
     );
-    if(restarts.length>=3){
-      issues.push({level:'warning',code:'restarts_excessive',message:'O controle do Viveiro reiniciou várias vezes na última hora.'});
+    if(restarts.length>=3&&schedule.inside){
+      issues.push({level:'warning',code:'restarts_excessive',message:'O controle do Viveiro reiniciou várias vezes durante a janela de irrigação.'});
     }
   }catch(error){
     issues.push({level:'warning',code:'audit_history_unavailable',message:'Auditoria não conseguiu consultar o histórico agora.'});
@@ -1742,6 +1742,36 @@ export async function initSecondsManager(){
   await runOperationalAudit({notify:false}).catch(error=>
     console.warn('Auditoria operacional inicial indisponível:',error?.message||error)
   );
+
+  try{
+    const now=Date.now();
+    const rows=(await readRecentHistory({sinceMs:now-8*86400000,limit:12000}))
+      .filter(row=>String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_'));
+    const byDay={};
+    for(const row of rows){
+      const key=localDayKey(Number(row?.ts||Date.parse(row?.at||0)||now));
+      if(!byDay[key])byDay[key]={total:0,types:{}};
+      byDay[key].total+=1;
+      const type=String(row?.type||'unknown');
+      byDay[key].types[type]=(byDay[key].types[type]||0)+1;
+    }
+    console.log('Viveiro history diagnostic',{
+      daily_state:{
+        day_key:String(state.daily_day_key||''),
+        started:Number(state.daily_pulses_started||0),
+        completed:Number(state.daily_pulses_completed||0),
+        interrupted:Number(state.daily_pulses_interrupted||0),
+        irrigated_seconds:Number(state.daily_irrigated_seconds||0)
+      },
+      audit:{
+        status:String(state.operational_audit?.status||''),
+        issues:(state.operational_audit?.issues||[]).map(x=>({code:x.code,level:x.level,message:x.message}))
+      },
+      by_day:byDay
+    });
+  }catch(error){
+    console.warn('Diagnóstico do histórico indisponível:',error?.message||error);
+  }
   if(!operationalAuditTimer){
     operationalAuditTimer=setInterval(()=>{
       runOperationalAudit({notify:true}).catch(error=>

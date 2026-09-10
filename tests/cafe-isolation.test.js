@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const store=fs.readFileSync('server/api/irrigation/_store.js','utf8');
-const state=fs.readFileSync('server/api/cafe/_state.js','utf8');
+const state=fs.readFileSync('server/cafe/state.js','utf8');
 const router=fs.readFileSync('server/cafe/router.js','utf8');
 const zone=fs.readFileSync('server/api/inkbird/zone.js','utf8');
 const group=fs.readFileSync('server/api/inkbird/group.js','utf8');

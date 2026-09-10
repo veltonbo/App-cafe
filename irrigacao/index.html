@@ -11,7 +11,7 @@
   <link rel="manifest" href="/irrigacao/manifest.webmanifest">
   <link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/irrigacao/icon.svg">
-  <link rel="stylesheet" href="/irrigacao/app.css?v=20260909-1">
+  <link rel="stylesheet" href="/irrigacao/app.css?v=20260909-2">
 </head>
 <body>
   <div id="offlineBar" class="offlineBar" hidden>Sem conexão com o servidor. Os últimos dados continuam visíveis.</div>
@@ -183,6 +183,13 @@
       </article>
 
       <article class="panel">
+        <div class="panelHead"><div><small>AUDITORIA AUTOMÁTICA</small><h3>Conferência operacional</h3></div><span id="auditBadge" class="badge">—</span></div>
+        <p id="auditSummary" class="panelNote">Aguardando a primeira verificação.</p>
+        <div id="auditList" class="auditList"></div>
+        <div class="auditFoot"><span>Última conferência</span><strong id="auditCheckedAt">—</strong></div>
+      </article>
+
+      <article class="panel">
         <div class="panelHead"><div><small>MANUTENÇÃO</small><h3>Suspender automação</h3></div><span id="maintenanceBadge" class="badge">—</span></div>
         <p class="panelNote">Use durante serviços no viveiro. A saída fica protegida enquanto a manutenção estiver ativa.</p>
         <div class="buttonRow three">
@@ -226,6 +233,6 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="/irrigacao/app.js?v=20260909-2" defer></script>
+  <script src="/irrigacao/app.js?v=20260909-3" defer></script>
 </body>
 </html>

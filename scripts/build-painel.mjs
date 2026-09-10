@@ -1,0 +1,12 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const src=path.resolve('public/painel');
+const out=path.resolve('dist/painel');
+await fs.rm(out,{recursive:true,force:true});
+await fs.mkdir(path.dirname(out),{recursive:true});
+await fs.cp(src,out,{recursive:true});
+const html=await fs.readFile(path.join(out,'index.html'),'utf8');
+const js=await fs.readFile(path.join(out,'app.js'),'utf8');
+if(!html.includes('/app.css')||!html.includes('/app.js'))throw new Error('Painel sem assets consolidados.');
+if(js.includes('/api/viveiro/')||js.includes('/api/inkbird/'))throw new Error('Frontend do painel não pode chamar APIs de controle diretamente.');
+console.log('Painel Fazenda 2E: build somente leitura validado.');

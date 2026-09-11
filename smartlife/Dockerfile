@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
@@ -25,6 +25,10 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python
 ENV NODE_ENV=production
+# Keep glibc from retaining hundreds of MB in the native heap on long-running ARM64 workloads.
+ENV MALLOC_ARENA_MAX=2
+ENV MALLOC_TRIM_THRESHOLD_=131072
+ENV MALLOC_MMAP_THRESHOLD_=131072
 
 EXPOSE 8080
 

@@ -27,6 +27,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-python-primary-engine.mjs \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
+    && node scripts/patch-smartlife-reauth-ui.mjs \
     && npm prune --omit=dev
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python

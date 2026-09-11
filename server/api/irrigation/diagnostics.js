@@ -38,10 +38,18 @@ export default async function handler(req,res){
   if(maintenance.ok&&maintenance.value?.backups?.last_error)alerts.push({level:'warning',key:'backup-error',message:'O último backup apresentou erro.'});
   if(maintenance.ok){
     const rss=Number(maintenance.value?.memory?.rss_mb||0);
+    const heap=Number(maintenance.value?.memory?.heap_used_mb||0);
+    const external=Number(maintenance.value?.memory?.external_mb||0);
+    const buffers=Number(maintenance.value?.memory?.array_buffers_mb||0);
     const trend=maintenance.value?.memory_trend||{};
     const rate=Number(trend.rss_per_minute||0);
     const windowMinutes=Number(trend.window_minutes||0);
-    if(rss>1024)alerts.push({level:'warning',key:'memory',message:'Uso de memória do processo acima de 1 GB.'});
+    // Em uma VM de 12 GB, RSS estável perto de 1 GB não é por si só falha.
+    // Alertamos apenas acima de 1,5 GB ou quando houver crescimento sustentado.
+    if(rss>1536)alerts.push({
+      level:'warning',key:'memory',
+      message:`Uso de memória do processo acima de 1,5 GB (${rss} MB; heap ${heap} MB, externo ${external} MB, buffers ${buffers} MB).`
+    });
     if(windowMinutes>=3&&rate>=20)alerts.push({
       level:'warning',
       key:'memory-growth',

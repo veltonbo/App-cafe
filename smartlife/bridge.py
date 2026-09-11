@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import base64
 import io
 import json
@@ -55,9 +56,6 @@ def update_device_cache_resilient(manager, saver):
         if "sign invalid" not in message:
             raise
 
-        # A SDK renova o token automaticamente perto do vencimento, mas uma
-        # sessão que perdeu a rotação pode precisar de uma renovação forçada.
-        # Tentamos uma vez antes de declarar que a autenticação precisa ser refeita.
         try:
             manager.customer_api.token_info.expire_time = 0
             manager.customer_api.refresh_access_token_if_need()
@@ -103,8 +101,7 @@ def device_payload(device):
     }
 
 
-def main():
-    payload = json.load(sys.stdin)
+def handle(payload):
     action = str(payload.get("action") or "device")
 
     if action == "reauth_start":
@@ -221,9 +218,45 @@ def main():
     }
 
 
-try:
-    result = main()
-except Exception as exc:
-    result = {"ok": False, "error": str(exc)}
+def safe_handle(payload):
+    try:
+        return handle(payload)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
-print(MARKER + json.dumps(result, ensure_ascii=False, separators=(",", ":")))
+
+def emit(result, request_id=None):
+    envelope = result if request_id is None else {"request_id": request_id, "result": result}
+    print(MARKER + json.dumps(envelope, ensure_ascii=False, separators=(",", ":")), flush=True)
+
+
+def run_daemon():
+    for raw in sys.stdin:
+        line = raw.strip()
+        if not line:
+            continue
+        request_id = None
+        try:
+            envelope = json.loads(line)
+            request_id = envelope.get("request_id")
+            payload = envelope.get("payload")
+            if not isinstance(payload, dict):
+                raise ValueError("Payload inválido.")
+            emit(safe_handle(payload), request_id)
+        except Exception as exc:
+            emit({"ok": False, "error": str(exc)}, request_id)
+
+
+def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--daemon", action="store_true")
+    args, _ = parser.parse_known_args()
+    if args.daemon:
+        run_daemon()
+        return
+
+    payload = json.load(sys.stdin)
+    emit(safe_handle(payload))
+
+
+main()

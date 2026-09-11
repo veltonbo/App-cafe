@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verificar clima e monitor do Viveiro
+      - name: Verificar Oracle, clima e monitor do Viveiro
         shell: bash
         run: |
           set -euo pipefail
@@ -26,16 +26,20 @@ jobs:
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=fazenda2e-irrigation")"
 
           OIDC_TOKEN="$(printf '%s' "$OIDC_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
-          BASE_URL="https://fazenda-2e-irrigacao-production.up.railway.app"
+          BASE_URL="https://fazenda2e.tail890201.ts.net"
+
+          curl --fail --silent --show-error --max-time 10 \
+            "$BASE_URL/health"
+          echo
 
           curl --fail --silent --show-error \
-            --retry 2 --retry-delay 3 \
+            --retry 2 --retry-delay 3 --max-time 12 \
             -H "Authorization: Bearer ${OIDC_TOKEN}" \
             "$BASE_URL/api/viveiro/weather"
           echo
 
           curl --fail --silent --show-error \
-            --retry 2 --retry-delay 3 \
+            --retry 2 --retry-delay 3 --max-time 12 \
             -H "Authorization: Bearer ${OIDC_TOKEN}" \
             "$BASE_URL/api/irrigation/monitor"
           echo

@@ -3,19 +3,72 @@ import path from 'node:path';
 
 const htmlFile=path.resolve('dist/irrigacao/index.html');
 const appFile=path.resolve('dist/irrigacao/app.js');
+const cssFile=path.resolve('dist/irrigacao/app.css');
 const authFile=path.resolve('dist/irrigacao/firebase-auth.js');
-if(!fs.existsSync(htmlFile)||!fs.existsSync(appFile)||!fs.existsSync(authFile))throw new Error('Build do Viveiro incompleto.');
+if(!fs.existsSync(htmlFile)||!fs.existsSync(appFile)||!fs.existsSync(cssFile)||!fs.existsSync(authFile))throw new Error('Build do Viveiro incompleto.');
+
 let html=fs.readFileSync(htmlFile,'utf8');
-html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-5');
+html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-6');
+html=html.replace(/\/irrigacao\/app\.css\?v=[^\"]+/,'/irrigacao/app.css?v=20260911-6');
 if(!html.includes('/irrigacao/firebase-auth.js'))html=html.replace(/<script src="\/irrigacao\/app\.js[^>]*><\/script>/,m=>m+'\n  <script src="/irrigacao/firebase-auth.js?v=20260910-1" defer></script>');
+
 if(!html.includes('id="auto3ShadowBox"')){
- const marker='<p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>';
- if(!html.includes(marker))throw new Error('Bloco Automático 2.0 não encontrado.');
- html=html.replace(marker,marker+`\n<div id="auto3ShadowBox" style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(90,105,95,.18)"><div class="autoTop"><div><small>AUTOMÁTICO 3.0 • MODO SOMBRA</small><h3 id="auto3Title">Observando sem controlar</h3></div><span id="auto3Badge" class="badge">SOMBRA</span></div><p id="auto3Reason">O 3.0 calcula em paralelo, mas não envia comandos para a bomba.</p><div class="cycleRow"><div><small>Ciclo atual</small><strong id="auto3Current">—</strong></div><span>→</span><div><small>3.0 faria</small><strong id="auto3Target">—</strong></div><div class="intensity"><small>Confiança</small><strong id="auto3Confidence">—</strong></div></div></div>`);
+  const marker='<p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>';
+  if(!html.includes(marker))throw new Error('Bloco Automático 2.0 não encontrado.');
+  html=html.replace(marker,marker+`
+        <div id="auto3ShadowBox" class="auto3Box">
+          <div class="autoTop">
+            <div><small>AUTOMÁTICO 3.0 • MODO SOMBRA</small><h3 id="auto3Title">Observando sem controlar</h3></div>
+            <span id="auto3Badge" class="badge">SOMBRA</span>
+          </div>
+          <p id="auto3Reason">O 3.0 calcula em paralelo, mas não envia comandos para a bomba.</p>
+          <div class="auto3Grid">
+            <div><small>Ciclo atual</small><strong id="auto3Current">—</strong></div>
+            <div><small>3.0 faria</small><strong id="auto3Target">—</strong></div>
+            <div><small>Confiança</small><strong id="auto3Confidence">—</strong></div>
+            <div><small>Leitura climática</small><strong id="auto3WeatherAge">—</strong></div>
+          </div>
+        </div>`);
 }
+
 const systemTitle='      <div class="pageTitle"><small>SEGURANÇA</small><h2>Sistema</h2><p>Conectividade, proteção, manutenção e diagnóstico.</p></div>';
-if(!html.includes('id="serverDiagnosticsPanel"')&&html.includes(systemTitle))html=html.replace(systemTitle,systemTitle+`<article id="serverDiagnosticsPanel" class="panel"><div class="panelHead"><div><small>ORACLE • DIAGNÓSTICO</small><h3>Saúde do servidor</h3></div><span id="diagOverallBadge" class="badge">VERIFICANDO</span></div><div class="statusRows"><div><span>Memória do servidor</span><strong id="diagServerRam">—</strong></div><div><span>Memória do Fazenda 2E</span><strong id="diagProcessRam">—</strong></div><div><span>Histórico local</span><strong id="diagHistory">—</strong></div><div><span>Sincronização local</span><strong id="diagSync">—</strong></div><div><span>Backups locais</span><strong id="diagBackup">—</strong></div><div><span>Firebase</span><strong id="diagFirebase">—</strong></div></div><p id="diagAlerts" class="panelNote">Verificando componentes do servidor.</p><div class="auditFoot"><span>Último diagnóstico</span><strong id="diagCheckedAt">—</strong></div></article>`);
+if(!html.includes('id="serverDiagnosticsPanel"')&&html.includes(systemTitle))html=html.replace(systemTitle,systemTitle+`
+      <article id="serverDiagnosticsPanel" class="panel">
+        <div class="panelHead"><div><small>ORACLE CLOUD • DIAGNÓSTICO</small><h3>Saúde do servidor</h3></div><span id="diagOverallBadge" class="badge">VERIFICANDO</span></div>
+        <div class="statusRows">
+          <div><span>Hospedagem</span><strong>Oracle Cloud</strong></div>
+          <div><span>Memória do servidor</span><strong id="diagServerRam">—</strong></div>
+          <div><span>Memória do Fazenda 2E</span><strong id="diagProcessRam">—</strong></div>
+          <div><span>Histórico local</span><strong id="diagHistory">—</strong></div>
+          <div><span>Sincronização local</span><strong id="diagSync">—</strong></div>
+          <div><span>Backups locais</span><strong id="diagBackup">—</strong></div>
+          <div><span>Firebase</span><strong id="diagFirebase">—</strong></div>
+        </div>
+        <p id="diagAlerts" class="panelNote">Verificando componentes do servidor.</p>
+        <div class="auditFoot"><span>Último diagnóstico</span><strong id="diagCheckedAt">—</strong></div>
+      </article>`);
 fs.writeFileSync(htmlFile,html);
+
+let css=fs.readFileSync(cssFile,'utf8');
+if(!css.includes('/* automatico-3-ui-v6 */')){
+  css+=`
+/* automatico-3-ui-v6 */
+.auto3Box{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+.auto3Box>p{margin:8px 0 10px;color:#62736b;font-size:.61rem;line-height:1.42}
+.auto3Grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:9px;border:1px solid var(--line);border-radius:12px;background:#f8fbf9}
+.auto3Grid>div{min-width:0;padding:4px 5px}
+.auto3Grid small{display:block;color:var(--muted);font-size:.45rem}
+.auto3Grid strong{display:block;margin-top:4px;font-size:.64rem;line-height:1.25}
+@media(max-width:560px){
+  .appMain{padding-bottom:calc(132px + env(safe-area-inset-bottom))}
+  .auto3Grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metricGrid,.todayGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .operationCard{grid-template-columns:42px minmax(0,1fr) 106px}
+  .automationSummary{padding:12px}
+}
+`;
+  fs.writeFileSync(cssFile,css);
+}
 
 let app=fs.readFileSync(appFile,'utf8');
 const sessionMarker='async function ensureSecureSession(){\n';
@@ -32,15 +85,51 @@ const newLevel="  const level=currentClimate.fresh?String(currentClimate.level_l
 if(app.includes(oldLevel))app=app.replace(oldLevel,newLevel);
 
 if(!app.includes("const shadow3=d.climate?.shadow3||{};")){
- const marker="  $('autoReason').textContent=intel.cycle_reason?.detail||cs.last_reason||'Aguardando avaliação climática.';";
- if(!app.includes(marker))throw new Error('Renderização Automático 2.0 não encontrada.');
- app=app.replace(marker,marker+`\n  const shadow3=d.climate?.shadow3||{};if($('auto3ShadowBox')){const st=String(shadow3.status||'observing');const lb=st==='shadow_recommendation'?'SIMULARIA':st==='stable'?'ESTÁVEL':st==='outside_schedule'?'FORA DO HORÁRIO':st==='blocked'?'CHUVA':'OBSERVANDO';setBadge($('auto3Badge'),lb,shadow3.would_act?'warn':'');$('auto3Title').textContent=shadow3.level_label?shadow3.level_label+' • sem controlar':'Observando sem controlar';$('auto3Reason').textContent=shadow3.reason||'O 3.0 calcula em paralelo, mas não envia comandos para a bomba.';const a=num(shadow3.current_on_seconds),b=num(shadow3.current_off_seconds),c=num(shadow3.target_on_seconds),e=num(shadow3.target_off_seconds);$('auto3Current').textContent=a&&b?a+' s / '+b+' s':'—';$('auto3Target').textContent=c&&e?c+' s / '+e+' s':'—';$('auto3Confidence').textContent=shadow3.confidence_label||'—';}`);
+  const marker="  $('autoReason').textContent=intel.cycle_reason?.detail||cs.last_reason||'Aguardando avaliação climática.';";
+  if(!app.includes(marker))throw new Error('Renderização Automático 2.0 não encontrada.');
+  app=app.replace(marker,marker+`
+  const shadow3=d.climate?.shadow3||{};
+  if($('auto3ShadowBox')){
+    const st=String(shadow3.status||'observing');
+    const lb=st==='shadow_recommendation'?'SIMULARIA':st==='stable'?'ESTÁVEL':st==='outside_schedule'?'FORA DO HORÁRIO':st==='blocked'?'CHUVA':'OBSERVANDO';
+    setBadge($('auto3Badge'),lb,shadow3.would_act?'warn':'');
+    $('auto3Title').textContent=shadow3.level_label?shadow3.level_label+' • sem controlar':'Observando sem controlar';
+    $('auto3Reason').textContent=shadow3.reason||'O 3.0 calcula em paralelo, mas não envia comandos para a bomba.';
+    const a=num(shadow3.current_on_seconds),b=num(shadow3.current_off_seconds),c=num(shadow3.target_on_seconds),e=num(shadow3.target_off_seconds);
+    $('auto3Current').textContent=a&&b?a+' s / '+b+' s':'—';
+    $('auto3Target').textContent=c&&e?c+' s / '+e+' s':'—';
+    $('auto3Confidence').textContent=shadow3.confidence_label||'—';
+    if($('auto3WeatherAge'))$('auto3WeatherAge').textContent=shadow3.weather_observed_at?(shadow3.weather_fresh?'Atual • '+fmtAge(shadow3.weather_observed_at):'Antiga • '+fmtAge(shadow3.weather_observed_at)):'Aguardando';
+  }`);
 }
 
+// A tela de histórico distingue situação atual de ocorrências já resolvidas.
+const statusDetailOld="      ?'O sistema registrou uma ocorrência que merece acompanhamento.'";
+const statusDetailNew="      ?(num(incidents.totals?.open)>0?'Existe uma ocorrência aberta que merece acompanhamento.':'Houve uma ocorrência hoje, mas não existe incidente aberto agora.')";
+if(app.includes(statusDetailOld))app=app.replace(statusDetailOld,statusDetailNew);
+
 if(!app.includes('function renderServerDiagnostics(')){
- const end=app.lastIndexOf('})();');if(end<0)throw new Error('Final do app não encontrado.');
- const code=`\nfunction renderServerDiagnostics(d){const badge=$('diagOverallBadge');if(!badge)return;const alerts=Array.isArray(d?.alerts)?d.alerts:[];const critical=alerts.some(x=>x?.level==='critical');setBadge(badge,critical?'CRÍTICO':alerts.length?'ATENÇÃO':'SAUDÁVEL',critical?'bad':alerts.length?'warn':'');const total=num(d?.server?.memory?.total_mb),free=num(d?.server?.memory?.free_mb);$('diagServerRam').textContent=total?Math.round(free)+' MB livres / '+Math.round(total)+' MB':'—';$('diagProcessRam').textContent=d?.checks?.maintenance?.ok?Math.round(num(d.checks.maintenance.value?.memory?.rss_mb))+' MB RAM':'Indisponível';const hist=d?.checks?.local_history;$('diagHistory').textContent=hist?.ok?num(hist.value?.rows).toLocaleString('pt-BR')+' registros':'Indisponível';const syncAt=num(hist?.value?.sync?.last_success_at);$('diagSync').textContent=syncAt?'Atualizado há '+fmtAge(syncAt):'Aguardando';const maint=d?.checks?.maintenance,backups=maint?.value?.backups||{},backupAt=num(backups?.last?.at);$('diagBackup').textContent=maint?.ok?String(num(backups.count))+' arquivos'+(backupAt?' • há '+fmtAge(backupAt):''):'Indisponível';const fb=d?.checks?.firebase;$('diagFirebase').textContent=fb?.ok?'Online • '+Math.round(num(fb.ms))+' ms':'Indisponível';$('diagCheckedAt').textContent=d?.checked_at?localDateTime(d.checked_at):'—';$('diagAlerts').textContent=alerts.length?alerts.map(x=>x?.message).filter(Boolean).join(' • '):'Servidor, histórico, sincronização, backups e Firebase funcionando normalmente.';}\nasync function refreshServerDiagnostics(){if(!hasAuth()||!$('serverDiagnosticsPanel'))return;try{renderServerDiagnostics(await api('/api/irrigation/diagnostics'))}catch(error){const b=$('diagOverallBadge');if(b)setBadge(b,'INDISPONÍVEL','bad');if($('diagAlerts'))$('diagAlerts').textContent='Não foi possível atualizar o diagnóstico: '+(error?.message||'erro de comunicação')}}\nqsa('[data-view="system"]').forEach(el=>el.addEventListener('click',()=>setTimeout(refreshServerDiagnostics,200)));setTimeout(refreshServerDiagnostics,1500);setInterval(refreshServerDiagnostics,30000);\n`;
- app=app.slice(0,end)+code+app.slice(end);
+  const end=app.lastIndexOf('})();');if(end<0)throw new Error('Final do app não encontrado.');
+  const code=`
+function renderServerDiagnostics(d){
+  const badge=$('diagOverallBadge');if(!badge)return;
+  const alerts=Array.isArray(d?.alerts)?d.alerts:[];const critical=alerts.some(x=>x?.level==='critical');
+  setBadge(badge,critical?'CRÍTICO':alerts.length?'ATENÇÃO':'SAUDÁVEL',critical?'bad':alerts.length?'warn':'');
+  const total=num(d?.server?.memory?.total_mb),free=num(d?.server?.memory?.free_mb);
+  $('diagServerRam').textContent=total?Math.round(free)+' MB livres / '+Math.round(total)+' MB':'—';
+  $('diagProcessRam').textContent=d?.checks?.maintenance?.ok?Math.round(num(d.checks.maintenance.value?.memory?.rss_mb))+' MB RAM':'Indisponível';
+  const hist=d?.checks?.local_history;$('diagHistory').textContent=hist?.ok?num(hist.value?.rows).toLocaleString('pt-BR')+' registros':'Indisponível';
+  const syncAt=num(hist?.value?.sync?.last_success_at);$('diagSync').textContent=syncAt?'Atualizado há '+fmtAge(syncAt):'Aguardando';
+  const maint=d?.checks?.maintenance,backups=maint?.value?.backups||{},backupAt=num(backups?.last?.at);$('diagBackup').textContent=maint?.ok?String(num(backups.count))+' arquivos'+(backupAt?' • há '+fmtAge(backupAt):''):'Indisponível';
+  const fb=d?.checks?.firebase;$('diagFirebase').textContent=fb?.ok?'Online • '+Math.round(num(fb.ms))+' ms':'Indisponível';
+  $('diagCheckedAt').textContent=d?.checked_at?localDateTime(d.checked_at):'—';
+  $('diagAlerts').textContent=alerts.length?alerts.map(x=>x?.message).filter(Boolean).join(' • '):'Servidor Oracle, histórico, sincronização, backups e Firebase funcionando normalmente.';
+}
+async function refreshServerDiagnostics(){if(!hasAuth()||!$('serverDiagnosticsPanel'))return;try{renderServerDiagnostics(await api('/api/irrigation/diagnostics'))}catch(error){const b=$('diagOverallBadge');if(b)setBadge(b,'INDISPONÍVEL','bad');if($('diagAlerts'))$('diagAlerts').textContent='Não foi possível atualizar o diagnóstico: '+(error?.message||'erro de comunicação')}}
+qsa('[data-view="system"]').forEach(el=>el.addEventListener('click',()=>setTimeout(refreshServerDiagnostics,200)));
+setTimeout(refreshServerDiagnostics,1500);setInterval(refreshServerDiagnostics,30000);
+`;
+  app=app.slice(0,end)+code+app.slice(end);
 }
 fs.writeFileSync(appFile,app);
-console.log('Irrigação: VPD sincronizado, cache atualizado, Automático 3.0 sombra e diagnóstico visual aplicados.');
+console.log('Irrigação: VPD sincronizado, Automático 3.0, Oracle, histórico e interface v6 aplicados.');

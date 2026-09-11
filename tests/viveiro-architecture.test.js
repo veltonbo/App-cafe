@@ -8,14 +8,16 @@ const dashboard=fs.readFileSync('server/api/viveiro/dashboard.js','utf8');
 const ui=fs.readFileSync('public/irrigacao/app.js','utf8');
 const html=fs.readFileSync('public/irrigacao/index.html','utf8');
 
-test('worker legado nao concorre mais com o servidor continuo',()=>{
+test('diagnóstico manual aponta para Oracle/Tailscale e não para Railway',()=>{
   assert.doesNotMatch(workflow,/^\s*schedule:/m);
   assert.doesNotMatch(workflow,/\/api\/viveiro\/pulse/);
   assert.match(workflow,/workflow_dispatch/);
-  assert.match(workflow,/fazenda-2e-irrigacao-production\.up\.railway\.app/);
+  assert.match(workflow,/fazenda2e\.tail890201\.ts\.net/);
+  assert.doesNotMatch(workflow,/up\.railway\.app/);
+  assert.match(workflow,/\/health/);
 });
 
-test('servidor continuo mantem atualizacao climatica em quatro segundos',()=>{
+test('fonte do servidor ainda é patchável para isolamento climático no build',()=>{
   assert.match(server,/const intervalMs=4000/);
   assert.doesNotMatch(server,/Math\.min\(4000,configuredMs\)/);
   assert.match(html,/id="weatherCheck"[^>]+value="≈ 4"[^>]+disabled/);

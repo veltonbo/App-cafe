@@ -17,10 +17,10 @@ COPY . .
 
 RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/audit-summary.mjs /tmp/npm-audit.json \
-    && node scripts/patch-viveiro-realtime.mjs \
     && npm test \
     && node scripts/patch-local-history-runtime.mjs \
     && node scripts/patch-irrigation-runtime-v3.mjs \
+    && node scripts/patch-viveiro-realtime.mjs \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && npm prune --omit=dev

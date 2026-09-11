@@ -21,6 +21,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-local-history-runtime.mjs \
     && node scripts/patch-irrigation-runtime-v3.mjs \
     && node scripts/patch-viveiro-realtime.mjs \
+    && node scripts/patch-climate-isolation.mjs \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && npm prune --omit=dev

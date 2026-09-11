@@ -38,22 +38,32 @@ sudo tailscale funnel --bg --yes "$APP_PORT"
 DNS_NAME="$(tailscale status --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print((d.get("Self",{}).get("DNSName") or "").rstrip("."))')"
 [ -n "$DNS_NAME" ] || fail "não foi possível descobrir o endereço HTTPS do Tailscale"
 URL="https://${DNS_NAME}/irrigacao/"
-HEALTH="https://${DNS_NAME}/health"
 
-say "Validando HTTPS..."
-ok=0
-for _ in $(seq 1 30); do
-  if curl -fsS --max-time 5 "$HEALTH" >/dev/null 2>&1; then ok=1; break; fi
-  sleep 2
+say "Validando backend local..."
+for _ in $(seq 1 20); do
+  if curl -fsS --max-time 3 "http://127.0.0.1:${APP_PORT}/health" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
 done
-[ "$ok" -eq 1 ] || fail "o Funnel foi criado, mas o endereço HTTPS ainda não respondeu"
+curl -fsS --max-time 3 "http://127.0.0.1:${APP_PORT}/health" >/dev/null 2>&1 || fail "o backend local não respondeu na porta ${APP_PORT}"
 
-say "HTTPS validado. Desativando o Caddy antigo..."
-docker rm -f fazenda2e-caddy >/dev/null 2>&1 || true
+say "Confirmando Funnel..."
+FUNNEL_STATUS="$(sudo tailscale funnel status 2>/dev/null || true)"
+printf '%s\n' "$FUNNEL_STATUS" | grep -q "127.0.0.1:${APP_PORT}" || fail "o Funnel não está apontando para o backend local"
 
+say "Protegendo o backend para acesso somente local..."
 touch "$HTTPS_MARKER"
+if ! bash "$REPO_DIR/scripts/oracle-deploy.sh"; then
+  rm -f "$HTTPS_MARKER"
+  fail "o redeploy protegido falhou; o backend anterior foi preservado"
+fi
+
+say "Desativando o Caddy antigo..."
+docker rm -f fazenda2e-caddy >/dev/null 2>&1 || true
 
 say "Concluído."
 say "Acesso seguro: $URL"
 say "O Tailscale inicia automaticamente com a VM e o Funnel permanece configurado."
-say "Depois de confirmar o acesso, remova a regra pública da porta 8080 na Oracle Cloud."
+say "Agora a porta 8080 do aplicativo fica somente no localhost da VM."
+say "Você pode remover a regra pública da porta 8080 na Oracle Cloud."

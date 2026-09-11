@@ -17,6 +17,16 @@ test('pulse_id deduplica retries de inicio e conclusao',()=>{
   assert.equal(a.irrigated_seconds,30.1);
 });
 
+test('pulso concluido usa tempo programado e nao latencia de confirmacao',()=>{
+  const rows=[
+    {id:'a',type:'viveiro_pulse_start',pulse_id:'p-latency',ts:Date.parse('2026-09-10T14:00:00Z')},
+    {id:'b',type:'viveiro_pulse_complete',pulse_id:'p-latency',ts:Date.parse('2026-09-10T14:00:40Z'),duration_seconds:30,actual_duration_seconds:40.075}
+  ];
+  const a=pulseAccountingForDay(rows,'2026-09-10');
+  assert.equal(a.pulses_completed,1);
+  assert.equal(a.irrigated_seconds,30);
+});
+
 test('um pulse_id possui apenas um desfecho contabil',()=>{
   const day='2026-09-09';
   const rows=[
@@ -32,7 +42,6 @@ test('um pulse_id possui apenas um desfecho contabil',()=>{
 });
 
 test('pulso que cruza meia-noite pertence ao dia em que iniciou',()=>{
-  // Porto Velho = UTC-4. Comeca 23:59:50 local e termina 00:00:20 local.
   const rows=[
     {id:'a',type:'viveiro_pulse_start',pulse_id:'p3',ts:Date.parse('2026-09-10T03:59:50Z')},
     {id:'b',type:'viveiro_pulse_complete',pulse_id:'p3',ts:Date.parse('2026-09-10T04:00:20Z'),actual_duration_seconds:30}

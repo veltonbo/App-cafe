@@ -18,10 +18,12 @@ COPY . .
 RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/audit-summary.mjs /tmp/npm-audit.json \
     && npm test \
+    && /opt/smartlife/bin/python -m py_compile smartlife/bridge.py smartlife/controller_shadow.py smartlife/safety_watchdog.py \
     && node scripts/patch-local-history-runtime.mjs \
     && node scripts/patch-irrigation-runtime-v3.mjs \
     && node scripts/patch-viveiro-realtime.mjs \
     && node scripts/patch-climate-isolation.mjs \
+    && node scripts/patch-python-safety-watchdog.mjs \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && npm prune --omit=dev

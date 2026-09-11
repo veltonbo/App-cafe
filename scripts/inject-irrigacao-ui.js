@@ -14,6 +14,9 @@ if(!html.includes('/irrigacao/app.css')||!html.includes('/irrigacao/app.js')){
   throw new Error('A interface consolidada do Viveiro não foi encontrada no build.');
 }
 
+// Força o navegador/PWA a buscar a versão nova do JavaScript após cada mudança relevante.
+html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-1');
+
 if(!html.includes('/irrigacao/firebase-auth.js')){
   html=html.replace(
     /<script src="\/irrigacao\/app\.js[^>]*><\/script>/,
@@ -107,7 +110,7 @@ async function refreshServerDiagnostics(){
 }
 
 qsa('[data-view="system"]').forEach(el=>el.addEventListener('click',()=>setTimeout(refreshServerDiagnostics,200)));
-setTimeout(refreshServerDiagnostics,5000);
+setTimeout(refreshServerDiagnostics,1500);
 setInterval(refreshServerDiagnostics,30000);
 `;
   app=app.slice(0,end)+diagnostics+app.slice(end);

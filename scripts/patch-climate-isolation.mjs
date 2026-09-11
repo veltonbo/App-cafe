@@ -8,8 +8,10 @@ function replaceOnce(text,from,to,label){
 
 // 1) Weather2-2: cache compartilhado maior para que clima não sature Smart Life.
 // Também corrige a detecção de chuva: valor acumulado (ex.: 6,2 mm no dia)
-// não pode significar "está chovendo agora". Somente estado instantâneo ou taxa
-// instantânea de chuva podem manter a irrigação bloqueada.
+// não pode significar "está chovendo agora". Somente atividade recente de chuva
+// pode manter a irrigação bloqueada. Alguns modelos Tuya deixam rain_state preso
+// em "rain" mesmo depois de a chuva parar; por isso o acumulado é usado apenas
+// para confirmar nova atividade, nunca como bloqueio permanente.
 {
   const file='server/api/weather/_weather.js';
   let text=fs.readFileSync(file,'utf8');
@@ -18,10 +20,15 @@ function replaceOnce(text,from,to,label){
     "const WEATHER_CACHE_MS=15*1000;",
     'cache Weather2-2 15 s'
   );
+  text=replaceOnce(text,
+    "let weatherDeviceMeta=null;",
+    "let weatherDeviceMeta=null;\nlet rainActivityTracker={amount:null,lastActivityAt:0,lastObservedAt:0};\nconst RAIN_STATE_STALE_MS=5*60*1000;",
+    'rastreador de atividade de chuva'
+  );
 
   const oldRain=`  const stateText = rainState ? String(rainState.value).toLowerCase() : '';\n  const currentRain = [rainRate, rainGeneric].map(scaled).filter(Boolean);\n\n  const rainDetected =\n    /rain|raining|wet|yes|true|1/.test(stateText) ||\n    currentRain.some(x => x.value > 0);`;
-  const newRain=`  const stateText = rainState ? String(rainState.value).trim().toLowerCase() : '';\n  const stateFalse=/^(false|0|no|off|dry|clear|normal|none|no[_ -]?rain|not[_ -]?raining|stopped)$/.test(stateText);\n  const stateTrue=/^(true|1|yes|on|wet|rain|raining|rainy|raining[_ -]?now)$/.test(stateText);\n  // rainGeneric pode ser acumulado (mm do dia/24 h). Usá-lo como chuva atual\n  // fazia o sistema permanecer pausado mesmo horas depois de a chuva terminar.\n  const currentRainRate=scaled(rainRate);\n  const rainDetected =\n    (!stateFalse && stateTrue) ||\n    Boolean(currentRainRate && Number(currentRainRate.value)>0);`;
-  text=replaceOnce(text,oldRain,newRain,'chuva instantânea sem usar acumulado');
+  const newRain=`  const stateText = rainState ? String(rainState.value).trim().toLowerCase() : '';\n  const stateFalse=/^(false|0|no|off|dry|clear|normal|none|no[_ -]?rain|not[_ -]?raining|stopped)$/.test(stateText);\n  const stateTrue=/^(true|1|yes|on|wet|rain|raining|rainy|raining[_ -]?now)$/.test(stateText);\n  const currentRainRate=scaled(rainRate);\n  const today=scaled(rainToday);\n  const h24=scaled(rain24h);\n  const generic=scaled(rainGeneric);\n  const cumulative=[today,h24,generic].map(x=>Number(x?.value)).filter(Number.isFinite);\n  const amount=cumulative.length?Math.max(...cumulative):null;\n  const now=Date.now();\n  const previousAmount=Number(rainActivityTracker.amount);\n  const amountIncreased=Number.isFinite(amount)&&Number.isFinite(previousAmount)&&amount>previousAmount+0.01;\n  const rateActive=Boolean(currentRainRate&&Number(currentRainRate.value)>0);\n  if(rateActive||amountIncreased){\n    rainActivityTracker.lastActivityAt=now;\n  }else if(stateTrue&&!rainActivityTracker.lastActivityAt){\n    // Na primeira leitura após iniciar o processo damos ao estado instantâneo uma\n    // janela curta para provar que realmente existe precipitação em andamento.\n    rainActivityTracker.lastActivityAt=now;\n  }\n  if(Number.isFinite(amount))rainActivityTracker.amount=amount;\n  rainActivityTracker.lastObservedAt=now;\n  const recentActivity=rainActivityTracker.lastActivityAt>0&&now-rainActivityTracker.lastActivityAt<RAIN_STATE_STALE_MS;\n  const rainDetected = rateActive || (!stateFalse&&stateTrue&&recentActivity);`;
+  text=replaceOnce(text,oldRain,newRain,'chuva instantânea com expiração de estado preso');
   fs.writeFileSync(file,text);
 }
 
@@ -87,4 +94,4 @@ function replaceOnce(text,from,to,label){
   fs.writeFileSync(file,text);
 }
 
-console.log('[Fazenda 2E] Clima isolado: Weather2-2 15 s, proteção 30 s, previsão 30 min, chuva atual separada do acumulado.');
+console.log('[Fazenda 2E] Clima isolado: Weather2-2 15 s, proteção 30 s, previsão 30 min, chuva atual separada do acumulado e estado preso expira em 5 min.');

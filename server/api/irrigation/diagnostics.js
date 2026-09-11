@@ -29,6 +29,11 @@ export default async function handler(req,res){
   const alerts=[];
   if(!history.ok)alerts.push({level:'critical',key:'local-history',message:'Histórico local indisponível.'});
   if(history.ok&&!history.value?.rows)alerts.push({level:'warning',key:'local-history-empty',message:'Histórico local está vazio.'});
+  if(history.ok&&history.value?.rows){
+    const lastSync=Number(history.value?.sync?.last_success_at||0);
+    if(!lastSync)alerts.push({level:'warning',key:'local-history-sync',message:'Sincronização do histórico local ainda não foi confirmada.'});
+    else if(Date.now()-lastSync>2*60*1000)alerts.push({level:'warning',key:'local-history-sync-stale',message:'Sincronização do histórico local está atrasada.'});
+  }
   if(!maintenance.ok)alerts.push({level:'critical',key:'maintenance',message:'Monitoramento local indisponível.'});
   if(maintenance.ok&&maintenance.value?.backups?.last_error)alerts.push({level:'warning',key:'backup-error',message:'O último backup apresentou erro.'});
   if(maintenance.ok&&Number(maintenance.value?.memory?.rss_mb||0)>1024)alerts.push({level:'warning',key:'memory',message:'Uso de memória do processo acima de 1 GB.'});

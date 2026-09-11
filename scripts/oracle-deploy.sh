@@ -9,6 +9,7 @@ DOCKERFILE="${DOCKERFILE:-smartlife/Dockerfile}"
 HEALTH_PATH="${HEALTH_PATH:-/health}"
 PUBLIC_PORT="${PUBLIC_PORT:-8080}"
 TEST_PORT="${TEST_PORT:-18080}"
+HTTPS_MARKER="${HTTPS_MARKER:-$HOME/.fazenda2e-https-enabled}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 IMAGE="fazenda2e-irrigacao:${STAMP}"
 CANDIDATE="${APP_NAME}-candidate-${STAMP}"
@@ -23,6 +24,12 @@ command -v curl >/dev/null || fail "curl não encontrado"
 [ -d "$REPO_DIR/.git" ] || fail "repositório não encontrado em $REPO_DIR"
 [ -f "$ENV_FILE" ] || fail "arquivo de ambiente não encontrado em $ENV_FILE"
 mkdir -p "$DATA_DIR"
+
+if [ -f "$HTTPS_MARKER" ]; then
+  BIND_ADDR="127.0.0.1"
+else
+  BIND_ADDR="0.0.0.0"
+fi
 
 cd "$REPO_DIR"
 say "Atualizando código..."
@@ -60,7 +67,7 @@ trap - EXIT
 
 if ! docker run -d --name "$APP_NAME" --restart unless-stopped --env-file "$ENV_FILE" \
   -e FAZENDA2E_DATA_DIR=/data -v "$DATA_DIR:/data" \
-  -p "${PUBLIC_PORT}:8080" "$IMAGE" >/dev/null; then
+  -p "${BIND_ADDR}:${PUBLIC_PORT}:8080" "$IMAGE" >/dev/null; then
   say "Falha ao iniciar nova versão. Restaurando anterior..."
   docker rm -f "$APP_NAME" >/dev/null 2>&1 || true
   if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then docker rename "$BACKUP" "$APP_NAME"; docker start "$APP_NAME" >/dev/null; fi
@@ -82,5 +89,6 @@ fi
 
 say "Deploy concluído com sucesso."
 docker ps --filter "name=^/${APP_NAME}$"
+if [ "$BIND_ADDR" = "127.0.0.1" ]; then say "Backend protegido: porta $PUBLIC_PORT acessível apenas localmente; acesso público deve usar HTTPS."; fi
 if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then say "Backup mantido para rollback: $BACKUP"; fi
 say "Dados locais persistentes: $DATA_DIR"

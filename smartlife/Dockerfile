@@ -23,6 +23,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-irrigation-runtime-v3.mjs \
     && node scripts/patch-viveiro-realtime.mjs \
     && node scripts/patch-climate-isolation.mjs \
+    && node scripts/patch-system-consistency.mjs \
     && node scripts/patch-python-safety-watchdog.mjs \
     && node scripts/patch-python-primary-engine.mjs \
     && npm run build \

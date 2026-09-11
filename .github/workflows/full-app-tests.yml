@@ -24,7 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Python 3
         uses: actions/setup-python@v5
@@ -62,8 +61,10 @@ jobs:
             test -f /app/dist/irrigacao/app.js &&
             grep -q "smartLifeReconnectPanel" /app/dist/irrigacao/index.html &&
             grep -q "startSmartLifeReconnect" /app/dist/irrigacao/app.js &&
+            grep -q "smartLifeOk=deviceOk&&weatherOk" /app/dist/irrigacao/app.js &&
+            grep -q "knownActiveCodes" /app/server/continuous/seconds-manager.js &&
             grep -q "python_primary_v1" /app/server/continuous/seconds-manager.js
           '
 
       - name: Resumo
-        run: echo 'Testes unitários, integração Python, build, patches e imagem Docker concluídos.'
+        run: echo 'Testes unitários, integração Python, build, consistência, patches e imagem Docker concluídos.'

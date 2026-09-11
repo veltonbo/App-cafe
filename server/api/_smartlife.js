@@ -12,7 +12,6 @@ const LIST_CACHE_MS=4000;
 let sessionCache=null;
 let sessionLoaded=false;
 let savedSessionFingerprint='';
-let bridgeQueue=Promise.resolve();
 let listCache={at:0,devices:null};
 let listFetchPromise=null;
 
@@ -105,9 +104,6 @@ async function saveSession(session){
   const currentExpiry=tokenAbsoluteExpiry(sessionCache);
   const nextExpiry=tokenAbsoluteExpiry(clean);
 
-  // Chamadas de segurança podem rodar em paralelo. O refresh token do Smart Life
-  // pode ser rotacionado; portanto uma resposta atrasada jamais pode devolver
-  // ao Firebase uma sessão mais antiga do que a que já foi renovada.
   if(sessionCache){
     if(currentIssued>0&&nextIssued>0&&currentIssued>nextIssued)return;
     if(currentIssued===nextIssued&&currentExpiry>0&&nextExpiry>0&&currentExpiry>nextExpiry)return;
@@ -129,62 +125,111 @@ function pythonBin(){
   return 'python3';
 }
 
-function runBridge(input,{timeoutMs=30000}={}){
-  return new Promise((resolve,reject)=>{
-    const child=spawn(pythonBin(),[path.join(process.cwd(),'smartlife','bridge.py')],{
+class PersistentBridgeWorker{
+  constructor(name){
+    this.name=name;
+    this.child=null;
+    this.stdoutBuffer='';
+    this.stderrTail='';
+    this.current=null;
+    this.sequence=0;
+    this.queue=Promise.resolve();
+  }
+
+  ensureProcess(){
+    if(this.child&&!this.child.killed)return this.child;
+    const child=spawn(pythonBin(),[path.join(process.cwd(),'smartlife','bridge.py'),'--daemon'],{
       cwd:process.cwd(),
       env:{...process.env,PYTHONIOENCODING:'utf-8'},
       stdio:['pipe','pipe','pipe']
     });
-    let stdout='';
-    let stderr='';
-    let finished=false;
-    const timer=setTimeout(()=>{
-      if(finished)return;
-      finished=true;
-      child.kill('SIGKILL');
-      reject(new Error('Tempo esgotado ao acessar o Smart Life.'));
-    },Math.max(5000,Number(timeoutMs)||30000));
+    this.child=child;
+    this.stdoutBuffer='';
+    this.stderrTail='';
 
-    const append=(current,chunk)=>(
-      current.length>2_000_000?current:current+chunk.toString('utf8')
-    );
-    child.stdout.on('data',chunk=>{stdout=append(stdout,chunk)});
-    child.stderr.on('data',chunk=>{stderr=append(stderr,chunk)});
-    child.on('error',error=>{
-      if(finished)return;
-      finished=true;
-      clearTimeout(timer);
-      reject(new Error('Ponte Smart Life indisponível: '+(error?.message||String(error))));
+    child.stdout.on('data',chunk=>this.onStdout(chunk));
+    child.stderr.on('data',chunk=>{
+      this.stderrTail=(this.stderrTail+chunk.toString('utf8')).slice(-4000);
     });
+    child.on('error',error=>this.failCurrent(new Error('Ponte Smart Life indisponível: '+(error?.message||String(error)))));
     child.on('close',code=>{
-      if(finished)return;
-      finished=true;
-      clearTimeout(timer);
-      const line=stdout.split(/\r?\n/).reverse().find(x=>x.startsWith(PY_MARKER));
-      if(!line){
-        const hint=code===0?'resposta inválida':'processo encerrou com código '+code;
-        return reject(new Error('Falha na ponte Smart Life ('+hint+').'));
-      }
-      try{
-        const result=JSON.parse(line.slice(PY_MARKER.length));
-        if(!result?.ok)throw new Error(result?.error||'Falha no Smart Life.');
-        resolve(result);
-      }catch(error){
-        reject(error);
+      const wasCurrent=this.current;
+      this.child=null;
+      this.stdoutBuffer='';
+      if(wasCurrent){
+        const hint=this.stderrTail.trim()||('processo encerrou com código '+code);
+        this.failCurrent(new Error('Falha na ponte Smart Life ('+hint+').'));
       }
     });
-    child.stdin.end(JSON.stringify(input));
-  });
+    return child;
+  }
+
+  onStdout(chunk){
+    this.stdoutBuffer+=chunk.toString('utf8');
+    if(this.stdoutBuffer.length>4_000_000)this.stdoutBuffer=this.stdoutBuffer.slice(-2_000_000);
+    for(;;){
+      const idx=this.stdoutBuffer.indexOf('\n');
+      if(idx<0)break;
+      const line=this.stdoutBuffer.slice(0,idx).trim();
+      this.stdoutBuffer=this.stdoutBuffer.slice(idx+1);
+      if(!line.startsWith(PY_MARKER))continue;
+      let envelope;
+      try{envelope=JSON.parse(line.slice(PY_MARKER.length))}catch{continue}
+      const pending=this.current;
+      if(!pending||String(envelope?.request_id)!==String(pending.id))continue;
+      clearTimeout(pending.timer);
+      this.current=null;
+      const result=envelope?.result;
+      if(!result?.ok)return pending.reject(new Error(result?.error||'Falha no Smart Life.'));
+      pending.resolve(result);
+    }
+  }
+
+  failCurrent(error){
+    const pending=this.current;
+    if(!pending)return;
+    clearTimeout(pending.timer);
+    this.current=null;
+    pending.reject(error);
+  }
+
+  call(input,{timeoutMs=30000}={}){
+    const execute=()=>this.callOnce(input,{timeoutMs});
+    const job=this.queue.then(execute,execute);
+    this.queue=job.catch(()=>null);
+    return job;
+  }
+
+  callOnce(input,{timeoutMs=30000}={}){
+    return new Promise((resolve,reject)=>{
+      const child=this.ensureProcess();
+      const id=`${this.name}-${Date.now()}-${++this.sequence}`;
+      const timer=setTimeout(()=>{
+        if(this.current?.id!==id)return;
+        this.current=null;
+        try{child.kill('SIGKILL')}catch{}
+        reject(new Error('Tempo esgotado ao acessar o Smart Life.'));
+      },Math.max(5000,Number(timeoutMs)||30000));
+      timer.unref?.();
+      this.current={id,resolve,reject,timer};
+      const payload=JSON.stringify({request_id:id,payload:input})+'\n';
+      child.stdin.write(payload,error=>{
+        if(!error)return;
+        if(this.current?.id===id){
+          clearTimeout(timer);
+          this.current=null;
+        }
+        reject(new Error('Falha ao enviar comando para a ponte Smart Life: '+(error?.message||String(error))));
+      });
+    });
+  }
 }
 
+const regularBridge=new PersistentBridgeWorker('regular');
+const priorityBridge=new PersistentBridgeWorker('priority');
+
 function queuedBridge(input){
-  const job=bridgeQueue.then(
-    ()=>runBridge(input),
-    ()=>runBridge(input)
-  );
-  bridgeQueue=job.catch(()=>null);
-  return job;
+  return regularBridge.call(input,{timeoutMs:30000});
 }
 
 async function callWithStoredSession(payload){
@@ -250,7 +295,7 @@ export async function smartLifeReauthFinish(token){
     token:String(token||'').trim()
   });
   if(!result?.authorized){
-    return{ok:true,authorized:false,error:result?.error||'Autorização ainda não confirmada.'};
+    return{ok:true,authorized:false,error:result?.error||'Autorização ainda não confirmada no Smart Life.'};
   }
   const verified=await importSmartLifeSession(result.session);
   return{ok:true,authorized:true,devices:verified.devices||[]};
@@ -321,10 +366,8 @@ export async function smartLifeSendCommands({
     commands,
     confirm_delay:priority?0.15:0.35
   };
-  // OFF de segurança pode executar em paralelo com uma leitura já em andamento.
-  // Os demais comandos continuam serializados para evitar concorrência desnecessária.
   const result=priority
-    ?await runBridge(input,{timeoutMs:12000})
+    ?await priorityBridge.call(input,{timeoutMs:12000})
     :await queuedBridge(input);
   if(result.session)await saveSession(result.session);
   if(result.device)mergeDeviceIntoCache(result.device);

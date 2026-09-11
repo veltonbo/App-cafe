@@ -1,5 +1,5 @@
 import { readRecentHistory } from '../api/irrigation/_store.js';
-import { appendLocalHistory, readLocalHistory, localHistoryStatus } from './history-store.js';
+import { appendLocalHistory, readLocalHistory, localHistoryStatus, markLocalHistorySynced } from './history-store.js';
 
 const DAY=86400000;
 const INITIAL_WINDOW_MS=Math.max(DAY,Number(process.env.LOCAL_HISTORY_BACKFILL_DAYS||32)*DAY);
@@ -36,8 +36,9 @@ async function mirrorWindow(sinceMs){
       seen.add(key);
       added++;
     }
+    const sync=await markLocalHistorySynced({remote:remote.length,added});
     const status=await localHistoryStatus();
-    return{ok:true,remote:remote.length,added,...status};
+    return{ok:true,remote:remote.length,added,sync,...status};
   }finally{
     busy=false;
   }

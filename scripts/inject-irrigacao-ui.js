@@ -6,7 +6,7 @@ const appFile=path.resolve('dist/irrigacao/app.js');
 const authFile=path.resolve('dist/irrigacao/firebase-auth.js');
 if(!fs.existsSync(htmlFile)||!fs.existsSync(appFile)||!fs.existsSync(authFile))throw new Error('Build do Viveiro incompleto.');
 let html=fs.readFileSync(htmlFile,'utf8');
-html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-4');
+html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-5');
 if(!html.includes('/irrigacao/firebase-auth.js'))html=html.replace(/<script src="\/irrigacao\/app\.js[^>]*><\/script>/,m=>m+'\n  <script src="/irrigacao/firebase-auth.js?v=20260910-1" defer></script>');
 if(!html.includes('id="auto3ShadowBox"')){
  const marker='<p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>';
@@ -43,4 +43,4 @@ if(!app.includes('function renderServerDiagnostics(')){
  app=app.slice(0,end)+code+app.slice(end);
 }
 fs.writeFileSync(appFile,app);
-console.log('Irrigação: VPD sincronizado, Automático 3.0 sombra e diagnóstico visual aplicados.');
+console.log('Irrigação: VPD sincronizado, cache atualizado, Automático 3.0 sombra e diagnóstico visual aplicados.');

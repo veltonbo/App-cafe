@@ -15,13 +15,33 @@ if(!html.includes('/irrigacao/app.css')||!html.includes('/irrigacao/app.js')){
 }
 
 // Força o navegador/PWA a buscar a versão nova do JavaScript após cada mudança relevante.
-html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-1');
+html=html.replace(/\/irrigacao\/app\.js\?v=[^\"]+/,'/irrigacao/app.js?v=20260911-3');
 
 if(!html.includes('/irrigacao/firebase-auth.js')){
   html=html.replace(
     /<script src="\/irrigacao\/app\.js[^>]*><\/script>/,
     match=>match+'\n  <script src="/irrigacao/firebase-auth.js?v=20260910-1" defer></script>'
   );
+}
+
+if(!html.includes('id="auto3ShadowBox"')){
+  const autoReason='<p id="autoReason">O sistema ainda não enviou a avaliação climática.</p>';
+  if(!html.includes(autoReason))throw new Error('Bloco do Automático 2.0 não encontrado para inserir o 3.0.');
+  const shadow=`${autoReason}
+        <div id="auto3ShadowBox" style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(90,105,95,.18)">
+          <div class="autoTop">
+            <div><small>AUTOMÁTICO 3.0 • MODO SOMBRA</small><h3 id="auto3Title">Observando sem controlar</h3></div>
+            <span id="auto3Badge" class="badge">SOMBRA</span>
+          </div>
+          <p id="auto3Reason">O 3.0 calcula em paralelo, mas não envia comandos para a bomba.</p>
+          <div class="cycleRow">
+            <div><small>Ciclo atual</small><strong id="auto3Current">—</strong></div>
+            <span>→</span>
+            <div><small>3.0 faria</small><strong id="auto3Target">—</strong></div>
+            <div class="intensity"><small>Confiança</small><strong id="auto3Confidence">—</strong></div>
+          </div>
+        </div>`;
+  html=html.replace(autoReason,shadow);
 }
 
 const systemTitle='      <div class="pageTitle"><small>SEGURANÇA</small><h2>Sistema</h2><p>Conectividade, proteção, manutenção e diagnóstico.</p></div>';
@@ -57,6 +77,26 @@ if(!app.includes("startsWith('f2e.')")){
     "    return true;\n"+
     "  }\n"
   );
+}
+
+if(!app.includes("const shadow3=d.climate?.shadow3||{};")){
+  const autoMarker="  $('autoReason').textContent=intel.cycle_reason?.detail||cs.last_reason||'Aguardando avaliação climática.';";
+  if(!app.includes(autoMarker))throw new Error('Renderização do Automático 2.0 não encontrada para inserir o 3.0.');
+  const shadowRender=`${autoMarker}
+  const shadow3=d.climate?.shadow3||{};
+  if($('auto3ShadowBox')){
+    const shadowStatus=String(shadow3.status||'observing');
+    const shadowLabel=shadowStatus==='shadow_recommendation'?'SIMULARIA':shadowStatus==='stable'?'ESTÁVEL':shadowStatus==='outside_schedule'?'FORA DO HORÁRIO':shadowStatus==='blocked'?'CHUVA':'OBSERVANDO';
+    setBadge($('auto3Badge'),shadowLabel,shadow3.would_act?'warn':'');
+    $('auto3Title').textContent=shadow3.level_label?shadow3.level_label+' • sem controlar':'Observando sem controlar';
+    $('auto3Reason').textContent=shadow3.reason||'O 3.0 calcula em paralelo, mas não envia comandos para a bomba.';
+    const s3on=num(shadow3.current_on_seconds),s3off=num(shadow3.current_off_seconds);
+    const t3on=num(shadow3.target_on_seconds),t3off=num(shadow3.target_off_seconds);
+    $('auto3Current').textContent=s3on&&s3off?s3on+' s / '+s3off+' s':'—';
+    $('auto3Target').textContent=t3on&&t3off?t3on+' s / '+t3off+' s':'—';
+    $('auto3Confidence').textContent=shadow3.confidence_label||'—';
+  }`;
+  app=app.replace(autoMarker,shadowRender);
 }
 
 if(!app.includes('function renderServerDiagnostics(')){
@@ -117,4 +157,4 @@ setInterval(refreshServerDiagnostics,30000);
 }
 fs.writeFileSync(appFile,app);
 
-console.log('Irrigação: interface validada com login Firebase, diagnóstico visual e sessão bearer compatível com HTTP.');
+console.log('Irrigação: interface validada com login Firebase, Automático 3.0 sombra, diagnóstico visual e sessão bearer compatível.');

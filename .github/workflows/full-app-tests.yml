@@ -1,0 +1,69 @@
+name: Fazenda 2E • testes completos
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fazenda2e-full-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências Node
+        run: npm install
+
+      - name: Testes Node + integração Python
+        run: npm test
+
+      - name: Sintaxe JavaScript crítica
+        run: |
+          node --check server/continuous/server.js
+          node --check server/continuous/seconds-manager.js
+          node --check server/continuous/python-engine.js
+          node --check server/api/_smartlife.js
+          node --check api/router.js
+
+      - name: Sintaxe Python crítica
+        run: |
+          python -m py_compile smartlife/controller_engine.py smartlife/controller_shadow.py smartlife/safety_watchdog.py smartlife/bridge.py
+
+      - name: Build Vite
+        run: npm run build
+
+      - name: Build Docker completo com todos os patches
+        run: docker build -f smartlife/Dockerfile -t fazenda2e-test .
+
+      - name: Validar artefatos do Viveiro dentro da imagem
+        run: |
+          docker run --rm --entrypoint sh fazenda2e-test -lc '
+            test -f /app/dist/irrigacao/index.html &&
+            test -f /app/dist/irrigacao/app.js &&
+            grep -q "smartLifeReconnectPanel" /app/dist/irrigacao/index.html &&
+            grep -q "startSmartLifeReconnect" /app/dist/irrigacao/app.js &&
+            grep -q "python_primary_v1" /app/server/continuous/seconds-manager.js
+          '
+
+      - name: Resumo
+        run: echo 'Testes unitários, integração Python, build, patches e imagem Docker concluídos.'

@@ -7,6 +7,9 @@ function replaceOnce(text,from,to,label){
 }
 
 // 1) Weather2-2: cache compartilhado maior para que clima não sature Smart Life.
+// Também corrige a detecção de chuva: valor acumulado (ex.: 6,2 mm no dia)
+// não pode significar "está chovendo agora". Somente estado instantâneo ou taxa
+// instantânea de chuva podem manter a irrigação bloqueada.
 {
   const file='server/api/weather/_weather.js';
   let text=fs.readFileSync(file,'utf8');
@@ -15,6 +18,10 @@ function replaceOnce(text,from,to,label){
     "const WEATHER_CACHE_MS=15*1000;",
     'cache Weather2-2 15 s'
   );
+
+  const oldRain=`  const stateText = rainState ? String(rainState.value).toLowerCase() : '';\n  const currentRain = [rainRate, rainGeneric].map(scaled).filter(Boolean);\n\n  const rainDetected =\n    /rain|raining|wet|yes|true|1/.test(stateText) ||\n    currentRain.some(x => x.value > 0);`;
+  const newRain=`  const stateText = rainState ? String(rainState.value).trim().toLowerCase() : '';\n  const stateFalse=/^(false|0|no|off|dry|clear|normal|none|no[_ -]?rain|not[_ -]?raining|stopped)$/.test(stateText);\n  const stateTrue=/^(true|1|yes|on|wet|rain|raining|rainy|raining[_ -]?now)$/.test(stateText);\n  // rainGeneric pode ser acumulado (mm do dia/24 h). Usá-lo como chuva atual\n  // fazia o sistema permanecer pausado mesmo horas depois de a chuva terminar.\n  const currentRainRate=scaled(rainRate);\n  const rainDetected =\n    (!stateFalse && stateTrue) ||\n    Boolean(currentRainRate && Number(currentRainRate.value)>0);`;
+  text=replaceOnce(text,oldRain,newRain,'chuva instantânea sem usar acumulado');
   fs.writeFileSync(file,text);
 }
 
@@ -80,4 +87,4 @@ function replaceOnce(text,from,to,label){
   fs.writeFileSync(file,text);
 }
 
-console.log('[Fazenda 2E] Clima isolado: Weather2-2 15 s, proteção 30 s, previsão 30 min.');
+console.log('[Fazenda 2E] Clima isolado: Weather2-2 15 s, proteção 30 s, previsão 30 min, chuva atual separada do acumulado.');

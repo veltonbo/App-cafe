@@ -94,7 +94,9 @@ export async function localMaintenanceStatus(){
     memory:{
       rss_mb:Math.round(mem.rss/1024/1024),
       heap_used_mb:Math.round(mem.heapUsed/1024/1024),
-      heap_total_mb:Math.round(mem.heapTotal/1024/1024)
+      heap_total_mb:Math.round(mem.heapTotal/1024/1024),
+      external_mb:Math.round(mem.external/1024/1024),
+      array_buffers_mb:Math.round(mem.arrayBuffers/1024/1024)
     },
     backups:{
       count:backupFiles.filter(name=>name.endsWith('.gz')).length,

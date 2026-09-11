@@ -7,6 +7,7 @@ const STALE_MS=Math.max(FRESH_MS,Number(process.env.VIVEIRO_DASHBOARD_STALE_MS||
 let cachedBody=null;
 let cachedAt=0;
 let refreshPromise=null;
+let lastRefreshErrorAt=0;
 
 function captureResponse(onDone){
   let statusCode=200;
@@ -20,10 +21,22 @@ function captureResponse(onDone){
   };
 }
 
+function makeShadowRequest(req){
+  return{
+    method:'GET',
+    headers:{...(req?.headers||{})},
+    query:{...(req?.query||{})},
+    body:{},
+    url:req?.url||'/api/viveiro/dashboard',
+    socket:req?.socket||null,
+    connection:req?.connection||null
+  };
+}
+
 function refreshInBackground(req){
   if(refreshPromise)return refreshPromise;
   refreshPromise=new Promise((resolve,reject)=>{
-    const shadowReq={...req,method:'GET'};
+    const shadowReq=makeShadowRequest(req);
     const shadowRes=captureResponse((status,body)=>{
       if(status>=200&&status<300&&body&&typeof body==='object'){
         cachedBody=body;
@@ -34,6 +47,14 @@ function refreshInBackground(req){
       }
     });
     Promise.resolve(dashboardHandler(shadowReq,shadowRes)).catch(reject);
+  }).catch(error=>{
+    // Evita spam de log e tempestade de refresh quando uma dependência está lenta.
+    const now=Date.now();
+    if(now-lastRefreshErrorAt>30000){
+      lastRefreshErrorAt=now;
+      console.warn('dashboard background refresh:',error?.message||error);
+    }
+    throw error;
   }).finally(()=>{refreshPromise=null;});
   return refreshPromise;
 }
@@ -55,12 +76,9 @@ function responseAdapter(res){
   };
 }
 
-export function invalidateDashboardCache(){
-  cachedAt=0;
-}
+export function invalidateDashboardCache(){cachedAt=0;}
 
 export default async function cachedDashboard(req,res){
-  // Nunca entregue uma resposta em cache antes de validar a sessão.
   if(!authorize(req,res))return;
 
   if(req.method!=='GET'){
@@ -76,7 +94,7 @@ export default async function cachedDashboard(req,res){
 
   if(cachedBody&&age<STALE_MS){
     res.setHeader?.('X-Fazenda2E-Cache','STALE');
-    refreshInBackground(req).catch(error=>console.warn('dashboard background refresh:',error?.message||error));
+    refreshInBackground(req).catch(()=>null);
     return res.status(200).json(cachedBody);
   }
 

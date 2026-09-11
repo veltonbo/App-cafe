@@ -1,8 +1,8 @@
-const CACHE='fazenda2e-viveiro-clean-v8';
+const CACHE='fazenda2e-viveiro-clean-v10';
 const SHELL=[
   '/irrigacao/',
-  '/irrigacao/app.css?v=20260909-3',
-  '/irrigacao/app.js?v=20260911-5',
+  '/irrigacao/app.css?v=20260911-6',
+  '/irrigacao/app.js?v=20260911-6',
   '/irrigacao/manifest.webmanifest',
   '/irrigacao/icon.svg'
 ];
@@ -27,7 +27,7 @@ self.addEventListener('fetch',event=>{
 
   if(event.request.mode==='navigate'){
     event.respondWith(
-      fetch(event.request).then(response=>{
+      fetch(event.request,{cache:'no-store'}).then(response=>{
         if(url.pathname==='/irrigacao/'||url.pathname==='/irrigacao'){
           const copy=response.clone();
           caches.open(CACHE).then(cache=>cache.put('/irrigacao/',copy)).catch(()=>null);
@@ -40,7 +40,7 @@ self.addEventListener('fetch',event=>{
 
   if(url.origin===self.location.origin&&url.pathname.startsWith('/irrigacao/')){
     event.respondWith(
-      fetch(event.request).then(response=>{
+      fetch(event.request,{cache:'no-store'}).then(response=>{
         const copy=response.clone();
         caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>null);
         return response;

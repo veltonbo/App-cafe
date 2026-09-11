@@ -2,6 +2,7 @@ import cycle from '../server/api/cycle.js';
 import rootStatus from '../server/api/status.js';
 import rootSwitch from '../server/api/switch.js';
 import weatherStatus from '../server/api/weather/status.js';
+import weatherForecast from '../server/api/weather/forecast.js';
 import viveiroWeather from '../server/api/viveiro/weather.js';
 import viveiroSeconds from '../server/api/viveiro/seconds.js';
 import viveiroPulse from '../server/api/viveiro/pulse.js';
@@ -23,6 +24,7 @@ const ROUTES={
   'status':rootStatus,
   'switch':rootSwitch,
   'weather/status':weatherStatus,
+  'weather/forecast':weatherForecast,
   'viveiro/weather':viveiroWeather,
   'viveiro/seconds':viveiroSeconds,
   'viveiro/pulse':viveiroPulse,

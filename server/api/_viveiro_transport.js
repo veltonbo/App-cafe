@@ -34,26 +34,38 @@ function hasRelay(device){
 }
 
 function scoreDevice(device){
-  if(!device||isWeather(device))return -1000;
+  if(!device||isWeather(device)||!hasRelay(device))return -1000;
   const name=norm(device.name);
   const preferred=norm(SMARTLIFE_VIVEIRO_NAME);
-  let score=0;
+  let score=25;
   if(name===preferred)score+=100;
   if(preferred&&name.includes(preferred))score+=60;
   if(/viveiro/.test(name))score+=50;
   if(/ekaza/.test(name))score+=35;
   if(/irrig/.test(name))score+=30;
-  if(hasRelay(device))score+=25;
-  if(device.online!==false)score+=20;
-  else score-=30;
   return score;
+}
+
+function chooseRankedDevices(devices){
+  const candidates=devices
+    .map(device=>({device,score:scoreDevice(device)}))
+    .filter(item=>item.score>0);
+
+  // Um EKAZA substituído pode deixar o aparelho antigo/offline ainda cadastrado.
+  // Se houver candidato compatível ONLINE, jamais preferimos um antigo offline só
+  // porque ele conserva o nome "Viveiro". Isso evita prender o servidor no ID velho.
+  const online=candidates.filter(item=>item.device?.online!==false);
+  const pool=online.length?online:candidates;
+  return pool.sort((a,b)=>b.score-a.score);
 }
 
 async function resolveViveiroDevice({force=false}={}){
   const age=Date.now()-Number(resolvedDevice.at||0);
   if(!force&&resolvedDevice.id&&age>=0&&age<RESOLVE_CACHE_MS){
     try{
-      return await smartLifeReadDevice({deviceId:resolvedDevice.id,maxAgeMs:4000});
+      const cached=await smartLifeReadDevice({deviceId:resolvedDevice.id,maxAgeMs:4000});
+      if(cached?.online!==false)return cached;
+      resolvedDevice={id:null,name:null,at:0};
     }catch{
       resolvedDevice={id:null,name:null,at:0};
     }
@@ -64,10 +76,7 @@ async function resolveViveiroDevice({force=false}={}){
     throw new Error('Nenhum dispositivo encontrado no Smart Life.');
   }
 
-  const ranked=devices
-    .map(device=>({device,score:scoreDevice(device)}))
-    .filter(item=>item.score>0)
-    .sort((a,b)=>b.score-a.score);
+  const ranked=chooseRankedDevices(devices);
 
   if(!ranked.length){
     const names=devices.map(d=>String(d?.name||'')).filter(Boolean);
@@ -77,7 +86,7 @@ async function resolveViveiroDevice({force=false}={}){
   const best=ranked[0];
   const second=ranked[1];
   if(second&&best.score===second.score&&String(best.device?.id||'')!==String(second.device?.id||'')){
-    throw new Error('Há mais de um possível dispositivo do Viveiro no Smart Life. Renomeie o novo para "Viveiro" para evitar acionamento do equipamento errado.');
+    throw new Error('Há mais de um possível dispositivo ONLINE do Viveiro no Smart Life. Renomeie o novo para "Viveiro" para evitar acionamento do equipamento errado.');
   }
 
   resolvedDevice={

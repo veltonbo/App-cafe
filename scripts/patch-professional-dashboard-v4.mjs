@@ -19,10 +19,10 @@ if(app.includes(renderMarker)&&!app.includes('function renderAuto4(){')){
   el('auto4Decision').textContent=a.decision||'OBSERVANDO';
   el('auto4Confidence').textContent='Confiança '+(a.confidence_label||'—')+(Number.isFinite(Number(a.confidence_score))?' • '+a.confidence_score+'%':'');
   el('auto4Reason').textContent=a.reason||'Coletando dados para o Automático 4.0.';
-  el('auto4Current').textContent=a.current_on_seconds?`${a.current_on_seconds}/${a.current_off_seconds} s`:'—';
-  el('auto4Target').textContent=a.target_on_seconds?`${a.target_on_seconds}/${a.target_off_seconds} s`:'—';
+  el('auto4Current').textContent=a.current_on_seconds?a.current_on_seconds+'/'+a.current_off_seconds+' s':'—';
+  el('auto4Target').textContent=a.target_on_seconds?a.target_on_seconds+'/'+a.target_off_seconds+' s':'—';
   el('auto4Demand').textContent=Number.isFinite(Number(a.demand_percent))?(a.demand_percent>0?'+':'')+a.demand_percent+'%':'—';
-  el('auto4Factors').innerHTML=(a.factors||[]).slice(0,4).map(x=>'<span>'+escapeHtml(String(x))+'</span>').join('');
+  el('auto4Factors').innerHTML=(a.factors||[]).slice(0,4).map(x=>'<span>'+esc(String(x))+'</span>').join('');
 }
 
 ${renderMarker}`);

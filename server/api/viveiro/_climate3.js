@@ -1,3 +1,6 @@
+const localFormatter1=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
 import { climateTrend, vaporPressureDeficit } from './_climate.js';
 
 function metricValue(metric){
@@ -7,9 +10,7 @@ function metricValue(metric){
 }
 
 function localScheduleState(seconds={},now=Date.now()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter1.formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const weekday=dayMap[parts.weekday]??0;
   const nowSeconds=Number(parts.hour||0)*3600+Number(parts.minute||0)*60+Number(parts.second||0);

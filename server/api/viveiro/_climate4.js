@@ -1,8 +1,9 @@
+const localFormatter1=new Intl.DateTimeFormat('en-US',{timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 import { climate3SynchronizedReading } from './_climate3.js';
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 function scheduleState(seconds={},now=Date.now()){
-  const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(now)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  const p=Object.fromEntries(localFormatter1.formatToParts(new Date(now)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
   const dm={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6},day=dm[p.weekday]??0,sec=+p.hour*3600+ +p.minute*60+ +p.second;
   const start=clamp(Number(seconds.start_minutes||0),0,1439)*60,end=clamp(Number(seconds.end_minutes||1440),1,1440)*60,mask=Number(seconds.days_mask??127);
   return{inside:Boolean(mask&(1<<day))&&sec>=start&&sec<end,day,seconds:sec,start,end};

@@ -1,18 +1,20 @@
+const TZ='America/Porto_Velho';
+const localFormatter1=new Intl.DateTimeFormat('en-CA',{
+    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
+  });
+const localFormatter2=new Intl.DateTimeFormat('pt-BR',{
+    timeZone:'UTC',weekday:'short',day:'2-digit',month:'2-digit'
+  });
 import { pulseAccountingForDay } from './accounting.js';
 
-const TZ='America/Porto_Velho';
 
 export function viveiroDayKey(ts=Date.now()){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(Number(ts)||Date.now()));
+  return localFormatter1.format(new Date(Number(ts)||Date.now()));
 }
 
 function dayLabel(key){
   const [y,m,d]=String(key).split('-').map(Number);
-  return new Intl.DateTimeFormat('pt-BR',{
-    timeZone:'UTC',weekday:'short',day:'2-digit',month:'2-digit'
-  }).format(new Date(Date.UTC(y,m-1,d,12)));
+  return localFormatter2.format(new Date(Date.UTC(y,m-1,d,12)));
 }
 
 export function normalizeIncidents(raw){

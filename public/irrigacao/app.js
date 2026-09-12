@@ -13,7 +13,7 @@ if(!store.settings.apiUrl)store.settings.apiUrl=DEFAULT_API;
 
 const app={
   dashboard:null,status:null,seconds:null,liveConnected:false,lastLiveAt:0,lastDashboardAt:0,lastStatusAt:0,
-  activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null,dashboardPollTimer:null,statusPollTimer:null,sessionReady:false,authChecked:false
+  dashboardFailed:false,activeView:'summary',autoMode:'automatic',automationDirty:false,loading:false,sseAbort:null,dashboardPollTimer:null,statusPollTimer:null,sessionReady:false,authChecked:false
 };
 
 function saveStore(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch{}}
@@ -102,7 +102,7 @@ function fmtAge(ts){
 }
 function fmtClock(ts){
   if(!ts)return'—';
-  return new Date(num(ts)).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return new Date(num(ts)).toLocaleTimeString('pt-BR',{timeZone:'America/Porto_Velho',hour:'2-digit',minute:'2-digit'});
 }
 function timeValue(mins){
   const m=Math.max(0,Math.min(1440,Math.round(num(mins))));
@@ -114,7 +114,7 @@ function minutesValue(v){
 }
 function localDateTime(ts){
   if(!ts)return'—';
-  return new Date(num(ts)).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return new Date(num(ts)).toLocaleString('pt-BR',{timeZone:'America/Porto_Velho',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
 function setDot(id,state){
   const el=$(id);if(!el)return;el.className=state===true?'ok':state===false?'bad':'warn';
@@ -131,6 +131,17 @@ function seconds(){
 function climateState(){return app.dashboard?.climate?.state||{}}
 function climateConfig(){return app.dashboard?.climate?.config||{}}
 function weatherConfig(){return app.dashboard?.weather?.config||{}}
+
+function hasReading(value){return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))}
+function dashboardConnected(){return Boolean(navigator.onLine&&hasAuth()&&app.dashboard&&!app.dashboardFailed&&Date.now()-app.lastDashboardAt<30000)}
+function renderConnection(){
+  const connected=dashboardConnected();
+  $('offlineBar').hidden=connected;
+  const live=document.querySelector('.v6Live');
+  if(live){live.textContent=connected?'DADOS ATUALIZADOS':'SEM DADOS ATUAIS';live.classList.toggle('stale',!connected)}
+  const operation=document.querySelector('#v6Operation');if(operation)operation.textContent=connected?'Monitorada':'Aguardando';
+  const safety=document.querySelector('#v6Safety');if(safety)safety.textContent=connected?(app.dashboard.safety?.emergency_latched?'Emergência':'Consultar Sistema'):'Não confirmada';
+}
 
 function renderOperation(){
   const d=app.dashboard||{},op=d.intelligence?.operation||{},s=seconds();
@@ -167,11 +178,11 @@ function renderMetrics(){
   const h=m.humidity?.value;
   const v=cs.last_vpd??cs.vpd;
   const r=m.rainGeneric?.value??m.rain24h?.value;
-  $('temperature').textContent=Number.isFinite(Number(t))?Number(t).toFixed(1)+' °C':'—';
-  $('humidity').textContent=Number.isFinite(Number(h))?Math.round(Number(h))+'%':'—';
-  $('vpd').textContent=Number.isFinite(Number(v))?Number(v).toFixed(2)+' kPa':'—';
-  $('rain').textContent=Number.isFinite(Number(r))?Number(r).toFixed(1)+' mm':(m.rainDetected?'Detectada':'0.0 mm');
-  $('rainHint').textContent=m.rainDetected?'Chuva detectada':'Sem chuva detectada';
+  $('temperature').textContent=hasReading(t)?Number(t).toFixed(1)+' °C':'—';
+  $('humidity').textContent=hasReading(h)?Math.round(Number(h))+'%':'—';
+  $('vpd').textContent=hasReading(v)?Number(v).toFixed(2)+' kPa':'—';
+  $('rain').textContent=hasReading(r)?Number(r).toFixed(1)+' mm':(m.rainDetected===true?'Detectada':'—');
+  $('rainHint').textContent=m.rainDetected===true?'Chuva detectada':w.linked&&w.ok!==false&&!w.error&&m.rainDetected===false?'Sem chuva detectada':'Aguardando leitura';
 
   const level=String(cs.drying_level_label||cs.drying_level||cs.last_level||cs.level||'').replaceAll('_',' ');
   setBadge($('climateBadge'),level?level.toUpperCase():'AGUARDANDO',m.rainDetected?'warn':'');
@@ -190,7 +201,11 @@ function renderMetrics(){
 }
 
 function renderToday(){
-  const t=app.dashboard?.summary?.today||{};
+  if(!app.dashboard?.summary?.today){
+    for(const id of ['todayPulses','todayCompleted','todayIrrigated','todayLast','todayRainPauses','todayErrors'])document.getElementById(id).textContent='—';
+    $('todayLastSub').textContent='Aguardando histórico';return;
+  }
+  const t=app.dashboard.summary.today;
   $('todayPulses').textContent=String(num(t.pulses));
   $('todayCompleted').textContent=num(t.completed_pulses)+' concluídos';
   $('todayIrrigated').textContent=fmtSeconds(t.irrigated_seconds);
@@ -203,8 +218,13 @@ function renderHealth(){
   const h=app.dashboard?.intelligence?.health||{};
   $('healthTitle').textContent=h.message||'Aguardando diagnóstico';
   $('healthDetail').textContent=h.level==='ok'?'Todos os serviços essenciais respondendo.':(h.issues?.[0]?.message||'Toque para abrir o Sistema.');
-  $('healthIcon').textContent=h.level==='critical'?'!':h.level==='warning'?'•':'✓';
-  const connected=Boolean(hasAuth()&&app.dashboard);
+  $('healthIcon').textContent=h.level==='critical'?'!':h.level==='ok'?'✓':'•';
+  const connected=dashboardConnected();
+  if(!connected){
+    $('healthTitle').textContent='Conexão não confirmada';
+    $('healthDetail').textContent=app.lastDashboardAt?'Última atualização: '+fmtAge(app.lastDashboardAt)+'.':'Aguardando a primeira atualização.';
+    $('healthIcon').textContent='•';
+  }
   $('headerStateText').textContent=!hasAuth()?'Configurar':!connected?'Reconectando':h.level==='critical'?'Atenção':'Online';
   setDot('headerDot',!hasAuth()?null:h.level==='critical'?false:connected?true:null);
 }
@@ -240,20 +260,20 @@ function renderHistory(){
   $('weekRain').textContent=String(num(tot.rain_pauses));
   $('weekErrors').textContent=String(num(tot.errors));
 
-  const status=String(reports.status_today||'normal');
-  $('dayStatusTitle').textContent=status==='critical'?'CRÍTICO':status==='warning'?'ATENÇÃO':'NORMAL';
-  $('dayStatusDetail').textContent=status==='critical'
+  const status=String(reports.status_today||'unknown');
+  $('dayStatusTitle').textContent=status==='unknown'?'AGUARDANDO':status==='critical'?'CRÍTICO':status==='warning'?'ATENÇÃO':'NORMAL';
+  $('dayStatusDetail').textContent=status==='unknown'?'Aguardando histórico para avaliar o dia.':status==='critical'
     ?'Existe uma falha ou incidente crítico registrado hoje.'
     :status==='warning'
       ?'O sistema registrou uma ocorrência que merece acompanhamento.'
       :'Irrigação, clima e auditoria sem ocorrência crítica hoje.';
   $('dayStatusCard').className='dayStatusCard '+status;
-  setBadge($('dayStatusBadge'),status==='critical'?'CRÍTICO':status==='warning'?'ATENÇÃO':'NORMAL',status==='critical'?'bad':status==='warning'?'warn':'');
+  setBadge($('dayStatusBadge'),status==='unknown'?'AGUARDANDO':status==='critical'?'CRÍTICO':status==='warning'?'ATENÇÃO':'NORMAL',status==='critical'?'bad':status==='warning'?'warn':'');
 
   $('reportAutoAdjust').textContent=String(num(today.auto_adjustments));
   $('reportInterruptions').textContent=String(num(today.interrupted));
   const climate=today.climate||{};
-  $('reportTemperature').textContent=Number.isFinite(Number(climate.temperature_min))&&Number.isFinite(Number(climate.temperature_max))
+  $('reportTemperature').textContent=hasReading(climate.temperature_min)&&hasReading(climate.temperature_max)
     ?Number(climate.temperature_min).toFixed(1)+'–'+Number(climate.temperature_max).toFixed(1)+' °C'
     :'—';
   $('reportIncidents').textContent=String(num(incidents.totals?.open));
@@ -319,7 +339,7 @@ function renderSystem(){
   const d=app.dashboard||{},s=seconds(),w=weather(),health=d.intelligence?.health||{};
   const deviceOk=app.status?.online===true;
   const weatherOk=Boolean(w.linked&&!w.error&&w.device?.online!==false);
-  const serverOk=Boolean(d.server?.online);
+  const serverOk=dashboardConnected()&&Boolean(d.server?.online);
   setDot('svcEkaza',deviceOk?true:app.status?.online===false?false:null);
   setDot('svcWeather',weatherOk);
   setDot('svcRealtime',app.liveConnected);
@@ -383,7 +403,7 @@ function renderSystem(){
 }
 function renderAll(){
   renderOperation();renderMetrics();renderToday();renderHealth();renderAutomation();renderHistory();renderSystem();
-  $('offlineBar').hidden=navigator.onLine&&Boolean(app.dashboard);
+  renderConnection();
 }
 
 function initDays(){
@@ -403,11 +423,11 @@ async function loadDashboard(showToast=false){
   app.loading=true;
   try{
     const d=await api('/api/viveiro/dashboard');
-    app.dashboard=d;app.seconds=d.seconds||app.seconds;app.lastDashboardAt=Date.now();
+    app.dashboardFailed=false;app.dashboard=d;app.seconds=d.seconds||app.seconds;app.lastDashboardAt=Date.now();
     renderAll();
     if(showToast)toast('Dados atualizados');
   }catch(e){
-    $('offlineBar').hidden=false;
+    app.dashboardFailed=true;renderHealth();renderConnection();
     if(showToast)toast(e.message||'Falha ao atualizar');
   }finally{app.loading=false}
 }
@@ -617,10 +637,11 @@ async function saveConnection(tokenOverride){
 $('saveConnectionBtn').addEventListener('click',()=>saveConnection());
 $('setupSaveBtn').addEventListener('click',()=>{const t=$('setupToken').value.trim();if(!t)return toast('Informe o token.');saveConnection(t)});
 
-window.addEventListener('online',()=>{$('offlineBar').hidden=true;if(hasAuth()){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
-window.addEventListener('offline',()=>{$('offlineBar').hidden=false});
+window.addEventListener('online',()=>{renderConnection();if(hasAuth()){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
+window.addEventListener('offline',()=>{renderHealth();renderConnection()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&hasAuth()){loadDashboard();loadStatus();scheduleDashboardPoll();scheduleStatusPoll()}});
 
+setInterval(()=>{renderHealth();renderConnection()},5000);
 async function bootstrap(){
   initDays();
   $('apiUrl').value=store.settings.apiUrl||DEFAULT_API;

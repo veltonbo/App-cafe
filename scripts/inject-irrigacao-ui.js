@@ -157,8 +157,8 @@ if(operationRegex.test(app))app=app.replace(operationRegex,realtimeOperation);el
 const oldClimate="  const v=cs.last_vpd??cs.vpd;\n  const r=m.rainGeneric?.value??m.rain24h?.value;";
 const newClimate="  const currentClimate=d.climate?.current||{};\n  const v=currentClimate.fresh?currentClimate.vpd:null;\n  const r=m.rainGeneric?.value??m.rain24h?.value;";
 if(app.includes(oldClimate))app=app.replace(oldClimate,newClimate);
-const oldHint="  $('vpd').textContent=Number.isFinite(Number(v))?Number(v).toFixed(2)+' kPa':'—';\n  $('rain').textContent=";
-const newHint="  $('vpd').textContent=Number.isFinite(Number(v))?Number(v).toFixed(2)+' kPa':'—';\n  if($('vpdHint'))$('vpdHint').textContent=currentClimate.fresh?'Calculado da leitura atual':currentClimate.observed_at?'Leitura climática antiga':'Aguardando leitura sincronizada';\n  $('rain').textContent=";
+const oldHint="  $('vpd').textContent=hasReading(v)?Number(v).toFixed(2)+' kPa':'—';\n  $('rain').textContent=";
+const newHint="  $('vpd').textContent=hasReading(v)?Number(v).toFixed(2)+' kPa':'—';\n  if($('vpdHint'))$('vpdHint').textContent=currentClimate.fresh?'Calculado da leitura atual':currentClimate.observed_at?'Leitura climática antiga':'Aguardando leitura sincronizada';\n  $('rain').textContent=";
 if(app.includes(oldHint))app=app.replace(oldHint,newHint);
 const oldLevel="  const level=String(cs.drying_level_label||cs.drying_level||cs.last_level||cs.level||'').replaceAll('_',' ');";
 const newLevel="  const level=currentClimate.fresh?String(currentClimate.level_label||currentClimate.level||'').replaceAll('_',' '):'';";

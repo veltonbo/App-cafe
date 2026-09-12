@@ -1,0 +1,1 @@
+{"name":"fazenda2e-irrigacao-ui","private":true,"version":"1.0.0","type":"module","scripts":{"build":"vite build","dev":"vite"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"^6.3.5","typescript":"latest","react":"latest","react-dom":"latest","lucide-react":"latest","recharts":"latest"},"devDependencies":{}}

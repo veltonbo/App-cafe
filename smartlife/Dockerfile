@@ -38,8 +38,11 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-professional-dashboard-v4.mjs \
     && node scripts/patch-executive-v5.mjs \
     && node scripts/patch-ui-v6-final.mjs \
+    && node scripts/patch-ekaza-selector-ui.mjs \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
+    && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/index.html \
+    && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/app.js \
     && cd irrigacao-react \
     && npm install \
     && npm run build \

@@ -4,6 +4,7 @@ import {
   smartLifeSendCommands
 } from './_smartlife.js';
 
+const SMARTLIFE_VIVEIRO_ID=String(process.env.SMARTLIFE_VIVEIRO_ID||'').trim();
 const SMARTLIFE_VIVEIRO_NAME=String(process.env.SMARTLIFE_VIVEIRO_NAME||'Viveiro').trim();
 
 async function ensureSmartLife(){
@@ -15,7 +16,8 @@ async function ensureSmartLife(){
 export async function readViveiroState(options={}){
   await ensureSmartLife();
   const device=await smartLifeReadDevice({
-    deviceName:SMARTLIFE_VIVEIRO_NAME,
+    deviceId:SMARTLIFE_VIVEIRO_ID||null,
+    deviceName:SMARTLIFE_VIVEIRO_ID?null:SMARTLIFE_VIVEIRO_NAME,
     force:Boolean(options?.force),
     maxAgeMs:Number.isFinite(Number(options?.maxAgeMs))?Number(options.maxAgeMs):undefined
   });
@@ -35,7 +37,8 @@ export async function sendViveiroCommands(commands){
   await ensureSmartLife();
   const priority=commands.some(cmd=>cmd?.code==='switch_1'&&cmd?.value===false);
   const device=await smartLifeSendCommands({
-    deviceName:SMARTLIFE_VIVEIRO_NAME,
+    deviceId:SMARTLIFE_VIVEIRO_ID||null,
+    deviceName:SMARTLIFE_VIVEIRO_ID?null:SMARTLIFE_VIVEIRO_NAME,
     commands,
     priority
   });

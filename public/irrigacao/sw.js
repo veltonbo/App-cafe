@@ -1,14 +1,8 @@
-const CACHE='fazenda2e-viveiro-clean-v11';
-const SHELL=[
-  '/irrigacao/',
-  '/irrigacao/app.css?v=20260911-7',
-  '/irrigacao/app.js?v=20260911-7',
-  '/irrigacao/manifest.webmanifest',
-  '/irrigacao/icon.svg'
-];
+const CACHE='fazenda2e-viveiro-live-v12';
+const FALLBACK='/irrigacao/';
 
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).catch(()=>null));
+  event.waitUntil(caches.open(CACHE).then(cache=>cache.add(FALLBACK)).catch(()=>null));
   self.skipWaiting();
 });
 
@@ -20,21 +14,11 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(url.pathname.startsWith('/api/'))return;
-  if(event.request.mode==='navigate'){
-    event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{
-      if(url.pathname==='/irrigacao/'||url.pathname==='/irrigacao'){
-        const copy=response.clone();
-        caches.open(CACHE).then(cache=>cache.put('/irrigacao/',copy)).catch(()=>null);
-      }
-      return response;
-    }).catch(()=>caches.match('/irrigacao/')));
-    return;
-  }
-  if(url.origin===self.location.origin&&url.pathname.startsWith('/irrigacao/')){
-    event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{
-      const copy=response.clone();
-      caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>null);
-      return response;
-    }).catch(()=>caches.match(event.request)));
-  }
+  if(url.origin!==self.location.origin||!url.pathname.startsWith('/irrigacao/'))return;
+  event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{
+    if(event.request.mode==='navigate'&&response.ok){
+      const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(FALLBACK,copy)).catch(()=>null);
+    }
+    return response;
+  }).catch(()=>event.request.mode==='navigate'?caches.match(FALLBACK):caches.match(event.request)));
 });

@@ -20,6 +20,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && npm test \
     && /opt/smartlife/bin/python -m py_compile smartlife/bridge.py smartlife/controller_shadow.py smartlife/safety_watchdog.py smartlife/controller_engine.py \
     && node scripts/patch-local-history-runtime.mjs \
+    && node scripts/patch-auto4-runtime.mjs \
     && node scripts/patch-irrigation-runtime-v3.mjs \
     && node scripts/patch-viveiro-realtime.mjs \
     && node scripts/patch-climate-isolation.mjs \

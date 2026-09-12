@@ -45,6 +45,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-ekaza-selector-ui.mjs \
     && node scripts/patch-notifications-ui.mjs \
     && node scripts/patch-runtime-sync-v5.mjs \
+    && node scripts/patch-ui-consistency-v7.mjs \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
     && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/index.html \
@@ -52,6 +53,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
+    && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
     && grep -q "addEventListener('push'" dist/irrigacao/sw.js \
     && cd irrigacao-react \
     && npm install \

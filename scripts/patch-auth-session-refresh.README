@@ -1,1 +1,0 @@
-This marker file documents the browser-side auth retry patch. The Dockerfile must invoke scripts/patch-auth-session-refresh.mjs after inject-irrigacao-ui.js so the generated dist app gets the retry wrapper.

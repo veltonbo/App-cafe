@@ -55,18 +55,11 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
     && grep -q "addEventListener('push'" dist/irrigacao/sw.js \
-    && cd irrigacao-react \
-    && npm install \
-    && npm run build \
-    && cd .. \
-    && rm -rf dist/irrigacao-next \
-    && mkdir -p dist/irrigacao-next \
-    && cp -R irrigacao-react/dist/. dist/irrigacao-next/ \
-    && test -f dist/irrigacao-next/index.html \
-    && grep -q 'Fazenda 2E' dist/irrigacao-next/index.html \
-    && test -n "$(find dist/irrigacao-next/assets -type f -name '*.js' -print -quit)" \
-    && rm -rf irrigacao-react/node_modules \
     && npm prune --omit=dev
+
+# A interface React continua no repositório para evolução e testes, mas não faz
+# parte do caminho crítico do controlador. Uma falha no preview não pode impedir
+# a publicação de correções do viveiro em produção.
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python
 ENV NODE_ENV=production

@@ -28,8 +28,12 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-python-safety-watchdog.mjs \
     && node scripts/patch-python-primary-engine.mjs \
     && node scripts/patch-new-ekaza-cycle.mjs \
+    && node scripts/patch-automatic-stability-v3.mjs \
+    && node scripts/patch-runtime-sync-v5.mjs \
     && grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
     && ! grep -q 'Atualize a programação do EKAZA antes de ativar o modo em segundos.' server/api/viveiro/_seconds.js \
+    && grep -q 'FAZENDA2E_AUTOMATIC_STABILITY_V3' server/api/viveiro/_climate.js \
+    && grep -q 'FAZENDA2E_RUNTIME_SYNC_V5' server/continuous/seconds-manager.js \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-smartlife-reauth-ui.mjs \
@@ -40,12 +44,14 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-ui-v6-final.mjs \
     && node scripts/patch-ekaza-selector-ui.mjs \
     && node scripts/patch-notifications-ui.mjs \
+    && node scripts/patch-runtime-sync-v5.mjs \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
     && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/app.js \
+    && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
     && grep -q "addEventListener('push'" dist/irrigacao/sw.js \
     && cd irrigacao-react \
     && npm install \

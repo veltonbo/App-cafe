@@ -30,6 +30,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-smartlife-reauth-ui.mjs \
     && node scripts/patch-secure-session-ui.mjs \
+    && node scripts/patch-smartlife-reauth-runtime.mjs \
     && npm prune --omit=dev
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python

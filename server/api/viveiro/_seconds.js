@@ -1,8 +1,24 @@
+const TZ='America/Porto_Velho';
+const localFormatter1=new Intl.DateTimeFormat('en-US',{
+    timeZone:TZ,
+    weekday:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hourCycle:'h23'
+  });
+const localFormatter2=new Intl.DateTimeFormat('en-US',{
+    timeZone:TZ,
+    weekday:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hourCycle:'h23'
+  });
 import { randomUUID } from 'node:crypto';
 import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 
-const TZ='America/Porto_Velho';
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
@@ -14,14 +30,7 @@ function normalizeStatus(result){
 }
 
 export function localSchedule(state,nowDate=new Date()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:TZ,
-    weekday:'short',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hourCycle:'h23'
-  }).formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter1.formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
 
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const day=dayMap[parts.weekday]??0;
@@ -46,14 +55,7 @@ export function localSchedule(state,nowDate=new Date()){
 }
 
 export function secondsUntilNextWindow(state,nowDate=new Date()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:TZ,
-    weekday:'short',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hourCycle:'h23'
-  }).formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter2.formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
 
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const day=dayMap[parts.weekday]??0;

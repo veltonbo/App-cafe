@@ -6,8 +6,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 python3-venv python3-pip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY smartlife/requirements.txt /tmp/smartlife-requirements.txt
 RUN python3 -m venv /opt/smartlife \
@@ -38,7 +38,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
     && cd irrigacao-react \
-    && npm install \
+    && npm ci \
     && npm run build \
     && cd .. \
     && rm -rf dist/irrigacao-next \

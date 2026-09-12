@@ -3,7 +3,7 @@ const H='dist/irrigacao/index.html',C='dist/irrigacao/app.css';
 let h=fs.readFileSync(H,'utf8'),c=fs.readFileSync(C,'utf8');
 const stamp='FAZENDA2E_UI_V6_20260912';
 if(!h.includes(stamp)){
-  const hero=`<div id="uiV6Marker" data-version="${stamp}" class="v6Hero"><div class="v6HeroTop"><div><small>CENTRAL OPERACIONAL • 4.0</small><h2>Fazenda 2E</h2><p>Decisão, clima e irrigação em uma única visão.</p></div><span class="v6Live"><i></i> AO VIVO</span></div><div class="v6HeroGrid"><div><small>OPERAÇÃO</small><strong id="v6Operation">Monitorada</strong></div><div><small>AUTOMÁTICO</small><strong>4.0 Sombra</strong></div><div><small>SEGURANÇA</small><strong>Protegida</strong></div></div></div>`;
+  const hero=`<div id="uiV6Marker" data-version="${stamp}" class="v6Hero"><div class="v6HeroTop"><div><small>CENTRAL OPERACIONAL • 4.0</small><h2>Fazenda 2E</h2><p>Decisão, clima e irrigação em uma única visão.</p></div><span class="v6Live"><i></i> SEM DADOS ATUAIS</span></div><div class="v6HeroGrid"><div><small>OPERAÇÃO</small><strong id="v6Operation">Aguardando</strong></div><div><small>AUTOMÁTICO</small><strong>4.0 Sombra</strong></div><div><small>SEGURANÇA</small><strong id="v6Safety">Não confirmada</strong></div></div></div>`;
   const re=/(<section\s+id=["']view-summary["'][^>]*>)/i;
   if(!re.test(h))throw new Error('view-summary não encontrado para UI v6');
   h=h.replace(re,`$1\n${hero}`);

@@ -1,3 +1,16 @@
+const localFormatter1=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
+  });
+const localFormatter2=new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',weekday:'short',day:'2-digit'});
+const localFormatter3=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
+const localFormatter4=new Intl.DateTimeFormat('pt-BR',{weekday:'short',timeZone:'America/Porto_Velho'});
+const localFormatter5=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
 import { applyCors, authorize } from '../_tuya.js';
 import { historyIndexStatus, readRecentHistory, storeGet, storeSet } from '../irrigation/_store.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, patchClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
@@ -10,14 +23,12 @@ import { buildViveiroReports } from '../../continuous/reporting.js';
 const ROOT='IrrigacaoFazenda2E';
 
 function localDateKey(ts){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(Number(ts)||Date.now()));
+  return localFormatter1.format(new Date(Number(ts)||Date.now()));
 }
 function dayLabel(key){
   const [y,m,d]=String(key).split('-').map(Number);
   const dt=new Date(Date.UTC(y,m-1,d,12));
-  return new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',weekday:'short',day:'2-digit'}).format(dt);
+  return localFormatter2.format(dt);
 }
 function clock(minutes){
   const m=Math.max(0,Math.min(1440,Math.round(Number(minutes)||0)));
@@ -29,10 +40,7 @@ function upcomingSchedule(cfg={},now=Date.now()){
   const end=Math.max(1,Math.min(1440,Number(cfg.end_minutes||0)));
   const out=[];
   const nowDate=new Date(now);
-  const tzParts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const tzParts=Object.fromEntries(localFormatter3.formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const baseDay=dayMap[tzParts.weekday]??0;
   const nowSec=Number(tzParts.hour)*3600+Number(tzParts.minute)*60+Number(tzParts.second);
@@ -42,7 +50,7 @@ function upcomingSchedule(cfg={},now=Date.now()){
     if(!(mask&(1<<dow)))continue;
     const startSec=start*60;
     if(add===0&&nowSec>=end*60)continue;
-    const label=add===0?'Hoje':add===1?'Amanhã':new Intl.DateTimeFormat('pt-BR',{weekday:'short',timeZone:'America/Porto_Velho'}).format(new Date(now+add*86400000));
+    const label=add===0?'Hoje':add===1?'Amanhã':localFormatter4.format(new Date(now+add*86400000));
     out.push({
       day_offset:add,
       weekday:dow,
@@ -86,10 +94,7 @@ function irrigationSuggestion(weather={},cfg={}){
 }
 
 function localNowParts(now=Date.now()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter5.formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   return{
     weekday:dayMap[parts.weekday]??0,

@@ -194,3 +194,11 @@ input:focus,select:focus{border-color:#85baa8;box-shadow:0 0 0 3px rgba(8,116,88
   .incidentItem{grid-template-columns:28px minmax(0,1fr)}
   .incidentItem em{grid-column:2}
 }
+
+/* Accessibility and connection feedback */
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #176fcb;outline-offset:3px}
+.bottomNav button,.headerState{min-height:44px}
+input,select{min-height:44px;max-width:100%}
+.v6Live.stale{background:#fff0d7!important;color:#78500d!important}
+@media(max-width:560px){.panel input{font-size:16px}.appMain{overflow-wrap:anywhere}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

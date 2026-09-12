@@ -1,1 +1,21 @@
-{"name":"fazenda2e-irrigacao-ui","private":true,"version":"1.0.0","type":"module","scripts":{"build":"vite build","dev":"vite"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"^6.3.5","typescript":"latest","react":"latest","react-dom":"latest","lucide-react":"latest","recharts":"latest"},"devDependencies":{}}
+{
+  "name": "fazenda2e-irrigacao-ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "lucide-react": "0.544.0",
+    "recharts": "3.1.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.9.2",
+    "vite": "6.3.5"
+  }
+}

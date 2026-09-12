@@ -37,6 +37,16 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-ui-v6-final.mjs \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
+    && cd irrigacao-react \
+    && npm install \
+    && npm run build \
+    && cd .. \
+    && rm -rf dist/irrigacao-next \
+    && mkdir -p dist/irrigacao-next \
+    && cp -R irrigacao-react/dist/. dist/irrigacao-next/ \
+    && test -f dist/irrigacao-next/index.html \
+    && grep -q 'Irrigação inteligente' dist/irrigacao-next/index.html \
+    && rm -rf irrigacao-react/node_modules \
     && npm prune --omit=dev
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python

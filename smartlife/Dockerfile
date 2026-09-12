@@ -27,6 +27,7 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-system-consistency.mjs \
     && node scripts/patch-python-safety-watchdog.mjs \
     && node scripts/patch-python-primary-engine.mjs \
+    && node scripts/patch-new-ekaza-cycle.mjs \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-smartlife-reauth-ui.mjs \

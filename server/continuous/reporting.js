@@ -1,6 +1,10 @@
 import { pulseAccountingForDay } from './accounting.js';
 
 const TZ='America/Porto_Velho';
+const OPERATIONAL_FAILURE_TYPES=new Set([
+  'viveiro_error',
+  'viveiro_start_failure'
+]);
 
 export function viveiroDayKey(ts=Date.now()){
   return new Intl.DateTimeFormat('en-CA',{
@@ -30,6 +34,9 @@ function eventIdentity(row,prefix='row'){
   if(event)return'event:'+event;
   return prefix+':'+rowTs(row)+':'+String(row?.type||'');
 }
+function isOperationalFailure(row={}){
+  return OPERATIONAL_FAILURE_TYPES.has(String(row?.type||''));
+}
 function minOrNull(values){return values.length?Math.min(...values):null}
 function maxOrNull(values){return values.length?Math.max(...values):null}
 function avgOrNull(values){return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
@@ -38,6 +45,7 @@ function emptyBucket(){
   return{
     starts:new Map(),
     finals:new Map(),
+    failureKeys:new Set(),
     rain_pauses:0,
     errors:0,
     auto_adjustments:0,
@@ -87,7 +95,10 @@ function groupThirtyDays(history,now){
     }
 
     if(type==='viveiro_weather_pause'||type==='viveiro_rain_pause')bucket.rain_pauses+=1;
-    if(type.includes('error'))bucket.errors+=1;
+    if(isOperationalFailure(row)){
+      bucket.failureKeys.add(eventIdentity(row,'failure'));
+      bucket.errors=bucket.failureKeys.size;
+    }
     if(type==='viveiro_pulse_interrupted')bucket.interrupted_events+=1;
 
     if(['viveiro_climate_auto_change','viveiro_climate_return_base','viveiro_climate_applied'].includes(type)){
@@ -143,8 +154,6 @@ export function buildViveiroReports(history=[],incidentsRaw={},seconds={},audit=
       key,
       label:dayLabel(key),
       status:statusForDay(b,dayIncidents,audit,key===todayKey),
-      // Para relatório histórico, pulso contabilizado é o que possui desfecho
-      // confirmado. Starts sem fechamento ficam separados como inconsistência.
       pulses:Number(accounting.pulses_confirmed||0),
       start_attempts:Number(accounting.raw_pulses_started??b.starts.size),
       orphaned_starts:Number(accounting.orphaned_starts||0),

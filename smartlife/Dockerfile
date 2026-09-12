@@ -59,7 +59,7 @@ RUN node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-notifications-ui.mjs \
     && node scripts/patch-runtime-sync-v5.mjs \
     && node scripts/patch-ui-consistency-v7.mjs \
-    && node scripts/patch-operations-center-v8.mjs
+    && node scripts/patch-operations-center-v9-safe.mjs
 
 # Verificações da interface de produção.
 RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
@@ -70,8 +70,10 @@ RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
-    && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V8' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V8' dist/irrigacao/app.js \
+    && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V9_SAFE' dist/irrigacao/index.html \
+    && test -f dist/irrigacao/suporte.html \
+    && test -f dist/irrigacao/suporte.js \
+    && test -f dist/irrigacao/suporte.css \
     && grep -q "addEventListener('push'" dist/irrigacao/sw.js
 
 RUN npm prune --omit=dev

@@ -28,6 +28,8 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-python-safety-watchdog.mjs \
     && node scripts/patch-python-primary-engine.mjs \
     && node scripts/patch-new-ekaza-cycle.mjs \
+    && grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
+    && ! grep -q 'Atualize a programação do EKAZA antes de ativar o modo em segundos.' server/api/viveiro/_seconds.js \
     && npm run build \
     && node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-smartlife-reauth-ui.mjs \

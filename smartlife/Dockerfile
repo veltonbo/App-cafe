@@ -15,11 +15,19 @@ RUN python3 -m venv /opt/smartlife \
 
 COPY . .
 
+# Testes básicos ficam separados das transformações para que qualquer falha
+# apareça com clareza no log do deploy.
 RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/audit-summary.mjs /tmp/npm-audit.json \
     && npm test \
-    && /opt/smartlife/bin/python -m py_compile smartlife/bridge.py smartlife/controller_shadow.py smartlife/safety_watchdog.py smartlife/controller_engine.py \
-    && node scripts/patch-local-history-runtime.mjs \
+    && /opt/smartlife/bin/python -m py_compile \
+       smartlife/bridge.py \
+       smartlife/controller_shadow.py \
+       smartlife/safety_watchdog.py \
+       smartlife/controller_engine.py
+
+# Patches do controlador/runtime.
+RUN node scripts/patch-local-history-runtime.mjs \
     && node scripts/patch-auto4-runtime.mjs \
     && node scripts/patch-irrigation-runtime-v3.mjs \
     && node scripts/patch-viveiro-realtime.mjs \
@@ -29,13 +37,18 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-python-primary-engine.mjs \
     && node scripts/patch-new-ekaza-cycle.mjs \
     && node scripts/patch-automatic-stability-v3.mjs \
-    && node scripts/patch-runtime-sync-v5.mjs \
-    && grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
+    && node scripts/patch-runtime-sync-v5.mjs
+
+# Verificações do runtime antes de compilar a interface.
+RUN grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
     && ! grep -q 'Atualize a programação do EKAZA antes de ativar o modo em segundos.' server/api/viveiro/_seconds.js \
     && grep -q 'FAZENDA2E_AUTOMATIC_STABILITY_V3' server/api/viveiro/_climate.js \
-    && grep -q 'FAZENDA2E_RUNTIME_SYNC_V5' server/continuous/seconds-manager.js \
-    && npm run build \
-    && node scripts/inject-irrigacao-ui.js \
+    && grep -q 'FAZENDA2E_RUNTIME_SYNC_V5' server/continuous/seconds-manager.js
+
+RUN npm run build
+
+# Patches da interface de produção.
+RUN node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-smartlife-reauth-ui.mjs \
     && node scripts/patch-secure-session-ui.mjs \
     && node scripts/patch-smartlife-reauth-runtime.mjs \
@@ -45,8 +58,10 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/patch-ekaza-selector-ui.mjs \
     && node scripts/patch-notifications-ui.mjs \
     && node scripts/patch-runtime-sync-v5.mjs \
-    && node scripts/patch-ui-consistency-v7.mjs \
-    && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
+    && node scripts/patch-ui-consistency-v7.mjs
+
+# Verificações da interface de produção.
+RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
     && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/app.js \
@@ -54,8 +69,9 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
-    && grep -q "addEventListener('push'" dist/irrigacao/sw.js \
-    && npm prune --omit=dev
+    && grep -q "addEventListener('push'" dist/irrigacao/sw.js
+
+RUN npm prune --omit=dev
 
 # A interface React continua no repositório para evolução e testes, mas não faz
 # parte do caminho crítico do controlador. Uma falha no preview não pode impedir

@@ -1,22 +1,24 @@
 import { pulseAccountingForDay } from './accounting.js';
 
 const TZ='America/Porto_Velho';
+const DAY_KEY_FORMATTER=new Intl.DateTimeFormat('en-CA',{
+  timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
+});
+const DAY_LABEL_FORMATTER=new Intl.DateTimeFormat('pt-BR',{
+  timeZone:'UTC',weekday:'short',day:'2-digit',month:'2-digit'
+});
 const OPERATIONAL_FAILURE_TYPES=new Set([
   'viveiro_error',
   'viveiro_start_failure'
 ]);
 
 export function viveiroDayKey(ts=Date.now()){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(Number(ts)||Date.now()));
+  return DAY_KEY_FORMATTER.format(new Date(Number(ts)||Date.now()));
 }
 
 function dayLabel(key){
   const [y,m,d]=String(key).split('-').map(Number);
-  return new Intl.DateTimeFormat('pt-BR',{
-    timeZone:'UTC',weekday:'short',day:'2-digit',month:'2-digit'
-  }).format(new Date(Date.UTC(y,m-1,d,12)));
+  return DAY_LABEL_FORMATTER.format(new Date(Date.UTC(y,m-1,d,12)));
 }
 
 export function normalizeIncidents(raw){

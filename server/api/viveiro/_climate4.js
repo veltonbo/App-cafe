@@ -13,11 +13,16 @@ function confidenceScore(reading,history=[]){
   score+=Math.min(15,history.filter(r=>Number(r?.ts)>Date.now()-3600000).length);
   return clamp(Math.round(score),0,100);
 }
+function intensityPercent(on,off,baseOn,baseOff){
+  const baseDuty=baseOn/(baseOn+baseOff),duty=on/(on+off);
+  return baseDuty>0?Number((((duty/baseDuty)-1)*100).toFixed(1)):0;
+}
 export function climate4ShadowSuggestion(snapshot={},seconds={},climateState={},history=[],options={}){
   const now=Number(options.now)||Date.now(),reading=climate3SynchronizedReading(snapshot,climateState,now),schedule=scheduleState(seconds,now);
-  const on=clamp(Math.round(Number(seconds.on_seconds||30)),1,300),off=clamp(Math.round(Number(seconds.off_seconds||120)),15,900),baseOff=clamp(Math.round(Number(seconds.base_off_seconds||off)),15,900);
+  const on=clamp(Math.round(Number(seconds.on_seconds||30)),1,300),off=clamp(Math.round(Number(seconds.off_seconds||120)),15,900),baseOn=clamp(Math.round(Number(seconds.base_on_seconds||on)),1,300),baseOff=clamp(Math.round(Number(seconds.base_off_seconds||off)),15,900);
   const raining=Boolean(snapshot?.metrics?.rainDetected),score=confidenceScore(reading,history),trend=Number(reading?.trend?.vpd_slope_per_10m||0),vpd=Number(reading.vpd);
-  const base={version:4,mode:'shadow',controls_output:false,evaluated_at:now,current_on_seconds:on,current_off_seconds:off,target_on_seconds:on,target_off_seconds:off,confidence_score:score,confidence_label:score>=80?'Alta':score>=60?'Média':'Baixa',reading,schedule,would_act:false,factors:[],safety:['Horário','Chuva','Watchdog','Tempo máximo ligado','Falha de comunicação']};
+  const currentIntensity=intensityPercent(on,off,baseOn,baseOff);
+  const base={version:4,mode:'shadow',controls_output:false,evaluated_at:now,current_on_seconds:on,current_off_seconds:off,base_on_seconds:baseOn,base_off_seconds:baseOff,current_intensity_percent:currentIntensity,target_on_seconds:on,target_off_seconds:off,confidence_score:score,confidence_label:score>=80?'Alta':score>=60?'Média':'Baixa',reading,schedule,would_act:false,factors:[],safety:['Horário','Chuva','Watchdog','Tempo máximo ligado','Falha de comunicação']};
   if(raining)return{...base,status:'blocked',decision:'PROTEGER',reason:'Chuva detectada. O 4.0 manteria a irrigação desligada.',factors:['Chuva atual']};
   if(!reading.fresh||!Number.isFinite(vpd))return{...base,status:'observing',decision:'AGUARDAR',reason:'Leitura climática insuficiente ou antiga. Nenhum ajuste seria aplicado.'};
   if(!schedule.inside)return{...base,status:'outside_schedule',decision:'OBSERVAR',reason:'Fora da janela de irrigação. O 4.0 apenas acompanha as condições.'};
@@ -29,6 +34,16 @@ export function climate4ShadowSuggestion(snapshot={},seconds={},climateState={},
   demand=clamp(demand,-.20,.38);
   const targetRaw=clamp(Math.round(baseOff*(1-demand)),Math.round(baseOff*.55),Math.round(baseOff*1.3));
   const maxStep=score>=80?15:score>=60?10:6,target=off+clamp(targetRaw-off,-maxStep,maxStep),delta=target-off;
-  const decision=Math.abs(delta)<5?'MANTER':delta<0?'INTENSIFICAR':'REDUZIR';
-  return{...base,status:decision==='MANTER'?'stable':'recommendation',decision,target_off_seconds:decision==='MANTER'?off:target,would_act:decision!=='MANTER',demand_percent:Number((demand*100).toFixed(1)),factors,reason:decision==='MANTER'?'Condição estável. O 4.0 manteria o ciclo atual.':`${factors.slice(0,2).join(' + ')}. O 4.0 sugere ${on}/${off}s → ${on}/${target}s, sem controlar a bomba.`};
+  const targetIntensity=intensityPercent(on,target,baseOn,baseOff);
+  let decision='MANTER';
+  if(Math.abs(delta)>=5){
+    if(delta<0)decision='INTENSIFICAR';
+    else if(target<baseOff)decision='MANTER REFORÇO';
+    else decision='REDUZIR';
+  }
+  let reason='Condição estável. O 4.0 manteria o ciclo atual.';
+  if(decision==='INTENSIFICAR')reason=`${factors.slice(0,2).join(' + ')}. O 4.0 aumentaria um pouco a intensidade atual: ${on}/${off}s → ${on}/${target}s.`;
+  else if(decision==='MANTER REFORÇO')reason=`${factors.slice(0,2).join(' + ')}. A irrigação continuaria reforçada em relação ao ciclo-base, mas com intensidade ligeiramente menor que a atual: ${on}/${off}s → ${on}/${target}s.`;
+  else if(decision==='REDUZIR')reason=`${factors.slice(0,2).join(' + ')}. O 4.0 reduziria a intensidade atual: ${on}/${off}s → ${on}/${target}s.`;
+  return{...base,status:decision==='MANTER'?'stable':'recommendation',decision,target_off_seconds:decision==='MANTER'?off:target,target_intensity_percent:decision==='MANTER'?currentIntensity:targetIntensity,would_act:decision!=='MANTER',demand_percent:Number((demand*100).toFixed(1)),factors,reason:reason+' Modo sombra: não controla a bomba.'};
 }

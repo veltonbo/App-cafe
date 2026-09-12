@@ -1,8 +1,11 @@
 import dashboardHandler from './dashboard.js';
 import { authorize } from '../_tuya.js';
 
-const FRESH_MS=Math.max(1000,Number(process.env.VIVEIRO_DASHBOARD_CACHE_MS||5000));
-const STALE_MS=Math.max(FRESH_MS,Number(process.env.VIVEIRO_DASHBOARD_STALE_MS||120000));
+// O dashboard contém estado operacional em tempo real. Um cache muito longo fazia
+// respostas antigas sobrescreverem eventos SSE mais novos no app. Mantemos uma
+// janela curta para preservar desempenho sem sacrificar sincronização visual.
+const FRESH_MS=Math.max(500,Number(process.env.VIVEIRO_DASHBOARD_CACHE_MS||1500));
+const STALE_MS=Math.max(FRESH_MS,Number(process.env.VIVEIRO_DASHBOARD_STALE_MS||12000));
 
 let cachedBody=null;
 let cachedAt=0;
@@ -48,7 +51,6 @@ function refreshInBackground(req){
     });
     Promise.resolve(dashboardHandler(shadowReq,shadowRes)).catch(reject);
   }).catch(error=>{
-    // Evita spam de log e tempestade de refresh quando uma dependência está lenta.
     const now=Date.now();
     if(now-lastRefreshErrorAt>30000){
       lastRefreshErrorAt=now;

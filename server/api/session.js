@@ -1,7 +1,6 @@
 import {
   applyCors,
   authorize,
-  authorizeControlToken,
   clearControlSession,
   issueAppBearerSession,
   issueControlSession,
@@ -31,9 +30,12 @@ export default async function handler(req,res){
       }
     }
 
-    if(!authorizeControlToken(req,res))return;
+    // Accept either the legacy control bearer, a valid Firebase app bearer, or an
+    // already-valid secure cookie. This lets the browser exchange the short-lived
+    // app bearer created by Firebase login for the HttpOnly control-session cookie.
+    if(!authorize(req,res))return;
     const session=issueControlSession(res);
-    return res.status(200).json({ok:true,session:true,auth:'legacy',expires_at:session.expires_at});
+    return res.status(200).json({ok:true,session:true,auth:'secure-cookie',expires_at:session.expires_at});
   }
 
   if(req.method==='GET'){

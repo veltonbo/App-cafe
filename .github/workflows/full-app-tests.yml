@@ -3,6 +3,7 @@ name: Fazenda 2E • testes completos
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -31,7 +32,7 @@ jobs:
           python-version: '3.12'
 
       - name: Instalar dependências Node
-        run: npm install
+        run: npm ci
 
       - name: Testes Node + integração Python
         run: npm test

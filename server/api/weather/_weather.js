@@ -350,3 +350,6 @@ export function decideWeather(snapshot, policy = {}, state = {}) {
 
   return { blocked:false, reason:'Irrigação liberada pelo clima.', code:'clear', rain_mm:amount };
 }
+
+// Compartilha a observação do monitor sem nova chamada à nuvem.
+export function getCachedWeatherSnapshot(){return weatherSnapshotCache.value;}

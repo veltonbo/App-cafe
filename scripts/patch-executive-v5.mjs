@@ -29,8 +29,8 @@ if(!j.includes('function renderExecutiveV5(){')){
  const f=$('sum4Factors');if(f)f.innerHTML=(a.factors||[]).slice(0,4).map(x=>'<span>'+esc(x)+'</span>').join('');
  const pulses=num(t.pulses),completed=num(t.completed_pulses),errors=num(t.errors),rate=pulses?Math.round(completed/pulses*100):100;
  set('kpiCompletion',rate+'%');set('kpiErrors',String(errors));set('kpiRain',String(num(t.rain_pauses)));set('kpiIrrigated',fmtSeconds(t.irrigated_seconds));
- const good=errors===0&&health.level!=='critical';setBadge($('decisionHealth'),good?'NORMAL':'ATENÇÃO',good?'':'warn');
- set('decisionAdvice',errors?'Há '+errors+' falha(s) registrada(s) hoje. Consulte o histórico antes de alterar o automático.':num(t.rain_pauses)?'Proteção por chuva atuou hoje. O automático permanece subordinado às proteções.':'Operação sem falhas registradas hoje. O 4.0 continua comparando decisões em modo sombra.');
+ const good=dashboardConnected()&&health.level==='ok'&&errors===0;setBadge($('decisionHealth'),!dashboardConnected()?'AGUARDANDO':good?'NORMAL':'ATENÇÃO',good?'':'warn');
+ set('decisionAdvice',errors?'Há '+errors+' falha(s) registrada(s) hoje. Consulte o histórico antes de alterar o automático.':num(t.rain_pauses)?'Proteção por chuva atuou hoje. O automático permanece subordinado às proteções.':'Operação sem falhas registradas hoje. O Automático 4.0 decide a necessidade de irrigação dentro das proteções configuradas.');
 }
 ${m}`;
  if(!j.includes(m))throw new Error('renderAll marker not found');j=j.replace(m,fn);j=j.replace('renderOperation();renderMetrics();renderToday();renderHealth();renderAutomation();renderHistory();renderSystem();','renderOperation();renderMetrics();renderToday();renderHealth();renderAutomation();renderHistory();renderSystem();renderExecutiveV5();');

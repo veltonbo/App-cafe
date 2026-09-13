@@ -23,8 +23,8 @@ function replaceOnce(text,from,to,label){
 {
   const file='server/api/viveiro/dashboard.js';
   let text=fs.readFileSync(file,'utf8');
-  const oldCond=`  if(op.inside_schedule&&String(climateState?.last_mode||'')==='automatic'){\n    const evalAt=Number(climateState?.last_evaluated_at||0);`;
-  const newCond=`  const climatePausedPhases=new Set(['weather_blocked','waiting_after_rain','weather_unavailable','maintenance','emergency_stopped']);\n  if(op.inside_schedule&&String(climateState?.last_mode||'')==='automatic'&&!climatePausedPhases.has(String(op.phase||''))){\n    const evalAt=Number(climateState?.last_evaluated_at||0);`;
+  const oldCond=`  if(seconds.enabled&&op.inside_schedule&&!safety?.emergency_latched&&!maintenance?.active){\n    const evalAt=Number(seconds.climate4_last_evaluated_at||0);`;
+  const newCond=`  const climatePausedPhases=new Set(['weather_blocked','waiting_after_rain','weather_unavailable','maintenance','emergency_stopped']);\n  if(seconds.enabled&&op.inside_schedule&&!safety?.emergency_latched&&!maintenance?.active&&!climatePausedPhases.has(String(op.phase||''))){\n    const evalAt=Number(seconds.climate4_last_evaluated_at||0);`;
   text=replaceOnce(text,oldCond,newCond,'saúde do Automático 2.0 durante bloqueios legítimos');
   fs.writeFileSync(file,text);
 }

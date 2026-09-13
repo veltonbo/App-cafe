@@ -6,6 +6,7 @@ import {
 } from './_smartlife.js';
 import { getViveiroBinding } from './_viveiro_binding.js';
 
+const SMARTLIFE_VIVEIRO_ID=String(process.env.SMARTLIFE_VIVEIRO_ID||'').trim();
 const SMARTLIFE_VIVEIRO_NAME=String(process.env.SMARTLIFE_VIVEIRO_NAME||'Viveiro').trim();
 let resolvedDevice={id:null,name:null,at:0};
 const RESOLVE_CACHE_MS=30_000;
@@ -21,6 +22,7 @@ export function viveiroDeviceHasRelay(device){
 }
 function scoreDevice(device){
   if(!device||isWeather(device)||!viveiroDeviceHasRelay(device))return -1000;
+  if(!/viveiro|ekaza|irrig/.test(norm(device.name))&&norm(device.name)!==norm(SMARTLIFE_VIVEIRO_NAME))return -1000;
   const name=norm(device.name),preferred=norm(SMARTLIFE_VIVEIRO_NAME);let score=25;
   if(name===preferred)score+=100;if(preferred&&name.includes(preferred))score+=60;if(/viveiro/.test(name))score+=50;if(/ekaza/.test(name))score+=35;if(/irrig/.test(name))score+=30;return score;
 }
@@ -28,6 +30,7 @@ function chooseRankedDevices(devices){const candidates=devices.map(device=>({dev
 
 async function resolveViveiroDevice({force=false}={}){
   const binding=await getViveiroBinding();
+  if(!binding.deviceId&&SMARTLIFE_VIVEIRO_ID)binding.deviceId=SMARTLIFE_VIVEIRO_ID;
   if(binding.deviceId){
     try{
       const explicit=await smartLifeReadDevice({deviceId:binding.deviceId,maxAgeMs:force?0:4000});

@@ -1,17 +1,18 @@
 import { climate3SynchronizedReading } from './_climate3.js';
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-function metricValue(metric){const n=Number(metric?.value);return Number.isFinite(n)?n:null}
+function metricValue(metric){const raw=metric?.value;if(raw==null||typeof raw==='boolean'||(typeof raw==='string'&&!raw.trim()))return null;const n=Number(raw);return Number.isFinite(n)?n:null}
+const scheduleFormatter=new Intl.DateTimeFormat('en-US',{timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 function scheduleState(seconds={},now=Date.now()){
-  const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(now)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  const p=Object.fromEntries(scheduleFormatter.formatToParts(new Date(now)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
   const dm={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6},day=dm[p.weekday]??0,sec=+p.hour*3600+ +p.minute*60+ +p.second;
   const start=clamp(Number(seconds.start_minutes||0),0,1439)*60,end=clamp(Number(seconds.end_minutes||1440),1,1440)*60,mask=Number(seconds.days_mask??127);
   return{inside:Boolean(mask&(1<<day))&&sec>=start&&sec<end,day,seconds:sec,start,end};
 }
-function confidenceScore(reading,history=[]){
+function confidenceScore(reading,history=[],now=Date.now()){
   let score=reading.fresh?55:0;
   if(reading.confidence==='medium')score+=15;if(reading.confidence==='high')score+=25;
-  score+=Math.min(15,history.filter(r=>Number(r?.ts)>Date.now()-3600000).length);
+  score+=Math.min(15,history.filter(r=>Number(r?.ts)>now-3600000&&Number(r?.ts)<=now).length);
   return clamp(Math.round(score),0,100);
 }
 function intensityPercent(on,off,baseOn,baseOff){
@@ -30,12 +31,12 @@ function rainContext(snapshot={},seconds={},now=Date.now()){
 export function climate4Decision(snapshot={},seconds={},climateState={},history=[],options={}){
   const now=Number(options.now)||Date.now(),reading=climate3SynchronizedReading(snapshot,climateState,now),schedule=scheduleState(seconds,now);
   const on=clamp(Math.round(Number(seconds.on_seconds||30)),1,300),off=clamp(Math.round(Number(seconds.off_seconds||120)),15,900),baseOn=clamp(Math.round(Number(seconds.base_on_seconds||on)),1,300),baseOff=clamp(Math.round(Number(seconds.base_off_seconds||off)),15,900);
-  const score=confidenceScore(reading,history),trend=Number(reading?.trend?.vpd_slope_per_10m||0),vpd=Number(reading.vpd),t=Number(reading.temperature),h=Number(reading.humidity),rain=rainContext(snapshot,seconds,now);
+  const score=confidenceScore(reading,history,now),trend=Number(reading?.trend?.vpd_slope_per_10m||0),vpd=Number(reading.vpd),t=Number(reading.temperature),h=Number(reading.humidity),rain=rainContext(snapshot,seconds,now);
   const currentIntensity=intensityPercent(on,off,baseOn,baseOff);
   const base={version:4,mode:'automatic',controls_output:true,evaluated_at:now,current_on_seconds:on,current_off_seconds:off,base_on_seconds:baseOn,base_off_seconds:baseOff,current_intensity_percent:currentIntensity,target_on_seconds:on,target_off_seconds:off,confidence_score:score,confidence_label:score>=80?'Alta':score>=60?'Média':'Baixa',reading,schedule,rain,would_act:false,factors:[],safety:['Horário','Chuva','Umidade/VPD','Chuva recente','Watchdog','Tempo máximo ligado','Falha de comunicação']};
   if(!schedule.inside)return{...base,status:'outside_schedule',decision:'AGUARDAR',should_irrigate:false,review_after_seconds:300,reason:'Fora da janela programada.'};
   if(rain.raining)return{...base,status:'blocked',decision:'NÃO IRRIGAR',should_irrigate:false,review_after_seconds:300,reason:'Chuva detectada agora. Irrigação bloqueada.'};
-  if(!reading.fresh||!Number.isFinite(vpd))return{...base,status:'observing',decision:'AGUARDAR',should_irrigate:false,review_after_seconds:180,reason:'Leitura climática insuficiente ou antiga. Por segurança, o 4.0 aguarda nova leitura.'};
+  if(!reading.fresh||reading.vpd==null||!Number.isFinite(vpd))return{...base,status:'observing',decision:'AGUARDAR',should_irrigate:false,review_after_seconds:180,reason:'Leitura climática insuficiente ou antiga. Por segurança, o 4.0 aguarda nova leitura.'};
 
   const coolHumid=Number.isFinite(t)&&Number.isFinite(h)&&t<=27&&h>=70&&vpd<=1.1;
   const veryHumidCool=Number.isFinite(t)&&Number.isFinite(h)&&t<=26&&h>=76&&vpd<=0.75;

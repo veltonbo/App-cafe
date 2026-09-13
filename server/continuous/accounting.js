@@ -1,9 +1,10 @@
 const TZ='America/Porto_Velho';
+const localFormatter1=new Intl.DateTimeFormat('en-CA',{
+    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
+  });
 
 export function accountingDayKey(ts=Date.now()){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(Number(ts)||Date.now()));
+  return localFormatter1.format(new Date(Number(ts)||Date.now()));
 }
 
 export function normalizeHistoryRows(raw){

@@ -1,10 +1,17 @@
+const TZ='America/Porto_Velho';
+const localFormatter1=new Intl.DateTimeFormat('en-US',{
+    timeZone:TZ,
+    weekday:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    hourCycle:'h23'
+  });
 import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import { appendHistory, storeGet, storePatch, storeSet } from '../irrigation/_store.js';
 import { getViveiroSafety, getViveiroMaintenance } from './_interlock.js';
 
-const TZ='America/Porto_Velho';
 const CONFIG_PATH='IrrigacaoFazenda2E/viveiroWeather/config';
 const STATE_PATH='IrrigacaoFazenda2E/viveiroWeather/state';
 const SECONDS_STATE_PATH='IrrigacaoFazenda2E/viveiroSecondsState';
@@ -51,13 +58,7 @@ async function setCycleEnabled(currentRaw,currentConfig,enabled){
   return encoded;
 }
 function timeContext(now=new Date()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:TZ,
-    weekday:'short',
-    hour:'2-digit',
-    minute:'2-digit',
-    hourCycle:'h23'
-  }).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter1.formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const dayIndex=dayMap[parts.weekday]??0;
   const minutes=Number(parts.hour)*60+Number(parts.minute);

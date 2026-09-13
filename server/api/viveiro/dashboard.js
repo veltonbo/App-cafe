@@ -1,3 +1,18 @@
+import { getCachedWeatherSnapshot } from '../weather/_weather.js';
+function nullableNumber(value){return value==null||typeof value==='boolean'||(typeof value==='string'&&!value.trim())?NaN:Number(value)}
+const localFormatter1=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
+  });
+const localFormatter2=new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',weekday:'short',day:'2-digit'});
+const localFormatter3=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
+const localFormatter4=new Intl.DateTimeFormat('pt-BR',{weekday:'short',timeZone:'America/Porto_Velho'});
+const localFormatter5=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
 import { applyCors, authorize } from '../_tuya.js';
 import { historyIndexStatus, readRecentHistory, storeGet, storeSet } from '../irrigation/_store.js';
 import { approveClimateSuggestion, getClimateConfig, getClimateState, patchClimateState, rejectClimateSuggestion, setClimateConfig } from './_climate.js';
@@ -10,14 +25,12 @@ import { buildViveiroReports } from '../../continuous/reporting.js';
 const ROOT='IrrigacaoFazenda2E';
 
 function localDateKey(ts){
-  return new Intl.DateTimeFormat('en-CA',{
-    timeZone:'America/Porto_Velho',year:'numeric',month:'2-digit',day:'2-digit'
-  }).format(new Date(Number(ts)||Date.now()));
+  return localFormatter1.format(new Date(Number(ts)||Date.now()));
 }
 function dayLabel(key){
   const [y,m,d]=String(key).split('-').map(Number);
   const dt=new Date(Date.UTC(y,m-1,d,12));
-  return new Intl.DateTimeFormat('pt-BR',{timeZone:'UTC',weekday:'short',day:'2-digit'}).format(dt);
+  return localFormatter2.format(dt);
 }
 function clock(minutes){
   const m=Math.max(0,Math.min(1440,Math.round(Number(minutes)||0)));
@@ -29,10 +42,7 @@ function upcomingSchedule(cfg={},now=Date.now()){
   const end=Math.max(1,Math.min(1440,Number(cfg.end_minutes||0)));
   const out=[];
   const nowDate=new Date(now);
-  const tzParts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const tzParts=Object.fromEntries(localFormatter3.formatToParts(nowDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const baseDay=dayMap[tzParts.weekday]??0;
   const nowSec=Number(tzParts.hour)*3600+Number(tzParts.minute)*60+Number(tzParts.second);
@@ -42,7 +52,7 @@ function upcomingSchedule(cfg={},now=Date.now()){
     if(!(mask&(1<<dow)))continue;
     const startSec=start*60;
     if(add===0&&nowSec>=end*60)continue;
-    const label=add===0?'Hoje':add===1?'Amanhã':new Intl.DateTimeFormat('pt-BR',{weekday:'short',timeZone:'America/Porto_Velho'}).format(new Date(now+add*86400000));
+    const label=add===0?'Hoje':add===1?'Amanhã':localFormatter4.format(new Date(now+add*86400000));
     out.push({
       day_offset:add,
       weekday:dow,
@@ -86,10 +96,7 @@ function irrigationSuggestion(weather={},cfg={}){
 }
 
 function localNowParts(now=Date.now()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter5.formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   return{
     weekday:dayMap[parts.weekday]??0,
@@ -250,6 +257,9 @@ function operationalState({seconds={},weatherSnapshot={},weatherConfig={},climat
     code='waiting_schedule';label='AGUARDANDO HORÁRIO';detail='Automático 2.0 não altera o ciclo fora da janela.';tone='neutral';
     nextAt=Number(seconds.next_window_at||climateState?.next_schedule_window_at||0)||null;
     nextLabel=nextAt?'Próximo início':'';
+  }else if(phase==='climate4_wait'){
+    code='climate_wait';label='AGUARDANDO CLIMA';detail=seconds.climate4_last_reason||'Automático 4.0 aguarda nova avaliação.';tone='neutral';
+    nextAt=Number(seconds.climate4_next_review_at||0)||null;nextLabel='Reavaliação';
   }else if(phase==='on'){
     code='irrigating';label='IRRIGANDO';detail='Saída do viveiro ligada.';tone='active';
     nextAt=Number(seconds.expected_off_at||0)||null;nextLabel=nextAt?'Desliga':'';
@@ -286,7 +296,7 @@ function detectAnomalies({seconds={},climateState={},weatherSnapshot={},maintena
     });
   }
 
-  const protectedPhase=['weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window'];
+  const protectedPhase=['climate4_wait','weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window'];
   if(seconds?.enabled&&op.inside_schedule&&!protectedPhase.includes(phase)){
     const cycleSeconds=Math.max(2,Number(seconds.on_seconds||30)+Number(seconds.off_seconds||120));
     const lastPulse=history.find(x=>String(x.type||'')==='viveiro_pulse_complete');
@@ -310,11 +320,11 @@ function detectAnomalies({seconds={},climateState={},weatherSnapshot={},maintena
     message:'Falhas repetidas de irrigação nos últimos 30 minutos.'
   });
 
-  if(op.inside_schedule&&String(climateState?.last_mode||'')==='automatic'){
-    const evalAt=Number(climateState?.last_evaluated_at||0);
+  if(seconds.enabled&&op.inside_schedule&&!safety?.emergency_latched&&!maintenance?.active){
+    const evalAt=Number(seconds.climate4_last_evaluated_at||0);
     if(evalAt&&now-evalAt>20*60000)issues.push({
       level:'warning',code:'climate_evaluation_stale',
-      message:'Automático 2.0 está há mais de 20 min sem nova avaliação.'
+      message:'Automático 4.0 está há mais de 20 min sem nova avaliação.'
     });
   }
   return issues;
@@ -352,10 +362,12 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
     });
   }
 
-  const weatherAt=Number(weatherSnapshot?.checked_at||climateState?.last_evaluated_at||0);
-  if(!weatherSnapshot?.linked||weatherSnapshot?.error){
+  const weatherAt=Number(weatherSnapshot?.checked_at||0);
+  const weatherOnline=weatherSnapshot?.linked===true&&!weatherSnapshot?.error&&weatherSnapshot?.device?.online!==false;
+  const weatherFresh=weatherAt>0&&now-weatherAt<=10*60000&&weatherAt<=now+30000;
+  if(!weatherOnline){
     issues.push({level:'critical',code:'weather_offline',message:'Weather2-2 sem comunicação.'});
-  }else if(weatherAt&&now-weatherAt>15*60000){
+  }else if(!weatherFresh){
     issues.push({level:'warning',code:'weather_stale',message:'Weather2-2 sem atualização recente.'});
   }
 
@@ -429,7 +441,7 @@ function buildHealth({seconds={},weatherSnapshot={},climateState={},maintenance=
     services:{
       railway:'online',
       firebase:firebaseOnline?'online':'offline',
-      weather:weatherSnapshot?.linked&&!weatherSnapshot?.error?'online':'offline',
+      weather:!weatherOnline?'offline':weatherFresh?'online':'stale',
       cycle:seconds?.enabled?'active':'stopped'
     }
   };
@@ -600,13 +612,13 @@ export default async function handler(req,res){
       const seconds=secondsRead?.value||null;
       const firebaseOnline=secondsRead?.ok===true;
       const weatherError=String(weatherState?.lastWeatherError||'');
-      const stateTemp=Number(weatherState?.lastTemperature);
-      const stateHum=Number(weatherState?.lastHumidity);
-      const climateTemp=Number(climateState?.last_temperature);
-      const climateHum=Number(climateState?.last_humidity);
+      const stateTemp=nullableNumber(weatherState?.lastTemperature);
+      const stateHum=nullableNumber(weatherState?.lastHumidity);
+      const climateTemp=nullableNumber(climateState?.last_temperature);
+      const climateHum=nullableNumber(climateState?.last_humidity);
       const lastTemp=Number.isFinite(stateTemp)?stateTemp:climateTemp;
       const lastHum=Number.isFinite(stateHum)?stateHum:climateHum;
-      const weatherSnapshot={
+      const weatherSnapshot=getCachedWeatherSnapshot()||{
         ok:!weatherError,
         linked:!weatherError&&weatherState?.weatherOnline!==false,
         cached:true,
@@ -615,7 +627,7 @@ export default async function handler(req,res){
         error:weatherError||null,
         metrics:{
           rainDetected:Boolean(weatherState?.rainDetected),
-          rainGeneric:Number.isFinite(Number(weatherState?.rainAmountMm))?{value:Number(weatherState.rainAmountMm),unit:'mm'}:null,
+          rainGeneric:Number.isFinite(nullableNumber(weatherState?.rainAmountMm))?{value:Number(weatherState.rainAmountMm),unit:'mm'}:null,
           temperature:Number.isFinite(lastTemp)?{value:lastTemp,unit:'°C'}:null,
           humidity:Number.isFinite(lastHum)?{value:lastHum,unit:'%'}:null
         }

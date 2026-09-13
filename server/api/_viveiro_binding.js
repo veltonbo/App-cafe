@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 
@@ -13,7 +14,8 @@ export async function getViveiroBinding(){
       deviceName:String(data?.deviceName||'').trim()||null,
       selectedAt:data?.selectedAt||null
     };
-  }catch{
+  }catch(error){
+    if(error?.code!=='ENOENT')throw new Error('Não foi possível ler a seleção do EKAZA; controle bloqueado.');
     return{deviceId:null,deviceName:null,selectedAt:null};
   }
 }
@@ -23,7 +25,7 @@ export async function setViveiroBinding({deviceId,deviceName=null}={}){
   if(!id)throw new Error('Dispositivo EKAZA não informado.');
   await fsp.mkdir(DATA_DIR,{recursive:true});
   const data={deviceId:id,deviceName:String(deviceName||'').trim()||null,selectedAt:new Date().toISOString()};
-  const tmp=FILE+'.tmp';
+  const tmp=FILE+'.'+randomUUID()+'.tmp';
   await fsp.writeFile(tmp,JSON.stringify(data,null,2)+'\n','utf8');
   await fsp.rename(tmp,FILE);
   return data;

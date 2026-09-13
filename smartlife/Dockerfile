@@ -68,7 +68,8 @@ RUN node scripts/inject-irrigacao-ui.js \
     && node scripts/patch-runtime-sync-v5.mjs \
     && node scripts/patch-ui-consistency-v7.mjs \
     && node scripts/patch-operations-center-v9-safe.mjs \
-    && node scripts/patch-support-report-v10.mjs
+    && node scripts/patch-support-report-v10.mjs \
+    && node scripts/patch-ui-automatic4-only.mjs
 
 # Verificações da interface de produção.
 RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
@@ -80,8 +81,11 @@ RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V9_SAFE' dist/irrigacao/index.html \
+    && grep -q 'FAZENDA2E_UI_AUTOMATIC4_ONLY_V1' dist/irrigacao/index.html \
+    && grep -q 'Automático 4.0 é o único controlador climático' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_SUPPORT_REPORT_V11' dist/irrigacao/suporte.js \
     && grep -q 'suporte.js?v=11' dist/irrigacao/suporte.html \
+    && node --check dist/irrigacao/app.js \
     && node --check dist/irrigacao/suporte.js \
     && test -f dist/irrigacao/suporte.html \
     && test -f dist/irrigacao/suporte.js \

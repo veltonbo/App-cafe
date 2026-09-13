@@ -38,15 +38,18 @@ RUN node scripts/patch-local-history-runtime.mjs \
     && node scripts/patch-new-ekaza-cycle.mjs \
     && node scripts/patch-automatic-stability-v3.mjs \
     && node scripts/patch-runtime-sync-v5.mjs \
-    && node scripts/patch-observability-v12.mjs
+    && node scripts/patch-observability-v12.mjs \
+    && node scripts/patch-automatic4-controller-v1.mjs
 
 # Verificações do runtime antes de compilar a interface.
 RUN grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
     && ! grep -q 'Atualize a programação do EKAZA antes de ativar o modo em segundos.' server/api/viveiro/_seconds.js \
-    && grep -q 'FAZENDA2E_AUTOMATIC_STABILITY_V3' server/api/viveiro/_climate.js \
     && grep -q 'FAZENDA2E_RUNTIME_SYNC_V5' server/continuous/seconds-manager.js \
     && grep -q 'FAZENDA2E_OBSERVABILITY_V12' server/continuous/seconds-manager.js \
+    && grep -q 'FAZENDA2E_AUTOMATIC4_CONTROLLER_V1' server/continuous/seconds-manager.js \
+    && grep -q "automatic_controller:'automatic4'" server/continuous/seconds-manager.js \
     && grep -q 'liveCheck:false' server/continuous/seconds-handler.js \
+    && node --check server/api/viveiro/_climate4.js \
     && node --check server/continuous/seconds-manager.js \
     && node --check server/continuous/seconds-handler.js
 

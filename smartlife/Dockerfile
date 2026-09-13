@@ -73,6 +73,8 @@ RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
     && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V9_SAFE' dist/irrigacao/index.html \
     && grep -q 'FAZENDA2E_SUPPORT_REPORT_V10' dist/irrigacao/suporte.js \
+    && grep -q 'suporte.js?v=10' dist/irrigacao/suporte.html \
+    && node --check dist/irrigacao/suporte.js \
     && test -f dist/irrigacao/suporte.html \
     && test -f dist/irrigacao/suporte.js \
     && test -f dist/irrigacao/suporte.css \

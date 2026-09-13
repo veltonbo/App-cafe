@@ -134,6 +134,7 @@ const realtimeOperation=`function renderOperation(){
   else if(phase==='waiting_window'){code='waiting_schedule';label='AGUARDANDO HORÁRIO';detail='Automação armada fora da janela de irrigação.';nextAt=num(s.next_window_at);nextLabel='Próximo início';}
   else if(phase==='weather_blocked'){code='rain';label='PAUSADO POR CHUVA';detail='A Weather2-2 detectou chuva e manteve a saída desligada.';}
   else if(phase==='waiting_after_rain'){code='rain';label='AGUARDANDO APÓS CHUVA';detail='Aguardando o período de segurança para retomar.';}
+  else if(phase==='climate4_wait'){code='waiting';label='AGUARDANDO CLIMA';detail=s.climate4_last_reason||'O Automático 4.0 aguarda a próxima avaliação climática.';}
   else if(phase==='weather_unavailable'){code='emergency';label='CLIMA INDISPONÍVEL';detail='Weather2-2 sem dados. Irrigação desligada por segurança.';}
   else if(phase==='maintenance'){code='neutral';label='MANUTENÇÃO';detail='Automação temporariamente bloqueada pelo modo manutenção.';}
   else if(phase==='emergency_stopped'){code='emergency';label='PARADA DE EMERGÊNCIA';detail='Saída bloqueada até liberação manual.';}
@@ -145,7 +146,7 @@ const realtimeOperation=`function renderOperation(){
   $('nextEventLabel').textContent=nextLabel||fallback.next_event_label||'Próximo evento';
   $('nextEventValue').dataset.at=String(nextAt||0);
   $('nextEventValue').textContent=nextAt?fmtSeconds(Math.max(0,(nextAt-Date.now())/1000)):(phase==='starting_on'||phase==='stopping_off'?'aguarde':'—');
-  const deviceAt=num(s.last_confirmation_at||s.state_updated_at||app.lastStatusAt),weatherAt=num(weather().checked_at||d.weather?.state?.lastWeatherAt);
+  const deviceAt=num(s.last_confirmation_at||app.lastStatusAt),weatherAt=num(weather().checked_at||d.weather?.state?.lastWeatherAt);
   $('deviceAge').textContent=fmtAge(deviceAt);$('weatherAge').textContent=fmtAge(weatherAt);$('liveAge').textContent=app.liveConnected?fmtAge(app.lastLiveAt):'reconectando';
   setDot('deviceDot',app.status?.online===true?true:app.status?.online===false?false:null);setDot('weatherDot',weather()?.linked&&weather()?.error==null?true:weather()?.error?false:null);setDot('liveDot',app.liveConnected?true:false);
   const active=Boolean(s.enabled);$('emergencyBtn').hidden=!active&&!d.safety?.emergency_latched;
@@ -157,8 +158,8 @@ if(operationRegex.test(app))app=app.replace(operationRegex,realtimeOperation);el
 const oldClimate="  const v=cs.last_vpd??cs.vpd;\n  const r=m.rainGeneric?.value??m.rain24h?.value;";
 const newClimate="  const currentClimate=d.climate?.current||{};\n  const v=currentClimate.fresh?currentClimate.vpd:null;\n  const r=m.rainGeneric?.value??m.rain24h?.value;";
 if(app.includes(oldClimate))app=app.replace(oldClimate,newClimate);
-const oldHint="  $('vpd').textContent=Number.isFinite(Number(v))?Number(v).toFixed(2)+' kPa':'—';\n  $('rain').textContent=";
-const newHint="  $('vpd').textContent=Number.isFinite(Number(v))?Number(v).toFixed(2)+' kPa':'—';\n  if($('vpdHint'))$('vpdHint').textContent=currentClimate.fresh?'Calculado da leitura atual':currentClimate.observed_at?'Leitura climática antiga':'Aguardando leitura sincronizada';\n  $('rain').textContent=";
+const oldHint="  $('vpd').textContent=hasReading(v)?Number(v).toFixed(2)+' kPa':'—';\n  $('rain').textContent=";
+const newHint="  $('vpd').textContent=hasReading(v)?Number(v).toFixed(2)+' kPa':'—';\n  if($('vpdHint'))$('vpdHint').textContent=currentClimate.fresh?'Calculado da leitura atual':currentClimate.observed_at?'Leitura climática antiga':'Aguardando leitura sincronizada';\n  $('rain').textContent=";
 if(app.includes(oldHint))app=app.replace(oldHint,newHint);
 const oldLevel="  const level=String(cs.drying_level_label||cs.drying_level||cs.last_level||cs.level||'').replaceAll('_',' ');";
 const newLevel="  const level=currentClimate.fresh?String(currentClimate.level_label||currentClimate.level||'').replaceAll('_',' '):'';";

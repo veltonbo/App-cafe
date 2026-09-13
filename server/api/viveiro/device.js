@@ -1,3 +1,4 @@
+import { storeGet } from '../irrigation/_store.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { smartLifeConfigured, smartLifeListDevices, smartLifeReadDevice } from '../_smartlife.js';
 import { getViveiroBinding, setViveiroBinding, clearViveiroBinding } from '../_viveiro_binding.js';
@@ -16,6 +17,11 @@ export default async function handler(req,res){
     }
     if(req.method==='POST'){
       const action=String(req.body?.action||'select');
+      if(!['select','clear','test'].includes(action))return res.status(400).json({ok:false,error:'Ação inválida.'});
+      if(action!=='test'){
+        const [safety,seconds]=await Promise.all([storeGet('IrrigacaoFazenda2E/viveiroSafety'),storeGet('IrrigacaoFazenda2E/viveiroSecondsState')]);
+        if(safety?.emergency_latched!==true||seconds?.enabled!==false)return res.status(409).json({ok:false,error:'Acione a parada de emergência e aguarde o automático parar antes de trocar o EKAZA.'});
+      }
       if(action==='clear')return res.status(200).json({ok:true,binding:await clearViveiroBinding()});
       const deviceId=String(req.body?.deviceId||'').trim();if(!deviceId)return res.status(400).json({ok:false,error:'Selecione um EKAZA.'});
       const device=await smartLifeReadDevice({deviceId,maxAgeMs:0});

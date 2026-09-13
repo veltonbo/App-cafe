@@ -2,3 +2,11 @@ node_modules
 .git
 .vercel
 *.log
+
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+dist
+irrigacao-react/dist

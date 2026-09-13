@@ -1,15 +1,17 @@
+const localFormatter1=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+  });
 import { climateTrend, vaporPressureDeficit } from './_climate.js';
 
 function metricValue(metric){
   const raw=metric&&typeof metric==='object'&&'value' in metric?metric.value:metric;
+  if(raw==null||typeof raw==='boolean'||(typeof raw==='string'&&!raw.trim()))return null;
   const n=Number(raw);
   return Number.isFinite(n)?n:null;
 }
 
 function localScheduleState(seconds={},now=Date.now()){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/Porto_Velho',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-  }).formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const parts=Object.fromEntries(localFormatter1.formatToParts(new Date(now)).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   const weekday=dayMap[parts.weekday]??0;
   const nowSeconds=Number(parts.hour||0)*3600+Number(parts.minute||0)*60+Number(parts.second||0);
@@ -38,7 +40,7 @@ export function climate3SynchronizedReading(snapshot={},climateState={},now=Date
   const observedAt=Math.max(0,Number(snapshot?.checked_at||0));
   const ageMinutes=observedAt?Math.max(0,(now-observedAt)/60000):null;
   const plausible=temperature!=null&&humidity!=null&&temperature>=-5&&temperature<=60&&humidity>=1&&humidity<=100;
-  const fresh=plausible&&observedAt>0&&ageMinutes<=10;
+  const fresh=snapshot?.ok!==false&&snapshot?.linked!==false&&snapshot?.device?.online!==false&&plausible&&observedAt>0&&observedAt<=now+30000&&ageMinutes<=10;
   const vpd=fresh?vaporPressureDeficit(temperature,humidity):null;
   const samples=(Array.isArray(climateState?.samples)?climateState.samples:[]).filter(row=>{
     const ts=Number(row?.observation_ts||row?.ts||0);
@@ -60,7 +62,7 @@ export function climate3SynchronizedReading(snapshot={},climateState={},now=Date
 }
 
 export function climate3Demand(vpd){
-  if(!Number.isFinite(Number(vpd)))return{level:'sem_dados',label:'Sem dados',demand:0};
+  if(vpd==null||!Number.isFinite(Number(vpd)))return{level:'sem_dados',label:'Sem dados',demand:0};
   if(vpd<=0.70)return{level:'muito_umido',label:'Muito úmido',demand:-0.18};
   if(vpd<=1.10)return{level:'umido',label:'Úmido',demand:-0.08};
   if(vpd<=1.70)return{level:'normal',label:'Normal',demand:0};

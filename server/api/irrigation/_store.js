@@ -13,6 +13,14 @@ let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
 let historyBackfillPromise=null;
 const recentHistoryCache=new Map();
+const HISTORY_CACHE_MAX_ENTRIES=12;
+function cacheRecentHistory(key,value){
+  recentHistoryCache.delete(key);
+  recentHistoryCache.set(key,value);
+  while(recentHistoryCache.size>HISTORY_CACHE_MAX_ENTRIES){
+    recentHistoryCache.delete(recentHistoryCache.keys().next().value);
+  }
+}
 
 function cleanPath(path) {
   return String(path || '').replace(/^\/+|\/+$/g,'').replace(/[.#$\[\]]/g,'_');
@@ -197,7 +205,7 @@ function refreshRecentHistory(key,start,safeLimit,entry={}){
   const promise=fetchRecentHistory(start,safeLimit)
     .then(rows=>{
       const now=Date.now();
-      recentHistoryCache.set(key,{
+      cacheRecentHistory(key,{
         rows,
         freshUntil:now+HISTORY_CACHE_FRESH_MS,
         staleUntil:now+HISTORY_CACHE_STALE_MS,
@@ -210,7 +218,7 @@ function refreshRecentHistory(key,start,safeLimit,entry={}){
       if(current)current.promise=null;
       throw error;
     });
-  recentHistoryCache.set(key,{...entry,promise});
+  cacheRecentHistory(key,{...entry,promise});
   return promise;
 }
 

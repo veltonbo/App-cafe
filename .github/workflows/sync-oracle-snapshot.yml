@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --location --retry 3 --retry-delay 2 \
-            https://fazenda2e.tail890201.ts.net/repo-sync-f5abdaa.tar.gz \
+            https://fazenda2e.tail890201.ts.net/repo-sync-fazenda2e-42.tar.gz \
             -o /tmp/fazenda2e-snapshot.tar.gz
           mkdir -p /tmp/fazenda2e-snapshot
           tar -xzf /tmp/fazenda2e-snapshot.tar.gz -C /tmp/fazenda2e-snapshot

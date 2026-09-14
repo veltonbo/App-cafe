@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173d2b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Viveiro">
+  <title>Fazenda 2E • Viveiro</title>
+  <link rel="manifest" href="/irrigacao/manifest.webmanifest">
+  <link rel="icon" href="/irrigacao/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/irrigacao/icon.svg">
+  <link rel="stylesheet" href="/irrigacao/app.css?v=20260914-42">
+</head>
+<body>
+  <div id="offlineBar" class="offlineBar" role="status" aria-live="polite" hidden>Tempo real reconectando. Os últimos dados continuam visíveis.</div>
+
+  <header class="appHeader">
+    <div>
+      <small>FAZENDA 2E • CONILON</small>
+      <h1>Viveiro Clonal</h1>
+    </div>
+    <button id="refreshBtn" class="headerState" type="button">
+      <i id="headerDot"></i><span id="headerStateText">Conectando</span>
+    </button>
+  </header>
+
+  <main class="appMain">
+    <section id="view-summary" class="view active">
+<div id="uiV6Marker" data-version="FAZENDA2E_UI_V6_20260912" class="v6Hero"><div class="v6HeroTop"><div><small>CENTRAL OPERACIONAL • 4.0</small><h2>Fazenda 2E</h2><p>Decisão, clima e irrigação em uma única visão.</p></div><span class="v6Live"><i></i> AO VIVO</span></div><div class="v6HeroGrid"><div><small>OPERAÇÃO</small><strong id="v6Operation">Monitorada</strong></div><div><small>AUTOMÁTICO</small><strong>4.0 Ativo</strong></div><div><small>SEGURANÇA</small><strong>Protegida</strong></div></div></div>
+      <section id="executiveStrip" class="executiveStrip">
+ <div class="execBrand"><small>PAINEL DE DECISÃO</small><b id="execHeadline">Sistema analisando</b><span id="execSubline">Consolidando operação, clima e segurança.</span></div>
+ <div class="execScore"><small>CONFIANÇA 4.0</small><strong id="execScore">—</strong><span id="execScoreLabel">coletando</span></div>
+</section>
+<article id="operationCard" class="operationCard tone-neutral">
+        <div class="operationIcon"><span id="operationIcon">◷</span></div>
+        <div class="operationBody">
+          <small>ESTADO AGORA</small>
+          <h2 id="operationLabel">CARREGANDO</h2>
+          <p id="operationDetail">Aguardando dados do viveiro.</p>
+        </div>
+        <div class="nextEvent">
+          <small id="nextEventLabel">Próximo evento</small>
+          <strong id="nextEventValue">—</strong>
+        </div>
+        <div class="freshness">
+          <span><i id="deviceDot"></i>EKAZA <b id="deviceAge">—</b></span>
+          <span><i id="weatherDot"></i>CLIMA <b id="weatherAge">—</b></span>
+          <span><i id="liveDot"></i>TEMPO REAL <b id="liveAge">—</b></span>
+        </div>
+      </article>
+
+      <button id="emergencyBtn" class="emergencyBtn" type="button">■ PARAR IRRIGAÇÃO AGORA</button>
+
+      <div class="sectionHead">
+        <div><small>AMBIENTE DOS CLONES</small><h2>Condição do viveiro</h2></div>
+        <span id="climateBadge" class="badge">—</span>
+      </div>
+      <div class="metricGrid">
+        <article class="metric"><small>Temperatura</small><strong id="temperature">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>Umidade</small><strong id="humidity">—</strong><span>Weather2-2</span></article>
+        <article class="metric"><small>VPD</small><strong id="vpd">—</strong><span id="vpdHint">Déficit de pressão</span></article>
+        <article class="metric"><small>Chuva 24 h</small><strong id="rain">—</strong><span id="rainHint">Sem chuva ativa</span></article>
+      </div>
+
+      <article id="climateForecastPanel" class="climateForecastPanel">
+        <div class="climateForecastHead">
+          <div><small>CLIMA • ESTAÇÃO + PREVISÃO</small><h3>Previsão agrícola</h3></div>
+          <span id="forecastBadge" class="badge">CARREGANDO</span>
+        </div>
+        <div class="climateReliability">
+          <div><small>Fonte atual</small><strong>Weather2-2</strong></div>
+          <div><small>Modelo</small><strong id="forecastProvider">Open-Meteo</strong></div>
+          <div><small>Conferência</small><strong id="forecastAgreement">—</strong></div>
+        </div>
+        <div class="forecastHighlights">
+          <div><small>Próxima chuva</small><strong id="forecastNextRain">—</strong></div>
+          <div><small>Chuva 24 h</small><strong id="forecastRain24">—</strong></div>
+          <div><small>VPD máx. 24 h</small><strong id="forecastVpd24">—</strong></div>
+          <div><small>ET₀ 24 h</small><strong id="forecastEt024">—</strong></div>
+        </div>
+        <div class="forecastTitleRow"><strong>Próximas horas</strong><small id="forecastUpdated">—</small></div>
+        <div id="forecastHourly" class="forecastHourly"><span class="panelNote">Carregando previsão...</span></div>
+        <div class="forecastTitleRow"><strong>Próximos dias</strong><small>modelo numérico</small></div>
+        <div id="forecastDaily" class="forecastDaily"><span class="panelNote">Carregando previsão...</span></div>
+        <p id="forecastNote" class="forecastNote">A estação local é usada para decisões atuais. A previsão serve para antecipar chuva, calor, VPD e demanda de água.</p>
+      </article>
+
+      <article id="summaryAuto4" class="summaryAuto4">
+ <div class="v5Head"><div><small>AUTOMÁTICO 4.0 • ATIVO</small><h3 id="sum4Decision">OBSERVANDO</h3></div><span id="sum4Badge" class="badge">SEM CONTROLE</span></div>
+ <p id="sum4Reason">Analisando as condições atuais.</p>
+ <div class="v5DecisionGrid"><div><small>Atual</small><b id="sum4Current">—</b></div><div><small>4.0 faria</small><b id="sum4Target">—</b></div><div><small>Demanda</small><b id="sum4Demand">—</b></div></div>
+ <div id="sum4Factors" class="v5Factors"></div>
+</article>
+<article id="intelligence41Card" class="intelligence41Card intelligence42Card">
+  <div class="intel42Main"><small>INTELIGÊNCIA 4.2 • CONSULTIVA</small><h3 id="intel41Title">Aprendendo o viveiro</h3><p id="intel41Reason">Analisando clima e resultado dos ciclos.</p></div>
+  <div class="intel41Side"><small>CONFIANÇA</small><strong id="intel41Confidence">—</strong><span id="intel41Next">Próxima ação em análise</span></div>
+  <div class="intel42Forecast"><div><small>Pulsos previstos</small><b id="intel42Pulses">—</b></div><div><small>Tempo previsto</small><b id="intel42Time">—</b></div><div><small>Chuva</small><b id="intel42Rain">—</b></div><div><small>Demanda</small><b id="intel42Demand">—</b></div></div>
+</article>
+<article class="automationSummary">
+        <div class="autoTop">
+          <div><small>AUTOMÁTICO 4.0</small><h3 id="autoTitle">Aguardando avaliação</h3></div>
+          <span id="autoBadge" class="badge">—</span>
+        </div>
+        <p id="autoReason">O sistema ainda não enviou a avaliação climática.</p><div id="auto4DecisionCenter" class="auto4DecisionCenter">
+    <div class="auto4Head"><div><small>AUTOMÁTICO 4.0 • INTELIGÊNCIA</small><h3>Central de decisões</h3></div><span class="badge">ATIVO</span></div>
+    <div class="auto4Decision"><strong id="auto4Decision">OBSERVANDO</strong><span id="auto4Confidence">Confiança —</span></div>
+    <p id="auto4Reason">O 4.0 está analisando clima, tendência e histórico sem controlar a bomba.</p>
+    <div class="auto4Metrics"><div><small>Ciclo atual</small><b id="auto4Current">—</b></div><div><small>4.0 faria</small><b id="auto4Target">—</b></div><div><small>Demanda</small><b id="auto4Demand">—</b></div><div><small>Segurança</small><b>5 camadas</b></div></div>
+    <div id="auto4Factors" class="auto4Factors"></div><div class="decisionFlow31"><div><small>OBSERVOU</small><strong id="decisionObserved">Coletando dados</strong></div><div><small>DECIDIU</small><strong id="decisionAction">Aguardando</strong></div><div><small>POR QUÊ</small><strong id="decisionWhy">Aguardando justificativa</strong></div><div><small>RESULTADO</small><strong id="decisionResult">Aguardando resultado</strong></div></div>
+  </div>
+        <div class="cycleRow">
+          <div><small>Ciclo-base</small><strong id="baseCycle">—</strong></div>
+          <span>→</span>
+          <div><small>Ciclo atual</small><strong id="currentCycle">—</strong></div>
+          <div class="intensity"><small>Intensidade</small><strong id="intensity">—</strong></div>
+        </div>
+      </article>
+
+      <article id="autonomySummary" class="autonomySummary"><div class="autonomyIcon">✦</div><div><small>SUPERVISOR AUTÔNOMO</small><strong id="autonomyTitle">Iniciando supervisão</strong><span id="autonomyDetail">Verificando clima, dispositivos e histórico.</span></div><b id="autonomyScore">—</b></article><article id="dailyPlanSummary" class="dailyPlanSummary"><div><small>PLANO DO DIA</small><strong id="dailyPlanTitle">Calculando demanda</strong><span id="dailyPlanDetail">Previsão + Weather2-2 + histórico do viveiro.</span></div><b id="dailyPlanScore">—</b></article><article id="agronomySummary32" class="agronomySummary32"><div><small>ASSISTENTE AGRONÔMICO 1.0</small><strong id="agronomyTitle32">Analisando o viveiro</strong><span id="agronomyDetail32">Leitura consultiva baseada em clima, histórico e demanda.</span></div><b id="agronomyBadge32">APOIO</b></article>
+
+      <div class="sectionHead">
+        <div><small>VIVEIRO HOJE</small><h2>Resumo da irrigação</h2></div>
+        <button class="textBtn" data-view="history" type="button">Ver histórico</button>
+      </div>
+      <article id="decisionSnapshot" class="decisionSnapshot"><div class="v5Head"><div><small>ANÁLISE DO DIA</small><h3>Indicadores para decisão</h3></div><span id="decisionHealth" class="badge">—</span></div><div class="decisionKpis"><div><small>Conclusão de pulsos</small><b id="kpiCompletion">—</b></div><div><small>Falhas</small><b id="kpiErrors">—</b></div><div><small>Pausas chuva</small><b id="kpiRain">—</b></div><div><small>Tempo irrigado</small><b id="kpiIrrigated">—</b></div></div><p id="decisionAdvice">Coletando dados de hoje.</p></article>
+<div class="todayGrid">
+        <article><small>Pulsos</small><strong id="todayPulses">—</strong><span id="todayCompleted">— concluídos</span></article>
+        <article><small>Tempo irrigado</small><strong id="todayIrrigated">—</strong><span>tempo confirmado</span></article>
+        <article><small>Último pulso</small><strong id="todayLast">—</strong><span id="todayLastSub">—</span></article>
+        <article><small>Pausas por chuva</small><strong id="todayRainPauses">—</strong><span id="todayErrors">— falhas</span></article>
+      </div>
+
+      <button id="healthCard" class="healthCard" data-view="system" type="button">
+        <i id="healthIcon">✓</i>
+        <span><small>SAÚDE DO SISTEMA</small><strong id="healthTitle">Verificando</strong><em id="healthDetail">Aguardando diagnóstico</em></span>
+        <b>›</b>
+      </button>
+    </section>
+
+    <section id="view-automation" class="view">
+      <div class="pageTitle conilonTitle"><small>MANEJO INTELIGENTE</small><h2>Automação 4.0</h2><p>Água na medida certa para o desenvolvimento dos clones.</p></div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>PROGRAMAÇÃO</small><h3>Ciclo do viveiro</h3></div><span id="scheduleState" class="badge">—</span></div>
+        <div class="fieldGrid two">
+          <label><span>Ligado</span><div class="unitInput"><input id="onSeconds" aria-label="Tempo ligado em segundos" type="number" min="1" max="300" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Intervalo</span><div class="unitInput"><input id="offSeconds" aria-label="Tempo de intervalo em segundos" type="number" min="1" max="900" inputmode="numeric"><b>s</b></div></label>
+          <label><span>Início</span><input id="startTime" aria-label="Horário de início" type="time"></label>
+          <label><span>Fim</span><input id="endTime" aria-label="Horário de fim" type="time"></label>
+        </div>
+        <div class="fieldLabel">Dias ativos</div>
+        <div id="dayPicker" class="dayPicker"></div>
+        <div class="buttonRow">
+          <button id="saveScheduleBtn" class="primaryBtn" type="button">Salvar e armar</button>
+          <button id="disableScheduleBtn" class="secondaryBtn" type="button">Desarmar</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>INTELIGÊNCIA</small><h3>Automático 4.0</h3></div><span id="autoConfigState" class="badge">ATIVO</span></div>
+        <div class="auto4OnlyNotice" data-version="FAZENDA2E_UI_AUTOMATIC4_ONLY_V1"><b>Automático 4.0 é o único controlador climático.</b><span>Ele decide se precisa irrigar, reduzir a frequência ou manter o viveiro desligado e reavaliar depois.</span></div><div class="segmented auto4LegacyHidden" id="autoMode">
+          <button data-mode="automatic" type="button">Automático</button>
+          <button data-mode="observation" type="button">Observar</button>
+          <button data-mode="off" type="button">Desligado</button>
+        </div>
+        <div class="fieldGrid two compactFields auto4LegacyHidden">
+          <label><span>Avaliar a cada</span><div class="unitInput"><input id="evaluationMinutes" aria-label="Intervalo de avaliação do Automático 4.0 em minutos" type="number" min="5" max="30"><b>min</b></div></label>
+          <label><span>Ajuste máximo</span><div class="unitInput"><input id="maxAdjustPercent" aria-label="Ajuste máximo do Automático 4.0 em porcentagem" type="number" min="10" max="30"><b>%</b></div></label>
+        </div>
+        <button id="saveAutoBtn" class="primaryBtn full auto4LegacyHidden" type="button">Salvar Automático 4.0</button>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>PROTEÇÃO</small><h3>Chuva e retomada</h3></div><span id="rainProtectionState" class="badge">—</span></div>
+        <label class="toggleRow"><span><b>Proteção por chuva</b><small>Impede a irrigação quando a Weather2-2 detecta chuva.</small></span><input id="rainEnabled" aria-label="Ativar proteção por chuva" type="checkbox"></label>
+        <div class="fieldGrid two compactFields">
+          <label><span>Retomar após</span><div class="unitInput"><input id="resumeDelay" aria-label="Tempo para retomada após chuva em minutos" type="number" min="0" max="1440"><b>min</b></div></label>
+          <label><span>Atualização</span><div class="unitInput"><input id="weatherCheck" aria-label="Intervalo de atualização climática em segundos" type="text" value="≈ 4" disabled><b>s</b></div></label>
+        </div>
+        <button id="saveRainBtn" class="primaryBtn full" type="button">Salvar proteção</button>
+      </article>
+
+      <article class="panel simulatorPanel">
+        <div class="panelHead"><div><small>SIMULADOR DE CICLO</small><h3>Testar sem alterar a irrigação</h3></div><span class="badge">SEM COMANDO</span></div>
+        <div class="fieldGrid two compactFields"><label><span>Ligado</span><div class="unitInput"><input id="simOn" type="number" min="1" max="300" value="30"><b>s</b></div></label><label><span>Intervalo</span><div class="unitInput"><input id="simOff" type="number" min="1" max="900" value="196"><b>s</b></div></label></div>
+        <div class="simResult"><div><small>Pulsos/hora</small><strong id="simPulses">—</strong></div><div><small>Irrigado/hora</small><strong id="simMinutes">—</strong></div><div><small>Vs. ciclo-base</small><strong id="simDelta">—</strong></div></div>
+        <p class="panelNote">Somente simulação. Não salva configuração e não aciona o EKAZA.</p>
+      </article>
+    </section>
+
+    <section id="view-history" class="view">
+      <div class="pageTitle conilonTitle"><small>EVOLUÇÃO DO VIVEIRO</small><h2>Histórico</h2><p>Pulsos, clima, decisões e resposta do sistema ao longo do tempo.</p></div>
+      <article class="panel history3Panel">
+        <div class="panelHead"><div><small>HISTÓRICO 3.0</small><h3>Abrir qualquer dia</h3></div><span id="history3Badge" class="badge">—</span></div>
+        <div class="history3Toolbar"><button id="historyPrevDay" class="secondaryBtn" type="button">‹</button><input id="historyDate" type="date" aria-label="Dia do histórico"><button id="historyNextDay" class="secondaryBtn" type="button">›</button><button id="exportDayBtn" class="secondaryBtn" type="button">Exportar</button></div>
+        <div class="history3Stats"><div><small>Pulsos</small><strong id="history3Pulses">—</strong></div><div><small>Irrigado</small><strong id="history3Time">—</strong></div><div><small>Chuva</small><strong id="history3Rain">—</strong></div><div><small>Falhas</small><strong id="history3Errors">—</strong></div></div>
+        <div class="panelHead history3TimelineHead"><div><small>LINHA DO TEMPO</small><h3>Operação do dia</h3></div><span id="history3EventsCount" class="badge">—</span></div>
+        <div id="history3Timeline" class="eventList"></div>
+      </article>
+
+      <article id="dayStatusCard" class="dayStatusCard normal">
+        <div><small>STATUS DO DIA</small><h3 id="dayStatusTitle">Verificando</h3><p id="dayStatusDetail">Aguardando relatório diário.</p></div>
+        <span id="dayStatusBadge" class="badge">—</span>
+      </article>
+
+      <article id="historyCompareCard" class="panel historyCompareCard">
+        <div class="panelHead"><div><small>COMPARATIVO</small><h3>Hoje × histórico recente</h3></div><span id="historyCompareBadge" class="badge">—</span></div>
+        <div class="historyCompareGrid">
+          <div><small>Hoje • pulsos</small><strong id="historyTodayPulses">—</strong><span id="historyTodayTime">—</span></div>
+          <div><small>Ontem • pulsos</small><strong id="historyYesterdayPulses">—</strong><span id="historyYesterdayTime">—</span></div>
+          <div><small>Média 7 dias</small><strong id="historyAvg7Pulses">—</strong><span id="historyAvg7Time">—</span></div>
+          <div><small>Variação x ontem</small><strong id="historyDeltaPulses">—</strong><span id="historyDeltaTime">—</span></div>
+        </div>
+      </article>
+
+      <article id="historyQualityCard" class="panel historyQualityCard">
+        <div class="panelHead"><div><small>CONFIABILIDADE DOS DADOS</small><h3>Qualidade do histórico</h3></div><span id="historyQualityBadge" class="badge">—</span></div>
+        <p id="historyQualityDetail" class="panelNote">Verificando consistência dos registros.</p>
+      </article>
+
+      <div id="historyPeriod" class="historyPeriod segmented" role="tablist" aria-label="Período do histórico">
+        <button class="active" data-period="today" role="tab" aria-selected="true" type="button">Hoje</button>
+        <button data-period="week" role="tab" aria-selected="false" type="button">7 dias</button>
+        <button data-period="month" role="tab" aria-selected="false" type="button">30 dias</button>
+      </div>
+
+      <div class="reportGrid historyPeriodBlock" data-period="today">
+        <article><small>Ajustes Auto 4.0</small><strong id="reportAutoAdjust">—</strong><span>hoje</span></article>
+        <article><small>Interrupções</small><strong id="reportInterruptions">—</strong><span>hoje</span></article>
+        <article><small>Temperatura</small><strong id="reportTemperature">—</strong><span>mín / máx</span></article>
+        <article><small>Incidentes</small><strong id="reportIncidents">—</strong><span>abertos agora</span></article>
+      </div>
+
+      <div class="weekSummary historyPeriodBlock" data-period="week" hidden>
+        <article><small>7 dias • pulsos</small><strong id="weekPulses">—</strong></article>
+        <article><small>7 dias • irrigado</small><strong id="weekIrrigated">—</strong></article>
+        <article><small>Pausas por chuva</small><strong id="weekRain">—</strong></article>
+        <article><small>Falhas</small><strong id="weekErrors">—</strong></article>
+      </div>
+
+      <article class="panel historyPeriodBlock" data-period="week" hidden>
+        <div class="panelHead"><div><small>ÚLTIMOS 7 DIAS</small><h3>Irrigação por dia</h3></div></div>
+        <div id="weekChart" class="weekChart"></div>
+      </article>
+
+      <article class="panel historyPeriodBlock" data-period="month" hidden>
+        <div class="panelHead"><div><small>TENDÊNCIA • 30 DIAS</small><h3>Tempo irrigado por dia</h3></div><span id="trend30Badge" class="badge">—</span></div>
+        <div id="trend30Chart" class="trend30Chart"></div>
+        <p id="trend30Note" class="panelNote">Aguardando histórico suficiente.</p>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>INCIDENTES</small><h3>Problemas e recuperações</h3></div><span id="incidentOpenBadge" class="badge">—</span></div>
+        <div id="incidentList" class="incidentList"></div>
+      </article>
+
+      <article id="decisionLearning33" class="panel decisionLearning33"><div class="panelHead"><div><small>DIÁRIO INTELIGENTE</small><h3>Aprendizado por resultado</h3></div><span id="decisionLearningBadge33" class="badge">—</span></div><div class="decisionLearningStats33"><div><small>Decisões avaliadas</small><strong id="decisionSamples33">—</strong></div><div><small>Resultado médio</small><strong id="decisionOutcome33">—</strong></div><div><small>Confiança</small><strong id="decisionConfidence33">—</strong></div></div><p id="decisionLearningSummary33" class="panelNote">Aguardando decisões avaliadas.</p><div id="decisionJournal33" class="decisionJournal33"></div></article><article class="panel">
+        <div class="panelHead"><div><small>DECISÕES</small><h3>O que o sistema fez</h3></div></div>
+        <div id="decisionList" class="eventList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>EVENTOS</small><h3>Atividade recente</h3></div></div>
+        <div id="historyEventFilter" class="historyEventFilter segmented" role="tablist" aria-label="Filtro de eventos">
+          <button class="active" data-filter="all" type="button">Todos</button>
+          <button data-filter="pulse" type="button">Pulsos</button>
+          <button data-filter="climate" type="button">Clima</button>
+          <button data-filter="issue" type="button">Falhas</button>
+        </div>
+        <div id="historyList" class="eventList"></div>
+      </article>
+    </section>
+
+    <section id="view-system" class="view">
+      <div class="pageTitle conilonTitle"><small>FAZENDA 2E CONECTADA</small><h2>Sistema</h2><p>Saúde, conectividade e proteção de toda a automação.</p></div>
+      <article id="systemOverallCard" class="systemOverallCard"><i id="systemOverallIcon">✓</i><span><small>ESTADO GERAL</small><strong id="systemOverallTitle">Verificando sistema</strong><em id="systemOverallDetail">Aguardando diagnóstico dos serviços.</em></span></article>
+      <article id="appUpdatePanel" class="panel appUpdatePanel">
+        <div class="panelHead"><div><small>APLICATIVO • ATUALIZAÇÃO</small><h3>Carregar versão mais nova</h3></div><span id="appUpdateBadge" class="badge">PRONTO</span></div>
+        <p id="appUpdateDetail" class="panelNote">Limpa somente o cache do Fazenda 2E e recarrega a versão mais recente. Configurações, histórico, sessão e dados do viveiro são preservados.</p>
+        <button id="refreshAppBtn" class="primaryBtn full" type="button">↻ Atualizar aplicativo</button>
+      </article>
+      <article id="guidedDiagnosticsPanel" class="panel">
+        <div class="panelHead"><div><small>DIAGNÓSTICO GUIADO</small><h3>Verificar sistema agora</h3></div><span id="guidedDiagBadge" class="badge">—</span></div>
+        <p id="guidedDiagSummary" class="panelNote">Oracle, Firebase, histórico, EKAZA, Weather2-2, Smart Life, Telegram, watchdog e backup.</p>
+        <button id="runDiagnosticsBtn" class="primaryBtn full" type="button">Verificar sistema agora</button>
+        <div id="guidedDiagList" class="auditList"></div>
+      </article>
+      <article id="professionalAlertsPanel" class="panel">
+        <div class="panelHead"><div><small>CENTRAL DE ALERTAS</small><h3>Ocorrências operacionais</h3></div><span id="alertCenterBadge" class="badge">—</span></div>
+        <div id="alertCenterList" class="incidentList"></div>
+      </article>
+      <article id="backup42Panel" class="panel">
+        <div class="panelHead"><div><small>BACKUP INTELIGENTE</small><h3>Configuração protegida</h3></div><span id="backup42Badge" class="badge">—</span></div>
+        <div class="buttonRow"><button id="createBackupBtn" class="primaryBtn" type="button">Criar backup</button><button id="refreshBackupsBtn" class="secondaryBtn" type="button">Atualizar lista</button></div>
+        <div id="backup42List" class="backup42List"></div>
+      </article>
+      <article id="version42Panel" class="panel">
+        <div class="panelHead"><div><small>VERSÃO DO SISTEMA</small><h3>Fazenda 2E <span id="appVersion">4.2.0</span></h3></div><span class="badge">ESTÁVEL</span></div>
+        <div class="statusRows"><div><span>Publicação</span><strong>14/09/2026</strong></div><div><span>Controlador físico</span><strong>Automático 4.0</strong></div></div>
+        <button id="toggleChangelogBtn" class="secondaryBtn full" type="button">O que mudou nesta versão</button>
+        <div id="changelog42" class="changelog42" hidden><b>4.2.0</b><p>Histórico 3.0, diagnóstico guiado, central de alertas, backup profissional, simulador, previsão de irrigação e Inteligência 4.2 consultiva.</p></div>
+      </article>
+
+      <article id="serverDiagnosticsPanel" class="panel">
+        <div class="panelHead"><div><small>ORACLE CLOUD • DIAGNÓSTICO</small><h3>Saúde do servidor</h3></div><span id="diagOverallBadge" class="badge">VERIFICANDO</span></div>
+        <div class="statusRows">
+          <div><span>Hospedagem</span><strong>Oracle Cloud</strong></div>
+          <div><span>Memória do servidor</span><strong id="diagServerRam">—</strong></div>
+          <div><span>Memória do Fazenda 2E</span><strong id="diagProcessRam">—</strong></div>
+          <div><span>Histórico local</span><strong id="diagHistory">—</strong></div>
+          <div><span>Sincronização local</span><strong id="diagSync">—</strong></div>
+          <div><span>Backups locais</span><strong id="diagBackup">—</strong></div>
+          <div><span>Firebase</span><strong id="diagFirebase">—</strong></div>
+        </div>
+        <p id="diagAlerts" class="panelNote">Verificando componentes do servidor.</p>
+        <div class="auditFoot"><span>Último diagnóstico</span><strong id="diagCheckedAt">—</strong></div>
+      </article>
+      <article id="smartLifeReconnectPanel" class="panel smartLifeReconnectPanel">
+        <div class="panelHead"><div><small>SMART LIFE • CONEXÃO</small><h3>Reconectar dispositivos</h3></div><span id="smartLifeReconnectBadge" class="badge">VERIFICANDO</span></div>
+        <p id="smartLifeReconnectText" class="panelNote">Verificando a conexão atual de EKAZA e Weather2-2.</p>
+        <button id="smartLifeReconnectBtn" class="primary full" type="button">Reconectar Smart Life</button>
+        <div id="smartLifeQrArea" class="smartLifeQrArea" hidden>
+          <img id="smartLifeQrImage" alt="QR Code Smart Life">
+          <strong>Autorize no aplicativo Smart Life</strong>
+          <p>Abra o Smart Life, use o leitor de QR Code e confirme a autorização. Depois volte aqui.</p>
+          <button id="smartLifeConfirmBtn" class="primary full" type="button">Já autorizei</button>
+          <button id="smartLifeCancelBtn" class="secondary full" type="button">Cancelar</button>
+        </div>
+      </article>
+
+      <article id="autonomySystemPanel" class="panel autonomySystemPanel"><div class="panelHead"><div><small>INTELIGÊNCIA LOCAL</small><h3>Supervisor autônomo</h3></div><span id="autonomySystemBadge" class="badge">—</span></div><div class="autonomySystemGrid"><div><small>Índice de autonomia</small><strong id="autonomySystemScore">—</strong></div><div><small>Última verificação</small><strong id="autonomyChecked">—</strong></div></div><p id="autonomySystemDetail" class="panelNote">Aguardando primeira avaliação.</p><div class="learningStrip"><div><small>APRENDIZADO</small><strong id="autonomyLearningStage">Iniciando</strong></div><div><small>NORMALIDADE</small><strong id="autonomyNormality">—</strong></div><div><small>ANOMALIAS</small><strong id="autonomyAnomalies">0</strong></div></div><div id="autonomyLearnedRanges" class="learnedRanges"></div><div id="predictiveMaintenance" class="predictiveMaintenance"><div><small>MANUTENÇÃO PREDITIVA</small><strong id="maintenanceTitle">Analisando tendência</strong></div><b id="maintenanceScore">—</b><p id="maintenanceDetail">Comparando falhas e latência com o padrão recente.</p></div><div class="reliability31"><div class="reliabilityHead"><span><small>CONFIABILIDADE DOS COMPONENTES</small><strong id="reliabilityOverall31">—</strong></span><em>Autonomia 3.3</em></div><div id="reliabilityGrid31" class="reliabilityGrid31"><div><small>Controlador</small><b id="relController31">—</b></div><div><small>EKAZA</small><b id="relEkaza31">—</b></div><div><small>Weather2-2</small><b id="relWeather31">—</b></div><div><small>Firebase</small><b id="relFirebase31">—</b></div><div><small>Histórico</small><b id="relHistory31">—</b></div></div><p>Relógio local e comunicação Smart Life são avaliados separadamente.</p></div><div id="preventiveHealth32" class="preventiveHealth32"><div class="preventiveHead32"><span><small>SAÚDE PREVENTIVA</small><strong id="preventiveTitle32">Calculando risco</strong></span><b id="preventiveScore32">—</b></div><p id="preventiveDetail32">Aguardando tendência, backups e confiabilidade.</p><div class="preventiveGrid32"><div><small>Risco</small><strong id="riskLevel32">—</strong></div><div><small>Backup</small><strong id="backupState32">—</strong></div><div><small>Controlador</small><strong id="controllerState32">—</strong></div><div><small>Smart Life</small><strong id="cloudState32">—</strong></div></div></div><div id="recoverySelfTest33" class="recoverySelfTest33"><div><small>AUTOTESTE DE RECUPERAÇÃO</small><strong id="recoverySelfTitle33">Aguardando teste</strong></div><b id="recoverySelfScore33">—</b><p id="recoverySelfDetail33">Simulações sem desligar dispositivos reais.</p></div><div id="autonomyRecovery" class="autonomyRecovery"></div></article>
+
+      <article id="telegramPanel" class="panel telegramPanel"><div class="panelHead"><div><small>TELEGRAM</small><h3>Assistente do viveiro</h3></div><span id="telegramBadge" class="badge">—</span></div><p id="telegramDetail" class="panelNote">Verificando configuração.</p><div id="telegramSetupBox" class="telegramSetupBox"><label><span>Token do BotFather</span><input id="telegramTokenInput" type="password" autocomplete="off" placeholder="Cole o token uma única vez"></label><button id="telegramSaveTokenBtn" class="primaryBtn full" type="button">Ativar Telegram</button><p id="telegramActionStatus" class="telegramActionStatus" aria-live="polite"></p><small>O token é validado no Telegram e salvo apenas no volume privado do servidor.</small></div><div id="telegramPairBox" class="telegramPairBox" hidden><small>CÓDIGO DE VINCULAÇÃO</small><strong id="telegramPairCode">—</strong><span>Envie ao bot: <b>/vincular CÓDIGO</b></span></div><div id="telegramAssistantBox" class="telegramAssistantBox"><div class="telegramAssistantHead"><b>Avisos automáticos</b><small>Somente eventos importantes</small></div><label><span>Resumo da manhã</span><input id="tgMorning" type="checkbox" checked></label><label><span>Resumo noturno</span><input id="tgEvening" type="checkbox" checked></label><label><span>Aviso ao iniciar a janela</span><input id="tgWindowStart" type="checkbox" checked></label><label><span>Aviso ao encerrar a janela</span><input id="tgWindowEnd" type="checkbox" checked></label><label><span>Pausa por chuva</span><input id="tgRain" type="checkbox" checked></label><label><span>Recuperações automáticas</span><input id="tgRecovery" type="checkbox" checked></label><label><span>Anomalias do Supervisor</span><input id="tgAnomalies" type="checkbox" checked></label><div class="tgLead"><span>Resumo antes do início</span><div><input id="tgMorningLead" type="number" min="0" max="180" value="15"><b>min</b></div></div><div class="tgLead"><span>Fechamento após o fim</span><div><input id="tgEveningDelay" type="number" min="0" max="180" value="15"><b>min</b></div></div><button id="tgSaveAssistant" class="secondaryBtn full" type="button">Salvar avisos</button><small id="tgAssistantStatus" class="tgAssistantStatus"></small></div><div class="telegramCommands"><span>/status</span><span>/clima</span><span>/hoje</span><span>/autonomia</span><span>/ajuda</span></div></article>
+
+      <div class="serviceGrid">
+        <article><i id="svcEkaza"></i><small>EKAZA</small><strong id="svcEkazaText">—</strong></article>
+        <article><i id="svcWeather"></i><small>Weather2-2</small><strong id="svcWeatherText">—</strong></article>
+        <article><i id="svcRealtime"></i><small>Tempo real</small><strong id="svcRealtimeText">—</strong></article>
+        <article><i id="svcServer"></i><small>Servidor</small><strong id="svcServerText">—</strong></article>
+      </div>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>SEGURANÇA</small><h3>Estado de proteção</h3></div></div>
+        <div class="statusRows">
+          <div><span>Emergência</span><strong id="emergencyState">—</strong></div>
+          <div><span>Watchdog</span><strong id="watchdogState">—</strong></div>
+          <div><span>Última confirmação</span><strong id="confirmationState">—</strong></div>
+          <div><span>Latência Smart Life</span><strong id="confirmationLatencyState">—</strong></div>
+          <div><span>Precisão do ciclo local</span><strong id="precisionState">—</strong></div>
+        </div>
+        <button id="clearEmergencyBtn" class="secondaryBtn full" type="button" hidden>Liberar parada de emergência</button>
+      </article>
+
+      <details class="systemAdvanced">
+        <summary><span><b>Ferramentas e detalhes técnicos</b><small>Auditoria, manutenção, conexão e diagnóstico</small></span><strong>›</strong></summary>
+        <div class="systemAdvancedBody">
+      <article class="panel">
+        <div class="panelHead"><div><small>AUDITORIA AUTOMÁTICA</small><h3>Conferência operacional</h3></div><span id="auditBadge" class="badge">—</span></div>
+        <p id="auditSummary" class="panelNote">Aguardando a primeira verificação.</p>
+        <div id="auditList" class="auditList"></div>
+        <div class="auditFoot"><span>Última conferência</span><strong id="auditCheckedAt">—</strong></div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>MANUTENÇÃO</small><h3>Suspender automação</h3></div><span id="maintenanceBadge" class="badge">—</span></div>
+        <p class="panelNote">Use durante serviços no viveiro. A saída fica protegida enquanto a manutenção estiver ativa.</p>
+        <div class="buttonRow three">
+          <button class="secondaryBtn maintenanceBtn" data-minutes="30" type="button">30 min</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="60" type="button">1 hora</button>
+          <button class="secondaryBtn maintenanceBtn" data-minutes="0" type="button">Encerrar</button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panelHead"><div><small>CONEXÃO</small><h3>Este aparelho</h3></div></div>
+        <div class="fieldGrid">
+          <label><span>URL do servidor</span><input id="apiUrl" aria-label="URL do servidor" type="url" autocomplete="off"></label>
+          <label><span>Token de pareamento</span><input id="controlToken" aria-label="Token de pareamento" type="password" autocomplete="off" placeholder="Digite apenas para parear"></label>
+        </div>
+        <button id="saveConnectionBtn" class="primaryBtn full" type="button">Salvar conexão</button>
+      </article>
+
+      <!-- FAZENDA2E_EKAZA_SELECTOR_V1 -->
+      <article class="panel ekazaSelectorPanel">
+        <div class="panelHead"><div><small>SMART LIFE</small><h3>Trocar EKAZA</h3></div><span id="ekazaSelectorBadge" class="badge">—</span></div>
+        <p class="panelNote">Selecione qual dispositivo Smart Life controlará o viveiro. A troca não envia comando para ligar a bomba.</p>
+        <div id="ekazaCurrent" class="ekazaCurrent">Carregando dispositivo atual...</div>
+        <div id="ekazaDeviceList" class="ekazaDeviceList"></div>
+        <button id="refreshEkazaDevicesBtn" class="secondaryBtn full" type="button">Procurar dispositivos</button>
+      </article>
+
+      
+      <article class="panel notificationPanel" data-feature="FAZENDA2E_NOTIFICATIONS_V1">
+        <div class="panelHead"><div><small>NOTIFICAÇÕES</small><h3>Central de alertas</h3></div><span id="notificationBadge" class="badge">DESATIVADAS</span></div>
+        <p class="panelNote">Receba alertas mesmo com o aplicativo fechado: falha do EKAZA, chuva, emergência, watchdog e problemas de irrigação.</p>
+        <div class="notificationRows">
+          <label class="toggleRow"><span><b>Alertas no celular</b><small>Push do navegador / app instalado.</small></span><input id="notifyPush" type="checkbox"></label>
+          <label class="toggleRow"><span><b>Críticos</b><small>Emergência, falha de desligamento e perda de controle.</small></span><input id="notifyCritical" type="checkbox" checked></label>
+          <label class="toggleRow"><span><b>Atenção</b><small>EKAZA offline, chuva, atraso e falhas recuperáveis.</small></span><input id="notifyWarning" type="checkbox" checked></label>
+          <label class="toggleRow"><span><b>Informativos</b><small>Recuperações e avisos de rotina.</small></span><input id="notifyInfo" type="checkbox"></label>
+        </div>
+        <div class="buttonRow two notificationActions">
+          <button id="notifyEnableBtn" class="primaryBtn" type="button">Ativar notificações</button>
+          <button id="notifyTestBtn" class="secondaryBtn" type="button">Enviar teste</button>
+        </div>
+        <p id="notificationStatus" class="panelNote">Verificando este aparelho…</p>
+      </article>
+
+<details class="diagnostic">
+        <summary>Diagnóstico técnico</summary>
+        <pre id="diagnosticText">Aguardando dados.</pre>
+      </details>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <nav class="bottomNav" aria-label="Navegação principal">
+    <button class="active" data-view="summary" type="button"><span>⌂</span><small>Resumo</small></button>
+    <button data-view="automation" type="button"><span>◷</span><small>Automação</small></button>
+    <button data-view="history" type="button"><span>≡</span><small>Histórico</small></button>
+    <button data-view="system" type="button"><span>⚙</span><small>Sistema</small></button>
+  </nav>
+
+  <div id="setupOverlay" class="setupOverlay" hidden>
+    <div class="setupCard">
+      <small>FAZENDA 2E</small>
+      <h2>Conectar Viveiro</h2>
+      <p>Use o token de pareamento uma vez; depois este aparelho usa uma sessão segura.</p>
+      <label><span>Token de pareamento</span><input id="setupToken" aria-label="Token de pareamento inicial" type="password" placeholder="Digite apenas para parear"></label>
+      <button id="setupSaveBtn" class="primaryBtn full" type="button">Conectar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/irrigacao/app.js?v=20260914-42" defer></script>
+  <script src="/irrigacao/firebase-auth.js?v=20260910-1" defer></script>
+<a id="opsSafeBell" data-feature="FAZENDA2E_OPERATIONS_CENTER_V9_SAFE" href="/irrigacao/suporte.html" title="Notificações e suporte" aria-label="Notificações e suporte" style="position:fixed;right:18px;top:max(18px,env(safe-area-inset-top));z-index:86;width:48px;height:48px;border:1px solid #d9e5df;border-radius:16px;background:#fff;box-shadow:0 8px 26px rgba(20,55,38,.16);display:grid;place-items:center;font-size:21px;text-decoration:none">🔔</a>
+<script data-feature="FAZENDA2E_TELEGRAM_STANDALONE_V1">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function setStatus(text,kind){var el=q('telegramActionStatus');if(!el)return;el.textContent=text||'';el.dataset.kind=kind||'';}
+  function bind(){
+    var btn=q('telegramSaveTokenBtn'),input=q('telegramTokenInput');
+    if(!btn||!input||btn.dataset.standaloneBound==='1')return;
+    btn.dataset.standaloneBound='1';
+    btn.addEventListener('click',async function(ev){
+      ev.preventDefault();ev.stopImmediatePropagation();
+      var token=String(input.value||'').trim();
+      if(!token){setStatus('Cole o token do BotFather antes de ativar.','error');return;}
+      btn.disabled=true;btn.textContent='Validando…';setStatus('Validando o bot diretamente no Telegram…','working');
+      try{
+        var r=await fetch('/api/irrigation/telegram',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'set_token',token:token})});
+        var body=await r.json().catch(function(){return {}});
+        if(!r.ok||body.ok===false)throw new Error(body.error||('Falha HTTP '+r.status));
+        input.value='';
+        var code=body.telegram&&body.telegram.pairing_code;
+        setStatus(code?'Telegram ativado. Código de vinculação: '+code:'Telegram ativado. Atualizando…','ok');
+        if(code){var box=q('telegramPairBox'),codeEl=q('telegramPairCode');if(box)box.hidden=false;if(codeEl)codeEl.textContent=code;}
+        setTimeout(function(){location.reload();},1400);
+      }catch(err){setStatus(err&&err.message?err.message:'Falha ao ativar Telegram.','error');}
+      finally{btn.disabled=false;btn.textContent='Ativar Telegram';}
+    },true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+})();
+</script>
+<script data-feature="FAZENDA2E_TELEGRAM_ASSISTANT_SCRIPT_V1">
+(function(){
+  var q=function(id){return document.getElementById(id)}, status=q('tgAssistantStatus');
+  function setStatus(t){if(status)status.textContent=t||'';}
+  async function load(){try{var r=await fetch('/api/irrigation/telegram',{credentials:'same-origin',cache:'no-store'});if(!r.ok)return;var d=await r.json(),a=d.assistant||{};[['tgMorning','morning_summary'],['tgEvening','evening_summary'],['tgWindowStart','window_start'],['tgWindowEnd','window_end'],['tgRain','rain'],['tgRecovery','recovery'],['tgAnomalies','anomalies']].forEach(function(x){if(q(x[0]))q(x[0]).checked=a[x[1]]!==false;});if(q('tgMorningLead'))q('tgMorningLead').value=Number.isFinite(Number(a.morning_lead_minutes))?a.morning_lead_minutes:15;if(q('tgEveningDelay'))q('tgEveningDelay').value=Number.isFinite(Number(a.evening_delay_minutes))?a.evening_delay_minutes:15;}catch(e){}}
+  if(q('tgSaveAssistant'))q('tgSaveAssistant').addEventListener('click',async function(){
+    var btn=q('tgSaveAssistant');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
+    var assistant={morning_summary:q('tgMorning')?.checked!==false,evening_summary:q('tgEvening')?.checked!==false,window_start:q('tgWindowStart')?.checked!==false,window_end:q('tgWindowEnd')?.checked!==false,rain:q('tgRain')?.checked!==false,recovery:q('tgRecovery')?.checked!==false,anomalies:q('tgAnomalies')?.checked!==false,morning_lead_minutes:Number(q('tgMorningLead')?.value||15),evening_delay_minutes:Number(q('tgEveningDelay')?.value||15)};
+    try{var r=await fetch('/api/irrigation/telegram',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'set_assistant',assistant:assistant})});var d=await r.json().catch(function(){return{}});if(!r.ok||d.ok===false)throw new Error(d.error||'Falha ao salvar');setStatus('Avisos automáticos salvos.');}
+    catch(e){setStatus(e.message||'Falha ao salvar avisos.');}
+    finally{if(btn){btn.disabled=false;btn.textContent='Salvar avisos';}}
+  });
+  load();
+})();
+</script>
+<script data-feature="FAZENDA2E_TELEGRAM_STATUS_DIRECT_V1">
+(function(){
+  function q(id){return document.getElementById(id)}
+  async function syncTelegram(){
+    try{
+      var r=await fetch('/api/irrigation/telegram',{credentials:'include',cache:'no-store'});
+      if(!r.ok)return; var d=await r.json(),t=d.telegram||{};
+      var configured=!!t.bot_token_configured,bound=!!t.bound,badge=q('telegramBadge'),detail=q('telegramDetail'),setup=q('telegramSetupBox'),pair=q('telegramPairBox'),code=q('telegramPairCode');
+      if(badge){badge.textContent=bound?'VINCULADO':configured?'AGUARDANDO VÍNCULO':'NÃO CONFIGURADO';badge.classList.toggle('warn',configured&&!bound);}
+      if(detail)detail.textContent=bound?'Telegram conectado. Alertas, resumos e consultas estão ativos.':configured?'Bot pronto. Falta vincular este Telegram.':'Configure o token do BotFather para ativar.';
+      if(setup)setup.hidden=configured; if(pair)pair.hidden=!configured||bound||!t.pairing_code; if(code)code.textContent=t.pairing_code||'—';
+    }catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncTelegram,{once:true});else syncTelegram();
+  setInterval(syncTelegram,30000);
+})();
+</script>
+</body>
+</html>

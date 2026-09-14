@@ -18,9 +18,12 @@ function sanitizeSeconds(raw={}){
   };
 }
 
+function backupShapeOk(item={}){
+  return Boolean(item.config&&typeof item.config==='object'&&item.climate&&typeof item.climate==='object'&&item.weather&&typeof item.weather==='object'&&item.seconds_snapshot&&typeof item.seconds_snapshot==='object');
+}
 function rows(raw){
   if(!raw||typeof raw!=='object')return[];
-  return Object.entries(raw).map(([id,v])=>({id,...(v||{})}))
+  return Object.entries(raw).map(([id,v])=>{const item=v||{},restorable=backupShapeOk(item);return{id,...item,integrity:restorable?'ok':'invalid',restorable}})
     .sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0));
 }
 
@@ -76,4 +79,27 @@ export async function restoreConfigBackup(id){
     restored_at:Date.now(),
     note:'O estado ao vivo do relé/ciclo em andamento não foi restaurado.'
   };
+}
+
+let validationCache={at:0,value:null};
+export async function validateLatestConfigBackup({maxAgeMs=300000}={}){
+  const now=Date.now();
+  if(validationCache.value&&now-validationCache.at<maxAgeMs)return validationCache.value;
+  try{
+    const list=await listConfigBackups(1);
+    const latest=list[0];
+    if(!latest){
+      validationCache={at:now,value:{ok:false,restorable:false,checked_at:now,error:'sem backup de configuração'}};
+      return validationCache.value;
+    }
+    const shapeOk=backupShapeOk(latest);
+    const value={ok:Boolean(shapeOk),restorable:Boolean(shapeOk),checked_at:now,id:latest.id,created_at:Number(latest.created_at||0),age_ms:Math.max(0,now-Number(latest.created_at||0)),reason:latest.reason||null};
+    if(!shapeOk)value.error='estrutura incompleta';
+    validationCache={at:now,value};
+    return value;
+  }catch(error){
+    const value={ok:false,restorable:false,checked_at:now,error:error?.message||String(error)};
+    validationCache={at:now,value};
+    return value;
+  }
 }

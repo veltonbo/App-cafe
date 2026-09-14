@@ -1,0 +1,1 @@
+A sincronização será feita diretamente pelo conector GitHub autorizado, sem instalar token na VM. Origem validada: commit local f5abdaaeb94acce2ab158df2ea0b2d8036d8c55d.

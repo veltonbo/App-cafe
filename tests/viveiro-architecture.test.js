@@ -17,8 +17,8 @@ test('diagnóstico manual aponta para Oracle/Tailscale e não para Railway',()=>
   assert.match(workflow,/\/health/);
 });
 
-test('fonte do servidor ainda é patchável para isolamento climático no build',()=>{
-  assert.match(server,/const intervalMs=4000/);
+test('fonte do servidor mantém Weather2-2 em ciclo fixo de 4 s',()=>{
+  assert.match(server,/(?:const intervalMs=4000|setInterval\(tick,4000\))/);
   assert.doesNotMatch(server,/Math\.min\(4000,configuredMs\)/);
   assert.match(html,/id="weatherCheck"[^>]+value="≈ 4"[^>]+disabled/);
 });

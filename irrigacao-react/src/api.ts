@@ -16,3 +16,8 @@ export const irrigationApi={
   telegram:()=>request('/api/irrigation/telegram'),
   saveTelegramAssistant:(assistant:any)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_assistant',assistant})})
 };
+export function subscribeViveiroLive(onEvent:(event:any)=>void,onStatus?:(online:boolean)=>void){
+  let closed=false,es:EventSource|null=null,retry:any=null;
+  const connect=()=>{if(closed)return;es=new EventSource('/api/viveiro/live');es.onopen=()=>onStatus?.(true);es.onerror=()=>{onStatus?.(false);es?.close();if(!closed)retry=setTimeout(connect,1500)};for(const type of ['seconds','confirmation','watchdog','autonomy','event'])es.addEventListener(type,(e:any)=>{try{onEvent(JSON.parse(e.data))}catch{}})};
+  connect();return()=>{closed=true;if(retry)clearTimeout(retry);es?.close()};
+}

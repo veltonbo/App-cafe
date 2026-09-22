@@ -41,7 +41,7 @@ test('polling da interface e adaptativo ao SSE',()=>{
 test('dashboard nao carrega o historico inteiro do Firebase',()=>{
   assert.doesNotMatch(dashboard,/storeGet\(ROOT\+'\/history'\)/);
   assert.match(dashboard,/readRecentHistory/);
-  assert.match(dashboard,/historySince=now-32\*86400000/);
+  assert.match(dashboard,/historySince=now-8\*86400000/);
 });
 
 test('retomada apos chuva usa a configuracao atual sem exigir rearme',()=>{

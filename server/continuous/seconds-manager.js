@@ -2010,6 +2010,14 @@ export async function suspendSecondsForRestart(){
 
   if(wasOn&&pulseId&&pulseStartedAt>0){
     const actualSeconds=Math.max(0,(stoppedAt-pulseStartedAt)/1000);
+    ensureDailyCounters(pulseStartedAt);
+    state={
+      ...state,
+      daily_pulses_interrupted:Number(state.daily_pulses_interrupted||0)+1,
+      daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0)+Math.min(plannedSeconds||actualSeconds,actualSeconds),
+      daily_last_pulse_at:stoppedAt,
+      last_pulse_at:stoppedAt
+    };
     // Registra o desfecho real antes de encerrar o processo. O event_id é
     // determinístico pelo pulse_id, portanto uma eventual repetição é idempotente.
     await event('viveiro_pulse_interrupted','Pulso interrompido por reinício do servidor.',{

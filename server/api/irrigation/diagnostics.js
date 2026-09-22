@@ -54,12 +54,15 @@ export default async function handler(req,res){
   const rss=Number(mem.rss_mb||0);
   const windowMinutes=Number(trend.window_minutes||0);
   const rate=Number(trend.rss_per_minute||0);
-  if(rss>1536)alerts.push({level:'warning',key:'memory',message:`Memória do processo em ${rss} MB; heap ${Number(mem.heap_used_mb||0)} MB.`});
+  const memoryStatus=rss>=2048?'critical':rss>=768?'warning':(windowMinutes>=3&&rate>=20?'warning':'ok');
+  if(rss>=2048)alerts.push({level:'critical',key:'memory',message:`Memória crítica: ${rss} MB no processo; heap ${Number(mem.heap_used_mb||0)} MB.`});
+  else if(rss>=768)alerts.push({level:'warning',key:'memory',message:`Memória elevada: ${rss} MB no processo; heap ${Number(mem.heap_used_mb||0)} MB.`});
   if(windowMinutes>=3&&rate>=20)alerts.push({level:'warning',key:'memory-growth',message:`Memória crescendo ${rate.toFixed(1)} MB/min.`});
+  guidedChecks.memory=state(memoryStatus==='ok','Memória',memoryStatus==='ok'?`Estável em ${rss} MB.`:`${rss} MB; tendência ${rate.toFixed(1)} MB/min.`);
   const critical=alerts.some(x=>x.level==='critical');
   return res.status(critical?503:200).json({
     ok:!critical,service:'fazenda-2e-irrigacao',checked_at:Date.now(),
-    server:{hostname:os.hostname(),node:process.version,platform:process.platform,arch:process.arch,process_uptime_seconds:Math.round(process.uptime()),system_uptime_seconds:Math.round(os.uptime()),load_average:os.loadavg().map(v=>Number(v.toFixed(2))),memory:{total_mb:Math.round(os.totalmem()/1024/1024),free_mb:Math.round(os.freemem()/1024/1024),process_rss_mb:Number(mem.rss_mb||0)}},
+    server:{hostname:os.hostname(),node:process.version,platform:process.platform,arch:process.arch,process_uptime_seconds:Math.round(process.uptime()),system_uptime_seconds:Math.round(os.uptime()),load_average:os.loadavg().map(v=>Number(v.toFixed(2))),memory:{total_mb:Math.round(os.totalmem()/1024/1024),free_mb:Math.round(os.freemem()/1024/1024),process_rss_mb:Number(mem.rss_mb||0),heap_used_mb:Number(mem.heap_used_mb||0),status:memoryStatus,trend_mb_per_minute:rate,trend_window_minutes:windowMinutes}},
     checks:{local_history:history,maintenance,firebase},
     guided_checks:guidedChecks,alerts,
     raw:{local_history:history,maintenance,firebase,smartlife,weather,telegram,controller:seconds}

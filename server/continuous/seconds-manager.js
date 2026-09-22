@@ -302,7 +302,7 @@ async function runOperationalAudit({notify=false}={}){
     issues.push({
       level:'warning',
       code:'cloud_latency_high',
-      message:'A confirmação da Smart Life está levando mais de 12 s em média.'
+      message:'A confirmação pela nuvem Smart Life está levando mais de 12 s em média; o relógio local do ciclo é avaliado separadamente.'
     });
   }
 
@@ -816,6 +816,7 @@ async function evaluateClimateControl(){
       trend_temperature:trend.temperature,
       trend_humidity:trend.humidity,
       trend_vpd:trend.vpd,
+      learning_history_trusted:accountingTrusted,
       trend_vpd_delta:trend.vpd_delta,
       trend_temp_delta:trend.temp_delta,
       trend_humidity_delta:trend.humidity_delta,

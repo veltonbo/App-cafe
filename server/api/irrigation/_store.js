@@ -9,7 +9,7 @@ const HISTORY_CACHE_FRESH_MS=10000;
 const HISTORY_CACHE_STALE_MS=5*60*1000;
 const HISTORY_CACHE_BUCKET_MS=60*1000;
 const HISTORY_DEFAULT_LIMIT=Math.max(500,Math.min(10000,Number(process.env.VIVEIRO_HISTORY_READ_LIMIT||2500)));
-const HISTORY_MAX_CACHE_ENTRIES=4;
+const HISTORY_MAX_CACHE_ENTRIES=1;
 
 let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
@@ -228,7 +228,7 @@ export async function readRecentHistory({sinceMs=0,limit=HISTORY_DEFAULT_LIMIT}=
   const key=cacheStart+':'+safeLimit;
   const now=Date.now();
   const cached=recentHistoryCache.get(key);
-  const trim=rows=>(rows||[]).filter(row=>historyTimestamp(row)>=requestedStart);
+  const trim=rows=>{const out=[];for(const row of (rows||[])){if(historyTimestamp(row)>=requestedStart)out.push(row)}return out;};
 
   if(cached?.rows&&now<Number(cached.freshUntil||0))return trim(cached.rows);
 

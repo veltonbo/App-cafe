@@ -5,7 +5,7 @@ import path from 'node:path';
 const DATA_DIR=process.env.FAZENDA2E_DATA_DIR||'/data';
 const HISTORY_FILE=path.join(DATA_DIR,'irrigation-history.ndjson');
 const SYNC_META_FILE=path.join(DATA_DIR,'local-history-meta.json');
-const MAX_ROWS=Math.max(1000,Number(process.env.LOCAL_HISTORY_MAX_ROWS||100000));
+const MAX_ROWS=Math.max(1000,Number(process.env.LOCAL_HISTORY_MAX_ROWS||10000));
 
 let readyPromise=null;
 let writeChain=Promise.resolve();
@@ -24,10 +24,19 @@ async function ensureReady(){
   readyPromise=(async()=>{
     await fsp.mkdir(DATA_DIR,{recursive:true});
     try{
-      const text=await fsp.readFile(HISTORY_FILE,'utf8');
-      rows=text.split('\n').filter(Boolean).map(line=>{
-        try{return JSON.parse(line)}catch{return null}
-      }).filter(Boolean).slice(-MAX_ROWS);
+      const stat=await fsp.stat(HISTORY_FILE);
+      const maxBytes=Math.max(2*1024*1024,Number(process.env.LOCAL_HISTORY_LOAD_BYTES||8*1024*1024));
+      const start=Math.max(0,stat.size-maxBytes);
+      const fh=await fsp.open(HISTORY_FILE,'r');
+      try{
+        const size=stat.size-start,buffer=Buffer.alloc(size);
+        await fh.read(buffer,0,size,start);
+        let text=buffer.toString('utf8');
+        if(start>0){const nl=text.indexOf('\n');text=nl>=0?text.slice(nl+1):'';}
+        rows=text.split('\n').filter(Boolean).map(line=>{
+          try{return JSON.parse(line)}catch{return null}
+        }).filter(Boolean).slice(-MAX_ROWS);
+      }finally{await fh.close();}
     }catch(error){
       if(error?.code!=='ENOENT')console.warn('[LocalHistory] read:',error?.message||error);
     }

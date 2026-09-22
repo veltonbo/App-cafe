@@ -1783,7 +1783,7 @@ export async function initSecondsManager(){
 
   try{
     const now=Date.now();
-    const rows=(await readRecentHistory({sinceMs:now-8*86400000,limit:12000}))
+    const rows=(await readRecentHistory({sinceMs:now-8*86400000,limit:2500}))
       .filter(row=>String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_'));
     const byDay={};
     for(const row of rows){

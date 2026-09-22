@@ -8,6 +8,8 @@ const HISTORY_BACKFILL_PAGE_SIZE=250;
 const HISTORY_CACHE_FRESH_MS=10000;
 const HISTORY_CACHE_STALE_MS=5*60*1000;
 const HISTORY_CACHE_BUCKET_MS=60*1000;
+const HISTORY_DEFAULT_LIMIT=Math.max(500,Math.min(10000,Number(process.env.VIVEIRO_HISTORY_READ_LIMIT||5000)));
+const HISTORY_MAX_CACHE_ENTRIES=4;
 
 let cachedAccessToken='';
 let cachedAccessTokenUntil=0;
@@ -203,6 +205,7 @@ function refreshRecentHistory(key,start,safeLimit,entry={}){
         staleUntil:now+HISTORY_CACHE_STALE_MS,
         promise:null
       });
+      while(recentHistoryCache.size>HISTORY_MAX_CACHE_ENTRIES){const oldest=recentHistoryCache.keys().next().value;if(oldest===key)break;recentHistoryCache.delete(oldest);}
       return rows;
     })
     .catch(error=>{
@@ -218,9 +221,9 @@ function markRecentHistoryStale(){
   for(const entry of recentHistoryCache.values())entry.freshUntil=0;
 }
 
-export async function readRecentHistory({sinceMs=0,limit=60000}={}){
+export async function readRecentHistory({sinceMs=0,limit=HISTORY_DEFAULT_LIMIT}={}){
   const requestedStart=Math.max(0,Math.round(Number(sinceMs)||0));
-  const safeLimit=Math.max(1,Math.min(60000,Math.round(Number(limit)||60000)));
+  const safeLimit=Math.max(1,Math.min(10000,Math.round(Number(limit)||HISTORY_DEFAULT_LIMIT)));
   const cacheStart=Math.floor(requestedStart/HISTORY_CACHE_BUCKET_MS)*HISTORY_CACHE_BUCKET_MS;
   const key=cacheStart+':'+safeLimit;
   const now=Date.now();

@@ -1,1 +1,8 @@
 node_modules
+.env
+.env.*
+dist/
+*.pre-*
+camera-gateway/
+public/cameras/
+server/api/cameras/

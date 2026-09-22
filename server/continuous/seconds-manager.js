@@ -1895,7 +1895,16 @@ export async function initSecondsManager(){
 }
 
 export async function configureSeconds(input={}){
-  if(state.enabled)throw new Error('O modo em segundos já está ativo.');
+  const wasEnabled=Boolean(state.enabled);
+  if(wasEnabled){
+    // Reprogramação segura: derruba a saída, encerra o laço atual e preserva
+    // a contabilidade diária antes de armar a nova geração.
+    await safeOff('reprogramming');
+    state={...state,enabled:false,phase:'reprogramming',relay_expected:false,reprogramming_at:Date.now()};
+    await persist();
+    if(loopPromise)await Promise.race([loopPromise,new Promise(resolve=>setTimeout(resolve,5000))]);
+    if(loopPromise)throw new Error('O controlador ainda está finalizando o ciclo anterior. Tente novamente em alguns segundos.');
+  }
   if(await emergencyLatched().catch(()=>false)){
     throw new Error('A parada de emergência está ativa. Libere a emergência antes de armar a irrigação.');
   }
@@ -1951,7 +1960,7 @@ export async function configureSeconds(input={}){
     last_decision_at:Date.now(),
     last_reason:'Nova programação armada. Sugestões climáticas antigas foram descartadas.'
   }).catch(()=>null);
-  await event('viveiro_cycle_start','Ciclo rápido configurado e armado.',{
+  await event(wasEnabled?'viveiro_cycle_reprogrammed':'viveiro_cycle_start',wasEnabled?'Programação atualizada com troca segura.':'Ciclo rápido configurado e armado.',{
     on_seconds:state.on_seconds,off_seconds:state.off_seconds,
     start_minutes:state.start_minutes,end_minutes:state.end_minutes,days_mask:state.days_mask
   });

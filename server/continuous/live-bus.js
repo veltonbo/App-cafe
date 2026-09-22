@@ -1,6 +1,8 @@
 let sequence=0;
 const listeners=new Set();
 const lastByType=new Map();
+const MAX_REPLAY_TYPES=16;
+const MAX_REPLAY_PAYLOAD_BYTES=128*1024;
 
 function safePayload(value){
   if(value==null)return null;
@@ -14,7 +16,10 @@ export function publishLive(type,payload={}){
     at:Date.now(),
     payload:safePayload(payload)
   };
-  lastByType.set(event.type,event);
+  let replayEvent=event;
+  try{if(Buffer.byteLength(JSON.stringify(event.payload))>MAX_REPLAY_PAYLOAD_BYTES)replayEvent={...event,payload:{truncated:true,reason:'payload_too_large'}}}catch{replayEvent={...event,payload:null}}
+  lastByType.set(event.type,replayEvent);
+  while(lastByType.size>MAX_REPLAY_TYPES)lastByType.delete(lastByType.keys().next().value);
   for(const listener of [...listeners]){
     try{listener(event)}catch{}
   }

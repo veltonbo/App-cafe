@@ -783,7 +783,10 @@ async function evaluateClimateControl(){
     snapshot=snapshot||await fetchWeatherSnapshot({maxAgeMs:5000}).catch(()=>null);
     const samples=updateClimateSamples(climateState?.samples||[],snapshot||{},cfg,Date.now());
     const trend=climateTrend(samples,Date.now());
-    const suggestion=climateSuggestion(snapshot||{},state,cfg,trend);
+    // Histórico divergente nunca pode aumentar confiança nem alimentar aprendizagem automática.
+    const accountingTrusted=String(state.accounting_reconciliation?.status||'')==='ok';
+    const safeTrend=accountingTrusted?trend:{...trend,confidence:'low',confidence_label:'Baixa'};
+    const suggestion=climateSuggestion(snapshot||{},state,cfg,safeTrend);
     const suggestionId=[
       localDayKey(),
       suggestion.base_on_seconds,suggestion.base_off_seconds,

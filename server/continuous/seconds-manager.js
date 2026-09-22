@@ -60,8 +60,9 @@ function addPrecisionSample(kind,targetMs,actualMs,at=Date.now()){
     abs_error_ms:Math.round(Math.abs(actual-target)),
     at:Number(at)||Date.now()
   };
-  const previous=Array.isArray(state.precision_samples)?state.precision_samples:[];
-  const samples=[...previous,sample].slice(-24);
+  const cutoff=Number(at)-10*60*1000;
+  const previous=(Array.isArray(state.precision_samples)?state.precision_samples:[]).filter(row=>Number(row?.at||0)>=cutoff);
+  const samples=[...previous,sample].slice(-12);
   const avg=samples.reduce((sum,row)=>sum+Number(row.abs_error_ms||0),0)/Math.max(1,samples.length);
   const max=Math.max(...samples.map(row=>Number(row.abs_error_ms||0)),0);
   state={
@@ -88,8 +89,9 @@ function addSchedulerPrecisionSample(kind,targetAt,actualAt,at=Date.now()){
     abs_error_ms:Math.round(Math.abs(actual-target)),
     at:Number(at)||Date.now()
   };
-  const previous=Array.isArray(state.scheduler_precision_samples)?state.scheduler_precision_samples:[];
-  const samples=[...previous,sample].slice(-24);
+  const cutoff=Number(at)-10*60*1000;
+  const previous=(Array.isArray(state.scheduler_precision_samples)?state.scheduler_precision_samples:[]).filter(row=>Number(row?.at||0)>=cutoff);
+  const samples=[...previous,sample].slice(-12);
   const avg=samples.reduce((sum,row)=>sum+Number(row.abs_error_ms||0),0)/Math.max(1,samples.length);
   const max=Math.max(...samples.map(row=>Number(row.abs_error_ms||0)),0);
   state={
@@ -277,12 +279,17 @@ async function runOperationalAudit({notify=false}={}){
     issues.push({level:'warning',code:'confirmation_stale',message:'Smart Life está há mais de 10 min sem nova confirmação do Viveiro.'});
   }
 
-  const schedulerPrecision=state.scheduler_precision||{};
-  if(Number(schedulerPrecision.samples||0)>=6&&Number(schedulerPrecision.avg_abs_error_ms||0)>1500){
+  // Para segurança, atraso de ON causado por checagens de chuva/nuvem não é falha
+  // do relógio. A auditoria de precisão considera o OFF, que limita a água aplicada.
+  const offScheduler=(Array.isArray(state.scheduler_precision_samples)?state.scheduler_precision_samples:[])
+    .filter(x=>String(x?.kind||'')==='off_command').slice(-4);
+  const offSchedulerAvg=offScheduler.length
+    ?offScheduler.reduce((sum,x)=>sum+Number(x?.abs_error_ms||0),0)/offScheduler.length:0;
+  if(offScheduler.length>=4&&offSchedulerAvg>1500){
     issues.push({
       level:'warning',
       code:'scheduler_delay_high',
-      message:'O relógio local do ciclo está enviando comandos com mais de 1,5 s de atraso médio.'
+      message:'O comando local de desligamento está saindo com mais de 1,5 s de atraso médio.'
     });
   }
 

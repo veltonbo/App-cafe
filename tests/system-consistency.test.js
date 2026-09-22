@@ -26,7 +26,8 @@ test('cartão Smart Life usa estado real de EKAZA e Weather2-2',()=>{
 });
 
 test('diagnóstico de memória diferencia RSS estável de pressão real',()=>{
-  assert.match(diagnostics,/rss>1536/);
+  assert.match(diagnostics,/rss>=2048/);
+  assert.match(diagnostics,/rss>=768/);
   assert.match(diagnostics,/windowMinutes>=3&&rate>=20/);
   assert.match(diagnostics,/heap_used_mb/);
 });

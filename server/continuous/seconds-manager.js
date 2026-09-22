@@ -61,7 +61,7 @@ function addPrecisionSample(kind,targetMs,actualMs,at=Date.now()){
     at:Number(at)||Date.now()
   };
   const cutoff=Number(at)-10*60*1000;
-  const previous=(Array.isArray(state.precision_samples)?state.precision_samples:[]).filter(row=>Number(row?.at||0)>=cutoff);
+  const previous=(Array.isArray(state.precision_samples)?state.precision_samples:[]).filter(row=>Number(row?.at||0)>=cutoff&&Number(row?.abs_error_ms||0)<=5000);
   const samples=[...previous,sample].slice(-12);
   const avg=samples.reduce((sum,row)=>sum+Number(row.abs_error_ms||0),0)/Math.max(1,samples.length);
   const max=Math.max(...samples.map(row=>Number(row.abs_error_ms||0)),0);

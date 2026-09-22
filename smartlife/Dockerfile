@@ -50,7 +50,7 @@ RUN npm --prefix irrigacao-react ci --silent \
     && mkdir -p dist/irrigacao \
     && cp -a irrigacao-react/dist/. dist/irrigacao/ \
     && grep -q '/irrigacao/' dist/irrigacao/index.html \
-    && grep -q 'fazenda2e-react-restored-v3' dist/irrigacao/sw.js
+    && grep -q 'fazenda2e-react-final-v4' dist/irrigacao/sw.js
 
 
 RUN npm prune --omit=dev

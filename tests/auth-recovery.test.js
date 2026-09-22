@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+test('login offers Firebase password recovery without exposing credentials',()=>{const s=fs.readFileSync('irrigacao-consolidated/firebase-auth.js','utf8');assert.match(s,/accounts:sendOobCode/);assert.match(s,/PASSWORD_RESET/);assert.match(s,/firebaseResetBtn/);assert.doesNotMatch(s,/password\s*:\s*['\"][^'\"]+['\"]/i)});

@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { appendHistory } from './_store.js';
 import { readRecentHistory } from './history-reader.js';
@@ -15,6 +16,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      if(!requirePermission(req,res,'operate'))return;
       const body = req.body || {};
       const entry = {
         type:String(body.type || 'note'),

@@ -1,4 +1,3 @@
-import { effectiveRainNow } from '../weather/_weather.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { historyIndexStatus, readRecentHistory, storeGet, storeSet } from '../irrigation/_store.js';
 import { getClimateConfig, getClimateState, patchClimateState, setClimateConfig } from './_climate.js';

@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { smartLifeConfigured, smartLifeListDevices, smartLifeReadDevice } from '../_smartlife.js';
 import { getViveiroBinding, setViveiroBinding, clearViveiroBinding } from '../_viveiro_binding.js';
@@ -15,6 +16,7 @@ export default async function handler(req,res){
       return res.status(200).json({ok:true,binding,devices});
     }
     if(req.method==='POST'){
+      if(!requirePermission(req,res,'configure'))return;
       const action=String(req.body?.action||'select');
       if(action==='clear')return res.status(200).json({ok:true,binding:await clearViveiroBinding()});
       const deviceId=String(req.body?.deviceId||'').trim();if(!deviceId)return res.status(400).json({ok:false,error:'Selecione um EKAZA.'});

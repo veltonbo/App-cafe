@@ -31,6 +31,9 @@ test('diagnóstico de memória diferencia RSS estável de pressão real',()=>{
   assert.match(diagnostics,/heap_used_mb/);
 });
 
-test('imagem de produção aplica correções de consistência',()=>{
-  assert.match(dockerfile,/patch-system-consistency\.mjs/);
+test('imagem de produção valida runtime consolidado sem reaplicar patches históricos',()=>{
+  assert.match(dockerfile,/node --check server\/continuous\/seconds-manager\.js/);
+  assert.match(dockerfile,/enforceViveiroInterlocks/);
+  assert.match(dockerfile,/runViveiroWeatherCheck/);
+  assert.doesNotMatch(dockerfile,/RUN node scripts\/patch-system-consistency\.mjs/);
 });

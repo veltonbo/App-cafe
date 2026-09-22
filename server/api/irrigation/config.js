@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { getAutomationConfig, patchAutomationConfig } from './_store.js';
 import { createConfigBackup } from './_backup.js';
@@ -71,6 +72,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST' || req.method === 'PATCH') {
+      if(!requirePermission(req,res,'configure'))return;
       const patch = sanitize(req.body || {});
       await createConfigBackup('antes_de_salvar_configuracao').catch(()=>null);
       await patchAutomationConfig(patch);

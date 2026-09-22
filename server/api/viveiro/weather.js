@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { verifyGitHubOidc } from './_github_oidc.js';
 import { createConfigBackup } from '../irrigation/_backup.js';
@@ -22,6 +23,7 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='POST'&&req.body?.action==='save_config'){
+      if(!requirePermission(req,res,'configure'))return;
       await createConfigBackup('antes_de_alterar_protecao_de_chuva').catch(()=>null);
       const config=await saveViveiroWeatherConfig(req.body?.config||{});
       const result=req.body?.run_now===false

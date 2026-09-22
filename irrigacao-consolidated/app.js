@@ -2,6 +2,7 @@
 'use strict';
 const KEY='viveiroEkazaRealV1';
 const DEFAULT_API=location.origin;
+const PREVIEW_READONLY=location.pathname.startsWith('/irrigacao-next');
 const DAYS=[['D',1],['S',2],['T',4],['Q',8],['Q',16],['S',32],['S',64]];
 const $=id=>document.getElementById(id);
 const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -32,6 +33,7 @@ function authHeaders(extra={}){
   return{
     'Content-Type':'application/json',
     ...(store.settings.token?{'Authorization':'Bearer '+store.settings.token}:{}),
+    ...(PREVIEW_READONLY?{'x-f2e-preview':'readonly'}:{}),
     ...extra
   };
 }
@@ -141,8 +143,9 @@ function seconds(){
 function climateState(){return app.dashboard?.climate?.state||{}}
 function climateConfig(){return app.dashboard?.climate?.config||{}}
 function weatherConfig(){return app.dashboard?.weather?.config||{}}
-function markServerSuccess(){app.serverReachable=true;app.lastServerSuccessAt=Date.now();renderConnectivityBanner();}
-function markServerFailure(){app.lastServerFailureAt=Date.now();if(!app.lastServerSuccessAt||Date.now()-app.lastServerSuccessAt>20000)app.serverReachable=false;renderConnectivityBanner();}
+function setCommandSafety(){const safe=app.serverReachable!==false&&navigator.onLine!==false;const ids=['saveScheduleBtn','disableScheduleBtn','emergencyBtn','clearEmergencyBtn','saveWeatherBtn'];const apply=e=>{if(!e)return;e.classList.toggle('serverUnsafe',!safe);if(!safe){e.dataset.serverSafetyDisabled=e.disabled?'existing':'safety';e.disabled=true;e.setAttribute('aria-disabled','true')}else if(e.dataset.serverSafetyDisabled==='safety'){e.disabled=false;e.removeAttribute('aria-disabled');delete e.dataset.serverSafetyDisabled}};ids.forEach(id=>apply($(id)));qsa('.maintenanceBtn').forEach(apply);}
+function markServerSuccess(){app.serverReachable=true;app.lastServerSuccessAt=Date.now();renderConnectivityBanner();setCommandSafety();}
+function markServerFailure(){app.lastServerFailureAt=Date.now();if(!app.lastServerSuccessAt||Date.now()-app.lastServerSuccessAt>20000)app.serverReachable=false;renderConnectivityBanner();setCommandSafety();}
 function renderConnectivityBanner(){
   const bar=$('offlineBar');if(!bar)return;
   const recentServer=app.serverReachable||Date.now()-num(app.lastServerSuccessAt)>0&&Date.now()-num(app.lastServerSuccessAt)<20000;
@@ -712,16 +715,21 @@ function initDays(){
   $('dayPicker').innerHTML=DAYS.map(([label,bit])=>'<button type="button" data-bit="'+bit+'">'+label+'</button>').join('');
   qsa('#dayPicker button').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('active');app.automationDirty=true}));
 }
-function showView(name){
+const APP_VIEWS=new Set(['summary','automation','history','system']);
+function viewFromHash(){const name=String(location.hash||'').replace(/^#/,'');return APP_VIEWS.has(name)?name:'summary';}
+function showView(name,options={}){
+  if(!APP_VIEWS.has(name))name='summary';
   app.activeView=name;
   qsa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
   qsa('.bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
-  scrollTo({top:0,behavior:'smooth'});
+  if(options.updateHash!==false&&location.hash!=='#'+name)history.replaceState(null,'','#'+name);
+  if(options.scroll!==false)scrollTo({top:0,behavior:options.instant?'auto':'smooth'});
   if(name==='history'||name==='system'){loadDashboard(false,true);}
   if(name==='system'){syncTelegramDirect();loadBackups42();}
   if(name==='history'){const h=app.dashboard?.history3;if(h&&$('historyDate')&&!$('historyDate').value)$('historyDate').value=h.selected_date||h.today_date||'';renderHistory3();}
 }
 qsa('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+window.addEventListener('hashchange',()=>showView(viewFromHash(),{updateHash:false,instant:true}));
 async function refreshHistoryDirectV12(){
   if(!hasAuth())return;
   try{
@@ -1052,7 +1060,8 @@ bootstrap();
 // FAZENDA2E_CRITICAL_VIEW_TIMER_V12
 setInterval(()=>{if(document.visibilityState==='visible')refreshCriticalViewV12();},15000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>refreshCriticalViewV12(),250);});
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'}).catch(()=>null);
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/irrigacao/sw.js',{scope:'/irrigacao/'}).then(reg=>reg.update()).catch(()=>null);}
+setTimeout(()=>showView(viewFromHash(),{updateHash:false,scroll:false,instant:true}),0);
 
 function forecastClock(v){if(!v)return'—';const d=new Date(v);return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 function forecastDay(v){if(!v)return'—';const d=new Date(v+'T12:00:00');return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');}
@@ -1212,3 +1221,26 @@ if($('telegramSaveTokenBtn'))$('telegramSaveTokenBtn').addEventListener('click',
   }catch(e){toast(e.message||'Falha ao ativar Telegram.');}
   finally{btn.disabled=false;btn.textContent='Ativar Telegram';}
 });
+
+/* F2E_RBAC_UI_V1 */
+async function loadAccessProfile(){
+ if(!hasAuth())return null;
+ try{const r=await fetch(apiBase()+'/api/session',{credentials:'same-origin',headers:authHeaders()});const d=await r.json().catch(()=>({}));if(!r.ok)return null;app.access=d.access||d.user?.access||null;applyAccessUI();return app.access}catch{return null}
+}
+function canAccess(permission){return Boolean(app.access?.active!==false&&Array.isArray(app.access?.permissions)&&app.access.permissions.includes(permission))}
+function applyAccessUI(){
+ const master=canAccess('admin'),configure=canAccess('configure'),operate=canAccess('operate');
+ if($('userAdminPanel'))$('userAdminPanel').hidden=!master;
+ ['saveScheduleBtn','saveWeatherBtn','saveConnectionBtn','tgSaveAssistant','telegramSaveTokenBtn'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('permissionLocked',!configure)});
+ ['emergencyBtn','clearEmergencyBtn'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('permissionLocked',!operate)});
+ qsa('.maintenanceBtn').forEach(e=>e.classList.toggle('permissionLocked',!operate));
+ if(master)loadUsersAdmin();
+}
+async function loadUsersAdmin(){
+ if(!canAccess('admin')||!$('userAdminList'))return;
+ try{const d=await api('/api/users');$('userAdminList').innerHTML=(d.users||[]).map(u=>'<div class="userAdminRow"><span><b>'+esc(u.email||u.id)+'</b><small>'+(u.active===false?'DESATIVADO • ':'')+esc(u.role||'viewer')+'</small></span><button type="button" data-user-toggle="'+esc(u.id)+'" data-active="'+String(u.active!==false)+'">'+(u.active===false?'Ativar':'Bloquear')+'</button><button type="button" data-user-delete="'+esc(u.id)+'">Remover</button></div>').join('')||'<p class="panelNote">Nenhum usuário gerenciado ainda.</p>';qsa('[data-user-toggle]').forEach(b=>b.onclick=()=>adminPatchUser(b.dataset.userToggle,{active:b.dataset.active!=='true'}));qsa('[data-user-delete]').forEach(b=>b.onclick=()=>adminDeleteUser(b.dataset.userDelete))}catch(e){$('userAdminList').innerHTML='<p class="panelNote">'+esc(e.message)+'</p>'}
+}
+async function adminPatchUser(id,patch){await api('/api/users',{method:'PATCH',body:JSON.stringify({id,...patch})});await loadUsersAdmin()}
+async function adminDeleteUser(id){if(!confirm('Remover este acesso gerenciado?'))return;await api('/api/users',{method:'DELETE',body:JSON.stringify({id})});await loadUsersAdmin()}
+if($('userAdminSave'))$('userAdminSave').addEventListener('click',async()=>{const email=String($('userAdminEmail')?.value||'').trim().toLowerCase(),role=String($('userAdminRole')?.value||'viewer');if(!email)return toast('Informe o e-mail.');try{await api('/api/users',{method:'POST',body:JSON.stringify({id:email,email,role,active:true})});$('userAdminEmail').value='';toast('Usuário atualizado.');await loadUsersAdmin()}catch(e){toast(e.message)}});
+setTimeout(loadAccessProfile,500);

@@ -65,14 +65,13 @@ test('rearmar ciclo preserva contadores do dia e reinício fecha pulso ativo',()
   assert.match(manager,/reason:'server_restart'/);
 });
 
-test('reconciliação do dia é não destrutiva e recupera snapshot anterior',()=>{
+test('reconciliação corrige somente tempo quando as contagens de pulsos conferem',()=>{
   assert.match(manager,/recoverDailyCountersFromReconciliation/);
   assert.match(manager,/source:'pre_reconciliation_snapshot'/);
-  assert.match(manager,/status:mismatch\?'mismatch':'ok'/);
-  assert.match(manager,/Divergência contábil preservada sem alterar o estado ao vivo/);
+  assert.match(manager,/const countsMatch=before\.started===expected\.started/);
+  assert.match(manager,/daily_irrigated_seconds:reconciledIrrigated/);
   assert.doesNotMatch(manager,/daily_pulses_started:expected\.started/);
   assert.doesNotMatch(manager,/daily_pulses_completed:expected\.completed/);
-  assert.doesNotMatch(manager,/daily_irrigated_seconds:expected\.irrigated/);
 });
 
 test('dashboard usa contadores ao vivo como fonte do dia atual',()=>{

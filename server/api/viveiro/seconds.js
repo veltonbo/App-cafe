@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { fetchWeatherSnapshot } from '../weather/_weather.js';
 import {
@@ -40,6 +41,7 @@ export default async function handler(req,res){
       });
     }
 
+    if(!requirePermission(req,res,'operate'))return;
     const action=String(req.body?.action||'configure');
 
     if(action==='status'){

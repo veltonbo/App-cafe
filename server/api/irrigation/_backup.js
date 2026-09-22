@@ -2,6 +2,8 @@ import { storeGet, storeGetQuery, storeSet } from './_store.js';
 
 const ROOT='IrrigacaoFazenda2E';
 const BACKUPS_PATH=ROOT+'/configBackups';
+const RETENTION=Math.max(5,Math.min(60,Number(process.env.F2E_BACKUP_RETENTION||30)));
+let lastAutomaticBackupAt=0;
 
 function sanitizeSeconds(raw={}){
   return{
@@ -103,3 +105,18 @@ export async function validateLatestConfigBackup({maxAgeMs=300000}={}){
     return value;
   }
 }
+
+export async function pruneConfigBackups(retention=RETENTION){
+  const keep=Math.max(5,Math.min(60,Number(retention)||RETENTION));
+  const raw=await storeGet(BACKUPS_PATH).catch(()=>null);const list=rows(raw);
+  const excess=list.slice(keep);
+  await Promise.all(excess.map(item=>storeSet(BACKUPS_PATH+'/'+item.id,null).catch(()=>null)));
+  return{ok:true,kept:Math.min(list.length,keep),removed:excess.length};
+}
+export async function ensureAutomaticConfigBackup({intervalMs=24*60*60*1000}={}){
+  const now=Date.now();if(lastAutomaticBackupAt&&now-lastAutomaticBackupAt<intervalMs)return{ok:true,skipped:true};
+  const latest=(await listConfigBackups(1).catch(()=>[]))[0];
+  if(latest&&now-Number(latest.created_at||0)<intervalMs){lastAutomaticBackupAt=now;return{ok:true,skipped:true,id:latest.id}}
+  const backup=await createConfigBackup('automatico_diario');lastAutomaticBackupAt=now;await pruneConfigBackups().catch(()=>null);return{ok:true,backup};
+}
+export async function verifyBackupRestoreShape(id){const backup=await getConfigBackup(id);if(!backupShapeOk(backup))throw new Error('Backup sem integridade para restauração.');return{ok:true,id:String(id),restorable:true,config_keys:Object.keys(backup.config||{}).length,climate_keys:Object.keys(backup.climate||{}).length,weather_keys:Object.keys(backup.weather||{}).length}}

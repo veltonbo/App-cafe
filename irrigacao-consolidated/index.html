@@ -353,6 +353,14 @@
         <button id="clearEmergencyBtn" class="secondaryBtn full" type="button" hidden>Liberar parada de emergência</button>
       </article>
 
+      <article id="userAdminPanel" class="panel userAdminPanel" hidden>
+        <div class="panelHead"><div><small>ACESSOS</small><h3>Usuários e permissões</h3></div><span class="badge">MASTER</span></div>
+        <p class="panelNote">Gerencie quem pode visualizar, operar ou configurar a irrigação.</p>
+        <div class="fieldGrid two"><label><span>E-mail</span><input id="userAdminEmail" type="email" autocomplete="off" placeholder="usuario@email.com"></label><label><span>Perfil</span><select id="userAdminRole"><option value="viewer">Somente leitura</option><option value="operator">Operador</option><option value="manager">Gerente</option><option value="master">Master</option></select></label></div>
+        <button id="userAdminSave" class="primaryBtn full" type="button">Adicionar / atualizar usuário</button>
+        <div id="userAdminList" class="userAdminList"></div>
+      </article>
+
       <details class="systemAdvanced">
         <summary><span><b>Ferramentas e detalhes técnicos</b><small>Auditoria, manutenção, conexão e diagnóstico</small></span><strong>›</strong></summary>
         <div class="systemAdvancedBody">

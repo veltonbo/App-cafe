@@ -574,25 +574,31 @@ async function reconcileDailyAccounting({notify=false}={}){
       before.interrupted!==expected.interrupted||
       Math.abs(before.irrigated-expected.irrigated)>0.25;
 
-    // O estado ao vivo é a fonte primária do dia corrente. O histórico serve
-    // para conferência, mas nunca mais altera automaticamente esses contadores.
+    // O histórico canônico contabiliza pulsos concluídos pelo tempo programado,
+    // sem somar a latência de confirmação da nuvem. Quando as contagens conferem,
+    // ele pode corrigir com segurança apenas o total de segundos do dia.
+    const countsMatch=before.started===expected.started&&before.completed===expected.completed&&before.interrupted===expected.interrupted;
+    const reconciledIrrigated=countsMatch?expected.irrigated:before.irrigated;
+    if(countsMatch&&Math.abs(before.irrigated-expected.irrigated)>0.25){
+      state={...state,daily_irrigated_seconds:reconciledIrrigated};
+    }
     state={
       ...state,
       accounting_reconciliation:{
-        status:mismatch?'mismatch':'ok',
+        status:countsMatch?'ok':(mismatch?'mismatch':'ok'),
         checked_at:Date.now(),
         day_key:accounting.day_key,
         live:before,
         history:expected,
-        message:mismatch
-          ?'Histórico e contadores ao vivo divergem; os valores ao vivo foram preservados.'
-          :'Contadores ao vivo e histórico conferem.'
+        message:!countsMatch&&mismatch
+          ?'Contagem de pulsos diverge; valores ao vivo preservados para revisão.'
+          :(mismatch?'Tempo irrigado reconciliado pelo histórico canônico.':'Contadores ao vivo e histórico conferem.')
       }
     };
     await persist();
 
-    if(mismatch){
-      console.warn('Divergência contábil preservada sem alterar o estado ao vivo',{before,expected});
+    if(mismatch&&!countsMatch){
+      console.warn('Divergência de contagem preservada para revisão',{before,expected});
     }
     return state.accounting_reconciliation;
   }catch(error){
@@ -625,7 +631,7 @@ async function evaluateClimateControl(){
     const [cfg,climateState]=await Promise.all([getClimateConfig(),getClimateState()]);
     if(cfg.enabled===false)return;
 
-    // O Automático 2.0 só atua dentro da janela configurada de irrigação.
+    // O Automático 4.0 só atua dentro da janela configurada de irrigação.
     // Fora do horário, o clima pode continuar sendo exibido no painel, mas
     // nenhuma sugestão é criada/aprovada/aplicada e o ciclo não é alterado.
     const schedule=localSchedule(state);
@@ -641,7 +647,7 @@ async function evaluateClimateControl(){
           last_decision:'outside_schedule',
           last_decision_at:Date.now(),
           next_schedule_window_at:nextWindowAt||null,
-          last_reason:'Automático 2.0 aguardando o horário programado da irrigação.'
+          last_reason:'Automático 4.0 aguardando o horário programado da irrigação.'
         }).catch(()=>null);
       }
       return;
@@ -849,7 +855,7 @@ async function evaluateClimateControl(){
       );
     }
 
-    console.log('Automatico 2.0 evaluation',{
+    console.log('Automatico 4.0 evaluation',{
       mode,
       useful:Boolean(suggestion.useful),
       level:suggestion.level,
@@ -887,7 +893,7 @@ async function evaluateClimateControl(){
       await patchClimateState({last_decision:'observation',last_decision_at:Date.now()});
       if(!sameObservation){
         await patchClimateState({last_observation_id:suggestionId,last_observation_at:Date.now()});
-        await event('viveiro_climate_observation','Automático 2.0 em observação: ajuste identificado sem alterar o ciclo.',{
+        await event('viveiro_climate_observation','Automático 4.0 em observação: ajuste identificado sem alterar o ciclo.',{
           from_seconds:suggestion.current_on_seconds,to_seconds:suggestion.target_on_seconds,
           from_off_seconds:suggestion.current_off_seconds,to_off_seconds:suggestion.target_off_seconds,
           temperature:suggestion.temperature,humidity:suggestion.humidity,vpd:suggestion.vpd,
@@ -919,7 +925,7 @@ async function evaluateClimateControl(){
         pending:newPending,approved_id:null,
         last_decision:'pending_confirmation',last_decision_at:Date.now()
       });
-      await event('viveiro_climate_suggestion','Sugestão do Automático 2.0 aguardando aprovação.',newPending);
+      await event('viveiro_climate_suggestion','Sugestão do Automático 4.0 aguardando aprovação.',newPending);
       await pushNotice(
         'Sugestão de ajuste no viveiro',
         suggestion.current_on_seconds+'s/'+suggestion.current_off_seconds+'s → '+
@@ -1001,7 +1007,7 @@ async function evaluateClimateControl(){
         extreme_level:suggestion.extreme_level
       });
       const type=suggestion.returning_to_base?'viveiro_climate_return_base':'viveiro_climate_auto_change';
-      await event(type,suggestion.returning_to_base?'Automático 2.0 retornou ao ciclo-base.':'Automático 2.0 ajustou o intervalo pelo clima.',{
+      await event(type,suggestion.returning_to_base?'Automático 4.0 retornou ao ciclo-base.':'Automático 4.0 ajustou o intervalo pelo clima.',{
         from_seconds:oldOn,to_seconds:targetOn,from_off_seconds:oldOff,to_off_seconds:targetOff,
         temperature:suggestion.temperature,humidity:suggestion.humidity,vpd:suggestion.vpd,
         water_factor:suggestion.water_factor,level:suggestion.level,
@@ -1013,7 +1019,7 @@ async function evaluateClimateControl(){
         await pushNotice(
           'Calor crítico • irrigação ajustada',
           oldOn+'s ligado / '+oldOff+'s intervalo → '+targetOn+'s / '+targetOff+'s. '+
-            'VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa. O Automático 2.0 aumentou a irrigação.',
+            'VPD '+Number(suggestion.vpd||0).toFixed(2)+' kPa. O Automático 4.0 aumentou a irrigação.',
           'viveiro-climate-critical-'+suggestionId,
           'warning',
           30,
@@ -1419,7 +1425,7 @@ async function run(){
       await event('viveiro_weather_resume','Proteção por chuva liberada. Retomada no ciclo-base antes de novos ajustes climáticos.');
       await pushNotice(
         'Viveiro liberado após chuva',
-        'A irrigação foi liberada no ciclo-base '+Number(state.base_on_seconds||state.on_seconds||30)+' s ligado / '+Number(state.base_off_seconds||state.off_seconds||120)+' s desligado. O Automático 2.0 aguardará novas leituras antes de ajustar novamente.',
+        'A irrigação foi liberada no ciclo-base '+Number(state.base_on_seconds||state.on_seconds||30)+' s ligado / '+Number(state.base_off_seconds||state.off_seconds||120)+' s desligado. O Automático 4.0 aguardará novas leituras antes de ajustar novamente.',
         'viveiro-rain-resume-'+localDayKey(),
         'info',
         20,
@@ -1442,11 +1448,13 @@ async function run(){
     ));
 
     let relayOnAt=0;
+    let relayOnCommandAt=0;
     let pulseId='';
     try{
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
       const onResult=await setViveiroRelay(true,{attempts:5});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
+      relayOnCommandAt=Number(onResult?.command_sent_at||onResult?.command_started_at||relayOnAt);
       addConfirmationLatencySample(
         'on',
         Number(onResult?.confirmation_latency_ms||0),
@@ -1489,8 +1497,9 @@ async function run(){
         source:String(onResult?.confirmed_by||'unknown'),
         reason:'pulse_start'
       });
-      // O countdown nativo continua sendo uma proteção extra.
-      await safetyCountdown(maxOn);
+      // O countdown nativo é uma proteção extra. Não bloqueia o relógio local:
+      // a latência da nuvem jamais pode prolongar um pulso.
+      void safetyCountdown(maxOn).catch(()=>false);
     }catch(error){
       await safeOff('start_failure');
       const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
@@ -1533,7 +1542,7 @@ async function run(){
       relay_expected:true,
       pulse_started_at:relayOnAt||Date.now(),
       current_pulse_id:pulseId,
-      expected_off_at:(relayOnAt||Date.now())+maxOn*1000,
+      expected_off_at:(relayOnCommandAt||relayOnAt||Date.now())+maxOn*1000,
       first_pulse_window_at:Number(state.first_pulse_window_at||0)||(relayOnAt||Date.now()),
       ...(delayed&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)?{start_alert_window_at:windowStartAt}: {})
     };
@@ -1580,26 +1589,10 @@ async function run(){
       // Se o prazo terminou durante o sleep, desliga sem fazer nenhuma consulta
       // de rede antes. Isso evita que Weather/Smart Life prolonguem o pulso.
       if(Date.now()>=onDeadline)break;
-      if(!(await active())){interrupted=true;break}
+      // Durante um pulso curto, nenhuma chamada de rede pode ficar no caminho do OFF.
+      // Chuva, ownership e Weather2-2 são verificados antes de ligar e novamente no
+      // intervalo. Assim, mesmo com Smart Life lenta, o comando OFF sai no prazo local.
       if(!localSchedule(state).inside){interrupted=true;break}
-
-      const nowWeather=await weather();
-      if(!nowWeather.usable){
-        state={...state,phase:'weather_unavailable',last_error:'Weather2-2 sem dados durante o pulso.'};
-        interrupted=true;
-        break;
-      }
-      if(nowWeather.raining){
-        state={
-          ...state,
-          phase:'weather_blocked',
-          paused_by_weather:true,
-          rain_last_at:Date.now(),
-          last_error:null
-        };
-        interrupted=true;
-        break;
-      }
     }
 
     await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
@@ -1621,7 +1614,7 @@ async function run(){
       ensureDailyCounters(physicalOnAt||physicalOffAt);
       state={
         ...state,
-        daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0)+actualPulseSeconds,
+        daily_irrigated_seconds:Number(state.daily_irrigated_seconds||0)+Math.min(maxOn,actualPulseSeconds),
         daily_last_pulse_at:physicalOffAt
       };
     }
@@ -1838,7 +1831,7 @@ export async function initSecondsManager(){
     getClimateConfig().catch(()=>null),
     getClimateState().catch(()=>null)
   ]);
-  console.log('Automatico 2.0 startup',{
+  console.log('Automatico 4.0 startup',{
     cycle_enabled:Boolean(state.enabled),
     phase:String(state.phase||''),
     automatic:Boolean(startupClimateConfig?.automatic),

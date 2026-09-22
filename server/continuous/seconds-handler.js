@@ -1,4 +1,5 @@
 import { applyCors, authorize } from '../api/_tuya.js';
+import { requirePermission } from '../api/_rbac.js';
 import {
   configureSeconds,
   disableSeconds,
@@ -19,6 +20,9 @@ export default async function handler(req,res){
     }
 
     const action=String(req.body?.action||'configure');
+    if(action==='status')return res.status(200).json({ok:true,state:await getSecondsManagerState()});
+    const required=(action==='emergency_stop'||action==='clear_emergency')?'emergency':(action==='configure'?'configure':'command');
+    if(!requirePermission(req,res,required))return;
 
     if(action==='configure'){
       const state=await configureSeconds(req.body||{});
@@ -40,9 +44,6 @@ export default async function handler(req,res){
       return res.status(200).json({ok:true,...result});
     }
 
-    if(action==='status'){
-      return res.status(200).json({ok:true,state:await getSecondsManagerState()});
-    }
 
     return res.status(400).json({ok:false,error:'Ação inválida.'});
   }catch(error){

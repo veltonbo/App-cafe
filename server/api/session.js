@@ -1,9 +1,11 @@
+import { resolveAccess } from './_rbac.js';
 import {
   applyCors,
   authorize,
   clearControlSession,
   issueAppBearerSession,
   issueControlSession,
+  authPrincipal,
   verifyFirebaseIdToken
 } from './_tuya.js';
 
@@ -23,7 +25,7 @@ export default async function handler(req,res){
           auth:'firebase',
           token:session.token,
           expires_at:session.expires_at,
-          user:session.user
+          user:{...session.user,access:resolveAccess(user)}
         });
       }catch(error){
         return res.status(401).json({ok:false,error:'Login do Firebase inválido.',detail:error?.message||String(error)});
@@ -34,13 +36,15 @@ export default async function handler(req,res){
     // already-valid secure cookie. This lets the browser exchange the short-lived
     // app bearer created by Firebase login for the HttpOnly control-session cookie.
     if(!authorize(req,res))return;
-    const session=issueControlSession(res);
-    return res.status(200).json({ok:true,session:true,auth:'secure-cookie',expires_at:session.expires_at});
+    const principal=authPrincipal(req)||{};
+    const session=issueControlSession(res,principal);
+    return res.status(200).json({ok:true,session:true,auth:'secure-cookie',expires_at:session.expires_at,access:resolveAccess(principal)});
   }
 
   if(req.method==='GET'){
     if(!authorize(req,res))return;
-    return res.status(200).json({ok:true,session:true});
+    const principal=authPrincipal(req)||{};
+    return res.status(200).json({ok:true,session:true,access:resolveAccess(principal)});
   }
 
   if(req.method==='DELETE'){

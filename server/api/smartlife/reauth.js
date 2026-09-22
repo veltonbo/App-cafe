@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { smartLifeReauthFinish, smartLifeReauthStart } from '../_smartlife.js';
 
@@ -6,6 +7,7 @@ export default async function handler(req,res){
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='POST')return res.status(405).json({ok:false,error:'Método não permitido.'});
   if(!authorize(req,res))return;
+  if(req.method!=='GET'&&!requirePermission(req,res,'admin'))return;
 
   try{
     const action=String(req.body?.action||'start');

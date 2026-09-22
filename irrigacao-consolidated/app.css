@@ -407,3 +407,49 @@ body{background:#edf2ef!important;color:#17382e!important}.appMain{width:min(100
 .backup42List{display:grid;gap:7px;margin-top:10px}.backup42Row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:#fbfcf8}.backup42Row b{display:block;font-size:.72rem}.backup42Row small{display:block;margin-top:3px;color:var(--muted);font-size:.62rem}.backup42Row button{min-height:34px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#53665d;font-size:.65rem;font-weight:850}.changelog42{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#f8faf7}.changelog42 b{font-size:.72rem}.changelog42 p{margin:5px 0 0;color:var(--muted);font-size:.66rem;line-height:1.45}#guidedDiagList{margin-top:10px}#professionalAlertsPanel .incidentList{margin-top:2px}
 @media(max-width:560px){.intel42Forecast,.history3Stats{grid-template-columns:repeat(2,minmax(0,1fr))}.history3Toolbar{grid-template-columns:40px minmax(0,1fr) 40px}.history3Toolbar #exportDayBtn{grid-column:1/-1}.simResult{grid-template-columns:repeat(3,minmax(0,1fr))}.intelligence42Card{grid-template-columns:minmax(0,1fr) 96px}}
 @media(max-width:380px){.simResult{grid-template-columns:1fr}.history3Stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* F2E_SUMMARY_V19 */
+#view-summary #executiveStrip,#view-summary #intelligence41Card,#view-summary .automationSummary,#view-summary #autonomySummary,#view-summary #dailyPlanSummary,#view-summary #agronomySummary32,#view-summary #decisionSnapshot{display:none!important}
+#view-summary #summaryAuto4{margin-top:10px!important}
+@media(max-width:560px){#view-summary .metricGrid,#view-summary .todayGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* F2E_OPERATION_FOCUS_V20 */
+#view-summary .operationCard{padding:20px!important;border-radius:24px!important}
+#view-summary .operationBody h2{font-size:1.7rem!important;letter-spacing:-.035em!important;line-height:1!important}
+#view-summary .operationBody p{font-size:.76rem!important;line-height:1.45!important;margin-top:7px!important}
+#view-summary .nextEvent{min-width:122px!important;padding:12px 13px!important}
+#view-summary .nextEvent strong{font-size:1.05rem!important;font-variant-numeric:tabular-nums!important}
+#view-summary .freshness{margin-top:4px!important}
+@media(max-width:560px){#view-summary .operationCard{padding:18px!important}#view-summary .operationBody h2{font-size:1.48rem!important}#view-summary .nextEvent{margin-left:0!important;min-width:0!important}#view-summary .nextEvent strong{font-size:1rem!important}}
+/* F2E_AUTOMATION_FOCUS_V21 */
+#view-automation>.pageTitle{margin-bottom:10px!important}
+#view-automation>.panel:first-of-type{border:1px solid #cfe0d6!important;background:linear-gradient(145deg,#ffffff,#f3f8f4)!important}
+#view-automation>.panel:first-of-type .panelHead h3{font-size:1.05rem!important}
+#view-automation #onSeconds,#view-automation #offSeconds{font-size:1.2rem!important;font-weight:900!important;color:#174b37!important}
+#view-automation .unitInput b{font-weight:900!important}
+#view-automation #saveScheduleBtn{box-shadow:0 8px 20px rgba(20,83,58,.14)!important}
+#view-automation .simulatorPanel{background:#f7f8f5!important}
+@media(max-width:560px){#view-automation>.panel{border-radius:18px!important}#view-automation .fieldGrid.two{gap:8px!important}#view-automation #onSeconds,#view-automation #offSeconds{font-size:1.1rem!important}#view-automation .buttonRow{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}}
+/* F2E_HISTORY_FOCUS_V22 */
+#view-history .history3Panel{border:1px solid #cfe0d6!important;background:linear-gradient(145deg,#fff,#f6faf7)!important}
+#view-history .history3Toolbar{position:sticky!important;top:82px!important;z-index:8!important;background:rgba(246,250,247,.94)!important;backdrop-filter:blur(12px)!important;padding:8px!important;border-radius:14px!important}
+#view-history .history3Stats{gap:8px!important}
+#view-history .history3Stats>div{border:1px solid #dce7df!important;border-radius:14px!important;background:#fff!important;padding:12px!important}
+#view-history .history3Stats strong{font-size:1rem!important;font-variant-numeric:tabular-nums!important}
+#view-history .history3TimelineHead{margin-top:16px!important}
+#view-history .eventList{display:grid!important;gap:7px!important}
+#view-history #dayStatusCard{margin-top:10px!important}
+@media(max-width:560px){#view-history .history3Toolbar{top:78px!important;display:grid!important;grid-template-columns:42px minmax(0,1fr) 42px!important}#view-history #exportDayBtn{grid-column:1/-1!important}#view-history .history3Stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* F2E_SYSTEM_FOCUS_V23 */
+#view-system .systemOverallCard{position:relative!important;margin-bottom:10px!important}
+#view-system .serviceGrid{order:2!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}
+#view-system .serviceGrid article{padding:11px 8px!important;border-radius:14px!important}
+#view-system .serviceGrid strong{font-size:.64rem!important}
+#view-system .smartLifeReconnectPanel{border-color:#d5e4d9!important}
+#view-system .systemAdvanced{margin-top:10px!important;border:1px solid #dce7df!important;border-radius:16px!important;background:#f8faf8!important}
+#view-system .systemAdvanced>summary{padding:14px!important}
+#view-system .systemAdvancedBody{padding:0 10px 10px!important}
+#view-system .diagnostic pre{max-height:260px!important;overflow:auto!important}
+@media(max-width:560px){#view-system .serviceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#view-system .serviceGrid article{min-height:76px!important}#view-system .statusRows>div{gap:12px!important}#view-system .statusRows strong{text-align:right!important}}
+/* F2E_RBAC_ADMIN_V1 */
+.userAdminList{display:grid;gap:8px;margin-top:12px}.userAdminRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:11px;border:1px solid #dce7df;border-radius:14px;background:#fff}.userAdminRow span{min-width:0}.userAdminRow b,.userAdminRow small{display:block;overflow:hidden;text-overflow:ellipsis}.userAdminRow small{text-transform:uppercase;color:#64746a;font-size:.65rem}.userAdminRow button{padding:8px 10px}.permissionLocked{opacity:.55;pointer-events:none}.accessRolePill{font-size:.68rem;font-weight:900;text-transform:uppercase}
+@media(max-width:560px){.userAdminRow{grid-template-columns:minmax(0,1fr) auto}.userAdminRow button:last-child{grid-column:1/-1}}
+.serverUnsafe{opacity:.45!important;pointer-events:none!important;filter:grayscale(.25)}

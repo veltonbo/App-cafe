@@ -31,16 +31,16 @@ function parseCookies(req){
   }
   return out;
 }
-function sessionSignature(exp){
-  return createHmac('sha256',controlToken).update('f2e-session:'+String(exp)).digest('base64url');
+function sessionSignature(exp,identity=''){
+  return createHmac('sha256',controlToken).update('f2e-session:'+String(exp)+':'+String(identity)).digest('base64url');
 }
 function validSession(req){
   if(!controlToken)return false;
   const raw=parseCookies(req)[SESSION_COOKIE]||'';
-  const [expRaw,sig]=String(raw).split('.');
+  const [expRaw,identity='',sig='']=String(raw).split('.');
   const exp=Number(expRaw);
   if(!Number.isFinite(exp)||exp<=Date.now()||!sig)return false;
-  return safeEqualText(sig,sessionSignature(expRaw));
+  return safeEqualText(sig,sessionSignature(expRaw,identity));
 }
 function rawBearer(req){
   const auth=String(req.headers?.authorization||'');
@@ -124,7 +124,7 @@ export function issueAppBearerSession(user){
   const uid=String(user?.uid||'').trim();
   if(!uid)throw new Error('Usuário Firebase inválido.');
   const exp=Date.now()+SESSION_TTL_SECONDS*1000;
-  const uidEncoded=Buffer.from(uid).toString('base64url');
+  const uidEncoded=Buffer.from(JSON.stringify({uid,email:String(user?.email||'')})).toString('base64url');
   const sig=appBearerSignature(String(exp),uidEncoded);
   return{
     token:[APP_BEARER_PREFIX,String(exp),uidEncoded,sig].join('.'),
@@ -133,9 +133,10 @@ export function issueAppBearerSession(user){
   };
 }
 
-export function issueControlSession(res){
+export function issueControlSession(res,principal={}){
   const exp=Date.now()+SESSION_TTL_SECONDS*1000;
-  const value=String(exp)+'.'+sessionSignature(String(exp));
+  const identity=Buffer.from(JSON.stringify({uid:String(principal?.uid||''),email:String(principal?.email||''),system:principal?.system===true})).toString('base64url');
+  const value=String(exp)+'.'+identity+'.'+sessionSignature(String(exp),identity);
   res.setHeader('Set-Cookie',
     SESSION_COOKIE+'='+value+
     '; Max-Age='+SESSION_TTL_SECONDS+
@@ -148,6 +149,16 @@ export function clearControlSession(res){
   res.setHeader('Set-Cookie',SESSION_COOKIE+'=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict');
 }
 
+
+export function authPrincipal(req){
+  const bearer=rawBearer(req);
+  if(controlToken&&safeEqualText(bearer,controlToken))return{system:true,uid:'system',email:''};
+  if(validAppBearerToken(bearer)){try{const payload=JSON.parse(Buffer.from(String(bearer).split('.')[2],'base64url').toString('utf8'));return{uid:String(payload.uid||''),email:String(payload.email||'')}}catch{return{uid:'legacy',email:''}}}
+  const raw=parseCookies(req)[SESSION_COOKIE]||'';const parts=String(raw).split('.');
+  if(parts.length===3&&validSession(req)){try{const payload=JSON.parse(Buffer.from(parts[1],'base64url').toString('utf8'));return{uid:String(payload.uid||''),email:String(payload.email||''),system:payload.system===true}}catch{}}
+  return null;
+}
+
 export function authorize(req, res) {
   if (!controlToken) {
     res.status(500).json({ ok: false, error: 'APP_CONTROL_TOKEN não configurado no servidor.' });
@@ -157,6 +168,7 @@ export function authorize(req, res) {
     res.status(401).json({ ok: false, error: 'Não autorizado.' });
     return false;
   }
+  req.authPrincipal=authPrincipal(req);
   return true;
 }
 

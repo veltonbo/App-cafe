@@ -88,6 +88,7 @@ async function loadForecast(){
     const future=hourly.filter(row=>Date.parse(row.time)>=now-60*60000);
     const next24=future.slice(0,24);
     const nextRain=future.find(row=>(row.precipitation_probability||0)>=50||(row.precipitation||0)>=0.5)||null;
+    const precipitation24=next24.reduce((sum,row)=>sum+Math.max(0,Number(row.precipitation||0)),0);
     const maxRainProb=next24.reduce((m,row)=>Math.max(m,row.precipitation_probability||0),0);
     const maxVpd=next24.reduce((m,row)=>Math.max(m,row.vapour_pressure_deficit||0),0);
     const et0Next24=next24.reduce((s,row)=>s+(row.et0_fao_evapotranspiration||0),0);
@@ -107,7 +108,7 @@ async function loadForecast(){
         wind_speed_10m:n(raw.current?.wind_speed_10m),
         wind_gusts_10m:n(raw.current?.wind_gusts_10m)
       },
-      summary:{next_rain:nextRain,max_rain_probability_24h:maxRainProb,max_vpd_24h:Number(maxVpd.toFixed(2)),et0_24h:Number(et0Next24.toFixed(2)),forecast_confidence:confidence},
+      summary:{next_rain:nextRain,precipitation_24h_mm:Number(precipitation24.toFixed(2)),max_rain_probability_24h:maxRainProb,max_vpd_24h:Number(maxVpd.toFixed(2)),et0_24h:Number(et0Next24.toFixed(2)),forecast_confidence:confidence},
       hourly:future.slice(0,48),daily
     };
     cacheAt=Date.now();

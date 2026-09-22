@@ -1,3 +1,4 @@
+import { requirePermission } from '../_rbac.js';
 import { applyCors, authorize } from '../_tuya.js';
 import { createConfigBackup, listConfigBackups, restoreConfigBackup } from './_backup.js';
 
@@ -12,6 +13,7 @@ export default async function handler(req,res){
     }
 
     if(req.method!=='POST')return res.status(405).json({ok:false,error:'Método não permitido.'});
+    if(!requirePermission(req,res,'configure'))return;
     const action=String(req.body?.action||'create');
 
     if(action==='create'){

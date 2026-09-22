@@ -19,9 +19,11 @@ import irrigationPythonController from '../server/api/irrigation/python-controll
 import smartLifeImport from '../server/api/smartlife/import.js';
 import smartLifeReauth from '../server/api/smartlife/reauth.js';
 import sessionApi from '../server/api/session.js';
+import usersApi from '../server/api/users.js';
 
 const ROUTES={
   'session':sessionApi,
+  'users':usersApi,
   'cycle':cycle,
   'status':rootStatus,
   'switch':rootSwitch,

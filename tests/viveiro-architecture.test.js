@@ -28,7 +28,7 @@ test('badge climatico usa o campo realmente persistido pelo Automatico 2.0',()=>
 });
 
 test('dashboard usa janela temporal e nao o no inteiro de historico',()=>{
-  assert.match(dashboard,/readRecentHistory\(\{sinceMs:historySince,limit:2500\}\)/);
+  assert.match(dashboard,/readRecentHistory\(\{sinceMs:historySince,limit:1000\}\)/);
   assert.doesNotMatch(dashboard,/storeGet\(ROOT\+'\/history'\)/);
 });
 

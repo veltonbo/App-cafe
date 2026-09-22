@@ -26,7 +26,7 @@ async function mirrorWindow(sinceMs){
   busy=true;
   try{
     const seen=await ensureKnown();
-    const remote=await readRecentHistory({sinceMs,limit:2500});
+    const remote=await readRecentHistory({sinceMs,limit:1000});
     let added=0;
     const ordered=[...remote].sort((a,b)=>Number(a.ts||Date.parse(a.at||'')||0)-Number(b.ts||Date.parse(b.at||'')||0));
     for(const row of ordered){

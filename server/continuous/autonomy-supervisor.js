@@ -63,7 +63,7 @@ async function readContext(){
     smartLifeListDevices({maxAgeMs:4000}).catch(()=>[]),
     localHistoryStatus().catch(()=>({rows:0})),
     storeGet('IrrigacaoFazenda2E/alertMonitor').then(()=>true).catch(()=>false),
-    readRecentHistory({sinceMs:Date.now()-14*86400000,limit:2500}).catch(()=>[]),
+    readRecentHistory({sinceMs:Date.now()-14*86400000,limit:1000}).catch(()=>[]),
     localMaintenanceStatus().catch(()=>({ok:false,backups:{validation:{ok:false,restorable:false}}})),
     validateLatestConfigBackup().catch(()=>({ok:false,restorable:false}))
   ]);

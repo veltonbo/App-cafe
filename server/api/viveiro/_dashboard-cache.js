@@ -58,7 +58,7 @@ export async function getDashboardSources({root='IrrigacaoFazenda2E',historySinc
     cachedRead('weatherState',{ttlMs:3000,maxStaleMs:60000},()=>storeGet(root+'/viveiroWeather/state').catch(()=>null)),
     cachedRead('weatherConfig',{ttlMs:30000,maxStaleMs:15*60*1000},()=>storeGet(root+'/viveiroWeather/config').catch(()=>null)),
     cachedRead('maintenance',{ttlMs:3000,maxStaleMs:60000},()=>getViveiroMaintenance().catch(()=>null)),
-    cachedRead('history32d',{ttlMs:15000,maxStaleMs:5*60*1000},()=>readRecentHistory({sinceMs:historySince,limit:2500}).catch(()=>[])),
+    cachedRead('history32d',{ttlMs:15000,maxStaleMs:5*60*1000},()=>readRecentHistory({sinceMs:historySince,limit:1000}).catch(()=>[])),
     cachedRead('config',{ttlMs:30000,maxStaleMs:15*60*1000},()=>storeGet(root+'/config').catch(()=>null)),
     cachedRead('climateConfig',{ttlMs:15000,maxStaleMs:5*60*1000},()=>getClimateConfig().catch(()=>null)),
     cachedRead('climateState',{ttlMs:3000,maxStaleMs:60000},()=>getClimateState().catch(()=>null)),

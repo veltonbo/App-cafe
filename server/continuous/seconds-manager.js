@@ -1749,6 +1749,8 @@ async function run(){
 
 function ensureLoop(){
   if(loopPromise)return;
+  state={...state,state_updated_at:Date.now()};
+  persist().catch(()=>null);
   loopPromise=run()
     .catch(async error=>{
       console.error('seconds loop',error);
@@ -2042,7 +2044,9 @@ export async function getSecondsManagerState(){
     if(needsLiveCheck){
       const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
       if(current){
-        state={...state,device_relay:current.relay,relay_expected:current.relay===true,checked_at:Date.now()};
+        const relay=current.relay===true;
+        state={...state,device_relay:relay,checked_at:Date.now()};
+        if(state.phase==='on')state={...state,relay_expected:relay};
       }
     }
   }

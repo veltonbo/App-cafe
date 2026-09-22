@@ -1,1 +1,1 @@
-import {defineConfig} from 'vite';import react from '@vitejs/plugin-react';export default defineConfig({plugins:[react()],base:'/irrigacao-next/',build:{outDir:'dist',emptyOutDir:true}});
+import {defineConfig} from 'vite';import react from '@vitejs/plugin-react';export default defineConfig({plugins:[react()],base:'/irrigacao/',build:{outDir:'dist',emptyOutDir:true}});

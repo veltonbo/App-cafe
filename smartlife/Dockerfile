@@ -26,71 +26,32 @@ RUN (npm audit --json > /tmp/npm-audit.json || true) \
        smartlife/safety_watchdog.py \
        smartlife/controller_engine.py
 
-# Patches do controlador/runtime.
-RUN node scripts/patch-local-history-runtime.mjs \
-    && node scripts/patch-auto4-runtime.mjs \
-    && node scripts/patch-irrigation-runtime-v3.mjs \
-    && node scripts/patch-viveiro-realtime.mjs \
-    && node scripts/patch-climate-isolation.mjs \
-    && node scripts/patch-system-consistency.mjs \
-    && node scripts/patch-python-safety-watchdog.mjs \
-    && node scripts/patch-python-primary-engine.mjs \
-    && node scripts/patch-new-ekaza-cycle.mjs \
-    && node scripts/patch-automatic-stability-v3.mjs \
-    && node scripts/patch-runtime-sync-v5.mjs \
-    && node scripts/patch-observability-v12.mjs \
-    && node scripts/patch-automatic4-controller-v1.mjs
+# O runtime atual já contém as correções consolidadas. Os scripts patch-*
+# permanecem no repositório apenas como histórico/migração e não são
+# reaplicados durante um build limpo. Reaplicá-los torna o build dependente
+# de marcadores de versões antigas e pode sobrescrever código mais novo.
 
-# Verificações do runtime antes de compilar a interface.
-RUN grep -q 'FAZENDA2E_NEW_EKAZA_SYNC_V2' server/api/viveiro/_seconds.js \
-    && ! grep -q 'Atualize a programação do EKAZA antes de ativar o modo em segundos.' server/api/viveiro/_seconds.js \
-    && grep -q 'FAZENDA2E_RUNTIME_SYNC_V5' server/continuous/seconds-manager.js \
-    && grep -q 'FAZENDA2E_OBSERVABILITY_V12' server/continuous/seconds-manager.js \
-    && grep -q 'FAZENDA2E_AUTOMATIC4_CONTROLLER_V1' server/continuous/seconds-manager.js \
-    && grep -q "automatic_controller:'automatic4'" server/continuous/seconds-manager.js \
-    && grep -q 'liveCheck:false' server/continuous/seconds-handler.js \
+# Verificações estruturais do runtime consolidado.
+# Não dependem de marcadores de patches históricos.
+RUN node --check server/api/viveiro/_seconds.js \
     && node --check server/api/viveiro/_climate4.js \
     && node --check server/continuous/seconds-manager.js \
-    && node --check server/continuous/seconds-handler.js
+    && node --check server/continuous/seconds-handler.js \
+    && grep -q 'enforceViveiroInterlocks' server/continuous/server.js \
+    && grep -q 'runViveiroWeatherCheck' server/continuous/server.js
 
 RUN npm run build
 
-# Patches da interface de produção.
-RUN node scripts/inject-irrigacao-ui.js \
-    && node scripts/patch-smartlife-reauth-ui.mjs \
-    && node scripts/patch-secure-session-ui.mjs \
-    && node scripts/patch-smartlife-reauth-runtime.mjs \
-    && node scripts/patch-professional-dashboard-v4.mjs \
-    && node scripts/patch-executive-v5.mjs \
-    && node scripts/patch-ui-v6-final.mjs \
-    && node scripts/patch-ekaza-selector-ui.mjs \
-    && node scripts/patch-notifications-ui.mjs \
-    && node scripts/patch-runtime-sync-v5.mjs \
-    && node scripts/patch-ui-consistency-v7.mjs \
-    && node scripts/patch-operations-center-v9-safe.mjs \
-    && node scripts/patch-support-report-v10.mjs \
-    && node scripts/patch-ui-automatic4-only.mjs
+# Frontend consolidado é a fonte canônica da irrigação.
+# Copiamos diretamente a versão revisada, sem reaplicar a cadeia histórica de patches.
+RUN npm --prefix irrigacao-react ci --silent \
+    && npm --prefix irrigacao-react run build \
+    && rm -rf dist/irrigacao \
+    && mkdir -p dist/irrigacao \
+    && cp -a irrigacao-react/dist/. dist/irrigacao/ \
+    && grep -q '/irrigacao/' dist/irrigacao/index.html \
+    && grep -q 'fazenda2e-react-restored-v3' dist/irrigacao/sw.js
 
-# Verificações da interface de produção.
-RUN grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_UI_V6_20260912' dist/irrigacao/app.css \
-    && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_EKAZA_SELECTOR_V1' dist/irrigacao/app.js \
-    && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_NOTIFICATIONS_V1' dist/irrigacao/app.js \
-    && grep -q 'FAZENDA2E_UI_SYNC_V5' dist/irrigacao/app.js \
-    && grep -q 'FAZENDA2E_UI_CONSISTENCY_V7' dist/irrigacao/app.js \
-    && grep -q 'FAZENDA2E_OPERATIONS_CENTER_V9_SAFE' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_UI_AUTOMATIC4_ONLY_V1' dist/irrigacao/index.html \
-    && grep -q 'Automático 4.0 é o único controlador climático' dist/irrigacao/index.html \
-    && grep -q 'FAZENDA2E_SUPPORT_REPORT_V11' dist/irrigacao/suporte.js \
-    && grep -q 'suporte.js?v=11' dist/irrigacao/suporte.html \
-    && node --check dist/irrigacao/app.js \
-    && node --check dist/irrigacao/suporte.js \
-    && test -f dist/irrigacao/suporte.html \
-    && test -f dist/irrigacao/suporte.js \
-    && test -f dist/irrigacao/suporte.css \
-    && grep -q "addEventListener('push'" dist/irrigacao/sw.js
 
 RUN npm prune --omit=dev
 
@@ -100,6 +61,7 @@ RUN npm prune --omit=dev
 
 ENV SMARTLIFE_PYTHON_BIN=/opt/smartlife/bin/python
 ENV NODE_ENV=production
+ENV PORT=8080
 ENV MALLOC_ARENA_MAX=2
 ENV MALLOC_TRIM_THRESHOLD_=131072
 ENV MALLOC_MMAP_THRESHOLD_=131072

@@ -16,7 +16,7 @@ function eventKey(row={}){
 
 async function ensureKnown(){
   if(known)return known;
-  const current=await readLocalHistory({sinceMs:0,limit:10000}).catch(()=>[]);
+  const current=await readLocalHistory({sinceMs:0,limit:2500}).catch(()=>[]);
   known=new Set(current.map(eventKey).filter(Boolean));
   return known;
 }

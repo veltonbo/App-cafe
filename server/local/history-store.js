@@ -5,7 +5,7 @@ import path from 'node:path';
 const DATA_DIR=process.env.FAZENDA2E_DATA_DIR||'/data';
 const HISTORY_FILE=path.join(DATA_DIR,'irrigation-history.ndjson');
 const SYNC_META_FILE=path.join(DATA_DIR,'local-history-meta.json');
-const MAX_ROWS=Math.max(1000,Number(process.env.LOCAL_HISTORY_MAX_ROWS||10000));
+const MAX_ROWS=Math.max(1000,Number(process.env.LOCAL_HISTORY_MAX_ROWS||2500));
 
 let readyPromise=null;
 let writeChain=Promise.resolve();
@@ -25,7 +25,7 @@ async function ensureReady(){
     await fsp.mkdir(DATA_DIR,{recursive:true});
     try{
       const stat=await fsp.stat(HISTORY_FILE);
-      const maxBytes=Math.max(2*1024*1024,Number(process.env.LOCAL_HISTORY_LOAD_BYTES||8*1024*1024));
+      const maxBytes=Math.max(2*1024*1024,Number(process.env.LOCAL_HISTORY_LOAD_BYTES||3*1024*1024));
       const start=Math.max(0,stat.size-maxBytes);
       const fh=await fsp.open(HISTORY_FILE,'r');
       try{

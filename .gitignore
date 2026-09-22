@@ -6,3 +6,4 @@ dist/
 camera-gateway/
 public/cameras/
 server/api/cameras/
+*.pre*

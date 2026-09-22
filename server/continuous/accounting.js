@@ -87,7 +87,11 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
   const irrigatedSeconds=finals.reduce((sum,row)=>sum+accountedPulseSeconds(row),0);
 
   const canonical=canonicalSummaryForDay(all,dayKey);
-  if(canonical){
+  const canonicalTs=rowTs(canonical);
+  const newestEventTs=Math.max(0,...starts.map(rowTs),...finals.map(rowTs));
+  // O resumo diário é um snapshot. Durante a janela ele não pode esconder
+  // pulsos mais novos que chegaram depois de sua geração.
+  if(canonical&&canonicalTs>=newestEventTs){
     const pulses=Math.max(0,Number(canonical?.pulses||0));
     const completedCount=Math.max(0,Number(canonical?.completed||0));
     const interruptedCount=Math.max(0,Number(canonical?.interrupted||0));

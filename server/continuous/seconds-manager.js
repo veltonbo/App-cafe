@@ -574,35 +574,31 @@ async function reconcileDailyAccounting({notify=false}={}){
       started:Number(accounting.pulses_started||0),
       completed:Number(accounting.pulses_completed||0),
       interrupted:Number(accounting.pulses_interrupted||0),
+      unclosed:Number(accounting.orphaned_starts||0),
       irrigated:Number(accounting.irrigated_seconds||0)
     };
-    const mismatch=
-      before.started!==expected.started||
-      before.completed!==expected.completed||
-      before.interrupted!==expected.interrupted||
-      Math.abs(before.irrigated-expected.irrigated)>0.25;
-
-    // O histórico canônico contabiliza pulsos concluídos pelo tempo programado,
-    // sem somar a latência de confirmação da nuvem. Quando as contagens conferem,
-    // ele pode corrigir com segurança apenas o total de segundos do dia.
-    const countsMatch=before.started===expected.started&&before.completed===expected.completed&&before.interrupted===expected.interrupted;
-    const reconciledIrrigated=countsMatch?expected.irrigated:before.irrigated;
-    if(countsMatch&&Math.abs(before.irrigated-expected.irrigated)>0.25){
-      state={...state,daily_irrigated_seconds:reconciledIrrigated};
+    // Eventos identificados por pulse_id são a fonte canônica do dia. Os contadores
+    // em memória podem reiniciar em deploy/reboot e não devem substituir evidência física.
+    const stateNeedsRepair=
+      before.started!==expected.started||before.completed!==expected.completed||
+      before.interrupted!==expected.interrupted||Math.abs(before.irrigated-expected.irrigated)>0.25;
+    if(stateNeedsRepair){
+      state={...state,
+        daily_pulses_started:expected.started,
+        daily_pulses_completed:expected.completed,
+        daily_pulses_interrupted:expected.interrupted,
+        daily_irrigated_seconds:expected.irrigated
+      };
     }
-    state={
-      ...state,
-      accounting_reconciliation:{
-        status:countsMatch?'ok':(mismatch?'mismatch':'ok'),
-        checked_at:Date.now(),
-        day_key:accounting.day_key,
-        live:before,
-        history:expected,
-        message:!countsMatch&&mismatch
-          ?'Contagem de pulsos diverge; valores ao vivo preservados para revisão.'
-          :(mismatch?'Tempo irrigado reconciliado pelo histórico canônico.':'Contadores ao vivo e histórico conferem.')
-      }
-    };
+    state={...state,accounting_reconciliation:{
+      status:'ok',checked_at:Date.now(),day_key:accounting.day_key,
+      source_of_truth:'pulse_id_events',repaired_state:stateNeedsRepair,
+      previous_live:before,history:expected,
+      unclosed_starts:expected.unclosed,
+      message:stateNeedsRepair
+        ?'Contadores restaurados pelos eventos únicos pulse_id; inícios sem encerramento permanecem separados.'
+        :'Contadores conferem com os eventos únicos pulse_id.'
+    }};
     await persist();
 
     if(mismatch&&!countsMatch){

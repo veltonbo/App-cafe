@@ -85,6 +85,11 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
   const completed=finals.filter(row=>String(row.type)==='viveiro_pulse_complete');
   const interrupted=finals.filter(row=>String(row.type)==='viveiro_pulse_interrupted');
   const irrigatedSeconds=finals.reduce((sum,row)=>sum+accountedPulseSeconds(row),0);
+  const finalPulseIds=new Set(finals.map(row=>String(row?.pulse_id||'').trim()).filter(Boolean));
+  const unclosedStarts=starts.filter(row=>{
+    const pulse=String(row?.pulse_id||'').trim();
+    return pulse&&!finalPulseIds.has(pulse);
+  });
 
   const canonical=canonicalSummaryForDay(all,dayKey);
   const canonicalTs=rowTs(canonical);
@@ -111,7 +116,7 @@ export function pulseAccountingForDay(rows=[],dayKey=accountingDayKey()){
   return{
     day_key:dayKey,starts,finals,completed,interrupted,
     pulses_confirmed:finals.length,pulses_started:starts.length,pulses_completed:completed.length,
-    pulses_interrupted:interrupted.length,orphaned_starts:Math.max(0,starts.length-finals.length),
+    pulses_interrupted:interrupted.length,orphaned_starts:unclosedStarts.length,unclosed_starts:unclosedStarts,
     irrigated_seconds:irrigatedSeconds,raw_pulses_started:starts.length,
     raw_pulses_completed:completed.length,raw_pulses_interrupted:interrupted.length,
     history_summary:null,history_quality:'event_level',history_confidence:'high'

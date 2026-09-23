@@ -647,6 +647,8 @@ async function evaluateClimateControl(){
           approved_id:null,
           last_decision:'outside_schedule',
           last_decision_at:Date.now(),
+          last_operational_decision:'outside_schedule',
+          last_operational_decision_at:Date.now(),
           next_schedule_window_at:nextWindowAt||null,
           last_reason:'Automático 4.0 aguardando o horário programado da irrigação.'
         }).catch(()=>null);
@@ -794,6 +796,7 @@ async function evaluateClimateControl(){
     await patchClimateState({
       samples,
       last_evaluated_at:Date.now(),
+      last_climate_evaluated_at:Date.now(),
       last_temperature:suggestion.temperature,
       last_humidity:suggestion.humidity,
       last_vpd:suggestion.vpd,

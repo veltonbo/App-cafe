@@ -17,6 +17,7 @@ if(process.env.F2E_QA_LIVE==='1'){
  run('health-local','curl',['-fsS','--max-time','5','http://127.0.0.1:8080/health']);
  run('health-public','curl',['-fsS','--max-time','10','https://fazenda2e.tail890201.ts.net/health']);
  run('docker-resources','docker',['stats','--no-stream','fazenda2e-irrigacao','--format','{{.MemUsage}} {{.CPUPerc}}']);
+ run('disk-root','sh',['-c',"u=$(df -P / | awk 'NR==2{gsub(/%/,\"\",$5);print $5}'); echo usage=${u}%; [ \"$u\" -lt 70 ]"]);
  run('recent-fatal-logs','sh',['-c',"! docker logs --since 15m fazenda2e-irrigacao 2>&1 | grep -Eiq 'ReferenceError|TypeError|fatal|uncaught|out of memory'"]);
 }
 const failed=checks.filter(x=>!x.ok);const result={agent:'Fazenda 2E Quality Guardian',version:1,mode:'safe-autofix',checked_at:Date.now(),status:failed.length?'attention':'healthy',passed:checks.length-failed.length,failed:failed.length,checks};mkdirSync(dirname(report),{recursive:true});writeFileSync(report,JSON.stringify(result,null,2));

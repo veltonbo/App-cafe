@@ -20,13 +20,23 @@ function weatherLabel(code){
   if([95,96,99].includes(c))return'Trovoadas';
   return'Variável';
 }
+export function classifyForecastRain(amountMm=0,probability=0){
+  const mm=Math.max(0,n(amountMm)||0),prob=clamp(n(probability)||0,0,100);
+  let level='desprezivel',label='Sem chuva útil',weight=0;
+  if(mm>=5){level=prob>=50?'util':'potencial';label=prob>=50?'Chuva útil':'Chuva útil incerta';weight=prob>=50?3:1;}
+  else if(mm>=2){level='relevante';label='Chuva relevante';weight=prob>=50?2:1;}
+  else if(mm>=0.5){level='fraca';label='Chuva fraca';weight=1;}
+  else if(mm>0){level='garoa';label='Garoa sem efeito relevante';weight=0;}
+  return{level,label,amount_mm:Number(mm.toFixed(2)),probability_percent:Math.round(prob),agronomically_useful:mm>=5&&prob>=50,weight};
+}
 function riskLabel(hour={}){
   const rain=n(hour.precipitation_probability)||0;
+  const rainImpact=classifyForecastRain(n(hour.precipitation)||0,rain);
   const vpd=n(hour.vapour_pressure_deficit);
   const et0=n(hour.et0_fao_evapotranspiration)||0;
   const gust=n(hour.wind_gusts_10m)||0;
   let score=0;
-  if(rain>=60)score-=2;else if(rain>=35)score-=1;
+  if(rainImpact.weight>=3)score-=3;else if(rainImpact.weight===2)score-=2;else if(rainImpact.weight===1)score-=1;
   if(vpd!=null){if(vpd>=3.2)score+=3;else if(vpd>=2.3)score+=2;else if(vpd>=1.7)score+=1;else if(vpd<0.8)score-=1;}
   if(et0>=0.35)score+=1;
   if(gust>=35)score+=1;
@@ -53,20 +63,25 @@ function rowsFromHourly(hourly={}){
 }
 function dailyRows(daily={}){
   const t=daily.time||[];
-  return t.map((time,i)=>({
-    time,
-    weather_code:n(daily.weather_code?.[i]),
-    weather_label:weatherLabel(daily.weather_code?.[i]),
-    temperature_max:n(daily.temperature_2m_max?.[i]),
-    temperature_min:n(daily.temperature_2m_min?.[i]),
-    precipitation_sum:n(daily.precipitation_sum?.[i]),
-    precipitation_probability_max:n(daily.precipitation_probability_max?.[i]),
-    wind_gusts_max:n(daily.wind_gusts_10m_max?.[i]),
-    et0:n(daily.et0_fao_evapotranspiration?.[i])
-  }));
+  return t.map((time,i)=>{
+    const precipitation_sum=n(daily.precipitation_sum?.[i]);
+    const precipitation_probability_max=n(daily.precipitation_probability_max?.[i]);
+    return{
+      time,
+      weather_code:n(daily.weather_code?.[i]),
+      weather_label:weatherLabel(daily.weather_code?.[i]),
+      temperature_max:n(daily.temperature_2m_max?.[i]),
+      temperature_min:n(daily.temperature_2m_min?.[i]),
+      precipitation_sum,
+      precipitation_probability_max,
+      rain_assessment:classifyForecastRain(precipitation_sum,precipitation_probability_max),
+      wind_gusts_max:n(daily.wind_gusts_10m_max?.[i]),
+      et0:n(daily.et0_fao_evapotranspiration?.[i])
+    };
+  });
 }
 
-async function loadForecast(){
+export async function loadForecast(){
   if(cache&&Date.now()-cacheAt<CACHE_MS)return cache;
   const lat=n(process.env.FAZENDA2E_LATITUDE)??DEFAULT_LAT;
   const lon=n(process.env.FAZENDA2E_LONGITUDE)??DEFAULT_LON;
@@ -88,13 +103,15 @@ async function loadForecast(){
     const future=hourly.filter(row=>Date.parse(row.time)>=now-60*60000);
     const next24=future.slice(0,24);
     const nextRain=future.find(row=>(row.precipitation_probability||0)>=50||(row.precipitation||0)>=0.5)||null;
-    const precipitation24=next24.reduce((sum,row)=>sum+Math.max(0,Number(row.precipitation||0)),0);
     const maxRainProb=next24.reduce((m,row)=>Math.max(m,row.precipitation_probability||0),0);
+    const precipitation24=next24.reduce((s,row)=>s+(row.precipitation||0),0);
+    const rainAssessment24=classifyForecastRain(precipitation24,maxRainProb);
+    const nextUsefulRain=daily.find(row=>row?.rain_assessment?.agronomically_useful)||null;
     const maxVpd=next24.reduce((m,row)=>Math.max(m,row.vapour_pressure_deficit||0),0);
     const et0Next24=next24.reduce((s,row)=>s+(row.et0_fao_evapotranspiration||0),0);
     const confidence=maxRainProb>=70?'alta':maxRainProb>=40?'média':'moderada';
     cache={
-      ok:true,provider:'Open-Meteo',model_note:'Previsão por modelos numéricos; a Weather2-2 continua sendo a fonte principal do clima atual.',
+      ok:true,provider:'Open-Meteo',model_note:'Previsão numérica: chuva útil exige pelo menos 5 mm e 50% de probabilidade. Garoa não substitui irrigação. A Weather2-2 confirma o clima real.',
       attribution:'Open-Meteo.com',generated_at:Date.now(),timezone:raw.timezone||TZ,
       location:{latitude:lat,longitude:lon,label:'Nova Brasilândia d’Oeste • RO'},
       current:{
@@ -108,7 +125,7 @@ async function loadForecast(){
         wind_speed_10m:n(raw.current?.wind_speed_10m),
         wind_gusts_10m:n(raw.current?.wind_gusts_10m)
       },
-      summary:{next_rain:nextRain,precipitation_24h_mm:Number(precipitation24.toFixed(2)),max_rain_probability_24h:maxRainProb,max_vpd_24h:Number(maxVpd.toFixed(2)),et0_24h:Number(et0Next24.toFixed(2)),forecast_confidence:confidence},
+      summary:{next_rain:nextRain,next_useful_rain:nextUsefulRain,precipitation_24h_mm:Number(precipitation24.toFixed(2)),rain_agronomic_24h:rainAssessment24,max_rain_probability_24h:maxRainProb,max_vpd_24h:Number(maxVpd.toFixed(2)),et0_24h:Number(et0Next24.toFixed(2)),forecast_confidence:confidence},
       hourly:future.slice(0,48),daily
     };
     cacheAt=Date.now();

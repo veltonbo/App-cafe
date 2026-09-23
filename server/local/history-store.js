@@ -80,6 +80,24 @@ export async function readLocalHistory({sinceMs=0,limit=60000}={}){
   return rows.filter(row=>tsOf(row)>=since).slice(-safeLimit).sort((a,b)=>tsOf(b)-tsOf(a));
 }
 
+export async function readLocalHistoryFileRange({sinceMs=0,limit=10000}={}){
+  await ensureReady();
+  const since=Math.max(0,Number(sinceMs)||0);
+  const safeLimit=Math.max(1,Math.min(20000,Number(limit)||10000));
+  const out=[];
+  try{
+    const stream=fs.createReadStream(HISTORY_FILE,{encoding:'utf8'});
+    let pending='';
+    for await(const chunk of stream){
+      pending+=chunk;
+      const lines=pending.split('\n');pending=lines.pop()||'';
+      for(const line of lines){if(!line)continue;try{const row=JSON.parse(line);if(tsOf(row)>=since)out.push(row)}catch{}}
+    }
+    if(pending){try{const row=JSON.parse(pending);if(tsOf(row)>=since)out.push(row)}catch{}}
+    return out.slice(-safeLimit).sort((a,b)=>tsOf(b)-tsOf(a));
+  }catch(error){if(error?.code==='ENOENT')return[];throw error}
+}
+
 export async function localHistoryStatus(){
   await ensureReady();
   let bytes=0;

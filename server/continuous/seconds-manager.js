@@ -9,6 +9,7 @@ import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, pat
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import { publishLive } from './live-bus.js';
 import { accountingDayKey, pulseAccountingForDay } from './accounting.js';
+import { readLocalHistoryFileRange } from '../local/history-store.js';
 import {
   localSchedule,
   secondsUntilNextWindow,
@@ -562,7 +563,7 @@ async function reconcileDailyAccounting({notify=false}={}){
       return state.accounting_reconciliation;
     }
 
-    const rows=(await readRecentHistory({
+    const rows=(await readLocalHistoryFileRange({
       sinceMs:Date.now()-HISTORY_RECENT_WINDOW_MS,
       limit:HISTORY_RECENT_LIMIT
     })).filter(row=>

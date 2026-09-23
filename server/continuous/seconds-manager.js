@@ -601,9 +601,6 @@ async function reconcileDailyAccounting({notify=false}={}){
     }};
     await persist();
 
-    if(mismatch&&!countsMatch){
-      console.warn('Divergência de contagem preservada para revisão',{before,expected});
-    }
     return state.accounting_reconciliation;
   }catch(error){
     state={

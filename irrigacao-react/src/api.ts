@@ -15,6 +15,8 @@ export const irrigationApi={
   saveConfig:(config:any)=>request('/api/irrigation/config',{method:'PATCH',body:JSON.stringify(config)}),
   telegram:()=>request('/api/irrigation/telegram'),
   saveTelegramAssistant:(assistant:any)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_assistant',assistant})}),
+  saveTelegramToken:(token:string)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_token',token})}),
+  detectTelegramChat:()=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'detect_chat'})}),
   saveTelegramChatId:(chat_id:string)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_chat_id',chat_id})}),
   testTelegram:()=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'test'})})
 };

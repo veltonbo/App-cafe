@@ -1,6 +1,7 @@
 import {execFileSync} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
+import {sendReport} from './telegram-report.mjs';
 const root=resolve('.'), report=resolve(process.env.F2E_QA_REPORT||'/tmp/fazenda2e-quality-agent.json');
 const checks=[]; const add=(name,ok,detail='')=>checks.push({name,ok,detail});
 function run(name,cmd,args=[]){try{const out=execFileSync(cmd,args,{cwd:root,encoding:'utf8',timeout:180000,stdio:['ignore','pipe','pipe']});add(name,true,out.trim().slice(-1200));return true}catch(e){add(name,false,String(e.stderr||e.stdout||e.message).slice(-1800));return false}}
@@ -18,4 +19,7 @@ if(process.env.F2E_QA_LIVE==='1'){
  run('docker-resources','docker',['stats','--no-stream','fazenda2e-irrigacao','--format','{{.MemUsage}} {{.CPUPerc}}']);
  run('recent-fatal-logs','sh',['-c',"! docker logs --since 15m fazenda2e-irrigacao 2>&1 | grep -Eiq 'ReferenceError|TypeError|fatal|uncaught|out of memory'"]);
 }
-const failed=checks.filter(x=>!x.ok);const result={agent:'Fazenda 2E Quality Guardian',version:1,mode:'safe-autofix',checked_at:Date.now(),status:failed.length?'attention':'healthy',passed:checks.length-failed.length,failed:failed.length,checks};mkdirSync(dirname(report),{recursive:true});writeFileSync(report,JSON.stringify(result,null,2));console.log(JSON.stringify({status:result.status,passed:result.passed,failed:result.failed,failures:failed.map(x=>x.name)},null,2));process.exit(failed.length?2:0);
+const failed=checks.filter(x=>!x.ok);const result={agent:'Fazenda 2E Quality Guardian',version:1,mode:'safe-autofix',checked_at:Date.now(),status:failed.length?'attention':'healthy',passed:checks.length-failed.length,failed:failed.length,checks};mkdirSync(dirname(report),{recursive:true});writeFileSync(report,JSON.stringify(result,null,2));
+const summary=`Status: ${result.status}\nVerificações: ${result.passed}/${checks.length} aprovadas\nFalhas: ${result.failed}${failed.length?'\n• '+failed.map(x=>x.name).join('\n• '):'\nNenhuma anomalia detectada.'}`;
+try{await sendReport({title:'🛡 Fazenda 2E • Quality Guardian',text:summary})}catch(e){console.error('telegram-report:',e.message)}
+console.log(JSON.stringify({status:result.status,passed:result.passed,failed:result.failed,failures:failed.map(x=>x.name)},null,2));process.exit(failed.length?2:0);

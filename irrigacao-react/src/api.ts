@@ -14,7 +14,9 @@ export const irrigationApi={
   config:()=>request('/api/irrigation/config'),
   saveConfig:(config:any)=>request('/api/irrigation/config',{method:'PATCH',body:JSON.stringify(config)}),
   telegram:()=>request('/api/irrigation/telegram'),
-  saveTelegramAssistant:(assistant:any)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_assistant',assistant})})
+  saveTelegramAssistant:(assistant:any)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_assistant',assistant})}),
+  saveTelegramChatId:(chat_id:string)=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'set_chat_id',chat_id})}),
+  testTelegram:()=>request('/api/irrigation/telegram',{method:'POST',body:JSON.stringify({action:'test'})})
 };
 export function subscribeViveiroLive(onEvent:(event:any)=>void,onStatus?:(online:boolean)=>void){
   let closed=false,es:EventSource|null=null,retry:any=null;

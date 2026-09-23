@@ -15,6 +15,7 @@ import irrigationLocalHistory from '../server/api/irrigation/local-history.js';
 import irrigationMonitor from '../server/api/irrigation/monitor.js';
 import irrigationBackups from '../server/api/irrigation/backups.js';
 import irrigationDiagnostics from '../server/api/irrigation/diagnostics.js';
+import irrigationTelegram from '../server/api/irrigation/telegram.js';
 import irrigationPythonController from '../server/api/irrigation/python-controller.js';
 import smartLifeImport from '../server/api/smartlife/import.js';
 import smartLifeReauth from '../server/api/smartlife/reauth.js';
@@ -41,6 +42,7 @@ const ROUTES={
   'irrigation/monitor':irrigationMonitor,
   'irrigation/backups':irrigationBackups,
   'irrigation/diagnostics':irrigationDiagnostics,
+  'irrigation/telegram':irrigationTelegram,
   'irrigation/python-controller':irrigationPythonController,
   'smartlife/import':smartLifeImport,
   'smartlife/reauth':smartLifeReauth

@@ -1,0 +1,9 @@
+[Unit]
+Description=Fazenda 2E - observar branch production
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+Persistent=true
+Unit=fazenda2e-deploy-watch.service
+[Install]
+WantedBy=timers.target

@@ -10,6 +10,8 @@ HEALTH_PATH="${HEALTH_PATH:-/health}"
 PUBLIC_PORT="${PUBLIC_PORT:-8080}"
 TEST_PORT="${TEST_PORT:-18080}"
 HTTPS_MARKER="${HTTPS_MARKER:-$HOME/.fazenda2e-https-enabled}"
+DEPLOY_REF="${DEPLOY_REF:-stabilize-production-20260929}"
+LOCK_FILE="${LOCK_FILE:-/tmp/fazenda2e-deploy.lock}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 IMAGE="fazenda2e-irrigacao:${STAMP}"
 CANDIDATE="${APP_NAME}-candidate-${STAMP}"
@@ -19,6 +21,9 @@ say(){ printf '\n[Fazenda 2E] %s\n' "$*"; }
 fail(){ say "ERRO: $*"; exit 1; }
 
 command -v git >/dev/null || fail "git não encontrado"
+command -v flock >/dev/null || fail "flock não encontrado"
+exec 9>"$LOCK_FILE"
+flock -n 9 || fail "já existe um deploy Fazenda 2E em andamento"
 command -v docker >/dev/null || fail "docker não encontrado"
 command -v curl >/dev/null || fail "curl não encontrado"
 [ -d "$REPO_DIR/.git" ] || fail "repositório não encontrado em $REPO_DIR"
@@ -32,13 +37,16 @@ else
 fi
 
 cd "$REPO_DIR"
-say "Atualizando código..."
-git fetch origin main
-git checkout main
-git pull --ff-only origin main
+say "Buscando versão $DEPLOY_REF..."
+[ -z "$(git status --porcelain)" ] || fail "árvore de trabalho possui alterações locais; deploy cancelado"
+git fetch --prune origin
+git rev-parse --verify "origin/$DEPLOY_REF^{commit}" >/dev/null 2>&1 || fail "branch remota $DEPLOY_REF não encontrada"
+git checkout -B "$DEPLOY_REF" "origin/$DEPLOY_REF"
+DEPLOY_SHA="$(git rev-parse HEAD)"
+say "Commit selecionado: $DEPLOY_SHA"
 
-say "Executando testes estáticos..."
-npm test
+say "Executando suíte canônica de produção..."
+npm run test:production:minimal
 say "Construindo e testando nova imagem..."
 docker build -t "$IMAGE" -f "$DOCKERFILE" .
 

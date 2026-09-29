@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const coffee=fs.readFileSync('server/continuous/coffee-sequence.js','utf8');
+const manager=fs.readFileSync('server/continuous/seconds-manager.js','utf8');
+const api=fs.readFileSync('server/api/esp32-controller.js','utf8');
+test('coffee waits for physical pump and valve confirmation before timing',()=>{assert.match(coffee,/if\(on&&pump\).*sector_started_at=Date\.now\(\).*deadline_at=/s)});
+test('coffee rain resume requires usable fresh weather',()=>{assert.match(coffee,/!weather\.raining&&weather\.usable&&!weather\.stale/)});
+test('nursery treats weather unavailable as protected state',()=>{assert.match(manager,/phase:'weather_unavailable'.*relay_expected:false/s)});
+test('manual relay ON is blocked while ESP32 is offline',()=>{assert.match(api,/if\(on&&!fresh\(s\)\).*comando de ligar bloqueado/s)});
+test('coffee handover keeps protected make-before-break path',()=>{assert.match(coffee,/handover_started_at/);assert.match(coffee,/pump/);});

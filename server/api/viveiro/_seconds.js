@@ -1,8 +1,46 @@
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { readViveiroState, sendViveiroCommands } from '../_viveiro_transport.js';
 import { decodeCycle, encodeCycle } from '../_cycle.js';
 
 const TZ='America/Porto_Velho';
+
+const DATA_ROOT=process.env.FAZENDA2E_DATA_DIR||'/data';
+const ESP_FILE=path.join(DATA_ROOT,'esp32-controller.json');
+function readEsp32(){try{return JSON.parse(fs.readFileSync(ESP_FILE,'utf8'))}catch{return null}}
+function saveEsp32(x){const t=ESP_FILE+'.tmp';fs.writeFileSync(t,JSON.stringify(x,null,2),{mode:0o600});fs.renameSync(t,ESP_FILE)}
+function espFresh(x){return Boolean(x&&Date.now()-Number(x.last_seen||0)<15000)}
+async function setEsp32NurseryRelay(on,{attempts=30}={}){
+  const wanted=Boolean(on), started=Date.now();
+  let x=readEsp32();
+  if(!espFresh(x))throw new Error('ESP32 do viveiro está offline.');
+  if(Array.isArray(x.relays)&&Boolean(x.relays[0])===wanted)return{ok:true,on:wanted,provider:'esp32',command_started_at:started,command_sent_at:started,confirmed_at:Date.now(),confirmation_latency_ms:0,confirmed_by:'esp32_state',attempts_used:0};
+  // Não sobrescreve outro comando físico ainda pendente. OFF pode substituir somente R1 ON.
+  if(x.pending&&Date.now()-Number(x.pending.created_at||0)<120000){
+    const sameR1=String(x.pending.type)==='relay'&&Number(x.pending.relay)===1;
+    const sameWanted=sameR1&&Boolean(x.pending.on)===wanted;
+    if(!sameWanted&&!(sameR1&&!wanted))throw new Error('ESP32 ocupado com outro comando físico.');
+    if(sameWanted){
+      for(let i=0;i<30;i++){await sleep(i?350:250);x=readEsp32();if(espFresh(x)&&Array.isArray(x.relays)&&Boolean(x.relays[0])===wanted)return{ok:true,on:wanted,provider:'esp32',command_started_at:started,command_sent_at:Number(x.pending?.created_at||started),confirmed_at:Date.now(),confirmation_latency_ms:Date.now()-started,confirmed_by:'esp32_status',attempts_used:i+1};}
+    }
+  }
+  const id=randomUUID(), sent=Date.now();
+  x.pending={id,type:'relay',relay:1,on:wanted,role:'nursery_pump',source:'automatic_viveiro',created_at:sent};saveEsp32(x);
+  const tries=Math.max(2,Math.min(60,Number(attempts)||30));
+  for(let i=0;i<tries;i++){
+    await sleep(i?350:250);x=readEsp32();
+    if(espFresh(x)&&Array.isArray(x.relays)&&Boolean(x.relays[0])===wanted){
+      if(x.pending?.id===id){x.pending=null;saveEsp32(x)}
+      const confirmed=Date.now();return{ok:true,on:wanted,provider:'esp32',command_started_at:started,command_sent_at:sent,confirmed_at:confirmed,confirmation_latency_ms:confirmed-sent,confirmed_by:'esp32_status',attempts_used:i+1};
+    }
+  }
+  x=readEsp32();
+  if(espFresh(x)&&Array.isArray(x.relays)&&Boolean(x.relays[0])===wanted){if(x.pending?.id===id){x.pending=null;saveEsp32(x)}return{ok:true,on:wanted,provider:'esp32',command_started_at:started,command_sent_at:sent,confirmed_at:Date.now(),confirmation_latency_ms:Date.now()-sent,confirmed_by:'esp32_final_state',attempts_used:tries};}
+  if(x?.pending?.id===id){x.pending=null;saveEsp32(x)}
+  throw new Error('ESP32 não confirmou R1 '+(wanted?'ligado':'desligado')+'.');
+}
+
 
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
@@ -78,69 +116,26 @@ export async function readViveiroDevice(options={}){
   const sm=state?.statusMap||{};
   const cycleRaw=typeof sm.cycle_time==='string'?sm.cycle_time:'';
 
+  // EKAZA permanece como camada de segurança/programação, mas a saída física
+  // do viveiro agora é R1 do ESP32. Nunca use switch_1 do EKAZA como confirmação de R1.
+  const esp=readEsp32();
+  const espOnline=espFresh(esp);
+  const espRelay=espOnline&&Array.isArray(esp?.relays)?Boolean(esp.relays[0]):null;
   return{
-    deviceId:state?.deviceId||null,
-    provider:state?.provider||null,
+    deviceId:'fazenda2e-esp32-01',
+    provider:'esp32',
+    safetyDeviceId:state?.deviceId||null,
+    safetyProvider:state?.provider||null,
     cycleRaw,
     cycleConfig:decodeCycle(cycleRaw),
-    relay:typeof sm.switch_1==='boolean'?sm.switch_1:null,
-    online:state?.online!==false
+    relay:espRelay,
+    online:espOnline,
+    safetyOnline:state?.online!==false
   };
 }
 
 export async function setViveiroRelay(on,{attempts=on?4:8}={}){
-  let lastError='';
-  const wanted=Boolean(on);
-  const confirmations=Math.max(1,Math.min(10,Number(attempts)||1));
-  const commandStartedAt=Date.now();
-
-  for(let sendTry=0;sendTry<2;sendTry++){
-    const commandSentAt=Date.now();
-    try{
-      const result=await sendViveiroCommands([
-        {code:'switch_1',value:wanted}
-      ]);
-      if(result?.statusMap?.switch_1===wanted){
-        const confirmedAt=Date.now();
-        return{
-          ok:true,on:wanted,provider:result.provider,
-          command_started_at:commandStartedAt,
-          command_sent_at:commandSentAt,
-          confirmed_at:confirmedAt,
-          confirmation_latency_ms:Math.max(0,confirmedAt-commandSentAt),
-          confirmed_by:'command_response'
-        };
-      }
-    }catch(error){
-      lastError=error?.message||String(error);
-    }
-
-    for(let i=0;i<confirmations;i++){
-      await sleep(i===0?250:400);
-      try{
-        const current=await readViveiroDevice({force:true,maxAgeMs:0});
-        if(current.relay===wanted){
-          const confirmedAt=Date.now();
-          return{
-            ok:true,on:wanted,provider:current.provider,
-            command_started_at:commandStartedAt,
-            command_sent_at:commandSentAt,
-            confirmed_at:confirmedAt,
-            confirmation_latency_ms:Math.max(0,confirmedAt-commandSentAt),
-            confirmed_by:'status_read'
-          };
-        }
-      }catch(error){
-        lastError=error?.message||String(error);
-      }
-    }
-  }
-
-  const error=new Error(
-    (wanted?'Não foi possível confirmar que o viveiro ligou. ':'Não foi possível confirmar que o viveiro desligou. ')+lastError
-  );
-  error.command_started_at=commandStartedAt;
-  throw error;
+  return setEsp32NurseryRelay(Boolean(on),{attempts});
 }
 
 export async function writeViveiroCycle(raw){
@@ -172,13 +167,11 @@ function disabledCycle(currentRaw,cfg){
 }
 
 export async function pulseStillActive(state={},options={}){
-  if(!state?.enabled||!state?.disabled_cycle_raw)return false;
-  const force=Boolean(options?.force);
-  const current=await readViveiroDevice({
-    force,
-    maxAgeMs:force?0:2500
-  }).catch(()=>null);
-  return Boolean(current&&String(current.cycleRaw||'')===String(state.disabled_cycle_raw||''));
+  if(!state?.enabled)return false;
+  // A posse operacional agora é do ESP32/R1. O EKAZA continua como intertravamento
+  // de segurança, mas uma falha de leitura da nuvem não pode desarmar o ciclo do ESP32.
+  const esp=readEsp32();
+  return espFresh(esp);
 }
 
 export async function prepareServerPulse({onSeconds=30,offSeconds=120,resumeDelayMinutes=30,startMinutes=null,endMinutes=null,daysMask=null}={}){

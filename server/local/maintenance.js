@@ -8,7 +8,8 @@ const DATA_DIR=process.env.FAZENDA2E_DATA_DIR||'/data';
 const BACKUP_DIR=path.join(DATA_DIR,'backups');
 const INTERVAL_MS=Math.max(15*60*1000,Number(process.env.LOCAL_BACKUP_INTERVAL_MS||6*60*60*1000));
 const RETAIN=Math.max(3,Number(process.env.LOCAL_BACKUP_RETAIN||14));
-const FILES=['irrigation-history.ndjson','viveiro-seconds.json'];
+const STATE_FILE=path.basename((process.env.IRRIGATION_STATE_FILE||path.join(DATA_DIR,'viveiro-seconds.json')).trim());
+const FILES=['irrigation-history.ndjson',STATE_FILE];
 const MEMORY_SAMPLE_MS=Math.max(15000,Number(process.env.MEMORY_SAMPLE_MS||30000));
 const MEMORY_SAMPLE_LIMIT=Math.max(20,Math.min(240,Number(process.env.MEMORY_SAMPLE_LIMIT||120)));
 

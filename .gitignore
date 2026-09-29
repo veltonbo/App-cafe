@@ -7,3 +7,17 @@ camera-gateway/
 public/cameras/
 server/api/cameras/
 *.pre*
+
+# Fazenda 2E - nunca versionar dados/credenciais/artefatos locais
+secrets/
+backups/
+audits/
+*.pem
+*.key
+*.crt
+*.p12
+*.log
+irrigacao-react/dist/
+firmware/**/build/
+firmware/build/
+firmware/release/*.bin

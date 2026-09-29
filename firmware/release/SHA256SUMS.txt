@@ -1,0 +1,2 @@
+d9a94f50d61c2aca3ffdba5eb26d346609766d1e8c82af56ae7d874a1fdfc9ef  firmware/release/Fazenda2E-ESP32-v1.0.0-OTA.bin
+287e56cf5fbbede766e6f35fde954d0c091df6c1f6278473fcbb659cf4d76eba  firmware/release/Fazenda2E-ESP32-v1.0.0-USB.bin

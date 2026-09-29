@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 APP_NAME="fazenda2e-irrigacao"
 REPO_DIR="${REPO_DIR:-$HOME/fazenda2e}"
-ENV_FILE="${ENV_FILE:-$HOME/fazenda2e-irrigacao.env}"
+ENV_FILE="${ENV_FILE:-$REPO_DIR/.env}"
 DATA_DIR="${DATA_DIR:-$HOME/fazenda2e-data}"
 DOCKERFILE="${DOCKERFILE:-smartlife/Dockerfile}"
 HEALTH_PATH="${HEALTH_PATH:-/health}"
@@ -37,6 +37,8 @@ git fetch origin main
 git checkout main
 git pull --ff-only origin main
 
+say "Executando testes estáticos..."
+npm test
 say "Construindo e testando nova imagem..."
 docker build -t "$IMAGE" -f "$DOCKERFILE" .
 
@@ -55,6 +57,9 @@ for _ in $(seq 1 40); do
   sleep 1
 done
 [ "$ok" -eq 1 ] || { docker logs --tail 120 "$CANDIDATE" || true; fail "nova versão não passou no health check; versão atual foi preservada"; }
+
+say "Executando smoke test real na candidata..."
+F2E_SMOKE_BASE="http://127.0.0.1:${TEST_PORT}" node scripts/frontend-runtime-smoke.mjs || { docker logs --tail 120 "$CANDIDATE" || true; fail "candidata falhou no smoke test; produção foi preservada"; }
 
 say "Nova versão aprovada. Fazendo troca segura..."
 if docker ps -a --format '{{.Names}}' | grep -qx "$APP_NAME"; then
@@ -79,8 +84,9 @@ for _ in $(seq 1 30); do
   if curl -fsS --max-time 3 "http://127.0.0.1:${PUBLIC_PORT}${HEALTH_PATH}" >/dev/null 2>&1; then ok=1; break; fi
   sleep 1
 done
+if [ "$ok" -eq 1 ] && ! F2E_SMOKE_BASE="http://127.0.0.1:${PUBLIC_PORT}" node scripts/frontend-runtime-smoke.mjs; then ok=0; fi
 if [ "$ok" -ne 1 ]; then
-  say "Health check final falhou. Restaurando versão anterior..."
+  say "Health/smoke final falhou. Restaurando versão anterior..."
   docker logs --tail 120 "$APP_NAME" || true
   docker rm -f "$APP_NAME" >/dev/null 2>&1 || true
   if docker ps -a --format '{{.Names}}' | grep -qx "$BACKUP"; then docker rename "$BACKUP" "$APP_NAME"; docker start "$APP_NAME" >/dev/null; fi

@@ -120,3 +120,8 @@ export async function ensureAutomaticConfigBackup({intervalMs=24*60*60*1000}={})
   const backup=await createConfigBackup('automatico_diario');lastAutomaticBackupAt=now;await pruneConfigBackups().catch(()=>null);return{ok:true,backup};
 }
 export async function verifyBackupRestoreShape(id){const backup=await getConfigBackup(id);if(!backupShapeOk(backup))throw new Error('Backup sem integridade para restauração.');return{ok:true,id:String(id),restorable:true,config_keys:Object.keys(backup.config||{}).length,climate_keys:Object.keys(backup.climate||{}).length,weather_keys:Object.keys(backup.weather||{}).length}}
+
+export async function disasterRecovery7Status(){
+ const validation=await validateLatestConfigBackup({maxAgeMs:0});
+ return{version:'7.0',mode:'safe-dry-run',backup_restorable:Boolean(validation?.restorable),latest_backup:validation||null,rollback_policy:'software_only_manual_authorization',live_relay_state_restored:false,physical_actions:false,commands_sent:0,interlocks_modified:false,checked_at:Date.now()};
+}

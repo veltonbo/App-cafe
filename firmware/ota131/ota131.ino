@@ -1,0 +1,104 @@
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+#include <Preferences.h>
+#include <Update.h>
+
+const char* FW_VERSION="1.3.1";
+const int relePins[16]={32,23,33,22,4,21,26,19,27,18,14,5,15,17,13,16};
+bool estadoRele[16]={false};
+WebServer server(80);
+Preferences prefs;
+String apiUrl,deviceToken,pairCode,lastCommand="";
+unsigned long lastCloud=0;
+
+void setRelay(int i,bool on){
+  if(i<0||i>15)return;
+  estadoRele[i]=on;
+  digitalWrite(relePins[i],on?LOW:HIGH);
+}
+void allOff(){
+  setRelay(1,false); setRelay(0,false);
+  for(int i=2;i<16;i++)setRelay(i,false);
+}
+void coffeeSector(int relay,bool on){
+  int i=relay-1; if(i<2||i>15)return;
+  if(on){for(int j=2;j<16;j++)if(j!=i)setRelay(j,false);setRelay(i,true);delay(2000);setRelay(1,true);}
+  else{setRelay(1,false);delay(2000);setRelay(i,false);}
+}bool otaUpdate(String url){
+  if(!url.startsWith("https://")||WiFi.status()!=WL_CONNECTED)return false;
+  allOff();
+  WiFiClientSecure client; client.setInsecure();
+  HTTPClient http;
+  if(!http.begin(client,url))return false;
+  http.addHeader("x-device-token",deviceToken);
+  int code=http.GET();
+  if(code!=HTTP_CODE_OK){http.end();return false;}
+  int len=http.getSize();
+  if(len<=0||!Update.begin(len)){http.end();return false;}
+  WiFiClient *stream=http.getStreamPtr();
+  size_t done=Update.writeStream(*stream);
+  bool ok=(done==(size_t)len)&&Update.end()&&Update.isFinished();
+  http.end();
+  if(ok){delay(500);ESP.restart();}
+  return ok;
+}
+
+String pagina(){
+  String h="<meta name=viewport content='width=device-width'><h2>Fazenda 2E</h2>";
+  h+="<p>ESP32 16 canais - Firmware "+String(FW_VERSION)+"</p>";
+  h+="<p>R1 Bomba Viveiro | R2 Bomba Cafe automatica | R3-R16 Setores Cafe</p>";
+  for(int i=0;i<16;i++){
+    h+="R"+String(i+1)+" - "+(estadoRele[i]?"LIGADO":"DESLIGADO");
+    if(i!=1)h+=" <a href='/r?n="+String(i+1)+"&v=1'>LIGAR</a> <a href='/r?n="+String(i+1)+"&v=0'>DESLIGAR</a>";
+    h+="<br>";
+  }  h+="<p><a href='/off'>DESLIGAR TODOS</a></p><hr>";
+  h+="<h3>Wi-Fi</h3><form method=POST action=/wifi><input name=s placeholder='Nome do Wi-Fi'><br>";
+  h+="<input name=p type=password placeholder='Senha'><br><button>Salvar Wi-Fi</button></form>";
+  h+="<h3>Parear com Fazenda 2E</h3><form method=POST action=/pair>";
+  h+="<input name=u placeholder='https://endereco-do-app'><br><input name=c placeholder='Codigo de pareamento'><br><button>Parear</button></form>";
+  h+="<p>Cloud: "+String(deviceToken.length()?"PAREADO":"NAO PAREADO")+"</p>";
+  return h;
+}
+void routes(){
+  server.on("/",[](){server.send(200,"text/html",pagina());});
+  server.on("/r",[](){int n=server.arg("n").toInt();bool on=server.arg("v")=="1";if(n==1)setRelay(0,on);else if(n>=3&&n<=16)coffeeSector(n,on);server.sendHeader("Location","/");server.send(302);});
+  server.on("/off",[](){allOff();server.sendHeader("Location","/");server.send(302);});
+  server.on("/wifi",HTTP_POST,[](){prefs.putString("ssid",server.arg("s"));prefs.putString("pass",server.arg("p"));server.send(200,"text/html","Wi-Fi salvo. Reiniciando...");delay(800);ESP.restart();});
+  server.on("/pair",HTTP_POST,[](){apiUrl=server.arg("u");pairCode=server.arg("c");prefs.putString("url",apiUrl);prefs.putString("pair",pairCode);server.send(200,"text/html","Dados salvos. Pareamento automatico.<br><a href='/'>Voltar</a>");});
+}
+void tryPair(){
+  if(deviceToken.length()||apiUrl.length()<8||pairCode.length()<8||WiFi.status()!=WL_CONNECTED)return;
+  WiFiClientSecure client;client.setInsecure();HTTPClient http;
+  http.begin(client,apiUrl+"/api/esp32/controller");http.addHeader("Content-Type","application/json");http.addHeader("x-pair-code",pairCode);
+  int c=http.POST("{}");
+  if(c==200){String x=http.getString();int a=x.indexOf("\"device_token\":\"");if(a>=0){a+=16;int b=x.indexOf('"',a);deviceToken=x.substring(a,b);prefs.putString("token",deviceToken);prefs.remove("pair");pairCode="";}}
+  http.end();
+}void cloud(){
+  if(!deviceToken.length()||WiFi.status()!=WL_CONNECTED)return;
+  WiFiClientSecure client;client.setInsecure();HTTPClient http;
+  http.begin(client,apiUrl+"/api/esp32/controller");http.addHeader("Content-Type","application/json");http.addHeader("x-device-token",deviceToken);
+  String rs="[";for(int i=0;i<16;i++){if(i)rs+=",";rs+=estadoRele[i]?"true":"false";}rs+="]";
+  String body="{\"device_id\":\"fazenda2e-esp32-01\",\"firmware\":\""+String(FW_VERSION)+"\",\"rssi\":"+String(WiFi.RSSI())+",\"relays\":"+rs+"}";
+  if(http.POST(body)==200){
+    String x=http.getString();int idp=x.indexOf("\"id\":\"");String id="";
+    if(idp>=0){idp+=6;int e=x.indexOf('"',idp);id=x.substring(idp,e);}
+    if(id.length()&&id!=lastCommand){
+      if(x.indexOf("\"type\":\"all_off\"")>=0)allOff();
+      else if(x.indexOf("\"type\":\"coffee_sector\"")>=0){int q=x.indexOf("\"relay\":");int n=x.substring(q+8).toInt();bool on=x.indexOf("\"on\":true",q)>=0;coffeeSector(n,on);}
+      else if(x.indexOf("\"type\":\"relay\"")>=0){int q=x.indexOf("\"relay\":");int n=x.substring(q+8).toInt();bool on=x.indexOf("\"on\":true",q)>=0;if(n==1)setRelay(0,on);}
+      else if(x.indexOf("\"type\":\"firmware\"")>=0){int q=x.indexOf("\"url\":\"");if(q>=0){q+=7;int e=x.indexOf('"',q);String u=x.substring(q,e);lastCommand=id;http.end();otaUpdate(u);return;}}
+      lastCommand=id;
+    }
+  }
+  http.end();
+}
+void setup(){
+  for(int i=0;i<16;i++){pinMode(relePins[i],OUTPUT);digitalWrite(relePins[i],HIGH);}
+  prefs.begin("fazenda2e",false);apiUrl=prefs.getString("url","");deviceToken=prefs.getString("token","");pairCode=prefs.getString("pair","");
+  WiFi.mode(WIFI_AP_STA);WiFi.softAP("Fazenda2E-Teste","12345678");
+  String s=prefs.getString("ssid",""),p=prefs.getString("pass","");if(s.length())WiFi.begin(s.c_str(),p.c_str());
+  routes();server.begin();
+}
+void loop(){server.handleClient();if(millis()-lastCloud>3000){lastCloud=millis();tryPair();cloud();}}

@@ -53,6 +53,10 @@ async function ensureReady(){
 export async function appendLocalHistory(row={}){
   await ensureReady();
   const payload={...row,ts:tsOf(row),at:row.at||new Date().toISOString()};
+  const eventId=String(payload.event_id||payload.id||'').trim();
+  if(eventId&&rows.some(item=>String(item?.event_id||item?.id||'').trim()===eventId)){
+    return{...payload,deduplicated:true};
+  }
   rows.push(payload);
   if(rows.length>MAX_ROWS)rows=rows.slice(-MAX_ROWS);
   writeChain=writeChain.then(()=>fsp.appendFile(HISTORY_FILE,JSON.stringify(payload)+'\n','utf8'));

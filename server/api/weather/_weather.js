@@ -4,7 +4,8 @@ import { smartLifeConfigured, smartLifeReadDevice } from '../_smartlife.js';
 const TARGET_DISPLAY_NAME=(process.env.WEATHER_DEVICE_NAME||'Weather2-2').trim();
 const TARGET_NAME=TARGET_DISPLAY_NAME.toLowerCase();
 const WEATHER_CACHE_MS=4*1000;
-const WEATHER_ERROR_BACKOFF_MS=2*60*1000;
+const WEATHER_ERROR_BACKOFF_MS=8*1000;
+const WEATHER_STALE_FALLBACK_MS=5*60*1000;
 const WEATHER_QUOTA_BACKOFF_MS=30*60*1000;
 let weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
 let weatherFetchPromise=null;
@@ -35,7 +36,7 @@ function parseValuesMeta(item) {
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
-function collectMetrics(statusMap, shadowMap, spec) {
+export function collectMetrics(statusMap, shadowMap, spec) {
   const merged = { ...statusMap, ...shadowMap };
   const meta = specMap(spec);
   const rows = Object.entries(merged).map(([code, value]) => {
@@ -57,11 +58,24 @@ function collectMetrics(statusMap, shadowMap, spec) {
   const rainToday = find(/rain.*today/, /today.*rain/, /rain_day/, /daily.*rain/, /precip.*today/);
   const rain24h = find(/rain.*24/, /24.*rain/, /rainfall_24/, /precip.*24/);
   const rainRate = find(/rain.*rate/, /rain.*current/, /precip.*rate/, /current.*rain/);
+  const rain1h = find(/rain.*1h/, /1h.*rain/, /rainfall_1h/, /precip.*1h/);
   const rainGeneric = find(/^rain$/, /rainfall$/, /precipitation$/);
-  const temp = find(/temp_current/, /^temp/, /temperature/);
-  const humidity = find(/humidity_current/, /^humidity/, /^hum/);
+  const isIndoor = r => /indoor|inside|room|interior|内温|室内/i.test(String(r?.code||'')+' '+String(r?.name||''));
+  const isOutdoor = r => /outdoor|outside|external|exterior|外温|室外/i.test(String(r?.code||'')+' '+String(r?.name||''));
+  const findOutdoor = (...patterns) => rows.find(r => isOutdoor(r) && patterns.some(p => p.test(r.code.toLowerCase()) || p.test(String(r.name).toLowerCase())));
+  const findNonIndoor = (...patterns) => rows.find(r => !isIndoor(r) && patterns.some(p => p.test(r.code.toLowerCase()) || p.test(String(r.name).toLowerCase())));
+  // Weather2-2 possui leitura interna e externa. Para irrigação/agronomia,
+  // temperatura e umidade devem representar o ambiente externo da fazenda.
+  const temp = findOutdoor(/temp/, /temperature/) || findNonIndoor(/temp_current/, /^temp/, /temperature/);
+  const humidity = findOutdoor(/humidity/, /^hum/) || findNonIndoor(/humidity_current/, /^humidity/, /^hum/);
+  const apparentTemperature = findOutdoor(/feel/, /apparent/, /heat.*index/) || findNonIndoor(/feel/, /apparent/, /heat.*index/);
+  const dewPoint = findOutdoor(/dew/) || findNonIndoor(/dew/);
   const wind = find(/wind.*speed/, /windspeed/, /^wind_speed/);
+  const windGust = find(/wind.*gust/, /gust.*wind/, /^gust/);
+  const windDirection = find(/wind.*direction/, /wind.*dir/, /^wind_direction/);
   const pressure = find(/pressure/, /barometric/);
+  const uvIndex = find(/uv.*index/, /^uvi$/, /^uv$/);
+  const light = find(/light.*intensity/, /illumin/, /lux/);
 
   const scaled = row => {
     if (!row || typeof row.value !== 'number') return null;
@@ -77,23 +91,34 @@ function collectMetrics(statusMap, shadowMap, spec) {
   };
 
   const stateText = rainState ? String(rainState.value).toLowerCase() : '';
-  const currentRain = [rainRate, rainGeneric].map(scaled).filter(Boolean);
+  const currentRain = [rainGeneric].map(scaled).filter(Boolean);
+  const recentRain = scaled(rain1h);
 
+  // Algumas estações Tuya mantêm rain_rate positivo após a chuva. Quando existe
+  // rain_1h, ele é a referência temporal para não confundir valor residual com chuva atual.
   const rainDetected =
     /rain|raining|wet|yes|true|1/.test(stateText) ||
-    currentRain.some(x => x.value > 0);
+    currentRain.some(x => x.value > 0) ||
+    (recentRain ? recentRain.value > 0 : (!rainState && scaled(rainRate)?.value > 0));
 
   return {
     rainDetected,
     rainState: rainState ? { code: rainState.code, value: rainState.value, name: rainState.name } : null,
     rainToday: scaled(rainToday),
     rain24h: scaled(rain24h),
+    rain1h: recentRain,
     rainRate: scaled(rainRate),
     rainGeneric: scaled(rainGeneric),
     temperature: scaled(temp),
     humidity: scaled(humidity),
+    apparentTemperature: scaled(apparentTemperature),
+    dewPoint: scaled(dewPoint),
     windSpeed: scaled(wind),
+    windGust: scaled(windGust),
+    windDirection: windDirection ? { code:windDirection.code, value:windDirection.value, name:windDirection.name, unit:windDirection.unit } : null,
     pressure: scaled(pressure),
+    uvIndex: scaled(uvIndex),
+    lightIntensity: scaled(light),
     candidates: rows.filter(r => /rain|precip|temp|hum|wind|press|uv|weather/i.test(r.code + ' ' + r.name))
   };
 }
@@ -258,10 +283,13 @@ export async function fetchWeatherSnapshot(options = {}) {
         :false;
       const backoff=weatherSnapshotCache.errorQuota?WEATHER_QUOTA_BACKOFF_MS:WEATHER_ERROR_BACKOFF_MS;
       if(!smartLifeReady&&now-weatherSnapshotCache.errorAt<backoff){
+        if(weatherSnapshotCache.value&&now-weatherSnapshotCache.at<WEATHER_STALE_FALLBACK_MS){
+          return {...weatherSnapshotCache.value,stale:true,degraded:true,last_good_at:weatherSnapshotCache.at,error:weatherSnapshotCache.error};
+        }
         throw new Error(weatherSnapshotCache.error);
       }
       if(smartLifeReady&&weatherSnapshotCache.errorQuota){
-        weatherSnapshotCache={value:null,at:0,error:null,errorAt:0,errorQuota:false};
+        weatherSnapshotCache={...weatherSnapshotCache,error:null,errorAt:0,errorQuota:false};
       }
     }
     if(weatherFetchPromise)return weatherFetchPromise;
@@ -276,13 +304,18 @@ export async function fetchWeatherSnapshot(options = {}) {
       return stamped;
     }catch(error){
       const message=error?.message||String(error);
+      const previousValue=weatherSnapshotCache.value;
+      const previousAt=weatherSnapshotCache.at;
       weatherSnapshotCache={
-        value:null,
-        at:0,
+        value:previousValue,
+        at:previousAt,
         error:message,
         errorAt:startedAt,
         errorQuota:isQuotaError(error)
       };
+      if(previousValue&&Date.now()-previousAt<WEATHER_STALE_FALLBACK_MS){
+        return {...previousValue,stale:true,degraded:true,last_good_at:previousAt,error:message,checked_at:previousAt};
+      }
       throw error;
     }
   })();

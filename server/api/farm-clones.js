@@ -1,0 +1,13 @@
+import fs from 'node:fs';import path from 'node:path';import {applyCors,authorize} from './_tuya.js';import {requirePermission} from './_rbac.js';
+import {FARM_CLONES,FARM_CAPACITY} from './_farm-model.js';
+const FILE=path.resolve(process.env.F2E_DATA_DIR||'/data','farm-clones.json');
+const ALLOWED=FARM_CLONES;
+const PLAN_FILE=path.resolve(process.env.F2E_DATA_DIR||'/data','farm-planting.json');
+const ROWS_FILE=path.resolve(process.env.F2E_DATA_DIR||'/data','farm-rows.json');
+const readJson=(f,d)=>{try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return d}};
+const load=()=>{try{return JSON.parse(fs.readFileSync(FILE,'utf8'))}catch{return{version:'1.0',assignments:{}}}};
+function save(x){fs.mkdirSync(path.dirname(FILE),{recursive:true});const t=FILE+'.tmp';fs.writeFileSync(t,JSON.stringify(x,null,2),{mode:0o600});fs.renameSync(t,FILE);fs.chmodSync(FILE,0o600)}
+export default async function handler(req,res){applyCors(req,res);if(req.method==='OPTIONS')return res.status(204).end();if(!authorize(req,res))return;
+ if(req.method==='GET'){const x=load();return res.status(200).json({ok:true,allowed_clones:ALLOWED,assignments:x.assignments||{},physical_control:false})}
+ if(req.method==='POST'){if(!requirePermission(req,res,'configure'))return;const sector=Math.trunc(Number(req.body?.sector||0)),clones=Array.isArray(req.body?.clones)?[...new Set(req.body.clones.map(String))]:[];if(!Number.isInteger(sector)||!FARM_CAPACITY[sector])return res.status(400).json({ok:false,error:'Setor inválido.'});if(!clones.length||clones.some(x=>!ALLOWED.includes(x)))return res.status(400).json({ok:false,error:'Selecione ao menos um clone cadastrado.'});const plan=readJson(PLAN_FILE,{sectors:{}}).sectors?.[String(sector)],usedPlan=Object.entries(plan?.quantities||{}).filter(([,n])=>Number(n)>0).map(([c])=>c),usedRows=[...new Set(Object.values(readJson(ROWS_FILE,{rows:{}}).rows||{}).filter(r=>r?.confirmed&&r.sector===sector).map(r=>r.clone))],required=[...new Set([...usedPlan,...usedRows])],missing=required.filter(c=>!clones.includes(c));if(missing.length)return res.status(409).json({ok:false,error:'Não é possível remover variedade já usada no planejamento ou nas ruas.',sector,required_clones:required,missing});const x=load();x.assignments=x.assignments||{};x.assignments[String(sector)]={sector,clones,confirmed:true,updated_at:new Date().toISOString(),updated_by:String(req.authPrincipal?.email||req.authPrincipal?.uid||'usuario').slice(0,120)};save(x);return res.status(201).json({ok:true,assignment:x.assignments[String(sector)],physical_control:false})}
+ return res.status(405).json({ok:false,error:'Método não permitido.'})}

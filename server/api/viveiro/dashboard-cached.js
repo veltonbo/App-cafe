@@ -5,7 +5,7 @@ import { authorize } from '../_tuya.js';
 // respostas antigas sobrescreverem eventos SSE mais novos no app. Mantemos uma
 // janela curta para preservar desempenho sem sacrificar sincronização visual.
 const FRESH_MS=Math.max(500,Number(process.env.VIVEIRO_DASHBOARD_CACHE_MS||1500));
-const STALE_MS=Math.max(FRESH_MS,Number(process.env.VIVEIRO_DASHBOARD_STALE_MS||12000));
+const STALE_MS=FRESH_MS; // painel operacional nunca devolve snapshot stale
 
 let cachedBody=null;
 let cachedAt=0;
@@ -94,11 +94,6 @@ export default async function cachedDashboard(req,res){
     return res.status(200).json(cachedBody);
   }
 
-  if(cachedBody&&age<STALE_MS){
-    res.setHeader?.('X-Fazenda2E-Cache','STALE');
-    refreshInBackground(req).catch(()=>null);
-    return res.status(200).json(cachedBody);
-  }
 
   res.setHeader?.('X-Fazenda2E-Cache','MISS');
   return dashboardHandler(req,responseAdapter(res));

@@ -1,0 +1,14 @@
+const base=process.env.F2E_SMOKE_BASE||'http://127.0.0.1:8080';
+const fail=m=>{console.error('SMOKE_FAIL',m);process.exit(2)};
+const h=await fetch(base+'/health');if(!h.ok)fail('health '+h.status);
+const page=await fetch(base+'/irrigacao/');if(!page.ok)fail('irrigacao '+page.status);
+const html=await page.text();
+const jsPath=html.match(/\/irrigacao\/assets\/[^"']+\.js/)?.[0]||html.match(/assets\/[^"']+\.js/)?.[0];
+const cssPath=html.match(/\/irrigacao\/assets\/[^"']+\.css/)?.[0]||html.match(/assets\/[^"']+\.css/)?.[0];
+if(!jsPath||!cssPath)fail('assets ausentes');
+const abs=p=>p.startsWith('/')?p:'/irrigacao/'+p;
+const js=await (await fetch(base+abs(jsPath))).text();
+const css=await (await fetch(base+abs(cssPath))).text();
+for(const x of ['Fazenda 2E','Viveiro','Café','Clima','Relatórios'])if(!js.includes(x))fail('marker '+x);
+for(const x of ['safe-area-inset-bottom','safe-area-inset-top','home7','nursery4'])if(!css.includes(x))fail('css '+x);
+console.log(JSON.stringify({ok:true,health:true,route:'/irrigacao/',js:abs(jsPath),css:abs(cssPath),physical_actions:false}));

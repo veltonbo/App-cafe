@@ -5,7 +5,8 @@ import {
   disableSeconds,
   emergencyStopAll,
   clearEmergencyStop,
-  getSecondsManagerState
+  getSecondsManagerState,
+  peekSecondsManagerState
 } from './seconds-manager.js';
 
 export default async function handler(req,res){
@@ -16,6 +17,7 @@ export default async function handler(req,res){
 
   try{
     if(req.method==='GET'){
+      if(String(req.query?.fast||'')==='1')return res.status(200).json({ok:true,state:peekSecondsManagerState()});
       return res.status(200).json({ok:true,state:await getSecondsManagerState()});
     }
 

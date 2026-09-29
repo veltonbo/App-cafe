@@ -162,6 +162,9 @@ export async function runViveiroWeatherCheck(){
   const position=schedulePosition(seconds.enabled
     ?{daysMask:seconds.days_mask,startMinutes:seconds.start_minutes,endMinutes:seconds.end_minutes}
     :ekaza.cycleConfig);
+  const ekazaFailover=Boolean(seconds.enabled&&seconds.failover_active);
+  const espPrimary=Boolean(seconds.enabled&&!ekazaFailover);
+  const ekazaOwns=Boolean(!seconds.enabled||ekazaFailover);
   const next={...previous,lastCheckedAt:checkedAt,cloudError:null};
   const result={
     ok:true,
@@ -173,11 +176,22 @@ export async function runViveiroWeatherCheck(){
     action:'none'
   };
 
+  if(espPrimary){
+    if(ekaza.cycleConfig?.enabled){
+      await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false);
+      result.action='ekaza_cycle_forced_off_esp_primary';
+    }
+    if(ekaza.relay===true){
+      await setRelay(false);
+      result.action=result.action==='none'?'ekaza_relay_forced_off_esp_primary':result.action+'+relay_off';
+    }
+  }
+
   if(safety?.emergency_latched||maintenance?.active){
     const blockedBy=safety?.emergency_latched?'emergency':'maintenance';
     next.status=blockedBy==='emergency'?'emergency_stopped':'maintenance';
     next.lastWeatherError=null;
-    if(!seconds.enabled&&ekaza.cycleConfig?.enabled){
+    if(ekazaOwns&&ekaza.cycleConfig?.enabled){
       await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,false).catch(()=>null);
       result.action='cycle_paused_'+blockedBy;
     }
@@ -203,7 +217,7 @@ export async function runViveiroWeatherCheck(){
     next.lastWeatherError=weather?.error||'Weather2-2 sem dados suficientes.';
     next.weatherUnavailableSince=Number(previous.weatherUnavailableSince||checkedAt);
 
-    if(seconds.enabled){
+    if(espPrimary){
       result.action='continuous_seconds_manager_handles_weather_unavailable';
     }else{
       const wasEnabled=previous.pausedByWeatherUnavailable
@@ -249,12 +263,12 @@ export async function runViveiroWeatherCheck(){
     const shouldRestore=Boolean(previous.wasCycleEnabledUnavailable);
     next.pausedByWeatherUnavailable=false;
     next.wasCycleEnabledUnavailable=false;
-    if(!seconds.enabled&&shouldRestore&&ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
+    if(ekazaOwns&&shouldRestore&&ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
       const restored=await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,true);
       result.cycle_config=restored;
       result.action=position.insideWindow?'cycle_recovered_weather_inside_window':'cycle_recovered_weather';
     }else{
-      result.action=seconds.enabled?'continuous_seconds_weather_recovered':'weather_recovered';
+      result.action=espPrimary?'continuous_seconds_weather_recovered':'weather_recovered';
     }
     if(!position.insideWindow){
       await setRelay(false).catch(()=>null);
@@ -287,7 +301,7 @@ export async function runViveiroWeatherCheck(){
     next.wasCycleEnabledUnavailable=false;
     next.status='paused_rain';
 
-    if(seconds.enabled){
+    if(espPrimary){
       // O servidor contínuo é o único responsável pelo estado do modo rápido.
       // Esta verificação apenas reforça o desligamento físico em caso de chuva.
       result.action='continuous_seconds_manager_handles_rain';
@@ -337,7 +351,7 @@ export async function runViveiroWeatherCheck(){
 
   if(checkedAt<resumeAt){
     next.status='waiting_resume_delay';
-    if(seconds.enabled){
+    if(espPrimary){
       result.action='continuous_seconds_manager_handles_resume_delay';
     }else if(ekaza.cycleConfig?.enabled){
       // Alguém reativou manualmente durante a espera: mantém a proteção.
@@ -353,7 +367,7 @@ export async function runViveiroWeatherCheck(){
   }
 
   if(previous.wasCycleEnabled){
-    if(seconds.enabled){
+    if(espPrimary){
       result.action=position.insideWindow?'continuous_seconds_ready':'continuous_seconds_waiting_window';
     }else if(ekaza.cycleConfig&&!ekaza.cycleConfig.enabled){
       const restored=await setCycleEnabled(ekaza.cycleRaw,ekaza.cycleConfig,true);

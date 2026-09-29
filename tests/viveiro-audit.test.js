@@ -7,8 +7,8 @@ const dashboard=fs.readFileSync('server/api/viveiro/dashboard.js','utf8');
 const html=fs.readFileSync('public/irrigacao/index.html','utf8');
 const ui=fs.readFileSync('public/irrigacao/app.js','utf8');
 
-test('Viveiro possui auditoria operacional a cada cinco minutos',()=>{
-  assert.match(manager,/OPERATIONAL_AUDIT_MS=5\*60\*1000/);
+test('Viveiro possui auditoria operacional a cada trinta segundos',()=>{
+  assert.match(manager,/OPERATIONAL_AUDIT_MS=30\*1000/);
   assert.match(manager,/runOperationalAudit/);
   assert.match(manager,/operational_audit/);
   assert.match(manager,/scheduler_precision/);

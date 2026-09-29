@@ -48,11 +48,11 @@ def build_manager(session):
 
 
 def refresh_manager(manager, saver):
-    try:
-        manager.customer_api.token_info.expire_time = 0
-        manager.customer_api.refresh_access_token_if_need()
-    except Exception:
-        pass
+    # Force refresh and preserve the newly issued token through SessionSaver.
+    # Never silently rebuild with the same rejected token after a sign-invalid.
+    api = manager.customer_api
+    api.token_info.expire_time = 0
+    api.refresh_access_token_if_need()
     return build_manager(saver.session)
 
 

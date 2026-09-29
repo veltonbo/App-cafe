@@ -10,7 +10,8 @@
     "start": "node server/continuous/start.js",
     "test": "node --test tests/*.test.js",
     "qa": "node scripts/quality-agent.mjs",
-    "qa:live": "F2E_QA_LIVE=1 node scripts/quality-agent.mjs"
+    "qa:live": "F2E_QA_LIVE=1 node scripts/quality-agent.mjs",
+    "test:production:minimal": "node scripts/test-production-minimal.mjs"
   },
   "devDependencies": {
     "vite": "^6.3.5"

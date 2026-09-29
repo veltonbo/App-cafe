@@ -19,7 +19,7 @@ COPY . .
 # apareça com clareza no log do deploy.
 RUN (npm audit --json > /tmp/npm-audit.json || true) \
     && node scripts/audit-summary.mjs /tmp/npm-audit.json \
-    && npm test \
+    && npm run test:production:minimal \
     && /opt/smartlife/bin/python -m py_compile \
        smartlife/bridge.py \
        smartlife/controller_shadow.py \
@@ -48,9 +48,9 @@ RUN npm --prefix irrigacao-react ci --silent \
     && npm --prefix irrigacao-react run build \
     && rm -rf dist/irrigacao \
     && mkdir -p dist/irrigacao \
-    && cp -a irrigacao-react/dist/. dist/irrigacao/ \
+    && cp -a irrigacao-react/dist/. dist/irrigacao/     && rm -rf dist/f2e     && mkdir -p dist/f2e     && cp -a irrigacao-react/dist/. dist/f2e/     && sed -i 's#/irrigacao/assets/#/f2e/assets/#g; s#<link rel="manifest"[^>]*>##g' dist/f2e/index.html     && rm -f dist/f2e/sw.js dist/f2e/manifest.webmanifest \
     && grep -q '/irrigacao/' dist/irrigacao/index.html \
-    && grep -q 'fazenda2e-react-lite-v5' dist/irrigacao/sw.js
+    && grep -q "addEventListener('push'" dist/irrigacao/sw.js && grep -q "addEventListener('notificationclick'" dist/irrigacao/sw.js
 
 
 RUN npm prune --omit=dev

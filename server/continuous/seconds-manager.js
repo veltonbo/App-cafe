@@ -34,7 +34,8 @@ const MAINTENANCE_PATH='IrrigacaoFazenda2E/viveiroMaintenance';
 const HISTORY_RECENT_WINDOW_MS=36*60*60*1000;
 const HISTORY_RECENT_LIMIT=5000;
 const ACCOUNTING_RECONCILE_MS=5*60*1000;
-const OPERATIONAL_AUDIT_MS=5*60*1000;
+const OPERATIONAL_AUDIT_MS=30*1000;
+const EKAZA_FAILOVER_CONFIRM_MS=60*1000;
 const INCIDENT_ROOT='IrrigacaoFazenda2E/viveiro/incidents';
 let accountingTimer=null;
 let operationalAuditTimer=null;
@@ -247,8 +248,83 @@ function auditSeverity(issues=[]){
 }
 async function runOperationalAudit({notify=false}={}){
   const now=Date.now();
+
+  // Guardian de agenda: uma parada externa/reinício não pode deixar uma janela válida
+  // silenciosamente desarmada. Emergência, manutenção e parada manual NÃO são rearmadas.
+  if(!state.enabled&&['stopped_external','stopped_after_restart'].includes(String(state.phase||''))){
+    const schedule=localSchedule(state);
+    const maint=await maintenance().catch(()=>({active:false}));
+    const emergency=await emergencyLatched().catch(()=>true);
+    if(schedule.inside&&!maint.active&&!emergency){
+      const previousPhase=String(state.phase||'');
+      const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
+      if(current?.online){
+        state={...state,enabled:true,phase:'queued',relay_expected:false,last_error:null,runtime_schedule_recovered_at:now};
+        ownershipActive=true;ownershipCheckedAt=now;
+        await persist();
+        ensureLoop();
+        await event('viveiro_schedule_runtime_recovered','Guardian rearmou a programação durante a janela ativa.',{previous_phase:previousPhase});
+        await pushNotice('Programação recuperada','O Guardian detectou a programação desarmada e reativou o ciclo automaticamente.','viveiro-runtime-recovery-'+localDayKey(), 'warning',30,true);
+      }
+    }
+  }
+
   const issues=[];
   let auditHistory=[];
+
+  // Watchdog de transição: se o relógio absoluto de ON/OFF vencer e o laço não
+  // avançar, força um estado seguro e reinicia o controlador sem ignorar intertravamentos.
+  const transitionToleranceMs=5000;
+  const onDue=String(state.phase||'')==='on'&&Number(state.expected_off_at||0)>0&&now>Number(state.expected_off_at)+transitionToleranceMs;
+  const offDue=String(state.phase||'')==='off'&&Number(state.expected_next_on_at||0)>0&&now>Number(state.expected_next_on_at)+transitionToleranceMs;
+  if(state.enabled&&(onDue||offDue)){
+    const kind=onDue?'on_overdue':'off_overdue';
+    const previousPhase=String(state.phase||'');
+    const lastRecovery=Number(state.transition_watchdog?.last_recovery_at||0);
+    if(now-lastRecovery>15000){
+      const recoveredOff=await safeOff('transition_watchdog_'+kind);
+      state={
+        ...state,
+        phase:'queued',
+        relay_expected:false,
+        expected_off_at:0,
+        expected_next_on_at:0,
+        last_error:recoveredOff?null:'Watchdog não confirmou R1 OFF durante recuperação.',
+        transition_watchdog:{
+          status:recoveredOff?'recovered':'critical',
+          reason:kind,
+          previous_phase:previousPhase,
+          last_recovery_at:now,
+          recovery_count:Number(state.transition_watchdog?.recovery_count||0)+1,
+          message:recoveredOff
+            ?'Transição atrasada detectada; R1 confirmado OFF e laço rearmado.'
+            :'Transição atrasada detectada e R1 OFF não foi confirmado.'
+        }
+      };
+      await persist();
+      await event('viveiro_transition_watchdog',recoveredOff
+        ?'Guardian recuperou automaticamente uma transição de ciclo atrasada.'
+        :'Guardian detectou transição atrasada, mas não confirmou o desligamento físico.',{
+        reason:kind,previous_phase:previousPhase,recovered:recoveredOff
+      });
+      if(recoveredOff){
+        ensureLoop();
+        await pushNotice(
+          'Guardian recuperou o ciclo',
+          'Uma transição '+(onDue?'ON → OFF':'OFF → ON')+' atrasou. O R1 foi colocado em estado seguro e o ciclo foi rearmado automaticamente.',
+          'viveiro-transition-recovered-'+localDayKey(),
+          'warning',15,true
+        );
+      }else{
+        await pushNotice(
+          'FALHA CRÍTICA • ciclo travado',
+          'O Guardian detectou uma transição atrasada e não recebeu confirmação física de R1 OFF. Verifique o controlador.',
+          'viveiro-transition-critical-'+localDayKey(),
+          'critical',5,true
+        );
+      }
+    }
+  }
   const phase=String(state.phase||'');
   const schedule=localSchedule(state);
   const protectedPhase=['weather_blocked','weather_unavailable','waiting_after_rain','maintenance','waiting_window','emergency_stopped','stopped'];
@@ -327,19 +403,27 @@ async function runOperationalAudit({notify=false}={}){
     })).filter(row=>
       String(row?.source||'').includes('viveiro')||String(row?.type||'').startsWith('viveiro_')
     );
-    auditHistory=history;
-    const recent30=history.filter(row=>now-Number(row.ts||0)<30*60000);
+    // O histórico local/Firebase pode devolver a mesma ocorrência pelos dois índices.
+    // Guardian conta ocorrências físicas únicas, nunca cópias do mesmo event_id.
+    const uniqueHistory=Array.from(new Map(history.map((row,index)=>[
+      String(row?.event_id||row?.id||[row?.type,row?.ts,index].join('-')),row
+    ])).values());
+    auditHistory=uniqueHistory;
+    const recent30=uniqueHistory.filter(row=>now-Number(row.ts||0)<30*60000);
+    // start_delay descreve o resultado tardio da mesma tentativa de partida e não
+    // representa uma segunda falha física. Contar failure + delay duplicava um único
+    // incidente e deixava o Guardian crítico mesmo após o R1 recuperar.
     const failures=recent30.filter(row=>
-      ['viveiro_error','viveiro_start_failure','viveiro_start_delay'].includes(String(row.type||''))
+      ['viveiro_error','viveiro_start_failure'].includes(String(row.type||''))
     );
     if(failures.length>=2){
-      issues.push({level:'critical',code:'repeated_failures',message:'Falhas repetidas de irrigação nos últimos 30 minutos.'});
+      issues.push({level:'critical',code:'repeated_failures',message:'Falhas independentes de irrigação se repetiram nos últimos 30 minutos.'});
     }
     const interrupted=recent30.filter(row=>String(row.type||'')==='viveiro_pulse_interrupted');
     if(interrupted.length>=3){
       issues.push({level:'warning',code:'many_interruptions',message:'Três ou mais pulsos foram interrompidos nos últimos 30 minutos.'});
     }
-    const restarts=history.filter(row=>
+    const restarts=uniqueHistory.filter(row=>
       now-Number(row.ts||0)<60*60000&&
       ['viveiro_server_restart','viveiro_server_resumed','viveiro_cycle_recovered'].includes(String(row.type||''))
     );
@@ -423,6 +507,11 @@ async function runOperationalAudit({notify=false}={}){
       duration_ms:Math.max(0,now-openedAt),
       resolution:manualIntervention?'intervencao':'automatico'
     };
+    const recoveryHistory=[
+      resolved,
+      ...(Array.isArray(state.guardian_recovery_history)?state.guardian_recovery_history:[])
+    ].filter((row,index,all)=>all.findIndex(x=>String(x?.id||'')===String(row?.id||''))===index).slice(0,12);
+    state={...state,guardian_recovery_history:recoveryHistory,last_guardian_recovery:resolved};
     await storeSet(INCIDENT_ROOT+'/'+incident.id,resolved).catch(error=>
       console.warn('Falha ao encerrar incidente do Viveiro:',error?.message||error)
     );
@@ -439,6 +528,11 @@ async function runOperationalAudit({notify=false}={}){
       notified_codes:[...nextNotified],
       cleared_codes:cleared,
       active_incidents:activeIncidents,
+      active_count:Object.keys(activeIncidents).length,
+      current_fault:Object.keys(activeIncidents).length>0,
+      recovered_recently:Object.keys(activeIncidents).length===0&&Boolean(state.last_guardian_recovery)&&now-Number(state.last_guardian_recovery?.resolved_at||0)<60*60000,
+      last_recovery:state.last_guardian_recovery||null,
+      recovery_history:(Array.isArray(state.guardian_recovery_history)?state.guardian_recovery_history:[]).slice(0,12),
       message:severity==='ok'?'Auditoria operacional sem anomalias.':issues[0]?.message||'Auditoria encontrou uma anomalia.'
     }
   };
@@ -1086,7 +1180,13 @@ async function load(){
     try{
       const remote=await storeGet(REMOTE_STATE_PATH);
       if(remote&&typeof remote==='object'){
-        state=remote;
+        // Prefer the newest state. Firebase can lag behind the local controller
+        // after a restart/deploy and must not resurrect an old stopped_external.
+        let local=null;
+        try{local=JSON.parse(await fs.readFile(STATE_FILE,'utf8'))}catch{}
+        const remoteAt=Number(remote.state_updated_at||remote.server_read_at||0);
+        const localAt=Number(local?.state_updated_at||local?.server_read_at||0);
+        state=(local&&typeof local==='object'&&localAt>remoteAt)?local:remote;
         remoteStoreAvailable=true;
         remoteStoreRetryAt=0;
         return;
@@ -1181,7 +1281,7 @@ async function safeOff(reason='safety'){
         status:'ok',
         checked_at:confirmedAt,
         reason:String(reason||'safety'),
-        message:'Saída OFF confirmada pela Smart Life.'
+        message:'Saída R1 OFF confirmada pelo ESP32.'
       }
     };
     publishLive('confirmation',{
@@ -1204,7 +1304,7 @@ async function safeOff(reason='safety'){
         status:'critical',
         checked_at:failedAt,
         reason:String(reason||'safety'),
-        message:'OFF não confirmado pela Smart Life.',
+        message:'R1 OFF não confirmado pelo ESP32.',
         error:error?.message||String(error)
       }
     };
@@ -1212,7 +1312,7 @@ async function safeOff(reason='safety'){
     console.error('safeOff',error?.message||error);
     await pushNotice(
       'ALERTA • desligamento não confirmado',
-      'O servidor mandou desligar o viveiro, mas não recebeu confirmação do estado OFF pela Smart Life. Verifique o equipamento.',
+      'O servidor mandou desligar o viveiro, mas não recebeu confirmação do R1 OFF pelo ESP32. Verifique o controlador.',
       'viveiro-watchdog-off',
       'critical',
       5,
@@ -1244,7 +1344,7 @@ function activeWindowStartAt(schedule){
 async function active(force=false){
   if(!state.enabled)return false;
   const now=Date.now();
-  if(!force&&ownershipCheckedAt&&now-ownershipCheckedAt<30000){
+  if(!force&&ownershipCheckedAt&&now-ownershipCheckedAt<3000){
     return ownershipActive;
   }
   ownershipCheckedAt=now;
@@ -1265,6 +1365,31 @@ async function finishAndRestore(reason='stopped'){
   return state;
 }
 
+async function activateEkazaFailover(){
+  if(state.failover_active)return true;
+  if(!state.native_cycle_raw||state.native_cycle_was_enabled===false)return false;
+  await writeViveiroCycle(state.native_cycle_raw);
+  const check=await readViveiroDevice({force:true,maxAgeMs:0});
+  if(String(check?.cycleRaw||'')!==String(state.native_cycle_raw||''))throw new Error('EKAZA não confirmou a programação de contingência.');
+  state={...state,failover_active:true,control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a programação de contingência.'};
+  await persist();
+  await event('viveiro_ekaza_failover_start','ESP32 permaneceu offline. EKAZA assumiu a programação de segurança.',{confirm_ms:EKAZA_FAILOVER_CONFIRM_MS});
+  await pushNotice('Contingência ativa • Fazenda 2E','ESP32 ficou offline por 60 s. O EKAZA assumiu a programação de segurança.','viveiro-ekaza-failover','critical',5,true);
+  return true;
+}
+async function reclaimEspPrimary(){
+  if(!state.failover_active)return true;
+  if(!state.disabled_cycle_raw)throw new Error('Programação segura do EKAZA não encontrada para devolver controle ao ESP32.');
+  await writeViveiroCycle(state.disabled_cycle_raw);
+  const check=await readViveiroDevice({force:true,maxAgeMs:0});
+  if(String(check?.cycleRaw||'')!==String(state.disabled_cycle_raw||''))throw new Error('EKAZA não confirmou saída da contingência.');
+  state={...state,failover_active:false,control_owner:'esp32_primary',controller_offline_since:0,failover_recovered_at:Date.now(),phase:'starting',last_error:null};
+  await persist();
+  await event('viveiro_ekaza_failover_end','ESP32 voltou e foi confirmado. EKAZA saiu da contingência antes da retomada do ESP32.');
+  await pushNotice('ESP32 recuperado • Fazenda 2E','EKAZA foi desativado e confirmado. O controle voltou com segurança ao ESP32.','viveiro-esp32-recovered','info',5,true);
+  return true;
+}
+
 async function run(){
   while(state.enabled){
     if(await emergencyLatched().catch(()=>false)){
@@ -1276,18 +1401,37 @@ async function run(){
     }
 
     if(!(await active())){
-      state={...state,enabled:false,phase:'stopped_external',relay_expected:false};
+      // Heartbeat isolado não transfere autoridade. O EKAZA só assume após
+      // indisponibilidade contínua confirmada por 60 s.
+      await safeOff('controller_unavailable').catch(()=>false);
+      const firstOffline=!Number(state.controller_offline_since||0);
+      const offlineSince=Number(state.controller_offline_since||Date.now());
+      state={...state,phase:state.failover_active?'ekaza_failover':'controller_unavailable',control_owner:state.failover_active?'ekaza_failover':'none',controller_offline_since:offlineSince,relay_expected:false,last_error:state.failover_active?'ESP32 offline; EKAZA em contingência.':'Aguardando confirmação da indisponibilidade do ESP32.'};
       await persist();
-      await event('viveiro_cycle_stop','Ciclo rápido interrompido externamente.',{reason:'stopped_external'});
-      await pushNotice(
-        'Atenção • irrigação interrompida',
-        'O ciclo automático foi interrompido externamente e ficou parado.',
-        'viveiro-stopped-external-'+localDayKey(),
-        'critical',
-        20,
-        true
-      );
-      break;
+      if(firstOffline)await pushNotice('ESP32 sem comunicação • Fazenda 2E','Aguardando 60 s de confirmação antes de liberar a contingência EKAZA.','viveiro-esp32-offline','warning',5,true);
+      if(!state.failover_active&&Date.now()-offlineSince>=EKAZA_FAILOVER_CONFIRM_MS){
+        await activateEkazaFailover().catch(async error=>{
+          state={...state,last_error:'Falha ao ativar contingência EKAZA: '+(error?.message||error)};
+          await persist();
+        });
+      }
+      await sleep(3000);
+      continue;
+    }
+
+    // O ESP32 nunca retoma enquanto o EKAZA ainda possui a programação ativa.
+    // Primeiro desabilita e confirma o EKAZA; somente depois R1 volta a ter autoridade.
+    if(state.failover_active){
+      try{await reclaimEspPrimary()}catch(error){
+        state={...state,phase:'failover_reclaim_wait',control_owner:'ekaza_failover',relay_expected:false,last_error:'Aguardando EKAZA confirmar devolução do controle: '+(error?.message||error)};
+        await persist();await sleep(3000);continue;
+      }
+    }else if(state.controller_offline_since){
+      state={...state,controller_offline_since:0,control_owner:'esp32_primary',last_error:null};
+      await persist();
+    }else if(state.control_owner!=='esp32_primary'){
+      state={...state,control_owner:'esp32_primary'};
+      await persist();
     }
 
     const maint=await maintenance();
@@ -1460,7 +1604,7 @@ async function run(){
     let pulseId='';
     try{
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
-      const onResult=await setViveiroRelay(true,{attempts:5});
+      const onResult=await setViveiroRelay(true,{attempts:30});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
       relayOnCommandAt=Number(onResult?.command_sent_at||onResult?.command_started_at||relayOnAt);
       addConfirmationLatencySample(
@@ -1495,7 +1639,10 @@ async function run(){
         current_pulse_id:pulseId,
         daily_pulses_started:Number(state.daily_pulses_started||0)+1,
         daily_last_pulse_at:relayOnAt,
-        watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'Saída ON confirmada pela Smart Life.'}
+        start_recovery_attempts:0,
+        last_physical_ack_at:relayOnAt,
+        last_physical_ack_attempts:Number(onResult?.attempts_used||0),
+        watchdog:{status:'ok',checked_at:relayOnAt,reason:'pulse_start',message:'R1 ON confirmado fisicamente pelo ESP32.'}
       };
       publishLive('confirmation',{
         command:'on',
@@ -1507,20 +1654,46 @@ async function run(){
       });
       // O countdown nativo é uma proteção extra. Não bloqueia o relógio local:
       // a latência da nuvem jamais pode prolongar um pulso.
-      void safetyCountdown(maxOn).catch(()=>false);
+      // EKAZA must remain fully passive while ESP32 owns the nursery cycle.
+      // Do not arm countdown_1: on this controller it can interfere with/invert the pump cycle.
+      // R1/ESP32 watchdog is the active pulse safety layer.
     }catch(error){
       await safeOff('start_failure');
       const expectedFrom=Math.max(Number(windowStartAt||0),Number(state.configured_at||0));
       const late=Date.now()-expectedFrom>=30000;
       const shouldAlert=late&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)&&!Number(state.first_pulse_window_at||0);
+      const recoveryAttempts=Number(state.start_recovery_attempts||0)+1;
       state={
         ...state,
         phase:'retry_wait',
         relay_expected:false,
+        start_recovery_attempts:recoveryAttempts,
+        last_recovery_at:Date.now(),
+        last_recovery_reason:'r1_on_not_confirmed',
         last_error:error?.message||String(error),
+        watchdog:{
+          status:recoveryAttempts>=3?'critical':'recovering',
+          checked_at:Date.now(),
+          reason:'r1_on_not_confirmed',
+          attempts:recoveryAttempts,
+          message:recoveryAttempts>=3
+            ?'R1 não confirmou após 3 tentativas de recuperação; novas tentativas seguras continuarão sem ignorar os intertravamentos.'
+            :'R1 não confirmou; Guardian fará nova tentativa segura.'
+        },
         ...(shouldAlert?{start_alert_window_at:windowStartAt}: {})
       };
       await persist();
+      if(recoveryAttempts===3){
+        await event('viveiro_physical_ack_critical','Guardian atingiu 3 falhas consecutivas de confirmação física do R1.',{
+          attempts:recoveryAttempts,error:state.last_error
+        });
+        await pushNotice(
+          'Falha crítica • confirmação do R1',
+          'O ESP32 não confirmou o acionamento do viveiro após 3 tentativas. O Guardian continuará tentando somente enquanto todas as proteções permitirem.',
+          'viveiro-r1-ack-critical-'+String(windowStartAt||localDayKey()),
+          'critical',20,true
+        );
+      }
       if(shouldAlert){
         await event('viveiro_start_failure','Alerta: o ciclo não iniciou até 30 segundos após o horário esperado.',{
           window_start_at:windowStartAt,
@@ -1550,7 +1723,9 @@ async function run(){
       relay_expected:true,
       pulse_started_at:relayOnAt||Date.now(),
       current_pulse_id:pulseId,
-      expected_off_at:(relayOnCommandAt||relayOnAt||Date.now())+maxOn*1000,
+      // O tempo de água começa quando o ESP32 confirma R1 fisicamente ON.
+      // Latência entre envio e confirmação não pode encurtar o pulso.
+      expected_off_at:(relayOnAt||Date.now())+maxOn*1000,
       first_pulse_window_at:Number(state.first_pulse_window_at||0)||(relayOnAt||Date.now()),
       ...(delayed&&Number(state.start_alert_window_at||0)!==Number(windowStartAt||0)?{start_alert_window_at:windowStartAt}: {})
     };
@@ -1603,18 +1778,23 @@ async function run(){
       if(!localSchedule(state).inside){interrupted=true;break}
     }
 
-    await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
+    const offRequestedAt=Date.now();
+    const offConfirmed=await safeOff(interrupted?'pulse_interrupted':'pulse_deadline');
     if(!interrupted&&onDeadline>0){
+      // Mede o disparo local real do OFF, não um timestamp compartilhado por outros comandos.
       addSchedulerPrecisionSample(
         'off_command',
         onDeadline,
-        Number(state.last_command_at||Date.now()),
+        offRequestedAt,
         Number(state.last_off_confirmed_at||Date.now())
       );
     }
-    const physicalOffAt=Number(state.last_off_confirmed_at||Date.now());
     const physicalOnAt=Number(state.last_on_confirmed_at||relayOnAt||state.pulse_started_at||0);
-    let actualPulseSeconds=0;
+    const confirmedOffAt=Number(state.last_off_confirmed_at||0);
+    // Nunca reutiliza um OFF de um pulso anterior. Sem confirmação nova, a duração física
+    // é desconhecida e permanece explicitamente não confirmada.
+    const physicalOffAt=offConfirmed&&confirmedOffAt>=physicalOnAt?confirmedOffAt:0;
+    let actualPulseSeconds=null;
     if(physicalOnAt>0&&physicalOffAt>=physicalOnAt){
       const actualMs=physicalOffAt-physicalOnAt;
       actualPulseSeconds=Math.max(0,actualMs/1000);
@@ -1629,6 +1809,7 @@ async function run(){
 
     const pulseCompleted=
       !interrupted&&
+      Number.isFinite(actualPulseSeconds)&&
       actualPulseSeconds>=Math.max(0,maxOn-0.75);
     const finalInterrupted=!pulseCompleted;
     ensureDailyCounters(physicalOnAt||physicalOffAt);
@@ -1638,7 +1819,7 @@ async function run(){
       pulse_count:Number(state.pulse_count||0)+(pulseCompleted?1:0),
       daily_pulses_completed:Number(state.daily_pulses_completed||0)+(pulseCompleted?1:0),
       daily_pulses_interrupted:Number(state.daily_pulses_interrupted||0)+(finalInterrupted?1:0),
-      last_pulse_at:physicalOffAt,
+      last_pulse_at:physicalOffAt||Date.now(),
       current_pulse_id:null,
       pulse_started_at:0,
       expected_off_at:0
@@ -1661,14 +1842,20 @@ async function run(){
         pulse_started_at:physicalOnAt,
         pulse_finished_at:physicalOffAt,
         planned_duration_seconds:maxOn,
-        actual_duration_seconds:Number(actualPulseSeconds.toFixed(3)),
-        timing_error_ms:Math.round((actualPulseSeconds-maxOn)*1000),
+        actual_duration_seconds:Number.isFinite(actualPulseSeconds)?Number(actualPulseSeconds.toFixed(3)):null,
+        timing_error_ms:Number.isFinite(actualPulseSeconds)?Math.round((actualPulseSeconds-maxOn)*1000):null,
+        off_confirmed:Boolean(physicalOffAt),
         reason:String(state.phase||'interrupted')
       });
     }
 
     if(!state.enabled)break;
-    if(!(await active()))break;
+    if(!(await active())){
+      state={...state,phase:'controller_unavailable',relay_expected:false,last_error:'Aguardando ESP32 responder.'};
+      await persist();
+      await sleep(3000);
+      continue;
+    }
 
     if(!localSchedule(state).inside){
       const waitSeconds=secondsUntilNextWindow(state);
@@ -1869,8 +2056,43 @@ export async function initSecondsManager(){
     return;
   }
 
+  // Recuperação da programação: se o ciclo contínuo ficou desarmado sem emergência/manutenção,
+  // mas ainda possui uma programação válida, rearma o controlador ao iniciar o servidor.
+  // Isso evita perder a janela diária após uma parada externa/estado persistido antigo.
+  if(!state.enabled&&['stopped_external','stopped_after_restart'].includes(String(state.phase||''))){
+    const maint=await maintenance().catch(()=>({active:false}));
+    const scheduleOk=Number(state.start_minutes)>=0&&Number(state.end_minutes)>Number(state.start_minutes)&&Number(state.days_mask)>0;
+    if(!maint.active&&scheduleOk){
+      const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
+      if(current?.online&&current?.cycleConfig){
+        state={...state,enabled:true,phase:'queued',relay_expected:false,last_error:null,recovered_schedule_at:Date.now()};
+        ownershipActive=true;ownershipCheckedAt=Date.now();
+        await persist();
+        await event('viveiro_schedule_rearmed','Programação diária rearmada automaticamente após estado parado.',{previous_phase:String(state.phase||'')});
+      }
+    }
+  }
+
   if(state.enabled){
     if(await active(true)){
+      // Recalcula imediatamente a fase persistida. Assim um reinício/publicação
+      // não deixa a interface presa em waiting_window quando a janela já abriu.
+      const startupSchedule=localSchedule(state);
+      const staleWaiting=state.phase==='waiting_window'&&startupSchedule.inside;
+      const staleRunning=!startupSchedule.inside&&['queued','starting','running','off'].includes(String(state.phase||''));
+      if(staleWaiting||staleRunning){
+        const waitSeconds=startupSchedule.inside?0:secondsUntilNextWindow(state);
+        state={
+          ...state,
+          phase:startupSchedule.inside?'starting':'waiting_window',
+          next_window_at:startupSchedule.inside?0:Date.now()+waitSeconds*1000,
+          expected_off_at:0,
+          expected_next_on_at:0,
+          last_command_reason:startupSchedule.inside?'schedule_recovered':'outside_schedule',
+          last_error:null
+        };
+        await persist();
+      }
       ensureLoop();
       await pushNotice(
         'Irrigação online novamente',
@@ -2054,6 +2276,8 @@ export async function suspendSecondsForRestart(){
   await persist();
   return state;
 }
+
+export function peekSecondsManagerState(){return publicSecondsState(state)}
 
 export async function getSecondsManagerState(){
   if(state.enabled){

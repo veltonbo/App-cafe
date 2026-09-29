@@ -11,7 +11,10 @@ REMOTE_SHA="$(git ls-remote origin "refs/heads/$DEPLOY_REF" | awk '{print $1}' |
 LAST_SHA="$(cat "$LAST_FILE" 2>/dev/null || true)"
 [ "$REMOTE_SHA" != "$LAST_SHA" ] || exit 0
 echo "[Fazenda 2E] novo commit $REMOTE_SHA em $DEPLOY_REF"
-DEPLOY_REF="$DEPLOY_REF" "$REPO_DIR/scripts/oracle-deploy.sh"
+if ! DEPLOY_REF="$DEPLOY_REF" "$REPO_DIR/scripts/oracle-deploy.sh"; then
+  echo "[Fazenda 2E] deploy não concluído; o próximo ciclo tentará novamente"
+  exit 0
+fi
 printf '%s\n' "$REMOTE_SHA" > "$LAST_FILE.tmp"
 mv "$LAST_FILE.tmp" "$LAST_FILE"
 echo "[Fazenda 2E] deploy confirmado $REMOTE_SHA"

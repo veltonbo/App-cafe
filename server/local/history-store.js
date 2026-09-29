@@ -5,11 +5,13 @@ import path from 'node:path';
 const DATA_DIR=process.env.FAZENDA2E_DATA_DIR||'/data';
 const HISTORY_FILE=path.join(DATA_DIR,'irrigation-history.ndjson');
 const SYNC_META_FILE=path.join(DATA_DIR,'local-history-meta.json');
+const EVENT_INDEX_FILE=path.join(DATA_DIR,'local-history-event-ids.ndjson');
 const MAX_ROWS=Math.max(1000,Number(process.env.LOCAL_HISTORY_MAX_ROWS||2500));
 
 let readyPromise=null;
 let writeChain=Promise.resolve();
 let rows=[];
+let eventIds=new Set();
 let syncMeta={last_success_at:0,last_remote_rows:0,last_added:0};
 
 function tsOf(row={}){
@@ -36,6 +38,27 @@ async function ensureReady(){
         rows=text.split('\n').filter(Boolean).map(line=>{
           try{return JSON.parse(line)}catch{return null}
         }).filter(Boolean).slice(-MAX_ROWS);
+        // O buffer em memória continua limitado, mas a deduplicação precisa conhecer
+        // todos os IDs históricos, inclusive os que ficaram fora das últimas MAX_ROWS.
+        try{
+          const indexText=await fsp.readFile(EVENT_INDEX_FILE,'utf8');
+          eventIds=new Set(indexText.split('\n').map(x=>x.trim()).filter(Boolean));
+        }catch(indexError){
+          if(indexError?.code!=='ENOENT')console.warn('[LocalHistory] event index read:',indexError?.message||indexError);
+        }
+        if(!eventIds.size){
+          eventIds=new Set();
+          const idStream=fs.createReadStream(HISTORY_FILE,{encoding:'utf8'});
+          let rest='';
+          for await(const chunk of idStream){
+            rest+=chunk;const lines=rest.split('\n');rest=lines.pop()||'';
+            for(const line of lines){try{const item=JSON.parse(line);const id=String(item?.event_id||item?.id||'').trim();if(id)eventIds.add(id)}catch{}}
+          }
+          if(rest){try{const item=JSON.parse(rest);const id=String(item?.event_id||item?.id||'').trim();if(id)eventIds.add(id)}catch{}}
+          const tmp=EVENT_INDEX_FILE+'.tmp';
+          await fsp.writeFile(tmp,[...eventIds].join('\n')+(eventIds.size?'\n':''),'utf8');
+          await fsp.rename(tmp,EVENT_INDEX_FILE);
+        }
       }finally{await fh.close();}
     }catch(error){
       if(error?.code!=='ENOENT')console.warn('[LocalHistory] read:',error?.message||error);
@@ -54,12 +77,18 @@ export async function appendLocalHistory(row={}){
   await ensureReady();
   const payload={...row,ts:tsOf(row),at:row.at||new Date().toISOString()};
   const eventId=String(payload.event_id||payload.id||'').trim();
-  if(eventId&&rows.some(item=>String(item?.event_id||item?.id||'').trim()===eventId)){
+  if(eventId&&eventIds.has(eventId)){
     return{...payload,deduplicated:true};
   }
   rows.push(payload);
   if(rows.length>MAX_ROWS)rows=rows.slice(-MAX_ROWS);
-  writeChain=writeChain.then(()=>fsp.appendFile(HISTORY_FILE,JSON.stringify(payload)+'\n','utf8'));
+  writeChain=writeChain.then(async()=>{
+    await fsp.appendFile(HISTORY_FILE,JSON.stringify(payload)+'\n','utf8');
+    if(eventId){
+      await fsp.appendFile(EVENT_INDEX_FILE,eventId+'\n','utf8');
+      eventIds.add(eventId);
+    }
+  });
   await writeChain;
   return payload;
 }
@@ -118,6 +147,7 @@ export async function localHistoryStatus(){
     ok:true,
     file:HISTORY_FILE,
     rows:rows.length,
+    indexed_event_ids:eventIds.size,
     bytes,
     first_ts:firstTs,
     last_ts:lastTs,

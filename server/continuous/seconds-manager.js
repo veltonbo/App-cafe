@@ -1253,11 +1253,11 @@ async function safeOff(reason='safety'){
   try{
     let result=null;
     try{
-      result=await setViveiroRelay(false,{attempts:10});
+      result=await setViveiroRelay(false,{attempts:10,source:'seconds_manager',reason:String(reason||'safety')});
     }catch(firstError){
       // Segunda tentativa independente: OFF é sempre o comando de maior prioridade.
       await sleep(250);
-      result=await setViveiroRelay(false,{attempts:10});
+      result=await setViveiroRelay(false,{attempts:10,source:'seconds_manager',reason:String(reason||'safety')});
     }
     const confirmedAt=Number(result?.confirmed_at||Date.now());
     addConfirmationLatencySample(
@@ -1604,7 +1604,7 @@ async function run(){
     let pulseId='';
     try{
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
-      const onResult=await setViveiroRelay(true,{attempts:30});
+      const onResult=await setViveiroRelay(true,{attempts:30,source:'seconds_manager',reason:'pulse_start'});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
       relayOnCommandAt=Number(onResult?.command_sent_at||onResult?.command_started_at||relayOnAt);
       addConfirmationLatencySample(

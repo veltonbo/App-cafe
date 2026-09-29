@@ -134,8 +134,13 @@ export async function readViveiroDevice(options={}){
   };
 }
 
-export async function setViveiroRelay(on,{attempts=on?4:8}={}){
-  return setEsp32NurseryRelay(Boolean(on),{attempts});
+let outputTail=Promise.resolve();
+let outputAuthority={command_id:null,desired:false,source:'startup',reason:'startup',requested_at:0,completed_at:0,confirmed:null,error:null};
+export function getViveiroOutputAuthority(){return{...outputAuthority}}
+export async function setViveiroRelay(on,{attempts=on?4:8,source='viveiro_engine',reason='relay_command'}={}){
+  const request={command_id:randomUUID(),desired:Boolean(on),source:String(source||'unknown').slice(0,120),reason:String(reason||'unspecified').slice(0,120),requested_at:Date.now()};
+  const run=async()=>{outputAuthority={...request,completed_at:0,confirmed:null,error:null};try{const result=await setEsp32NurseryRelay(request.desired,{attempts});outputAuthority={...request,completed_at:Date.now(),confirmed:true,error:null};return result}catch(error){outputAuthority={...request,completed_at:Date.now(),confirmed:false,error:error?.message||String(error)};throw error}};
+  const pending=outputTail.then(run,run);outputTail=pending.catch(()=>undefined);return pending;
 }
 
 export async function writeViveiroCycle(raw){

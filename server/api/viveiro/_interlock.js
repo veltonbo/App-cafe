@@ -60,14 +60,14 @@ async function pauseNativeCycle(recordPath,record){
   if(await secondsRunning()){
     const current=await readViveiroDevice({maxAgeMs:2000}).catch(()=>null);
     if(current?.relay===true){
-      await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+      await setViveiroRelay(false,{attempts:6,source:'viveiro_interlock',reason:'safety_interlock'}).catch(()=>null);
     }
     return record;
   }
 
   const current=await readViveiroDevice({force:true,maxAgeMs:0}).catch(()=>null);
   if(!current){
-    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+    await setViveiroRelay(false,{attempts:6,source:'viveiro_interlock',reason:'safety_interlock'}).catch(()=>null);
     return record;
   }
 
@@ -91,7 +91,7 @@ async function pauseNativeCycle(recordPath,record){
   }
 
   if(current?.relay===true){
-    await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+    await setViveiroRelay(false,{attempts:6,source:'viveiro_interlock',reason:'safety_interlock'}).catch(()=>null);
   }
   return next;
 }
@@ -176,7 +176,7 @@ export async function clearEmergency(){
     cleared_requires_manual_rearm:true
   };
   await storeSet(SAFETY_PATH,payload);
-  await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+  await setViveiroRelay(false,{attempts:6,source:'viveiro_interlock',reason:'safety_interlock'}).catch(()=>null);
   return payload;
 }
 
@@ -224,7 +224,7 @@ export async function setMaintenanceInterlock(minutes,reason='Modo manutenção'
   if(!(await secondsRunning())&&!restore.restored){
     const current=await readViveiroDevice({maxAgeMs:2000}).catch(()=>null);
     if(current?.relay===true){
-      await setViveiroRelay(false,{attempts:6}).catch(()=>null);
+      await setViveiroRelay(false,{attempts:6,source:'viveiro_interlock',reason:'safety_interlock'}).catch(()=>null);
     }
   }
   return payload;

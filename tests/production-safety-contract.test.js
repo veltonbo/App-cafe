@@ -8,4 +8,4 @@ test('coffee waits for physical pump and valve confirmation before timing',()=>{
 test('coffee rain resume requires usable fresh weather',()=>{assert.match(coffee,/!weather\.raining&&weather\.usable&&!weather\.stale/)});
 test('nursery treats weather unavailable as protected state',()=>{assert.match(manager,/phase:'weather_unavailable'.*relay_expected:false/s)});
 test('manual relay ON is blocked while ESP32 is offline',()=>{assert.match(api,/if\(on&&!fresh\(s\)\).*comando de ligar bloqueado/s)});
-test('coffee handover keeps protected make-before-break path',()=>{assert.match(coffee,/handover_started_at/);assert.match(coffee,/pump/);});
+test('coffee handover keeps protected make-before-break path',()=>{assert.match(coffee,/handover_started_at/);assert.match(coffee,/pump/);assert.match(coffee,/LAST_SECTOR_RELAY=13/);assert.match(coffee,/firmwareAtLeast137/);assert.doesNotMatch(coffee,/sort\(\(a,b\)=>a\.relay-b\.relay\)/);});

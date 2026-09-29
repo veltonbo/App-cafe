@@ -5,12 +5,12 @@ import { fetchWeatherSnapshot } from '../api/weather/_weather.js';
 
 const ROOT=process.env.FAZENDA2E_DATA_DIR||'/data';
 const DEVICE=path.join(ROOT,'esp32-controller.json'),SEQ=path.join(ROOT,'coffee-sequence.json'),CFG=path.join(ROOT,'coffee-automation.json'),HIST=path.join(ROOT,'coffee-history.json');
-const FIRST_SECTOR_RELAY=3,LAST_SECTOR_RELAY=11;
+const FIRST_SECTOR_RELAY=3,LAST_SECTOR_RELAY=13,LEGACY_LAST_SECTOR_RELAY=11;
 const GUARDIAN_GRACE_MS=15000;
 const read=(p,d={})=>{try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch{return d}};
 const write=(p,x)=>{fs.mkdirSync(ROOT,{recursive:true});const t=p+'.tmp';fs.writeFileSync(t,JSON.stringify(x,null,2),{mode:0o600});fs.renameSync(t,p)};
 const fresh=s=>Date.now()-Number(s.last_seen||0)<15000;
-const defaults=()=>({enabled:false,handover_seconds:5,sector_defaults:Object.fromEntries(Array.from({length:9},(_,i)=>[i+3,20])),programs:[],schedules:[],weather:{enabled:true,pause_on_rain:true,rain_wait_minutes:120,max_rain_probability:70,forecast_guard:false},updated_at:Date.now()});
+const defaults=()=>({enabled:false,handover_seconds:5,sector_defaults:Object.fromEntries(Array.from({length:11},(_,i)=>[i+3,20])),programs:[],schedules:[],weather:{enabled:true,pause_on_rain:true,rain_wait_minutes:120,max_rain_probability:70,forecast_guard:false},updated_at:Date.now()});
 export function coffeeAutomation(){const x={...defaults(),...read(CFG,{})};x.sector_defaults={...defaults().sector_defaults,...(x.sector_defaults||{})};x.handover_seconds=Math.max(2,Math.min(15,Number(x.handover_seconds)||5));return x}
 function scheduleMinutes(v){const [h,m]=String(v||'').split(':').map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:-1}
 function validateSchedules(programs,schedules){const byId=new Map((programs||[]).map(p=>[p.id,p]));const active=(schedules||[]).filter(x=>x.enabled!==false);for(let i=0;i<active.length;i++){const a=active[i],pa=byId.get(a.program_id),sa=scheduleMinutes(a.time);if(!pa||sa<0)continue;const ea=sa+(pa.sectors||[]).reduce((n,z)=>n+Math.max(1,Number(z.duration_minutes)||20),0);for(let j=i+1;j<active.length;j++){const b=active[j],pb=byId.get(b.program_id),sb=scheduleMinutes(b.time);if(!pb||sb<0)continue;const shared=(a.days||[]).map(Number).some(d=>(b.days||[]).map(Number).includes(d));if(!shared)continue;const eb=sb+(pb.sectors||[]).reduce((n,z)=>n+Math.max(1,Number(z.duration_minutes)||20),0);if(sa<eb&&sb<ea)throw new Error('Conflito de horários entre '+(pa.name||'programa')+' e '+(pb.name||'programa'))}}}
@@ -24,6 +24,8 @@ export function coffeeOperational(){
 function event(type,data={}){const h=read(HIST,[]);h.push({id:crypto.randomUUID(),type,at:Date.now(),...data});write(HIST,h.slice(-500))}
 function queueCommand(s,payload){s.pending={id:crypto.randomUUID(),...payload,created_at:Date.now()};write(DEVICE,s)}
 export function coffeeSequenceStatus(){return read(SEQ,{running:false,paused:false,queue:[],index:0,phase:'idle',guardian:{status:'ok',issues:[]}})}
+function firmwareAtLeast137(s={}){const m=String(s.firmware||'').match(/(\d+)\.(\d+)\.(\d+)/);if(!m)return false;const v=m.slice(1).map(Number);return v[0]>1||(v[0]===1&&(v[1]>3||(v[1]===3&&v[2]>=7)))}
+function assertSectorFirmware(sectors,s){if((sectors||[]).some(x=>Number(x.relay)>LEGACY_LAST_SECTOR_RELAY)&&!firmwareAtLeast137(s))throw new Error('Setores 08 e 09 exigem firmware ESP32 1.3.7 ou superior')}
 function setGuardian(q,issues=[]){
  const prev=q.guardian||{},critical=issues.some(x=>x.level==='critical'),status=critical?'critical':issues.length?'warning':'ok';
  q.guardian={status,issues,checked_at:Date.now(),last_incident:issues.length?{at:Date.now(),issues}:prev.last_incident||null,last_recovery_at:!issues.length&&prev.status&&prev.status!=='ok'?Date.now():prev.last_recovery_at||null};
@@ -40,7 +42,7 @@ function physicalGuardian(q,s,cfg){
  if(q.running&&q.phase==='watering'&&q.deadline_at&&now>Number(q.deadline_at)+GUARDIAN_GRACE_MS)issues.push({code:'sector_overdue',level:'critical',message:'Setor permaneceu irrigando além do deadline.'});
  setGuardian(q,issues);return issues;
 }
-export function startCoffeeSequence(sectors,meta={}){const clean=(Array.isArray(sectors)?sectors:[]).map(x=>({relay:Number(x.relay),duration_minutes:Math.max(1,Math.min(720,Number(x.duration_minutes)||20))})).filter(x=>x.relay>=FIRST_SECTOR_RELAY&&x.relay<=LAST_SECTOR_RELAY).sort((a,b)=>a.relay-b.relay);if(!clean.length)throw new Error('Selecione pelo menos um setor');if(new Set(clean.map(x=>x.relay)).size!==clean.length)throw new Error('Setor repetido');const s=read(DEVICE);if(!fresh(s))throw new Error('ESP32 offline');if(s.pending)throw new Error('Aguarde o comando físico atual');if((s.relays||[]).slice(1).some(Boolean))throw new Error('Há irrigação do café em andamento');const q={id:crypto.randomUUID(),running:true,paused:false,queue:clean,index:0,phase:'starting',started_at:Date.now(),sector_started_at:0,deadline_at:0,total_minutes:clean.reduce((a,x)=>a+x.duration_minutes,0),source:meta.source||'manual',program_id:meta.program_id||null,program_name:meta.program_name||null,updated_at:Date.now()};write(SEQ,q);event('sequence_started',{sequence_id:q.id,source:q.source,program_name:q.program_name,total_minutes:q.total_minutes,sectors:clean});return q}
+export function startCoffeeSequence(sectors,meta={}){const clean=(Array.isArray(sectors)?sectors:[]).map(x=>({relay:Number(x.relay),duration_minutes:Math.max(1,Math.min(720,Number(x.duration_minutes)||20))})).filter(x=>x.relay>=FIRST_SECTOR_RELAY&&x.relay<=LAST_SECTOR_RELAY);if(!clean.length)throw new Error('Selecione pelo menos um setor');if(new Set(clean.map(x=>x.relay)).size!==clean.length)throw new Error('Setor repetido');const s=read(DEVICE);assertSectorFirmware(clean,s);if(!fresh(s))throw new Error('ESP32 offline');if(s.pending)throw new Error('Aguarde o comando físico atual');if((s.relays||[]).slice(1).some(Boolean))throw new Error('Há irrigação do café em andamento');const q={id:crypto.randomUUID(),running:true,paused:false,queue:clean,index:0,phase:'starting',started_at:Date.now(),sector_started_at:0,deadline_at:0,total_minutes:clean.reduce((a,x)=>a+x.duration_minutes,0),source:meta.source||'manual',program_id:meta.program_id||null,program_name:meta.program_name||null,updated_at:Date.now()};write(SEQ,q);event('sequence_started',{sequence_id:q.id,source:q.source,program_name:q.program_name,total_minutes:q.total_minutes,sectors:clean});return q}
 export function pauseCoffeeSequence(reason='manual'){let q=coffeeSequenceStatus();if(!q.running)return q;q.paused=true;q.pause_reason=reason;q.paused_at=Date.now();q.remaining_ms=q.phase==='watering'?Math.max(0,Number(q.deadline_at)-Date.now()):0;q.phase_before_pause=q.phase;q.phase='pausing';write(SEQ,q);event('sequence_paused',{sequence_id:q.id,reason});return q}
 export function resumeCoffeeSequence(){let q=coffeeSequenceStatus();if(!q.running||!q.paused)return q;q.paused=false;q.pause_reason=null;q.resume_remaining_ms=Math.max(0,Number(q.remaining_ms||0));q.remaining_ms=0;q.phase='starting';q.deadline_at=0;q.updated_at=Date.now();write(SEQ,q);event('sequence_resumed',{sequence_id:q.id});return q}
 export function adjustCoffeeSequence(action,payload={}){
@@ -55,7 +57,7 @@ export function adjustCoffeeSequence(action,payload={}){
  }
  if(action==='append'){
    const relay=Number(payload.relay),duration=Math.max(1,Math.min(720,Number(payload.duration_minutes)||20));if(relay<FIRST_SECTOR_RELAY||relay>LAST_SECTOR_RELAY)throw new Error('Setor inválido');
-   if(q.queue.slice(q.index).some(x=>Number(x.relay)===relay))throw new Error('Este setor já está na fila atual');
+   assertSectorFirmware([{relay}],read(DEVICE));if(q.queue.slice(q.index).some(x=>Number(x.relay)===relay))throw new Error('Este setor já está na fila atual');
    q.queue.push({relay,duration_minutes:duration});q.total_minutes=Number(q.total_minutes||0)+duration;q.updated_at=Date.now();write(SEQ,q);event('sector_appended',{sequence_id:q.id,relay,duration_minutes:duration});return q
  }
  throw new Error('Ajuste de sequência inválido')

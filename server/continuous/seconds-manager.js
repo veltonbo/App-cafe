@@ -1295,6 +1295,7 @@ async function safeOff(reason='safety'){
     return true;
   }catch(error){
     const failedAt=Date.now();
+    const relayWasExpectedOn=Boolean(state.relay_expected);
     state={
       ...state,
       relay_expected:false,
@@ -1310,14 +1311,19 @@ async function safeOff(reason='safety'){
     };
     publishLive('watchdog',{status:'critical',at:failedAt,reason:String(reason||'safety'),error:error?.message||String(error)});
     console.error('safeOff',error?.message||error);
-    await pushNotice(
-      'ALERTA • desligamento não confirmado',
-      'O servidor mandou desligar o viveiro, mas não recebeu confirmação do R1 OFF pelo ESP32. Verifique o controlador.',
-      'viveiro-watchdog-off',
-      'critical',
-      5,
-      true
-    );
+    // Se R1 já era esperado OFF antes da perda de comunicação, o alerta
+    // específico de ESP32 offline cobre o evento. Evita dois pushs para a
+    // mesma indisponibilidade sem esconder o caso perigoso de R1 esperado ON.
+    if(relayWasExpectedOn){
+      await pushNotice(
+        'ALERTA • desligamento não confirmado',
+        'O servidor mandou desligar o viveiro, mas não recebeu confirmação do R1 OFF pelo ESP32. Verifique o controlador.',
+        'viveiro-watchdog-off',
+        'critical',
+        5,
+        true
+      );
+    }
     return false;
   }
 }

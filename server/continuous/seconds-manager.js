@@ -275,8 +275,11 @@ async function runOperationalAudit({notify=false}={}){
   // Watchdog de transição: se o relógio absoluto de ON/OFF vencer e o laço não
   // avançar, força um estado seguro e reinicia o controlador sem ignorar intertravamentos.
   const transitionToleranceMs=5000;
+  // ON atrasado é risco físico e mantém tolerância curta. OFF já significa R1
+  // desligado; dá margem ao loop/rede antes de pedir recuperação do Guardian.
+  const offTransitionToleranceMs=Math.max(15000,Number(state.off_transition_tolerance_ms||15000));
   const onDue=String(state.phase||'')==='on'&&Number(state.expected_off_at||0)>0&&now>Number(state.expected_off_at)+transitionToleranceMs;
-  const offDue=String(state.phase||'')==='off'&&Number(state.expected_next_on_at||0)>0&&now>Number(state.expected_next_on_at)+transitionToleranceMs;
+  const offDue=String(state.phase||'')==='off'&&Number(state.expected_next_on_at||0)>0&&now>Number(state.expected_next_on_at)+offTransitionToleranceMs;
   if(state.enabled&&(onDue||offDue)){
     const kind=onDue?'on_overdue':'off_overdue';
     const previousPhase=String(state.phase||'');

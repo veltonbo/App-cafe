@@ -80,15 +80,22 @@ export async function appendLocalHistory(row={}){
   if(eventId&&eventIds.has(eventId)){
     return{...payload,deduplicated:true};
   }
+  // Reserva o ID antes de entrar na fila: event() e mirror podem receber o
+  // mesmo evento quase simultaneamente. Sem a reserva ambos passavam no teste.
+  if(eventId)eventIds.add(eventId);
   rows.push(payload);
   if(rows.length>MAX_ROWS)rows=rows.slice(-MAX_ROWS);
-  writeChain=writeChain.then(async()=>{
-    await fsp.appendFile(HISTORY_FILE,JSON.stringify(payload)+'\n','utf8');
-    if(eventId){
-      await fsp.appendFile(EVENT_INDEX_FILE,eventId+'\n','utf8');
-      eventIds.add(eventId);
+  const write=async()=>{
+    try{
+      await fsp.appendFile(HISTORY_FILE,JSON.stringify(payload)+'\n','utf8');
+      if(eventId)await fsp.appendFile(EVENT_INDEX_FILE,eventId+'\n','utf8');
+    }catch(error){
+      // Permite retry real se a gravação falhar antes de ser confirmada.
+      if(eventId)eventIds.delete(eventId);
+      throw error;
     }
-  });
+  };
+  writeChain=writeChain.then(write,write);
   await writeChain;
   return payload;
 }

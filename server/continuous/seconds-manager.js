@@ -1604,7 +1604,7 @@ async function run(){
     let pulseId='';
     try{
       const previousOffConfirmedAt=Number(state.last_off_confirmed_at||0);
-      const onResult=await setViveiroRelay(true,{attempts:30,source:'seconds_manager',reason:'pulse_start'});
+      const onResult=await setViveiroRelay(true,{attempts:30,source:'seconds_manager',reason:'pulse_start',durationSeconds:maxOn});
       relayOnAt=Number(onResult?.confirmed_at||Date.now());
       relayOnCommandAt=Number(onResult?.command_sent_at||onResult?.command_started_at||relayOnAt);
       addConfirmationLatencySample(

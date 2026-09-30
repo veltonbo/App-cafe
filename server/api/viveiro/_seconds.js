@@ -11,6 +11,16 @@ const ESP_FILE=path.join(DATA_ROOT,'esp32-controller.json');
 function readEsp32(){try{return JSON.parse(fs.readFileSync(ESP_FILE,'utf8'))}catch{return null}}
 function saveEsp32(x){const t=ESP_FILE+'.tmp';fs.writeFileSync(t,JSON.stringify(x,null,2),{mode:0o600});fs.renameSync(t,ESP_FILE)}
 function espFresh(x){return Boolean(x&&Date.now()-Number(x.last_seen||0)<15000)}
+function firmwareAtLeast138(x){const m=String(x?.firmware||'').match(/(\d+)\.(\d+)\.(\d+)/);if(!m)return false;const v=m.slice(1).map(Number);return v[0]>1||(v[0]===1&&(v[1]>3||(v[1]===3&&v[2]>=8)))}
+async function startEsp32NurseryPulse(durationSeconds,{attempts=30}={}){
+  const duration=Math.max(1,Math.min(300,Math.round(Number(durationSeconds)||30))),started=Date.now();
+  let x=readEsp32();if(!espFresh(x))throw new Error('ESP32 do viveiro está offline.');if(!firmwareAtLeast138(x))throw new Error('Pulso local do viveiro exige firmware ESP32 1.3.8 ou superior.');
+  if(x.pending&&Date.now()-Number(x.pending.created_at||0)<120000)throw new Error('ESP32 ocupado com outro comando físico.');
+  const id=randomUUID(),sent=Date.now();x.pending={id,type:'nursery_pulse',relay:1,duration_seconds:duration,role:'nursery_pump',source:'automatic_viveiro',created_at:sent};saveEsp32(x);
+  const tries=Math.max(2,Math.min(60,Number(attempts)||30));for(let i=0;i<tries;i++){await sleep(i?350:250);x=readEsp32();if(espFresh(x)&&Array.isArray(x.relays)&&Boolean(x.relays[0])){if(x.pending?.id===id){x.pending=null;saveEsp32(x)}const confirmed=Date.now();return{ok:true,on:true,provider:'esp32',local_deadline:true,duration_seconds:duration,command_started_at:started,command_sent_at:sent,confirmed_at:confirmed,confirmation_latency_ms:confirmed-sent,confirmed_by:'esp32_status',attempts_used:i+1}}}
+  x=readEsp32();if(x?.pending?.id===id){x.pending=null;saveEsp32(x)}throw new Error('ESP32 não confirmou o início do pulso local R1.');
+}
+
 async function setEsp32NurseryRelay(on,{attempts=30}={}){
   const wanted=Boolean(on), started=Date.now();
   let x=readEsp32();
@@ -137,9 +147,9 @@ export async function readViveiroDevice(options={}){
 let outputTail=Promise.resolve();
 let outputAuthority={command_id:null,desired:false,source:'startup',reason:'startup',requested_at:0,completed_at:0,confirmed:null,error:null};
 export function getViveiroOutputAuthority(){return{...outputAuthority}}
-export async function setViveiroRelay(on,{attempts=on?4:8,source='viveiro_engine',reason='relay_command'}={}){
+export async function setViveiroRelay(on,{attempts=on?4:8,source='viveiro_engine',reason='relay_command',durationSeconds=null}={}){
   const request={command_id:randomUUID(),desired:Boolean(on),source:String(source||'unknown').slice(0,120),reason:String(reason||'unspecified').slice(0,120),requested_at:Date.now()};
-  const run=async()=>{outputAuthority={...request,completed_at:0,confirmed:null,error:null};try{const result=await setEsp32NurseryRelay(request.desired,{attempts});outputAuthority={...request,completed_at:Date.now(),confirmed:true,error:null};return result}catch(error){outputAuthority={...request,completed_at:Date.now(),confirmed:false,error:error?.message||String(error)};throw error}};
+  const run=async()=>{outputAuthority={...request,completed_at:0,confirmed:null,error:null};try{const current=readEsp32();const useLocal=request.desired&&Number(durationSeconds)>0&&firmwareAtLeast138(current);const result=useLocal?await startEsp32NurseryPulse(durationSeconds,{attempts}):await setEsp32NurseryRelay(request.desired,{attempts});outputAuthority={...request,completed_at:Date.now(),confirmed:true,error:null};return result}catch(error){outputAuthority={...request,completed_at:Date.now(),confirmed:false,error:error?.message||String(error)};throw error}};
   const pending=outputTail.then(run,run);outputTail=pending.catch(()=>undefined);return pending;
 }
 

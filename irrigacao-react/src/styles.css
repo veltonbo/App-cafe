@@ -90,3 +90,13 @@ h1,h2,.status strong,.sectors b{color:var(--text)}
 
 /* iOS safe-area: preserva o cabecalho abaixo da barra de status. */
 header{height:calc(72px + env(safe-area-inset-top));padding-top:calc(22px + env(safe-area-inset-top))}
+
+/* Device diagnostics — live relay matrix */
+.settings5Map>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.settings5Map>div>span{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:9px;min-width:0}
+.settings5Map>div>span>b{min-width:31px}
+.settings5Map>div>span>i{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings5Map>div>span>strong{font-size:11px;letter-spacing:.04em;opacity:.58}
+.settings5Map>div>span.relayOn{outline:1px solid rgba(74,222,128,.42)}
+.settings5Map>div>span.relayOn strong{opacity:1}
+@media(max-width:420px){.settings5Map>div{grid-template-columns:1fr}}

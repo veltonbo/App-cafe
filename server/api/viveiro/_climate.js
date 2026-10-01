@@ -274,6 +274,9 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const vpd=allowFastDrying?Math.max(Number(trendVpd),Number(instantVpd)):trendVpd;
   const raining=Boolean(snapshot?.metrics?.rainDetected);
   const lightIntensity=metricValue(snapshot?.metrics?.lightIntensity);
+  const rainRate=metricValue(snapshot?.metrics?.rainRate);
+  const rain1h=metricValue(snapshot?.metrics?.rain1h);
+  const rainGeneric=metricValue(snapshot?.metrics?.rainGeneric);
 
   const baseOn=Math.max(1,Math.min(300,Math.round(Number(secondsState.base_on_seconds)||30)));
   const baseOff=Math.max(1,Math.min(900,Math.round(Number(secondsState.base_off_seconds)||120)));
@@ -322,9 +325,17 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
   const lowLightSupport=
     coolHumid&&confidence!=='low'&&
     Number.isFinite(lightIntensity)&&lightIntensity>=0&&lightIntensity<=12000;
+  // Garoa/pingos podem aparecer nos acumuladores/rate antes de o sensor declarar
+  // rainDetected. Isso nunca substitui a proteção de chuva: apenas reforça a redução
+  // de demanda quando o restante do clima também está fresco/úmido.
+  const drizzleSignal=!raining&&[
+    rainRate,rain1h,rainGeneric
+  ].some(value=>Number.isFinite(value)&&value>0);
+  const drizzleSupport=coolHumid&&confidence!=='low'&&drizzleSignal;
   if(coolHumid)factor=Math.min(factor,.88);
   if(veryCoolHumid)factor=Math.min(factor,.82);
   if(lowLightSupport)factor=Math.min(factor,veryCoolHumid ? .78 : .83);
+  if(drizzleSupport)factor=Math.min(factor,veryCoolHumid ? .75 : .80);
 
   const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
   const extreme=climateExtremeProfile({
@@ -373,7 +384,8 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
         ?' e a tendência está ficando mais úmida'
         :'';
     const skyText=lowLightSupport?' + baixa luminosidade compatível com tempo nublado':'';
-    const coolText=coolHumid?' • condição fresca e úmida'+skyText:'';
+    const drizzleText=drizzleSupport?' + sinal leve de precipitação':'';
+    const coolText=coolHumid?' • condição fresca e úmida'+skyText+drizzleText:'';
     reason=drying.label+' (VPD '+vpd.toFixed(2)+' kPa)'+trendText+coolText+'. Ajuste feito principalmente no intervalo entre os pulsos.';
   }
 
@@ -384,7 +396,8 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     base_on_seconds:baseOn,base_off_seconds:baseOff,
     target_on_seconds:targetOn,target_off_seconds:targetOff,
     temperature,humidity,vpd,light_intensity:lightIntensity,
-    cool_humid:Boolean(coolHumid),cloudy_support:Boolean(lowLightSupport),
+    rain_rate:rainRate,rain_1h:rain1h,rain_generic:rainGeneric,
+    cool_humid:Boolean(coolHumid),cloudy_support:Boolean(lowLightSupport),drizzle_support:Boolean(drizzleSupport),
     factor,
     water_factor:factor,
     confidence_adjust_limit_percent:confidenceLimitPct,
@@ -400,7 +413,7 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     reason,
     automatic:cfg.automatic,
     observation:cfg.observation,
-    version:2
+    version:4
   };
 }
 

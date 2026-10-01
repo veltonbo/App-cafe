@@ -348,3 +348,28 @@ test('estado climático usa PATCH para não sobrescrever atualizações concorre
   assert.match(source,/storePatch\(STATE_PATH,delta\)/);
   assert.doesNotMatch(source,/const current=await getClimateState\(\);\s*const next=\{\.\.\.current,\.\.\.patch/);
 });
+
+
+test('Automatico 4.0 usa garoa apenas como reforco de clima fresco e umido',()=>{
+  const suggestion=climateSuggestion(
+    {metrics:{temperature:{value:23},humidity:{value:92},lightIntensity:{value:5000},rainDetected:false,rainRate:{value:0.2}}},
+    {base_on_seconds:30,base_off_seconds:150,on_seconds:30,off_seconds:150},
+    {automatic:true,max_adjust_percent:30},
+    {temperature:23,humidity:92,vpd:vaporPressureDeficit(23,92),vpd_delta:-0.05,confidence:'high',confidence_label:'Alta'}
+  );
+  assert.equal(suggestion.target_on_seconds,30);
+  assert.equal(suggestion.drizzle_support,true);
+  assert.ok(suggestion.target_off_seconds>150);
+  assert.match(suggestion.reason,/precipitação/i);
+});
+
+test('sinal leve de precipitacao sozinho nao reduz irrigacao',()=>{
+  const suggestion=climateSuggestion(
+    {metrics:{temperature:{value:32},humidity:{value:48},rainDetected:false,rainRate:{value:0.2}}},
+    {base_on_seconds:30,base_off_seconds:150,on_seconds:30,off_seconds:150},
+    {automatic:true,max_adjust_percent:30},
+    {temperature:32,humidity:48,vpd:vaporPressureDeficit(32,48),vpd_delta:0,confidence:'high',confidence_label:'Alta'}
+  );
+  assert.equal(suggestion.drizzle_support,false);
+  assert.ok(suggestion.target_off_seconds<=150);
+});

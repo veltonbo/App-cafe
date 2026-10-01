@@ -15,7 +15,26 @@ function firmwareAtLeast138(x){const m=String(x?.firmware||'').match(/(\d+)\.(\d
 async function startEsp32NurseryPulse(durationSeconds,{attempts=30}={}){
   const duration=Math.max(1,Math.min(300,Math.round(Number(durationSeconds)||30))),started=Date.now();
   let x=readEsp32();if(!espFresh(x))throw new Error('ESP32 do viveiro está offline.');if(!firmwareAtLeast138(x))throw new Error('Pulso local do viveiro exige firmware ESP32 1.3.8 ou superior.');
-  if(x.pending&&Date.now()-Number(x.pending.created_at||0)<120000)throw new Error('ESP32 ocupado com outro comando físico.');
+  if(x.pending&&Date.now()-Number(x.pending.created_at||0)<120000){
+    const pending=x.pending;
+    const nurseryPulse=String(pending.type||'')==='nursery_pulse'&&Number(pending.relay)===1;
+    if(!nurseryPulse)throw new Error('ESP32 ocupado com outro comando físico.');
+    // Um pulso local já entregue pode permanecer alguns segundos como pending enquanto
+    // o heartbeat/ACK chega ao servidor. Não crie outro pulso nem registre falha falsa:
+    // aguarde o ACK/estado do mesmo comando e reutilize a confirmação existente.
+    const pendingId=String(pending.id||'');
+    for(let i=0;i<Math.max(2,Math.min(60,Number(attempts)||30));i++){
+      await sleep(i?350:250);x=readEsp32();
+      if(espFresh(x)&&(String(x.nursery_pulse_id||'')===pendingId||(Array.isArray(x.relays)&&Boolean(x.relays[0])))){
+        if(x.pending?.id===pendingId){x.pending=null;saveEsp32(x)}
+        const confirmed=Date.now();return{ok:true,on:true,provider:'esp32',local_deadline:true,duration_seconds:Number(pending.duration_seconds||duration),command_started_at:Number(pending.created_at||started),command_sent_at:Number(pending.created_at||started),confirmed_at:confirmed,confirmation_latency_ms:Math.max(0,confirmed-Number(pending.created_at||confirmed)),confirmed_by:String(x.nursery_pulse_id||'')===pendingId?'esp32_command_ack_reused':'esp32_status_reused',attempts_used:i+1,reused_pending:true};
+      }
+      if(!x?.pending||String(x.pending.id||'')!==pendingId)break;
+    }
+    x=readEsp32();
+    if(x?.pending?.id===pendingId&&Date.now()-Number(pending.created_at||0)<15000)throw new Error('ESP32 aguardando confirmação do pulso R1 em andamento.');
+    if(x?.pending?.id===pendingId){x.pending=null;saveEsp32(x)}
+  }
   const id=randomUUID(),sent=Date.now();x.pending={id,type:'nursery_pulse',relay:1,duration_seconds:duration,role:'nursery_pump',source:'automatic_viveiro',created_at:sent};saveEsp32(x);
   const tries=Math.max(2,Math.min(60,Number(attempts)||30));for(let i=0;i<tries;i++){await sleep(i?350:250);x=readEsp32();if(espFresh(x)&&(String(x.nursery_pulse_id||'')===id||(Array.isArray(x.relays)&&Boolean(x.relays[0])))){if(x.pending?.id===id){x.pending=null;saveEsp32(x)}const confirmed=Date.now();return{ok:true,on:true,provider:'esp32',local_deadline:true,duration_seconds:duration,command_started_at:started,command_sent_at:sent,confirmed_at:confirmed,confirmation_latency_ms:confirmed-sent,confirmed_by:String(x.nursery_pulse_id||'')===id?'esp32_command_ack':'esp32_status',attempts_used:i+1}}}
   x=readEsp32();if(x?.pending?.id===id){x.pending=null;saveEsp32(x)}throw new Error('ESP32 não confirmou o início do pulso local R1.');

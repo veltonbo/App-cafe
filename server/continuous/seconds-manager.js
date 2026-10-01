@@ -1409,6 +1409,38 @@ async function run(){
       break;
     }
 
+    // Fora da janela de irrigação não existe operação para transferir ao EKAZA.
+    // Mantém R1 em segurança (OFF), registra o estado localmente e evita push/failover
+    // por uma indisponibilidade que não afeta uma irrigação programada.
+    const preSchedule=localSchedule(state);
+    if(!preSchedule.inside){
+      await safeOff('outside_schedule');
+      const waitSeconds=secondsUntilNextWindow(state);
+      const wasWaiting=state.phase==='waiting_window';
+      state={
+        ...state,
+        phase:'waiting_window',
+        control_owner:(await active().catch(()=>false))?'esp32_primary':'none',
+        controller_offline_since:0,
+        relay_expected:false,
+        on_seconds:Number(state.base_on_seconds||state.on_seconds||30),
+        off_seconds:Number(state.base_off_seconds||state.off_seconds||120),
+        climate_reason:'Fora do horário: ciclo-base restaurado até a próxima janela.',
+        expected_off_at:0,
+        expected_next_on_at:0,
+        next_window_at:Date.now()+waitSeconds*1000,
+        last_error:null
+      };
+      await persist();
+      if(!wasWaiting){
+        await event('viveiro_waiting_window','Ciclo rápido aguardando o próximo horário de início.',{
+          next_window_at:state.next_window_at
+        });
+      }
+      await sleep(Math.min(10000,Math.max(1000,waitSeconds*1000)));
+      continue;
+    }
+
     if(!(await active())){
       // Heartbeat isolado não transfere autoridade. O EKAZA só assume após
       // indisponibilidade contínua confirmada por 60 s.

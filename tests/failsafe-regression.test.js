@@ -4,3 +4,11 @@ test('relay ON/OFF requires fresh ESP32 R1 physical confirmation',()=>{assert.ma
 test('emergency latch persists and clearing does not rearm irrigation',()=>{assert.match(interlock,/emergency_latched:true/);assert.match(interlock,/cleared_requires_manual_rearm:true/);assert.match(manager,/enabled:false,phase:'stopped'/);assert.match(manager,/continua parada até novo rearme/)});
 test('server restart forces OFF before accounting active pulse',()=>{const i=manager.indexOf("safeOff('server_restart')");const j=manager.indexOf("reason:'server_restart'",i);assert.ok(i>=0&&j>i)});
 test('weather unavailable blocks restore and irrigation',()=>{assert.match(interlock,/weather_unavailable/);assert.match(manager,/phase:'weather_unavailable'/)});
+
+
+test('pending nursery pulse is reused instead of reported as a competing physical command',()=>{
+  assert.match(seconds,/nursery_pulse/);
+  assert.match(seconds,/esp32_command_ack_reused/);
+  assert.match(seconds,/reused_pending:true/);
+  assert.match(seconds,/aguardando confirmação do pulso R1 em andamento/);
+});

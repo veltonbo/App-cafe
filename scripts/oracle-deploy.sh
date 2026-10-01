@@ -42,7 +42,7 @@ say "Buscando versão $DEPLOY_REF..."
 GENERATED_REACT_INDEX="irrigacao-react/dist/index.html"
 status_before="$(git status --porcelain)"
 if [ -n "$status_before" ]; then
-  only_generated="$(printf '%s\n' "$status_before" | awk 'NF==2 && $2=="irrigacao-react/dist/index.html"{next} {print}')"
+  only_generated="$(printf '%s\\n' "$status_before" | awk 'NF==2 && $2=="irrigacao-react/dist/index.html"{next} {print}')"
   [ -z "$only_generated" ] || fail "árvore de trabalho possui alterações locais inesperadas; deploy cancelado"
   say "Limpando resíduo conhecido do build React: $GENERATED_REACT_INDEX"
   git show "HEAD:$GENERATED_REACT_INDEX" > "$GENERATED_REACT_INDEX"

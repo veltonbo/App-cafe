@@ -8,6 +8,7 @@ import {
   getSecondsManagerState,
   peekSecondsManagerState
 } from './seconds-manager.js';
+import { getViveiroMaintenance, setMaintenanceInterlock } from '../api/viveiro/_interlock.js';
 
 export default async function handler(req,res){
   applyCors(req,res);
@@ -29,6 +30,22 @@ export default async function handler(req,res){
     if(action==='configure'){
       const state=await configureSeconds(req.body||{});
       return res.status(200).json({ok:true,state});
+    }
+
+    if(action==='maintenance_status'){
+      return res.status(200).json({ok:true,maintenance:await getViveiroMaintenance()});
+    }
+
+    if(action==='maintenance_start'){
+      const minutes=Math.max(1,Math.min(1440,Math.round(Number(req.body?.minutes)||0)));
+      if(!minutes)return res.status(400).json({ok:false,error:'Informe o tempo da manutenção.'});
+      const maintenance=await setMaintenanceInterlock(minutes,req.body?.reason||'Manutenção do Viveiro pelo aplicativo');
+      return res.status(200).json({ok:true,maintenance,state:await getSecondsManagerState()});
+    }
+
+    if(action==='maintenance_end'){
+      const maintenance=await setMaintenanceInterlock(0,'Manutenção encerrada pelo aplicativo');
+      return res.status(200).json({ok:true,maintenance,state:await getSecondsManagerState()});
     }
 
     if(action==='disable'){

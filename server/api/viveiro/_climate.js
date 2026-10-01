@@ -16,7 +16,7 @@ export function normalizeClimateConfig(raw={}){
     normal_confirmations:Math.max(2,Math.min(4,Math.round(Number(raw.normal_confirmations)||2))),
     post_rain_hold_minutes:Math.max(15,Math.min(60,Math.round(Number(raw.post_rain_hold_minutes)||30))),
     enabled:raw.enabled!==false,
-    version:2
+    version:3
   };
 }
 
@@ -273,6 +273,7 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     :trendHumidity;
   const vpd=allowFastDrying?Math.max(Number(trendVpd),Number(instantVpd)):trendVpd;
   const raining=Boolean(snapshot?.metrics?.rainDetected);
+  const lightIntensity=metricValue(snapshot?.metrics?.lightIntensity);
 
   const baseOn=Math.max(1,Math.min(300,Math.round(Number(secondsState.base_on_seconds)||30)));
   const baseOff=Math.max(1,Math.min(900,Math.round(Number(secondsState.base_off_seconds)||120)));
@@ -311,7 +312,19 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
 
   // Situações extremas recebem o teto permitido.
   if(temperature>=35&&humidity<=40)factor=Math.max(factor,1.30);
-  if(temperature<=23&&humidity>=90)factor=Math.min(factor,.85);
+  if(temperature<=23&&humidity>=90)factor=Math.min(factor,.82);
+
+  // Fresco + úmido reduz a evapotranspiração do viveiro. Quando a estação também
+  // registra baixa luminosidade, usamos isso apenas como evidência complementar
+  // de condição nublada; baixa luz sozinha nunca reduz a irrigação.
+  const coolHumid=temperature<=26&&humidity>=80&&vpd<=0.75;
+  const veryCoolHumid=temperature<=24&&humidity>=88&&vpd<=0.55;
+  const lowLightSupport=
+    coolHumid&&confidence!=='low'&&
+    Number.isFinite(lightIntensity)&&lightIntensity>=0&&lightIntensity<=12000;
+  if(coolHumid)factor=Math.min(factor,.88);
+  if(veryCoolHumid)factor=Math.min(factor,.82);
+  if(lowLightSupport)factor=Math.min(factor,veryCoolHumid?.78:.83);
 
   const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
   const extreme=climateExtremeProfile({
@@ -359,7 +372,9 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
       :(vpdDelta<=-0.30&&vpdSlope10<=-0.18)
         ?' e a tendência está ficando mais úmida'
         :'';
-    reason=drying.label+' (VPD '+vpd.toFixed(2)+' kPa)'+trendText+'. Ajuste feito principalmente no intervalo entre os pulsos.';
+    const skyText=lowLightSupport?' + baixa luminosidade compatível com tempo nublado':'';
+    const coolText=coolHumid?' • condição fresca e úmida'+skyText:'';
+    reason=drying.label+' (VPD '+vpd.toFixed(2)+' kPa)'+trendText+coolText+'. Ajuste feito principalmente no intervalo entre os pulsos.';
   }
 
   return{
@@ -368,7 +383,8 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     current_on_seconds:currentOn,current_off_seconds:currentOff,
     base_on_seconds:baseOn,base_off_seconds:baseOff,
     target_on_seconds:targetOn,target_off_seconds:targetOff,
-    temperature,humidity,vpd,
+    temperature,humidity,vpd,light_intensity:lightIntensity,
+    cool_humid:Boolean(coolHumid),cloudy_support:Boolean(lowLightSupport),
     factor,
     water_factor:factor,
     confidence_adjust_limit_percent:confidenceLimitPct,

@@ -100,6 +100,32 @@ test('climate suggestion preserves configured base pulse',()=>{
   assert.ok(suggestion.target_off_seconds>=30);
 });
 
+test('Automatico 4.0 aumenta a pausa em clima fresco umido e nublado sem alterar o pulso',()=>{
+  const suggestion=climateSuggestion(
+    {metrics:{temperature:{value:23},humidity:{value:92},lightIntensity:{value:4500},rainDetected:false}},
+    {base_on_seconds:30,base_off_seconds:150,on_seconds:30,off_seconds:150},
+    {automatic:true,max_adjust_percent:30},
+    {temperature:23,humidity:92,vpd:vaporPressureDeficit(23,92),vpd_delta:-0.05,confidence:'high',confidence_label:'Alta'}
+  );
+  assert.equal(suggestion.target_on_seconds,30);
+  assert.ok(suggestion.target_off_seconds>150);
+  assert.equal(suggestion.cool_humid,true);
+  assert.equal(suggestion.cloudy_support,true);
+  assert.match(suggestion.reason,/fresca e úmida/i);
+  assert.match(suggestion.reason,/nublado/i);
+});
+
+test('baixa luminosidade sozinha nao reduz irrigacao',()=>{
+  const suggestion=climateSuggestion(
+    {metrics:{temperature:{value:32},humidity:{value:48},lightIntensity:{value:2000},rainDetected:false}},
+    {base_on_seconds:30,base_off_seconds:150,on_seconds:30,off_seconds:150},
+    {automatic:true,max_adjust_percent:30},
+    {temperature:32,humidity:48,vpd:vaporPressureDeficit(32,48),vpd_delta:0,confidence:'high',confidence_label:'Alta'}
+  );
+  assert.equal(suggestion.cloudy_support,false);
+  assert.ok(suggestion.target_off_seconds<=150);
+});
+
 test('rain always prevents climate adjustment',()=>{
   const suggestion=climateSuggestion(
     {

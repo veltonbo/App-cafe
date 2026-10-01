@@ -324,7 +324,7 @@ export function climateSuggestion(snapshot={},secondsState={},config={},trendDat
     Number.isFinite(lightIntensity)&&lightIntensity>=0&&lightIntensity<=12000;
   if(coolHumid)factor=Math.min(factor,.88);
   if(veryCoolHumid)factor=Math.min(factor,.82);
-  if(lowLightSupport)factor=Math.min(factor,veryCoolHumid?.78:.83);
+  if(lowLightSupport)factor=Math.min(factor,veryCoolHumid ? .78 : .83);
 
   const confidenceLimitPct=climateConfidenceAdjustmentLimit(confidence,cfg.max_adjust_percent);
   const extreme=climateExtremeProfile({

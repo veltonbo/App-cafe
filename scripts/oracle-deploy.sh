@@ -47,6 +47,19 @@ say "Commit selecionado: $DEPLOY_SHA"
 
 say "Executando suíte canônica de produção..."
 npm run test:production:minimal
+
+# Alguns testes/builds do frontend podem atualizar os hashes de assets no
+# index gerado do React. Esse arquivo é artefato rastreado e não pode deixar
+# a árvore suja, pois o watcher recusaria o próximo deploy. Como a árvore foi
+# validada como limpa antes dos testes, é seguro restaurar somente este
+# artefato conhecido para a versão do commit selecionado.
+GENERATED_REACT_INDEX="irrigacao-react/dist/index.html"
+if [ -f "$GENERATED_REACT_INDEX" ] && ! git diff --quiet -- "$GENERATED_REACT_INDEX"; then
+  say "Restaurando artefato de build gerado pelos testes: $GENERATED_REACT_INDEX"
+  git show "HEAD:$GENERATED_REACT_INDEX" > "$GENERATED_REACT_INDEX"
+fi
+[ -z "$(git status --porcelain)" ] || fail "testes deixaram alterações inesperadas na árvore; deploy cancelado para proteção"
+
 say "Construindo e testando nova imagem..."
 docker build -t "$IMAGE" -f "$DOCKERFILE" .
 

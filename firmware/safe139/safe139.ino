@@ -5,7 +5,7 @@
 #include <Preferences.h>
 #include <Update.h>
 
-const char* FW_VERSION="1.3.9";
+const char* FW_VERSION="1.4.0";
 const int relePins[16]={32,23,33,22,4,21,26,19,27,18,14,5,15,17,13,16};
 bool estadoRele[16]={false};
 WebServer server(80);
@@ -14,16 +14,24 @@ String apiUrl,deviceToken,pairCode,lastCommand="",wifiScanJson="",lastNurseryPul
 unsigned long lastCloud=0,lastWifiCheck=0,wifiLostAt=0,lastReconnect=0,lastCloudOk=0;
 unsigned long nurseryPulseDeadline=0;
 bool nurseryPulseArmed=false;
+bool nurseryAutonomyEnabled=false,nurseryOfflineMode=false,nurseryOfflineOn=false;
+unsigned long nurseryOfflineDeadline=0;
+int nurseryAutoOn=30,nurseryAutoOff=150,nurseryAutoStart=420,nurseryAutoEnd=1080,nurseryAutoDays=127;
+time_t nurseryLastGoodEpoch=0;
+unsigned long nurseryLastGoodMillis=0;
 const unsigned long WIFI_RETRY_MS=10000;
 const unsigned long WIFI_RESTART_MS=300000;
 const unsigned long CLOUD_FAILSAFE_MS=30000;
+const unsigned long AUTONOMY_START_MS=45000;
 
 void setRelay(int i,bool on){
   if(i<0||i>15)return;
   estadoRele[i]=on;
   digitalWrite(relePins[i],on?LOW:HIGH);
 }
+void stopNurseryAutonomy(){nurseryOfflineMode=false;nurseryOfflineOn=false;nurseryOfflineDeadline=0;}
 void allOff(){
+  stopNurseryAutonomy();
   nurseryPulseArmed=false; nurseryPulseDeadline=0;
   setRelay(1,false); setRelay(0,false);
   for(int i=2;i<16;i++)setRelay(i,false);
@@ -93,6 +101,36 @@ void routes(){
   server.on("/wifi",HTTP_POST,[](){String ss=server.arg("s"),pw=server.arg("p");if(ss.length()<1||ss.length()>32||(!(pw.length()==0||(pw.length()>=8&&pw.length()<=63)))){server.send(400,"text/html","Dados de Wi-Fi invalidos.<br><a href='/scan'>Voltar</a>");return;}allOff();prefs.putString("ssid",ss);prefs.putString("pass",pw);server.send(200,"text/html","Wi-Fi salvo. Reiniciando e conectando...<br>O ponto Fazenda2E-Teste continua disponivel para recuperacao.");delay(800);ESP.restart();});
   server.on("/pair",HTTP_POST,[](){apiUrl=server.arg("u");pairCode=server.arg("c");prefs.putString("url",apiUrl);prefs.putString("pair",pairCode);server.send(200,"text/html","Dados salvos. Pareamento automatico.<br><a href='/'>Voltar</a>");});
 }
+void saveNurseryAutonomy(){
+  prefs.putBool("na_en",nurseryAutonomyEnabled);prefs.putInt("na_on",nurseryAutoOn);prefs.putInt("na_off",nurseryAutoOff);
+  prefs.putInt("na_start",nurseryAutoStart);prefs.putInt("na_end",nurseryAutoEnd);prefs.putInt("na_days",nurseryAutoDays);
+}
+bool nurseryScheduleInside(time_t epoch){
+  if(epoch<=0)return false;
+  struct tm t; localtime_r(&epoch,&t);
+  int mins=t.tm_hour*60+t.tm_min;
+  return (nurseryAutoDays&(1<<t.tm_wday))&&mins>=nurseryAutoStart&&mins<nurseryAutoEnd;
+}
+time_t estimatedEpoch(){
+  time_t now=time(nullptr);
+  if(now>1700000000){nurseryLastGoodEpoch=now;nurseryLastGoodMillis=millis();return now;}
+  if(nurseryLastGoodEpoch>0)return nurseryLastGoodEpoch+(time_t)((millis()-nurseryLastGoodMillis)/1000UL);
+  return 0;
+}
+void nurseryAutonomyLoop(){
+  unsigned long now=millis();
+  bool cloudLost=lastCloudOk&&now-lastCloudOk>=AUTONOMY_START_MS;
+  if(!nurseryAutonomyEnabled||!cloudLost){if(nurseryOfflineMode){setRelay(0,false);stopNurseryAutonomy();}return;}
+  time_t epoch=estimatedEpoch();
+  if(!nurseryScheduleInside(epoch)){if(estadoRele[0])setRelay(0,false);nurseryOfflineMode=true;nurseryOfflineOn=false;nurseryOfflineDeadline=0;return;}
+  if(!nurseryOfflineMode){
+    nurseryPulseArmed=false;nurseryPulseDeadline=0;setRelay(0,false);
+    nurseryOfflineMode=true;nurseryOfflineOn=false;nurseryOfflineDeadline=now+1000UL;
+  }
+  if((long)(now-nurseryOfflineDeadline)<0)return;
+  if(nurseryOfflineOn){setRelay(0,false);nurseryOfflineOn=false;nurseryOfflineDeadline=now+(unsigned long)nurseryAutoOff*1000UL;}
+  else{setRelay(0,true);nurseryOfflineOn=true;nurseryOfflineDeadline=now+(unsigned long)nurseryAutoOn*1000UL;}
+}
 void tryPair(){
   if(deviceToken.length()||apiUrl.length()<8||pairCode.length()<8||WiFi.status()!=WL_CONNECTED)return;
   WiFiClientSecure client;client.setInsecure();HTTPClient http;
@@ -108,10 +146,17 @@ void tryPair(){
   String body="{\"device_id\":\"fazenda2e-esp32-01\",\"firmware\":\""+String(FW_VERSION)+"\",\"rssi\":"+String(WiFi.RSSI())+",\"relays\":"+rs+",\"nursery_pulse_id\":\""+lastNurseryPulseId+"\",\"nursery_pulse_active\":"+(nurseryPulseArmed?"true":"false")+"}";
   if(http.POST(body)==200){
     lastCloudOk=millis();
+    if(nurseryOfflineMode){setRelay(0,false);stopNurseryAutonomy();}
     String x=http.getString();int idp=x.indexOf("\"id\":\"");String id="";
     if(idp>=0){idp+=6;int e=x.indexOf('"',idp);id=x.substring(idp,e);}
     if(id.length()&&id!=lastCommand){
-      if(x.indexOf("\"type\":\"wifi_scan\"")>=0){
+      if(x.indexOf("\"type\":\"nursery_autonomy_config\"")>=0){
+        int a=x.indexOf("\"on_seconds\":");int b=x.indexOf("\"off_seconds\":");int c=x.indexOf("\"start_minutes\":");int d=x.indexOf("\"end_minutes\":");int e=x.indexOf("\"days_mask\":");
+        nurseryAutoOn=constrain(x.substring(a+13).toInt(),1,300);nurseryAutoOff=constrain(x.substring(b+14).toInt(),1,900);
+        nurseryAutoStart=constrain(x.substring(c+16).toInt(),0,1439);nurseryAutoEnd=constrain(x.substring(d+14).toInt(),1,1440);nurseryAutoDays=constrain(x.substring(e+12).toInt(),1,127);
+        nurseryAutonomyEnabled=x.indexOf("\"enabled\":true")>=0;saveNurseryAutonomy();
+      }
+      else if(x.indexOf("\"type\":\"wifi_scan\"")>=0){
         int n=WiFi.scanNetworks(false,true);String a="[";for(int k=0;k<n&&k<30;k++){if(k)a+=",";String ss=WiFi.SSID(k);ss.replace("\\","\\\\");ss.replace("\"","\\\"");a+="{\"ssid\":\""+ss+"\",\"rssi\":"+String(WiFi.RSSI(k))+",\"secure\":"+String(WiFi.encryptionType(k)==WIFI_AUTH_OPEN?"false":"true")+"}";}a+="]";wifiScanJson=a;WiFi.scanDelete();}
       else if(x.indexOf("\"type\":\"all_off\"")>=0)allOff();
       else if(x.indexOf("\"type\":\"coffee_handover\"")>=0){int a=x.indexOf("\"from_relay\":");int b=x.indexOf("\"to_relay\":");int c=x.indexOf("\"overlap_seconds\":");int fr=x.substring(a+13).toInt();int tr=x.substring(b+11).toInt();int ov=x.substring(c+18).toInt();coffeeHandover(fr,tr,ov);}
@@ -154,8 +199,11 @@ void cloudWatchdog(){
 void setup(){
   for(int i=0;i<16;i++){pinMode(relePins[i],OUTPUT);digitalWrite(relePins[i],HIGH);}
   prefs.begin("fazenda2e",false);apiUrl=prefs.getString("url","");deviceToken=prefs.getString("token","");pairCode=prefs.getString("pair","");
+  nurseryAutonomyEnabled=prefs.getBool("na_en",false);nurseryAutoOn=prefs.getInt("na_on",30);nurseryAutoOff=prefs.getInt("na_off",150);
+  nurseryAutoStart=prefs.getInt("na_start",420);nurseryAutoEnd=prefs.getInt("na_end",1080);nurseryAutoDays=prefs.getInt("na_days",127);
+  configTime(-4*3600,0,"pool.ntp.org","time.google.com");
   WiFi.mode(WIFI_AP_STA);WiFi.softAP("Fazenda2E-Teste","12345678");
   String s=prefs.getString("ssid",""),p=prefs.getString("pass","");if(s.length())WiFi.begin(s.c_str(),p.c_str());
   routes();server.begin();
 }
-void loop(){server.handleClient();if(nurseryPulseArmed&&(long)(millis()-nurseryPulseDeadline)>=0){setRelay(0,false);nurseryPulseArmed=false;nurseryPulseDeadline=0;}networkSafety();cloudWatchdog();if(millis()-lastCloud>3000){lastCloud=millis();tryPair();cloud();}}
+void loop(){server.handleClient();if(nurseryPulseArmed&&(long)(millis()-nurseryPulseDeadline)>=0){setRelay(0,false);nurseryPulseArmed=false;nurseryPulseDeadline=0;}networkSafety();cloudWatchdog();nurseryAutonomyLoop();if(millis()-lastCloud>3000){lastCloud=millis();tryPair();cloud();}}

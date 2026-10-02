@@ -188,10 +188,11 @@ void networkSafety(){
     if(ss.length()){WiFi.disconnect(false,false);delay(50);WiFi.begin(ss.c_str(),pw.c_str());}
   }
   // Se o rádio ficar preso por 5 min, reinicia com todas as saídas OFF.
-  if(now-wifiLostAt>=WIFI_RESTART_MS){allOff();delay(100);ESP.restart();}
+  if(now-wifiLostAt>=WIFI_RESTART_MS&&!nurseryAutonomyEnabled){allOff();delay(100);ESP.restart();}
 }
 void cloudWatchdog(){
   if(lastCloudOk&&millis()-lastCloudOk>CLOUD_FAILSAFE_MS){
+    if(nurseryAutonomyEnabled)return;
     bool any=false;for(int i=0;i<16;i++)if(estadoRele[i]){any=true;break;}
     if(any)allOff();
   }

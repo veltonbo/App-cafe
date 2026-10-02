@@ -143,7 +143,7 @@ void tryPair(){
   WiFiClientSecure client;client.setInsecure();HTTPClient http;
   http.begin(client,apiUrl+"/api/esp32/controller");http.addHeader("Content-Type","application/json");http.addHeader("x-device-token",deviceToken);
   String rs="[";for(int i=0;i<16;i++){if(i)rs+=",";rs+=estadoRele[i]?"true":"false";}rs+="]";
-  String body="{\"device_id\":\"fazenda2e-esp32-01\",\"firmware\":\""+String(FW_VERSION)+"\",\"rssi\":"+String(WiFi.RSSI())+",\"relays\":"+rs+",\"nursery_pulse_id\":\""+lastNurseryPulseId+"\",\"nursery_pulse_active\":"+(nurseryPulseArmed?"true":"false")+"}";
+  String body="{\"device_id\":\"fazenda2e-esp32-01\",\"firmware\":\""+String(FW_VERSION)+"\",\"rssi\":"+String(WiFi.RSSI())+",\"relays\":"+rs+",\"nursery_pulse_id\":\""+lastNurseryPulseId+"\",\"nursery_pulse_active\":"+(nurseryPulseArmed?"true":"false")+",\"nursery_autonomy\":{\"enabled\":"+(nurseryAutonomyEnabled?"true":"false")+",\"on_seconds\":"+String(nurseryAutoOn)+",\"off_seconds\":"+String(nurseryAutoOff)+",\"start_minutes\":"+String(nurseryAutoStart)+",\"end_minutes\":"+String(nurseryAutoEnd)+",\"days_mask\":"+String(nurseryAutoDays)+",\"offline_mode\":"+(nurseryOfflineMode?"true":"false")+"}}";
   if(http.POST(body)==200){
     lastCloudOk=millis();
     if(nurseryOfflineMode){setRelay(0,false);stopNurseryAutonomy();}

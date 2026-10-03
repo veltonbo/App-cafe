@@ -7,7 +7,7 @@ import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
-import { encodeCycle } from '../api/_cycle.js';
+import { decodeCycle, encodeCycle } from '../api/_cycle.js';
 import { sendViveiroCommands } from '../api/_viveiro_transport.js';
 import { publishLive } from './live-bus.js';
 import { accountingDayKey, pulseAccountingForDay } from './accounting.js';
@@ -20,7 +20,8 @@ import {
   readViveiroDevice,
   setViveiroRelay,
   stopServerPulse,
-  writeViveiroCycle
+  writeViveiroCycle,
+  disabledCycle
 } from '../api/viveiro/_seconds.js';
 
 const STATE_FILE=(process.env.IRRIGATION_STATE_FILE||'/data/viveiro-seconds.json').trim();
@@ -1397,15 +1398,27 @@ async function activateEkazaFailover(){
   await writeViveiroCycle(fallback);
   const check=await readViveiroDevice({force:true,maxAgeMs:0});
   if(String(check?.cycleRaw||'')!==String(fallback))throw new Error('EKAZA não confirmou a programação de contingência habilitada.');
-  // No failover, a saída física passa a ser o switch_1 do próprio EKAZA.
-  // O cycle_time sozinho programa os tempos, mas não arma a saída mestre em alguns modelos.
-  const armed=await sendViveiroCommands([{code:'switch_1',value:true}]);
-  if(armed?.statusMap?.switch_1!==true)throw new Error('EKAZA não confirmou a saída física de contingência ligada.');
-  state={...state,failover_cycle_raw:fallback,failover_active:true,control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a programação de contingência.'};
+  // O cycle_time do EKAZA não chaveia a saída física neste modelo. Mantemos a
+  // programação como referência, mas o servidor executa ON/OFF no switch_1 durante
+  // a contingência, preservando os segundos configurados e evitando bomba ligada direto.
+  await writeViveiroCycle(disabledCycle(fallback,decodeCycle(fallback)));
+  const disarmed=await sendViveiroCommands([{code:'switch_1',value:false}]);
+  if(disarmed?.statusMap?.switch_1!==false)throw new Error('EKAZA não confirmou a saída física desligada ao iniciar contingência.');
+  state={...state,failover_cycle_raw:fallback,failover_active:true,failover_relay_on:false,failover_next_switch_at:Date.now(),control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a contingência em ciclo controlado.'};
   await persist();
   await event('viveiro_ekaza_failover_start','ESP32 permaneceu offline. EKAZA assumiu a programação de segurança.',{confirm_ms:EKAZA_FAILOVER_CONFIRM_MS});
   await pushNotice('Contingência ativa • Fazenda 2E','ESP32 ficou offline por 60 s. O EKAZA assumiu a programação de segurança.','viveiro-ekaza-failover','critical',5,true);
   return true;
+}
+async function runEkazaFailoverCycle(){
+  const now=Date.now();
+  if(now<Number(state.failover_next_switch_at||0))return;
+  const turnOn=!Boolean(state.failover_relay_on);
+  const result=await sendViveiroCommands([{code:'switch_1',value:turnOn}]);
+  if(result?.statusMap?.switch_1!==turnOn)throw new Error('EKAZA não confirmou switch_1 '+(turnOn?'ON':'OFF')+'.');
+  const seconds=Math.max(1,Number(turnOn?state.on_seconds:state.off_seconds)||1);
+  state={...state,failover_relay_on:turnOn,relay_expected:turnOn,phase:turnOn?'ekaza_failover_on':'ekaza_failover_off',failover_next_switch_at:Date.now()+seconds*1000,last_error:'ESP32 offline; EKAZA em contingência cíclica.'};
+  await persist();
 }
 async function reclaimEspPrimary(){
   if(!state.failover_active)return true;
@@ -1480,7 +1493,15 @@ async function run(){
           await persist();
         });
       }
-      await sleep(3000);
+      if(state.failover_active){
+        await runEkazaFailoverCycle().catch(async error=>{
+          // Falha de confirmação sempre tende para OFF; nunca mantenha ON indefinidamente.
+          await sendViveiroCommands([{code:'switch_1',value:false}]).catch(()=>null);
+          state={...state,failover_relay_on:false,relay_expected:false,failover_next_switch_at:Date.now()+5000,phase:'ekaza_failover_error',last_error:'Falha no ciclo EKAZA: '+(error?.message||error)};
+          await persist();
+        });
+      }
+      await sleep(1000);
       continue;
     }
 

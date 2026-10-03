@@ -7,6 +7,7 @@ import { notifyIrrigation } from '../api/irrigation/_notify.js';
 import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
+import { encodeCycle } from '../api/_cycle.js';
 import { publishLive } from './live-bus.js';
 import { accountingDayKey, pulseAccountingForDay } from './accounting.js';
 import { readLocalHistoryFileRange } from '../local/history-store.js';
@@ -1376,11 +1377,26 @@ async function finishAndRestore(reason='stopped'){
 
 async function activateEkazaFailover(){
   if(state.failover_active)return true;
-  if(!state.native_cycle_raw||state.native_cycle_was_enabled===false)return false;
-  await writeViveiroCycle(state.native_cycle_raw);
+  // O ciclo rápido normalmente mantém o cycle_time nativo do EKAZA desativado.
+  // Para contingência não dependemos de como ele estava antes: geramos uma cópia
+  // habilitada com a mesma janela/dias. O EKAZA trabalha em minutos, então usamos
+  // limites conservadores (mínimo 1 min ON/OFF) apenas quando o ESP32 realmente falha.
+  const sourceRaw=String(state.native_cycle_raw||state.disabled_cycle_raw||'');
+  const current=await readViveiroDevice({force:true,maxAgeMs:0});
+  const cfg=current?.cycleConfig;
+  if(!sourceRaw||!cfg)throw new Error('Programação do EKAZA indisponível para contingência.');
+  const fallback=encodeCycle({
+    enabled:true,
+    daysMask:Number(state.days_mask||cfg.daysMask),
+    startMinutes:Number(state.start_minutes??cfg.startMinutes),
+    endMinutes:Number(state.end_minutes??cfg.endMinutes),
+    onMinutes:Math.max(1,Math.ceil(Number(state.on_seconds||30)/60)),
+    offMinutes:Math.max(1,Math.ceil(Number(state.off_seconds||120)/60))
+  },sourceRaw).raw;
+  await writeViveiroCycle(fallback);
   const check=await readViveiroDevice({force:true,maxAgeMs:0});
-  if(String(check?.cycleRaw||'')!==String(state.native_cycle_raw||''))throw new Error('EKAZA não confirmou a programação de contingência.');
-  state={...state,failover_active:true,control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a programação de contingência.'};
+  if(String(check?.cycleRaw||'')!==String(fallback))throw new Error('EKAZA não confirmou a programação de contingência habilitada.');
+  state={...state,failover_cycle_raw:fallback,failover_active:true,control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a programação de contingência.'};
   await persist();
   await event('viveiro_ekaza_failover_start','ESP32 permaneceu offline. EKAZA assumiu a programação de segurança.',{confirm_ms:EKAZA_FAILOVER_CONFIRM_MS});
   await pushNotice('Contingência ativa • Fazenda 2E','ESP32 ficou offline por 60 s. O EKAZA assumiu a programação de segurança.','viveiro-ekaza-failover','critical',5,true);

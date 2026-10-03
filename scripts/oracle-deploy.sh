@@ -124,6 +124,15 @@ if [ "$ok" -ne 1 ]; then
   fail "rollback executado"
 fi
 
+# O smoke final também pode regenerar o index React. Como todo o código-fonte
+# já foi validado e publicado, restaura somente esse artefato rastreado para
+# evitar bloquear o próximo ciclo do watcher.
+if [ -f "$GENERATED_REACT_INDEX" ] && ! git diff --quiet -- "$GENERATED_REACT_INDEX"; then
+  say "Limpando artefato React após smoke final: $GENERATED_REACT_INDEX"
+  git show "HEAD:$GENERATED_REACT_INDEX" > "$GENERATED_REACT_INDEX"
+fi
+[ -z "$(git status --porcelain)" ] || fail "deploy terminou com alterações inesperadas na árvore; revisar antes do próximo ciclo"
+
 say "Deploy concluído com sucesso."
 docker ps --filter "name=^/${APP_NAME}$"
 if [ "$BIND_ADDR" = "127.0.0.1" ]; then say "Backend protegido: porta $PUBLIC_PORT acessível apenas localmente; acesso público deve usar HTTPS."; fi

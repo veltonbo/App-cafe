@@ -158,6 +158,7 @@ void tryPair(){
       }
       else if(x.indexOf("\"type\":\"wifi_scan\"")>=0){
         int n=WiFi.scanNetworks(false,true);String a="[";for(int k=0;k<n&&k<30;k++){if(k)a+=",";String ss=WiFi.SSID(k);ss.replace("\\","\\\\");ss.replace("\"","\\\"");a+="{\"ssid\":\""+ss+"\",\"rssi\":"+String(WiFi.RSSI(k))+",\"secure\":"+String(WiFi.encryptionType(k)==WIFI_AUTH_OPEN?"false":"true")+"}";}a+="]";wifiScanJson=a;WiFi.scanDelete();}
+      else if(x.indexOf("\"type\":\"restart\"")>=0){lastCommand=id;allOff();http.end();delay(500);ESP.restart();return;}
       else if(x.indexOf("\"type\":\"all_off\"")>=0)allOff();
       else if(x.indexOf("\"type\":\"coffee_handover\"")>=0){int a=x.indexOf("\"from_relay\":");int b=x.indexOf("\"to_relay\":");int c=x.indexOf("\"overlap_seconds\":");int fr=x.substring(a+13).toInt();int tr=x.substring(b+11).toInt();int ov=x.substring(c+18).toInt();coffeeHandover(fr,tr,ov);}
       else if(x.indexOf("\"type\":\"coffee_sector\"")>=0){int q=x.indexOf("\"relay\":");int n=x.substring(q+8).toInt();bool on=x.indexOf("\"on\":true",q)>=0;coffeeSector(n,on);}

@@ -1396,6 +1396,10 @@ async function activateEkazaFailover(){
   await writeViveiroCycle(fallback);
   const check=await readViveiroDevice({force:true,maxAgeMs:0});
   if(String(check?.cycleRaw||'')!==String(fallback))throw new Error('EKAZA não confirmou a programação de contingência habilitada.');
+  // No failover, a saída física passa a ser o switch_1 do próprio EKAZA.
+  // O cycle_time sozinho programa os tempos, mas não arma a saída mestre em alguns modelos.
+  const armed=await sendViveiroCommands([{code:'switch_1',value:true}]);
+  if(armed?.statusMap?.switch_1!==true)throw new Error('EKAZA não confirmou a saída física de contingência ligada.');
   state={...state,failover_cycle_raw:fallback,failover_active:true,control_owner:'ekaza_failover',failover_started_at:Date.now(),relay_expected:false,last_error:'ESP32 indisponível; EKAZA assumiu a programação de contingência.'};
   await persist();
   await event('viveiro_ekaza_failover_start','ESP32 permaneceu offline. EKAZA assumiu a programação de segurança.',{confirm_ms:EKAZA_FAILOVER_CONFIRM_MS});
@@ -1405,6 +1409,9 @@ async function activateEkazaFailover(){
 async function reclaimEspPrimary(){
   if(!state.failover_active)return true;
   if(!state.disabled_cycle_raw)throw new Error('Programação segura do EKAZA não encontrada para devolver controle ao ESP32.');
+  // Primeiro desarma fisicamente o EKAZA; somente depois devolve a posse ao ESP32.
+  const disarmed=await sendViveiroCommands([{code:'switch_1',value:false}]);
+  if(disarmed?.statusMap?.switch_1!==false)throw new Error('EKAZA não confirmou a saída física desligada antes da devolução.');
   await writeViveiroCycle(state.disabled_cycle_raw);
   const check=await readViveiroDevice({force:true,maxAgeMs:0});
   if(String(check?.cycleRaw||'')!==String(state.disabled_cycle_raw||''))throw new Error('EKAZA não confirmou saída da contingência.');

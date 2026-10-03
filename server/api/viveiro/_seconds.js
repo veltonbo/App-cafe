@@ -189,7 +189,7 @@ export async function writeViveiroCycle(raw){
   throw new Error('O EKAZA não confirmou a alteração do cycle_time.');
 }
 
-function disabledCycle(currentRaw,cfg){
+export function disabledCycle(currentRaw,cfg){
   return encodeCycle({
     enabled:false,
     daysMask:cfg.daysMask,

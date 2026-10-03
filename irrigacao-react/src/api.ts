@@ -26,6 +26,7 @@ export const irrigationApi={
   esp32CoffeeSequenceResume:()=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'coffee_sequence_resume'})}),
   esp32CoffeeSequenceAdjust:(adjust:string,payload:any={})=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'coffee_sequence_adjust',adjust,...payload})}),
   esp32CoffeeAutomationSave:(config:any)=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'coffee_automation_save',config})}),
+  esp32Restart:()=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'restart'})}),
   esp32AllOff:()=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'all_off'})}),
   esp32WifiScan:()=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'wifi_scan'})}),
   esp32Wifi:(ssid:string,password:string)=>request('/api/esp32/controller',{method:'POST',body:JSON.stringify({action:'wifi',ssid,password})}),

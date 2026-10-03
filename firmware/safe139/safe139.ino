@@ -5,7 +5,7 @@
 #include <Preferences.h>
 #include <Update.h>
 
-const char* FW_VERSION="1.4.0";
+const char* FW_VERSION="1.4.1";
 const int relePins[16]={32,23,33,22,4,21,26,19,27,18,14,5,15,17,13,16};
 bool estadoRele[16]={false};
 WebServer server(80);
@@ -23,6 +23,10 @@ const unsigned long WIFI_RETRY_MS=10000;
 const unsigned long WIFI_RESTART_MS=300000;
 const unsigned long CLOUD_FAILSAFE_MS=30000;
 const unsigned long AUTONOMY_START_MS=45000;
+const int WIFI_ROAM_BAD_RSSI=-78;
+const int WIFI_ROAM_GAIN_DB=10;
+const unsigned long WIFI_ROAM_CHECK_MS=60000;
+unsigned long lastRoamCheck=0;
 
 void setRelay(int i,bool on){
   if(i<0||i>15)return;
@@ -175,6 +179,22 @@ void tryPair(){
   }
   http.end();
 }
+bool irrigationOutputsActive(){for(int i=0;i<16;i++)if(estadoRele[i])return true;return false;}
+void wifiRoam(){
+  unsigned long now=millis();
+  if(WiFi.status()!=WL_CONNECTED||now-lastRoamCheck<WIFI_ROAM_CHECK_MS)return;
+  lastRoamCheck=now;
+  int current=WiFi.RSSI(); if(current>WIFI_ROAM_BAD_RSSI||irrigationOutputsActive())return;
+  String ss=prefs.getString("ssid",""),pw=prefs.getString("pass",""); if(!ss.length())return;
+  uint8_t currentBssid[6]; memcpy(currentBssid,WiFi.BSSID(),6);
+  int n=WiFi.scanNetworks(false,true); int best=current; int bestIdx=-1;
+  for(int i=0;i<n;i++)if(WiFi.SSID(i)==ss&&WiFi.RSSI(i)>best){best=WiFi.RSSI(i);bestIdx=i;}
+  if(bestIdx>=0&&best>=current+WIFI_ROAM_GAIN_DB){
+    uint8_t target[6]; memcpy(target,WiFi.BSSID(bestIdx),6); int ch=WiFi.channel(bestIdx);
+    WiFi.scanDelete(); WiFi.disconnect(false,false); delay(100); WiFi.begin(ss.c_str(),pw.c_str(),ch,target,true); return;
+  }
+  WiFi.scanDelete();
+}
 void networkSafety(){
   unsigned long now=millis();
   if(WiFi.status()==WL_CONNECTED){
@@ -208,4 +228,4 @@ void setup(){
   String s=prefs.getString("ssid",""),p=prefs.getString("pass","");if(s.length())WiFi.begin(s.c_str(),p.c_str());
   routes();server.begin();
 }
-void loop(){server.handleClient();if(nurseryPulseArmed&&(long)(millis()-nurseryPulseDeadline)>=0){setRelay(0,false);nurseryPulseArmed=false;nurseryPulseDeadline=0;}networkSafety();cloudWatchdog();nurseryAutonomyLoop();if(millis()-lastCloud>3000){lastCloud=millis();tryPair();cloud();}}
+void loop(){server.handleClient();wifiRoam();if(nurseryPulseArmed&&(long)(millis()-nurseryPulseDeadline)>=0){setRelay(0,false);nurseryPulseArmed=false;nurseryPulseDeadline=0;}networkSafety();cloudWatchdog();nurseryAutonomyLoop();if(millis()-lastCloud>3000){lastCloud=millis();tryPair();cloud();}}

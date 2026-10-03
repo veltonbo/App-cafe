@@ -8,6 +8,7 @@ import { createConfigBackup } from '../api/irrigation/_backup.js';
 import { climateSuggestion, climateTrend, getClimateConfig, getClimateState, patchClimateState, updateClimateSamples, vaporPressureDeficit } from '../api/viveiro/_climate.js';
 import { activateEmergency, clearEmergency, emergencyLatched } from '../api/viveiro/_interlock.js';
 import { encodeCycle } from '../api/_cycle.js';
+import { sendViveiroCommands } from '../api/_viveiro_transport.js';
 import { publishLive } from './live-bus.js';
 import { accountingDayKey, pulseAccountingForDay } from './accounting.js';
 import { readLocalHistoryFileRange } from '../local/history-store.js';
